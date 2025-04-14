@@ -1,0 +1,25 @@
+[project]
+name = "animal-ethics"
+version = "0.1.0"
+description = "Animal Ethics approval process"
+authors = [
+    {name = "Serkan Kibritoglu", email = "serkan.kibritoglu@dbca.wa.gov.au"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "Django (==5.2)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+package-mode = false
+#packages = [
+#    { include = "my_package" },
+#    # { include = "extra_package/**/*.py" },
+#]
