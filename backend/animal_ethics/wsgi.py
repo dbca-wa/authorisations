@@ -1,5 +1,5 @@
 """
-WSGI config for animalethics project.
+WSGI config for animal_ethics project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animalethics.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animal_ethics.settings')
 
 application = get_wsgi_application()
