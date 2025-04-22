@@ -75,9 +75,11 @@ WSGI_APPLICATION = 'animal_ethics.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'mysecretpassword',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+        'NAME': 'animal-ethics',
+        'USER': 'dbuser',
+        'PASSWORD': 'p@ssword',
         # 'OPTIONS': {
         #     "service": "my_service",
         #     "passfile": ".my_pgpass",
