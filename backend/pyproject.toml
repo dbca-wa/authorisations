@@ -1,7 +1,7 @@
 [project]
-name = "animal-ethics"
+name = "authorisations"
 version = "0.1.0"
-description = "Animal Ethics approval process"
+description = "Animal Ethics & Section 40/45 approval process"
 authors = [
     {name = "Serkan Kibritoglu", email = "serkan.kibritoglu@dbca.wa.gov.au"}
 ]
