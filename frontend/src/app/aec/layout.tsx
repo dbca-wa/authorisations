@@ -1,12 +1,12 @@
 "use client";
 import Box from '@mui/material/Box';
-import ApplicationSteps from '../common/steps';
-import CssBaseline from '@mui/material/CssBaseline';
+import ApplicationSteps, { StepsContext } from '../common/steps';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Drawer from '@mui/material/Drawer';
-import { makeStyles } from '@mui/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import React from 'react';
 
 const steps = [
     {
@@ -61,18 +61,17 @@ const useStyles = makeStyles({
     }
 });
 
-
 export default function FormLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const [activeStep, setActiveStep] = React.useState(0); // Manage activeStep state here
+
     const classes = useStyles();
 
-    // 2 column layout with steps on the left and form on the right
     return (
         <Box sx={{ display: 'flex' }}>
-            {/* <CssBaseline /> */}
             <AppBar position="fixed">
                 <Toolbar>
                     <Typography variant="h6" noWrap component="div">
@@ -80,6 +79,7 @@ export default function FormLayout({
                     </Typography>
                 </Toolbar>
             </AppBar>
+            
             <Drawer
                 classes={{ paper: classes.drawerPaper }}
                 sx={{
@@ -93,16 +93,23 @@ export default function FormLayout({
                 variant="permanent"
                 anchor="left"
             >
-                <ApplicationSteps steps={steps} />
-
+                {/* Provide both activeStep and setActiveStep via context */}
+                <StepsContext.Provider value={{ activeStep, setActiveStep }}>
+                    <ApplicationSteps 
+                        steps={steps}
+                        activeStep={activeStep} // Pass activeStep to ApplicationSteps
+                    />
+                </StepsContext.Provider>
             </Drawer>
             <Box
                 component="main"
-                sx={{ flexGrow: 1, p: 3 }}
+                sx={{ flexGrow: 1, p: 1 }}
             >
                 <Toolbar />
-                {children}
-
+                {/* Provide both activeStep and setActiveStep via context */}
+                <StepsContext.Provider value={{ activeStep, setActiveStep }}>
+                    {children}
+                </StepsContext.Provider>
             </Box>
         </Box>
     );

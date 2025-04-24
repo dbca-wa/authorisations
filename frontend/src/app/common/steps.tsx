@@ -10,28 +10,27 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 
 
+export const StepsContext = React.createContext<{
+    activeStep: number;
+    setActiveStep: React.Dispatch<React.SetStateAction<number>>; // Allow functional updates
+}>({
+    activeStep: 0,
+    setActiveStep: () => {}, // Default is a no-op function
+});
+
+
 export default function ApplicationSteps({
-    steps,
+    steps, activeStep,
 }: Readonly<{
     steps: {
         label: string;
         description: string;
     }[];
+    activeStep: number;
 }>) {
-    const [activeStep, setActiveStep] = React.useState(0);
-
-    const handleNext = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    };
-
-    const handleBack = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    };
-
-    const handleReset = () => {
-        setActiveStep(0);
-    };
-
+    // const activeStep = React.useContext(StepsContext);
+    console.log("Context in Stepper: " + activeStep);
+    
     return (
         <Box sx={{ maxWidth: 400 }}>
             <Stepper activeStep={activeStep} orientation="vertical">
@@ -51,14 +50,14 @@ export default function ApplicationSteps({
                             <Box sx={{ mb: 2 }}>
                                 <Button
                                     variant="contained"
-                                    onClick={handleNext}
+                                    // onClick={handleNext}
                                     sx={{ mt: 1, mr: 1 }}
                                 >
                                     {index === steps.length - 1 ? 'Finish' : 'Continue'}
                                 </Button>
                                 <Button
                                     disabled={index === 0}
-                                    onClick={handleBack}
+                                    // onClick={handleBack}
                                     sx={{ mt: 1, mr: 1 }}
                                 >
                                     Back
@@ -71,7 +70,10 @@ export default function ApplicationSteps({
             {activeStep === steps.length && (
                 <Paper square elevation={0} sx={{ p: 3 }}>
                     <Typography>All steps completed - you&apos;re finished</Typography>
-                    <Button onClick={handleReset} sx={{ mt: 1, mr: 1 }}>
+                    <Button
+                        // onClick={handleReset}
+                        sx={{ mt: 1, mr: 1 }}
+                    >
                         Reset
                     </Button>
                 </Paper>
