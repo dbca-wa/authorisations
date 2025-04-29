@@ -1,55 +1,14 @@
 "use client";
+import React from 'react';
 import Box from '@mui/material/Box';
-import ApplicationSteps, { StepsContext } from '../common/steps';
+import ApplicationSteps from './steps';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Drawer from '@mui/material/Drawer';
 import makeStyles from '@mui/styles/makeStyles';
-import React from 'react';
-
-const steps = [
-    {
-        label: 'Terms of Service',
-        description: 'Read and accept the terms of service.',
-    },
-    {
-        label: 'Scientific Review',
-        description: 'Submit your project for scientific review.',
-    },
-    {
-        label: 'Competencies & Declarations',
-        description: 'Provide your competencies and declarations.',
-    },
-    {
-        label: 'Project Details',
-        description: 'Fill in the details of your project.',
-    },
-    {
-        label: 'Replacement',
-        description: 'Describe the alternatives to animal use in your project.',
-    },
-    {
-        label: 'Reduction',
-        description: 'Explain how you will reduce the number of animals used.',
-    },
-    {
-        label: 'Refinement',
-        description: 'Outline how you will refine your methods to minimize suffering.',
-    },
-    {
-        label: 'Adverse Effects',
-        description: 'Describe any potential adverse effects on animals.',
-    },
-    {
-        label: 'References & Sources',
-        description: 'References/sources used to prepare this application.',
-    },
-    {
-        label: 'Review & Submit',
-        description: 'Review your application and submit it.',
-    },
-];
+import formData from '@/app/data/formData.json';
+import ApplicationFormContext from '../context/FormContext';
 
 const drawerWidth = 320;
 const useStyles = makeStyles({
@@ -66,16 +25,19 @@ export default function FormLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const [activeStep, setActiveStep] = React.useState(0); // Manage activeStep state here
-
+    // Manage activeStep state here
+    const [activeSection, setActiveSection] = React.useState(0);
     const classes = useStyles();
+
+    // Set the ApplicationFormContext value
+    const contextValue = { activeSection, setActiveSection, formData };
 
     return (
         <Box sx={{ display: 'flex' }}>
             <AppBar position="fixed">
                 <Toolbar>
                     <Typography variant="h6" noWrap component="div">
-                        Animal Ethics Committee
+                        {formData.name}
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -94,12 +56,12 @@ export default function FormLayout({
                 anchor="left"
             >
                 {/* Provide both activeStep and setActiveStep via context */}
-                <StepsContext.Provider value={{ activeStep, setActiveStep }}>
+                <ApplicationFormContext.Provider value={contextValue}>
                     <ApplicationSteps 
-                        steps={steps}
-                        activeStep={activeStep} // Pass activeStep to ApplicationSteps
+                        sections={formData.sections}
+                        activeSection={activeSection}
                     />
-                </StepsContext.Provider>
+                </ApplicationFormContext.Provider>
             </Drawer>
             <Box
                 component="main"
@@ -107,9 +69,9 @@ export default function FormLayout({
             >
                 <Toolbar />
                 {/* Provide both activeStep and setActiveStep via context */}
-                <StepsContext.Provider value={{ activeStep, setActiveStep }}>
+                <ApplicationFormContext.Provider value={contextValue}>
                     {children}
-                </StepsContext.Provider>
+                </ApplicationFormContext.Provider>
             </Box>
         </Box>
     );
