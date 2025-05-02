@@ -41,7 +41,7 @@ export default function FormLayout({
                     </Typography>
                 </Toolbar>
             </AppBar>
-            
+
             <Drawer
                 classes={{ paper: classes.drawerPaper }}
                 sx={{
@@ -55,20 +55,16 @@ export default function FormLayout({
                 variant="permanent"
                 anchor="left"
             >
-                {/* Provide both activeStep and setActiveStep via context */}
-                <ApplicationFormContext.Provider value={contextValue}>
-                    <ApplicationSteps 
-                        sections={formData.sections}
-                        activeSection={activeSection}
-                    />
-                </ApplicationFormContext.Provider>
+                <ApplicationSteps
+                    sections={formData.sections}
+                    activeSection={activeSection}
+                />
             </Drawer>
             <Box
                 component="main"
                 sx={{ flexGrow: 1, p: 1 }}
             >
                 <Toolbar />
-                {/* Provide both activeStep and setActiveStep via context */}
                 <ApplicationFormContext.Provider value={contextValue}>
                     {children}
                 </ApplicationFormContext.Provider>

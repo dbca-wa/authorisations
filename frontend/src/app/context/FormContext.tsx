@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ApplicationForm from "../data/FormData";
+import ApplicationForm from "@/app/data/FormData";
 
 interface ApplicationFormContextValue {
     activeSection: number;

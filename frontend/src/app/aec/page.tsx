@@ -1,20 +1,20 @@
 "use client";
 import React from "react";
 import Button from "@mui/material/Button";
-import ApplicationFormContext from "../context/FormContext";
+import ApplicationFormContext from "@/app/context/FormContext";
 import CheckboxInput from "@/app/inputs/checkbox";
 import TextInput from "@/app/inputs/text";
-import { Box, ButtonGroup, List, ListItem, ListItemText } from "@mui/material";
+import { Box, List, ListItem } from "@mui/material";
+import GridInput from "@/app/inputs/grid";
+import { GridQuestion } from "@/app/data/FormData";
 
 
 export default function Page() {
     // Destructure values from the context
     const { activeSection, setActiveSection, formData } = React.useContext(ApplicationFormContext);
     const section = formData.sections[activeSection];
-    console.log("Active section in Page:", { activeSection });
 
     const handleNext = () => {
-        console.log("Current step:", activeSection);
         setActiveSection((prevStep) => prevStep + 1); // Update the step
     };
 
@@ -38,7 +38,6 @@ export default function Page() {
                             return (
                                 <ListItem key={index}>
                                     <CheckboxInput
-                                        key={index}
                                         label={question.label}
                                         isRequired={question.isRequired}
                                     />
@@ -49,10 +48,16 @@ export default function Page() {
                             return (
                                 <ListItem key={index}>
                                     <TextInput
-                                        key={index}
                                         label={question.label}
                                         isRequired={question.isRequired}
                                     />
+                                </ListItem>
+                            )
+                        }
+                        else if (question.type === "grid") {
+                            return (
+                                <ListItem key={index}>
+                                    <GridInput question={question as GridQuestion}/>
                                 </ListItem>
                             )
                         }
@@ -62,7 +67,7 @@ export default function Page() {
                 </List>
 
 
-                <Box justifyContent={"space-around"} display="flex"  mt={4}>
+                <Box justifyContent={"space-around"} display="flex" mt={4}>
                     {activeSection !== 0 && (
                         <Button variant="outlined" onClick={handleBack} className="mr-4">
                             Back

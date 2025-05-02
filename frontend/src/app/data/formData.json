@@ -81,6 +81,42 @@
                     "label": "Current CI competency form is attached or provided < 12 months ago",
                     "type": "checkbox",
                     "isRequired": false
+                },
+                {
+                    "label": "Project Personnel",
+                    "type": "grid",
+                    "isRequired": false,
+                    "description": "Please provide the names and roles of all project personnel, including their experience.",
+                    "columns": [
+                        {
+                            "label": "Name",
+                            "type": "text",
+                            "isRequired": true
+                        },
+                        {
+                            "label": "Role",
+                            "type": "text",
+                            "isRequired": true,
+                            "description": "Role in the project"
+                        },
+                        {
+                            "label": "Experience",
+                            "type": "text",
+                            "isRequired": true,
+                            "description": "Describe experience with designated fauna and techniques"
+                        },
+                        {
+                            "label": "Training",
+                            "type": "checkbox",
+                            "isRequired": false,
+                            "description": "Is this person training under supervision?"
+                        }
+                    ],
+                    "values": [
+                        ["John Doe", "Researcher", "5 years in field studies", false],
+                        ["Jane Smith", "Field Assistant", "2 years in field studies", true],
+                        ["Bob Johnson", "Lab Technician", "3 years in lab work", false]
+                    ]
                 }
             ]
         }

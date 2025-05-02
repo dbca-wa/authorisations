@@ -6,7 +6,7 @@ import StepContent from '@mui/material/StepContent';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { Section } from '../data/FormData';
+import { Section } from '@/app/data/FormData';
 
 
 export default function ApplicationSteps({
@@ -15,8 +15,6 @@ export default function ApplicationSteps({
     sections: Section[];
     activeSection: number;
 }>) {
-    console.log("Context in Stepper: " + activeSection);
-    
     return (
         <Box sx={{ maxWidth: 400 }}>
             <Stepper activeStep={activeSection} orientation="vertical">
