@@ -35,11 +35,7 @@ declare module '@mui/x-data-grid' {
     }
 }
 
-export default function GridInput({
-    question,
-}: Readonly<{
-    question: GridQuestion;
-}>) {
+export function GridInput(question : Readonly<GridQuestion>) {
     // Populate rows with values from the question
     const initialRows = getInitialRows(question);
 
@@ -100,7 +96,7 @@ export default function GridInput({
     });
 
     return (
-        <div className="w-full mt-8">
+        <div className="w-full">
             <Typography variant="h5">{question.label}</Typography>
             <p>{question.description}</p>
 
@@ -157,6 +153,9 @@ function getHeaders({
             case "checkbox":
                 columnType = "boolean";
                 break;
+            case "multiselect":
+                columnType = "singleSelect";
+                break;
             // case "date":
             //     columnType = "date";
             //     break;
@@ -172,6 +171,9 @@ function getHeaders({
             description: column.description,
             // Material UI column attributes
             type: columnType,
+            valueOptions: columnType === "singleSelect" && column.options
+                ? column.options
+                : null,
             editable: true,
             sortable: false,
             headerAlign: "center",
@@ -221,7 +223,7 @@ function getEmptyRow(question: GridQuestion) {
     const row: { [key: string]: any } = {};
     // Populate the row with values
     question.columns.forEach((column, _) => {
-        row[column.label] = null;
+        row[column.label] = '';
     });
     return row;
 }

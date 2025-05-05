@@ -1,16 +1,11 @@
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import { Question } from "@/app/data/FormData";
 
-export default function CheckboxInput({
-    label,
-    isRequired,
-}: Readonly<{
-    label: string;
-    isRequired: boolean;
-}>) {
+export function CheckboxInput(question : Readonly<Question>) {
     return <FormControlLabel control={<Checkbox />}
-        label={label}
-        required={isRequired}
+        label={question.label}
+        required={question.isRequired}
         className="w-full"
     />
 }

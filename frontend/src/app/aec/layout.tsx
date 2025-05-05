@@ -1,15 +1,16 @@
 "use client";
-import React from 'react';
-import Box from '@mui/material/Box';
-import ApplicationSteps from './steps';
 import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Drawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import Drawer from '@mui/material/Drawer';
 import makeStyles from '@mui/styles/makeStyles';
-import formData from '@/app/data/formData.json';
-import ApplicationFormContext from '../context/FormContext';
+import React from 'react';
+import { FormStepContext } from '../context/FormContext';
+import { ApplicationForm } from '../data/FormData';
+import { ApplicationSteps } from './steps';
 
+const formData: ApplicationForm = require('@/app/data/formData.json');
 const drawerWidth = 320;
 const useStyles = makeStyles({
     drawerPaper: {
@@ -26,11 +27,16 @@ export default function FormLayout({
     children: React.ReactNode;
 }>) {
     // Manage activeStep state here
-    const [activeSection, setActiveSection] = React.useState(0);
+    const [activeStep, setActiveStep] = React.useState(0);
     const classes = useStyles();
 
-    // Set the ApplicationFormContext value
-    const contextValue = { activeSection, setActiveSection, formData };
+    // Set the FormStepContext value
+    const contextValue = { 
+        setActiveStep, 
+        currentStep: formData.steps[activeStep],
+        isFirst: activeStep === 0,
+        isLast: activeStep === formData.steps.length - 1,
+    };
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -56,8 +62,8 @@ export default function FormLayout({
                 anchor="left"
             >
                 <ApplicationSteps
-                    sections={formData.sections}
-                    activeSection={activeSection}
+                    steps={formData.steps}
+                    activeStep={activeStep}
                 />
             </Drawer>
             <Box
@@ -65,9 +71,9 @@ export default function FormLayout({
                 sx={{ flexGrow: 1, p: 1 }}
             >
                 <Toolbar />
-                <ApplicationFormContext.Provider value={contextValue}>
+                <FormStepContext.Provider value={contextValue}>
                     {children}
-                </ApplicationFormContext.Provider>
+                </FormStepContext.Provider>
             </Box>
         </Box>
     );

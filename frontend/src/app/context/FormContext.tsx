@@ -1,25 +1,26 @@
 "use client";
+import { FormStep } from "@/app/data/FormData";
 import React from "react";
-import ApplicationForm from "@/app/data/FormData";
 
-interface ApplicationFormContextValue {
-    activeSection: number;
-    setActiveSection: React.Dispatch<React.SetStateAction<number>>; // Allow functional updates
-    formData: ApplicationForm;
+
+interface FormStepContextValue {
+    setActiveStep: React.Dispatch<React.SetStateAction<number>>; // Allow functional updates
+    currentStep: FormStep; // Current step data
+    isFirst: boolean;
+    isLast: boolean;
 }
 
-
-const ApplicationFormContext = React.createContext<ApplicationFormContextValue>({
-    activeSection: 0,
-    
+export const FormStepContext = React.createContext<FormStepContextValue>({
     // Default is a no-op function,
-    setActiveSection: () => { }, 
-    
-    // Default empty form data
-    formData: {
-        name: "",
-        sections: [],
-    }, 
-});
+    setActiveStep: () => { },
 
-export default ApplicationFormContext;
+    // Default empty step data
+    currentStep: {
+        title: "",
+        shortDescription: '',
+        sections: [],
+    },
+
+    isFirst: false,
+    isLast: false,
+});

@@ -3,15 +3,20 @@
  */
 type PrimitiveType = string | number | boolean | null;
 
-export default interface ApplicationForm {
+export interface ApplicationForm {
     name: string;
-    sections: Section[];
+    steps: FormStep[];
 }
 
-export interface Section {
+export interface FormStep {
     title: string;
     shortDescription: string;
-    longDescription: string;
+    sections: FormSection[];
+}
+
+export interface FormSection {
+    title: string;
+    description?: string;
     questions: RootQuestion[];
 }
 
@@ -24,10 +29,11 @@ export interface Question {
     type: string;
     isRequired: boolean;
     value?: PrimitiveType; // OR date?
+    options?: string[]; // For multiselect types
     description?: string;
 }
 
-export interface GridQuestion extends Omit<Question, "type" | "value"> {
+export interface GridQuestion extends Omit<Question, "value"> {
     type: "grid";
     maxRows: number;
     // Only basic Question types allowed here

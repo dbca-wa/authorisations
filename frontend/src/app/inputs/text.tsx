@@ -1,20 +1,13 @@
 import TextField from "@mui/material/TextField";
+import { Question } from "../data/FormData";
 
 
-export default function TextInput({
-    label,
-    isRequired,
-    description,
-}: Readonly<{
-    label: string;
-    isRequired: boolean;
-    description?: string;
-}>) {
+export function TextInput(question : Readonly<Question>) {
     return <TextField
-        label={label}
+        label={question.label}
         // defaultValue="Default Value"
-        helperText={description}
-        required={isRequired}
+        helperText={question.description}
+        required={question.isRequired}
         variant="outlined"
         className="w-full"
     />

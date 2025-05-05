@@ -6,30 +6,30 @@ import StepContent from '@mui/material/StepContent';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { Section } from '@/app/data/FormData';
+import { FormStep } from '@/app/data/FormData';
 
 
-export default function ApplicationSteps({
-    sections, activeSection,
+export function ApplicationSteps({
+    steps, activeStep,
 }: Readonly<{
-    sections: Section[];
-    activeSection: number;
+    steps: FormStep[];
+    activeStep: number;
 }>) {
     return (
         <Box sx={{ maxWidth: 400 }}>
-            <Stepper activeStep={activeSection} orientation="vertical">
-                {sections.map((section, index) => (
-                    <Step key={section.title} expanded={activeSection === index}>
+            <Stepper activeStep={activeStep} orientation="vertical">
+                {steps.map((step, index) => (
+                    <Step key={step.title} expanded={activeStep === index}>
                         <StepLabel>
-                            {section.title}
+                            {step.title}
                         </StepLabel>
                         <StepContent>
-                            <Typography>{section.shortDescription}</Typography>
+                            <Typography>{step.shortDescription}</Typography>
                         </StepContent>
                     </Step>
                 ))}
             </Stepper>
-            {activeSection === sections.length && (
+            {activeStep === steps.length && (
                 <Paper square elevation={0} sx={{ p: 3 }}>
                     <Typography>All steps completed - you&apos;re finished</Typography>
                     <Button
