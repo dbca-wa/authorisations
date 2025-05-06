@@ -8,6 +8,8 @@ import { TextInput } from "@/app/inputs/text";
 import { Box, List, ListItem } from "@mui/material";
 import Button from "@mui/material/Button";
 import React from "react";
+import { TextAreaInput } from "../inputs/textarea";
+import { DateInput } from "../inputs/date";
 
 
 export default function Page() {
@@ -49,21 +51,35 @@ export default function Page() {
                                     if (question.type === "text") {
                                         return (
                                             <ListItem key={index}>
-                                                <TextInput {...question} />
+                                                <TextInput question={question} />
+                                            </ListItem>
+                                        )
+                                    }
+                                    if (question.type === "textarea") {
+                                        return (
+                                            <ListItem key={index}>
+                                                <TextAreaInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "checkbox") {
                                         return (
                                             <ListItem key={index}>
-                                                <CheckboxInput {...question} />
+                                                <CheckboxInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "multiselect") {
                                         return (
                                             <ListItem key={index}>
-                                                <MultiSelectInput {...question} />
+                                                <MultiSelectInput question={question} />
+                                            </ListItem>
+                                        )
+                                    }
+                                    else if (question.type === "date") {
+                                        return (
+                                            <ListItem key={index}>
+                                                <DateInput question={question} />
                                             </ListItem>
                                         )
                                     }
@@ -74,7 +90,6 @@ export default function Page() {
                                             </ListItem>
                                         )
                                     }
-
                                 })}
 
                             </List>

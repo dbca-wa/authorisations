@@ -27,7 +27,7 @@ export type RootQuestion = Question | GridQuestion;
 export interface Question {
     label: string;
     type: string;
-    isRequired: boolean;
+    isRequired?: boolean;
     value?: PrimitiveType; // OR date?
     options?: string[]; // For multiselect types
     description?: string;

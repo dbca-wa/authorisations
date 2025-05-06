@@ -5,6 +5,7 @@ import { Roboto } from 'next/font/google';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '../theme';
 import "./globals.css";
+import L10nProvider from "./l10n";
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -40,7 +41,7 @@ export default function RootLayout({
       >
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            {children}
+            <L10nProvider children={children} />
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

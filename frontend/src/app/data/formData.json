@@ -109,23 +109,19 @@
                         },
                         {
                             "label": "Current Reg 25 Licence (BC Act) Number",
-                            "type": "text",
-                            "isRequired": false
+                            "type": "text"
                         },
                         {
                             "label": "Current Science Project Plan (SPP) Approval Number",
-                            "type": "text",
-                            "isRequired": false
+                            "type": "text"
                         },
                         {
                             "label": "Current Section 40 Authorisation (BC Act) Number",
-                            "type": "text",
-                            "isRequired": false
+                            "type": "text"
                         },
                         {
                             "label": "Current CI competency form is attached or provided < 12 months ago",
-                            "type": "checkbox",
-                            "isRequired": false
+                            "type": "checkbox"
                         }
                     ]
                 },
@@ -136,7 +132,6 @@
                         {
                             "label": "List of project personnel",
                             "type": "grid",
-                            "isRequired": false,
                             "maxRows": 10,
                             "columns": [
                                 {
@@ -147,6 +142,8 @@
                                 {
                                     "label": "Role",
                                     "type": "multiselect",
+                                    "isRequired": true,
+                                    "description": "Role in the project",
                                     "options": [
                                         "Chief Investigator",
                                         "Researcher",
@@ -154,9 +151,7 @@
                                         "Lab Technician",
                                         "Veterinarian",
                                         "Other"
-                                    ],
-                                    "isRequired": true,
-                                    "description": "Role in the project"
+                                    ]
                                 },
                                 {
                                     "label": "Experience",
@@ -167,7 +162,6 @@
                                 {
                                     "label": "Training",
                                     "type": "checkbox",
-                                    "isRequired": false,
                                     "description": "Is this person training under supervision?"
                                 }
                             ],
@@ -193,6 +187,146 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "title": "Other Institutions",
+                    "questions": [
+                        {
+                            "label": "Are any other institutions or their staff involved in aspects of this project?",
+                            "type": "checkbox"
+                        },
+                        {
+                            "label": "Name of institution",
+                            "type": "text"
+                        },
+                        {
+                            "label": "AEC Approval number",
+                            "type": "text"
+                        },
+                        {
+                            "label": "Detail other institutions involvement in the project",
+                            "type": "textarea"
+                        }
+                    ]
+                },
+                {
+                    "title": "Project Timeframes",
+                    "questions": [
+                        {
+                            "label": "Start date",
+                            "type": "date"
+                        },
+                        {
+                            "label": "End date",
+                            "type": "date"
+                        }
+                    ]
+                },
+                {
+                    "title": "Project Resources",
+                    "description": "... additional description about project resources and / or more explanation ...",
+                    "questions": [
+                        {
+                            "label": "I confirm that adequate resources are available to ensure that the project is conducted according to the project approval, conditions and animal welfare is not compromised.",
+                            "type": "checkbox"
+                        },
+                        {
+                            "label": "Anticipated funding issues",
+                            "type": "textarea",
+                            "description": "Please identify any shortfalls or anticipated issues with resources"
+                        },
+                        {
+                            "label": "Other resources",
+                            "type": "textarea",
+                            "description": "If funding is not sourced 100% from your institution, please identify other sources."
+                        }
+                    ]
+                },
+                {
+                    "title": "Project Location",
+                    "description": "Please describe the detailed information about the each location that the project is planning to operate.",
+                    "questions": [
+                        {
+                            "label": "Location of fieldwork",
+                            "type": "text"
+                        },
+                        {
+                            "label": "Source of animals",
+                            "type": "text"
+                        },
+                        {
+                            "label": "Location(s) where the animals will be held",
+                            "type": "text"
+                        }
+                    ]
+                },
+                {
+                    "title": "Collecting Specimens",
+                    "description": "If this project is collecting voucher specimens or monitoring in poorly represented areas.",
+                    "questions": [
+                        {
+                            "label": "This project is not collecting voucher specimens or monitoring in poorly represented areas.",
+                            "type": "checkbox"
+                        },
+                        {
+                            "label": "WA Museum / Biogeography Program / Fauna Geneticist been consulted?",
+                            "type": "checkbox"
+                        }
+                    ]
+                },
+                {
+                    "title": "Benefits of Project",
+                    "description": "Identify the benefits of the project outcomes and evidence that supports the use of animals.",
+                    "questions": [
+                        {
+                            "label": "Purpose of the proposed project",
+                            "type": "multiselect",
+                            "options": [
+                                "Animal management",
+                                "Animal production",
+                                "Educational outcomes",
+                                "Health and welfare",
+                                "Improve understanding",
+                                "Natural environment"
+                            ]
+                        },
+                        {
+                            "label": "Key aims / objectives",
+                            "type": "grid",
+                            "maxRows": 5,
+                            "columns": [
+                                {
+                                    "label": "Objective",
+                                    "type": "text"
+                                }
+                            ],
+                            "values": [
+                                [
+                                    "Undestand seasonal migration"
+                                ],
+                                [
+                                    "Support threatened species"
+                                ]
+                            ]
+                        },
+                        {
+                            "label": "Explain the relevance, benefits and the justification for the project",
+                            "type": "textarea",
+                            "description": "Applicants must demonstrate that the benefits of undertaking the project are justified in relation to the potential impact on animals, e.g How will your project contribute to the conservation of wildlife? How will it improve knowledge and understanding of biodiversity, ecosystems and processes?"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Study Design & Methodology",
+            "shortDescription": "Project design, methodology and sampling times.",
+            "sections": [
+                {
+                    "title": "Overall Design",
+                    "description": "Please provide a description of the overall project design, methodology and sampling times.",
+                    "questions": []
+
                 }
             ]
         }

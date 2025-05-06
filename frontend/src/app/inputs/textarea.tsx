@@ -1,8 +1,7 @@
-import TextField from "@mui/material/TextField";
 import { Question } from "../data/FormData";
+import TextField from "@mui/material/TextField";
 
-
-export function TextInput({
+export function TextAreaInput({
     question,
 } : {
     question: Readonly<Question>
@@ -14,5 +13,9 @@ export function TextInput({
         required={question.isRequired}
         variant="outlined"
         className="w-full"
+        // Textarea specific props
+        multiline
+        minRows={3}
+        maxRows={6}
     />
 }
