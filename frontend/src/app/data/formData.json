@@ -141,7 +141,7 @@
                                 },
                                 {
                                     "label": "Role",
-                                    "type": "multiselect",
+                                    "type": "select",
                                     "isRequired": true,
                                     "description": "Role in the project",
                                     "options": [
@@ -280,7 +280,7 @@
                     "questions": [
                         {
                             "label": "Purpose of the proposed project",
-                            "type": "multiselect",
+                            "type": "select",
                             "options": [
                                 "Animal management",
                                 "Animal production",
@@ -324,9 +324,496 @@
             "sections": [
                 {
                     "title": "Overall Design",
-                    "description": "Please provide a description of the overall project design, methodology and sampling times.",
-                    "questions": []
-
+                    "description": "Please provide a description of the overall project design, methodology and sampling times.\n\nExample: \n•\tThis project will use a 20km transect of 50 small baited cage traps, at 200m intervals, to target medium-sized mammals. \n•\tThe project will also use a grid of 16 pitfall traps, 8 funnel traps, and 8 Elliott traps to target small mammals, reptiles and amphibians. The grid will have four lines of four pitfall buckets with two funnel traps per line, and one Elliott trap at each end of the four pitfall lines.  \n•\tThe project involves trapping at three sites, which will be monitored once per year for each site, and traps will be run for four consecutive nights.\n•\tIt is anticipated that it will take project personnel approximately xx hours to complete trap checking and processing of captures.\n",
+                    "questions": [
+                        {
+                            "label": "Project design description",
+                            "type": "textarea",
+                            "description": "i.e. site locations, number of sites, trap types, numbers of traps, spacing/configuration, frequency and timing of monitoring."
+                        },
+                        {
+                            "label": "Species and number of individuals that will be handled or observed",
+                            "type": "grid",
+                            "description": "Please use current taxonomy from the NOMOS - taxonomic names management system.",
+                            "columns": [
+                                {
+                                    "label": "Scientific name",
+                                    "type": "text",
+                                    "description": "Include subspecies"
+                                },
+                                {
+                                    "label": "Common name",
+                                    "type": "text"
+                                },
+                                {
+                                    "label": "Total animals",
+                                    "type": "number",
+                                    "description": "Total number of animals to be handled (or observed) during the project time frame as indicated in Q7."
+                                },
+                                {
+                                    "label": "Marking method",
+                                    "type": "select",
+                                    "options": [
+                                        "Ear punch or notch",
+                                        "Ear tag",
+                                        "Pit tag / microchip",
+                                        "Temporary marking",
+                                        "Tail tip",
+                                        "Scale clip",
+                                        "Leg band",
+                                        "Blood sample",
+                                        "Toe clip",
+                                        "Flipper tag",
+                                        "Biopsy pole / harpoon",
+                                        "Skin off / scraping",
+                                        "Flipper biopsy",
+                                        "Cloacal swab",
+                                        "Scute notch",
+                                        "Feather / down removal",
+                                        "Other"
+                                    ]
+                                }
+                            ],
+                            "values": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Replacement, Reduction & Refinement",
+            "shortDescription": "Minimise the welfare impact on animals.",
+            "sections": [
+                {
+                    "title": "Replacement of Methods / Techniques / Equipment",
+                    "description": "Refer Clauses 1.18, 1.19, 1.20 \n\nMethods that replace or partially replace the use of animals must be investigated, considered and, where applicable, implemented to minimise welfare impacts. (Refer clauses 1.18, 1.19, 1.20). \n\nSection 3.3 (3.3.33-3.3.44) Wildlife and field techniques\n\nThe wellbeing of wildlife must be supported and safeguarded by using methods, techniques and equipment that are appropriate and avoid or minimise harm including pain and distress to target and non-target species.",
+                    "questions": [
+                        {
+                            "label": "Alternative LESS INVASIVE OR LOWER IMPACT TECHNIQUES, that would provide comparable data to answer the objectives of this project, ARE AVAILABLE.",
+                            "type": "checkbox"
+                        },
+                        {
+                            "label": "The handling or observation of animals in their natural environment is necessary to achieve the objective(s) of this project.  I have investigated and considered alternative options in relation to methods, techniques and equipment that minimise the risk to animal welfare (including disease and direct and indirect disturbance to the habitat).  I have identified that there are no suitable or more appropriate alternatives to achieve the objectives of this project.",
+                            "type": "checkbox"
+                        },
+                        {
+                            "label": "Why the available methods are not suitable?",
+                            "type": "textarea",
+                            "description": "Less invasive/lower impact methods are available - please identify the techniques and explain why they are not suitable for the project."
+                        }
+                    ]
+                },
+                {
+                    "title": "Reduction of Numbers and/or Effort",
+                    "description": "Refer clauses 1.21 to 1.27 \n\nMinimise the number of animals used while ensuring good statistical and experimental design.\n\nSection 3.3 (3.3.33-3.3.44) Wildlife and field techniques.",
+                    "questions": [
+                        {
+                            "label": "Explain the necessity for the number of animals to be handled.",
+                            "type": "textarea",
+                            "description": "Explain how the number of animals to be handled or observed and/or the sampling effort supports the validity of the research. e.g. statistical rigour, training, education. Consider whether the length (number of continuous days’ trapping) and number of survey sessions is appropriate to achieve the outcomes of your project while also minimising the impact on animals."
+                        }
+                    ]
+                },
+                {
+                    "title": "Refinement of Techniques",
+                    "description": "Refer Clauses 1.28, 1.29, 1.30 \n\nSteps must be taken at all times to support and safeguard animal wellbeing. Section 3.3 (3.3.33-3.3.44) Wildlife and field techniques.",
+                    "questions": [
+                        {
+                            "label": "Method of capture / observation",
+                            "description": "Selecting methods that are appropriate to the species & circumstances; avoiding or minimising harm to target and non-target species.",
+                            "type": "grid",
+                            "columns": [
+                                {
+                                    "label": "Method",
+                                    "type": "select",
+                                    "options": [
+                                        "Aerial survey",
+                                        "Cage traps (cleared & closed)",
+                                        "Cage traps (cleared & left open)*",
+                                        "Call broadcast / Playback",
+                                        "Camera traps",
+                                        "Capture by hand",
+                                        "Capture by net",
+                                        "Dry pit traps",
+                                        "Elliot traps (cleared & closed)",
+                                        "Elliot traps (cleared & left open)*",
+                                        "Funnel traps",
+                                        "Ground observation / sighting",
+                                        "Hair tubes",
+                                        "Leg-hold traps (Victor 1.5 padded jaw)",
+                                        "Marine - BRUV",
+                                        "Marine - DOV",
+                                        "Marine - UVC",
+                                        "Mist net",
+                                        "Sand pads / track searches",
+                                        "Scat searches",
+                                        "Soft cage traps (cleared & closed)",
+                                        "Soft cage traps (cleared & left open)*",
+                                        "Spotlighting",
+                                        "Wet pit traps",
+                                        "Other"
+                                    ]
+                                },
+                                {
+                                    "label": "Welfare risks and mitigation measures",
+                                    "type": "text"
+                                }
+                            ],
+                            "values": []
+                        },
+                        {
+                            "label": "Timing and frequency of trap checking",
+                            "description": "Identify the timing and frequency of trap checking and provide justification where these differ from the SOPs.",
+                            "type": "textarea"
+                        },
+                        {
+                            "label": "Other methods",
+                            "description": "Including VHF/GPS/Satellite collars or tags; Vouchering",
+                            "type": "grid",
+                            "columns": [
+                                {
+                                    "label": "Method",
+                                    "type": "select",
+                                    "options": [
+                                        "GPS / Satellite collar",
+                                        "VHF collar",
+                                        "Carapace mounted transmitter",
+                                        "Feather mounted transmitter",
+                                        "Harness mounted transmitter",
+                                        "Implant transmitter",
+                                        "Tail mounted transmitter",
+                                        "Other method",
+                                        "Vouchering"
+                                    ]
+                                }
+                            ],
+                            "values": []
+                        },
+                        {
+                            "label": "Transmitter specifications",
+                            "type": "text",
+                            "description": "Type, weight, minimum battery life, release mechanism"
+                        },
+                        {
+                            "label": "Transmitters length of time",
+                            "type": "text",
+                            "description": "Length of time transmitters will be left on or checked for replacement."
+                        },
+                        {
+                            "label": "Re-trapping",
+                            "type": "text",
+                            "description": "Explain how animals will be re-trapped to check, replace or remove transmitters."
+                        },
+                        {
+                            "label": "Method of marking / sampling",
+                            "type": "grid",
+                            "columns": [
+                                {
+                                    "label": "Method",
+                                    "type": "select",
+                                    "options": [
+                                        "Temporary marking",
+                                        "Pit tag / microchip",
+                                        "Ear tag",
+                                        "Ear notch (marking + tissue)",
+                                        "Ear notch (tissue only)",
+                                        "Tail tip",
+                                        "Scale clip",
+                                        "Leg band",
+                                        "Blood sample",
+                                        "Toe clip",
+                                        "Flipper tag",
+                                        "Biopsy pole / harpoon",
+                                        "Skin off / scraping",
+                                        "Flipper biopsy",
+                                        "Cloacal swab",
+                                        "Scute notch",
+                                        "Feather / down removal",
+                                        "Other"
+                                    ]
+                                },
+                                {
+                                    "label": "Species and number of animals to be marked",
+                                    "type": "number",
+                                    "description": "You can refer to the Species Table if all the information is contained in the Table."
+                                },
+                                {
+                                    "label": "Welfare risks and mitigation measures",
+                                    "type": "text"
+                                }
+                            ],
+                            "values": []
+                        },
+                        {
+                            "label": "Detail surgical invasive procedures to be carried out on animals (if applicable)",
+                            "type": "textarea"
+                        },
+                        {
+                            "label": "Describe pain management plans for surgery (if applicable)",
+                            "type": "textarea"
+                        },
+                        {
+                            "label": "Further measures",
+                            "type": "textarea",
+                            "description": "Identify any further measures that will refine your methods to improve animal welfare outcomes."
+                        },
+                        {
+                            "label": "Animal handling timeline",
+                            "type": "textarea",
+                            "description": "Brief description and expected timeline from start to finish for animal handling. e.g. animals will be removed from trap, morphometrics taken and released at point of capture. On average handling time will be no more than 5 minutes per individual."
+                        },
+                        {
+                            "label": "Describe transport and/or housing of animals (if applicable)",
+                            "type": "textarea"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Adverse Events",
+            "shortDescription": "Unexpected adverse events & euthanasia.",
+            "sections": [
+                {
+                    "title": "Adverse events",
+                    "description": "Unexpected adverse event: an event that may have a negative impact on the wellbeing of animals and was not foreshadowed in the approved project or activity.",
+                    "questions": [
+                        {
+                            "label": "Identify key strategies and measures to assess, monitor and manage animal wellbeing, including expected and unexpected adverse events.",
+                            "description": "This section should explain how you will monitor animal welfare and manage impacts including signs of elevated stress, ejected pouch young and unexpected injuries. Include details, where appropriate, on the decision-making steps that project personnel will take regarding adverse events. Include your Euthanasia Plan: briefly outline the decision-making process for determining when an animal should be humanely killed, and any arrangements for euthanasia and/or post mortem examination.",
+                            "type": "textarea"
+                        },
+                        {
+                            "label": "Pest species",
+                            "description": "If pest species (e.g. wild dog, fox, cat, rabbit, black rat, house house) are target or potential non-target species, please identify how you intend to manage these species (eg release at point of capture, euthanase).",
+                            "type": "textarea"
+                        },
+                        {
+                            "label": "Expected adverse events",
+                            "description": "If you expect to have some adverse events (e.g. predation events, pouch young deaths), please try to provide an estimate of the likely numbers for each type of event.",
+                            "type": "textarea"
+                        }
+                    ]
+                },
+                {
+                    "title": "Humane Killing (Euthanasia)",
+                    "description": "Euthanasia: the method and procedures for euthanasia must be humane and appropriate to the species and circumstances.\n\nSection 3.3 (3.3.45-3.3.46) Humane killing\n\nThe methods and procedures must produce rapid loss of consciousness until death, be appropriate to the species, age, developmental stage and health of the animal, be reliable, be done in an environment away from other animals, ensure that death is established before disposal of the carcass.",
+                    "questions": [
+                        {
+                            "label": "Methods for euthanasia",
+                            "description": "Identify method(s) in table below. If the method is species specific, please use the last (blank) column to identify the species, group of species etc to which this method will be applied.",
+                            "type": "grid",
+                            "columns": [
+                                {
+                                    "label": "Method",
+                                    "type": "select",
+                                    "options": [
+                                        "Benzocaine gel",
+                                        "Blunt force trauma",
+                                        "Cervical dislocation",
+                                        "Captive bolt device",
+                                        "Carbon dioxide asphyxiation",
+                                        "Decapitation",
+                                        "Eugenol (clove oil)",
+                                        "Ice slurry",
+                                        "Pentobarbitone injection",
+                                        "Pithing",
+                                        "Shooting via firearm"
+                                    ]
+                                },
+                                {
+                                    "label": "Preference",
+                                    "type": "select",
+                                    "options": [
+                                        "Preferred primary method",
+                                        "Secondary method",
+                                        "Other method(s)"
+                                    ]
+                                }
+                            ],
+                            "values": []
+                        },
+                        {
+                            "label": "Identify the criteria that project personnel will use to confirm death",
+                            "type": "text"
+                        },
+                        {
+                            "label": "Additional information (please include firearms licence # if appropriate)",
+                            "type": "textarea"
+                        }
+                    ]
+                },
+                {
+                    "title": "Additional Information",
+                    "questions": [
+                        {
+                            "label": "Any additional information in relation to euthanasia and/or adverse events",
+                            "type": "textarea"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Substances",
+            "shortDescription": "Including sedatives, vitamin injections, drugs or poisons.",
+            "sections": [
+                {
+                    "title": "Administered Substances",
+                    "questions": [
+                        {
+                            "label": "List ANY administered substances, including sedatives, vitamin injections and substances to be used",
+                            "type": "grid",
+                            "columns": [
+                                {
+                                    "label": "Name of Substance",
+                                    "type": "select",
+                                    "options": [
+                                        "Adrenaline",
+                                        "Atropine",
+                                        "Azaperone",
+                                        "Cyanide",
+                                        "Diazepam",
+                                        "Euthatal",
+                                        "Flumazenil",
+                                        "Forthane",
+                                        "Halothane",
+                                        "Isofluorane",
+                                        "Itraconazole",
+                                        "Ivomec",
+                                        "Ketamine",
+                                        "Novacaine",
+                                        "Pentobarbitone",
+                                        "Rhodamine B",
+                                        "Rimadyl",
+                                        "Sodium Fluoroacetate",
+                                        "Xylazine",
+                                        "Zoletil",
+                                        "Other"
+                                    ]
+                                },
+                                {
+                                    "label": "Name (if not in list)",
+                                    "type": "text"
+                                },
+                                {
+                                    "label": "Active ingredient(s)",
+                                    "type": "text"
+                                },
+                                {
+                                    "label": "Action",
+                                    "type": "select",
+                                    "options": [
+                                        "Anaesthesia",
+                                        "Sedation",
+                                        "Analgesia",
+                                        "Euthanasia",
+                                        "Other"
+                                    ]
+                                },
+                                {
+                                    "label": "Route",
+                                    "type": "select",
+                                    "options": [
+                                        "Intracardiac injection",
+                                        "Intramuscular injection",
+                                        "Intraperitoneal injection",
+                                        "Intravenous injection",
+                                        "Subcutaneous injection",
+                                        "Inhalation",
+                                        "Oral",
+                                        "Topical",
+                                        "Other"
+                                    ]
+                                }
+                            ],
+                            "values": []
+                        }
+                    ]
+                },
+                {
+                    "title": "Drug Dose Calculations",
+                    "questions": [
+                        {
+                            "label": "Please complete all calculations for all injectables",
+                            "type": "grid",
+                            "columns": [
+                                {
+                                    "label": "Drug dose (mg/kg) = A",
+                                    "type": "number"
+                                },
+                                {
+                                    "label": "Drug concentration (mg/mL) = B",
+                                    "type": "number"
+                                },
+                                {
+                                    "label": "Drug dose (mL/kg) = A ÷ B",
+                                    "type": "number"
+                                },
+                                {
+                                    "label": "Dept. Health Poison Permit No.",
+                                    "type": "text"
+                                },
+                                {
+                                    "label": "Permit holder",
+                                    "type": "text"
+                                },
+                                {
+                                    "label": "Poison Permit expiry date",
+                                    "type": "date"
+                                }
+                            ],
+                            "values": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Additional Information",
+            "shortDescription": "Post fieldwork & other info",
+            "sections": [
+                {
+                    "title": "Post Fieldwork",
+                    "description": "Describe provisions that will be made for the animals at the conclusion of fieldwork/experiment?",
+                    "questions": [
+                        {
+                            "label": "List of provisions",
+                            "type": "grid",
+                            "columns": [
+                                {
+                                    "label": "Provision",
+                                    "type": "select",
+                                    "options": [
+                                        "Vouchered",
+                                        "Deep burial",
+                                        "Incinerated",
+                                        "Release on site",
+                                        "Held at captive facility"
+                                    ]
+                                },
+                                {
+                                    "label": "Preference",
+                                    "type": "select",
+                                    "options": [
+                                        "Preferred primary",
+                                        "Secondary",
+                                        "Other"
+                                    ]
+                                }
+                            ],
+                            "values": []
+                        }
+                    ]
+                },
+                {
+                    "title": "References & Sources",
+                    "questions": [
+                        {
+                            "label": "References/sources used to prepare this application",
+                            "type": "textarea"
+                        }
+                    ]
                 }
             ]
         }

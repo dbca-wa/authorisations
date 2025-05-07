@@ -28,8 +28,8 @@ export interface Question {
     label: string;
     type: string;
     isRequired?: boolean;
-    value?: PrimitiveType; // OR date?
-    options?: string[]; // For multiselect types
+    value?: PrimitiveType; // date as string?
+    options?: string[]; // For select types
     description?: string;
 }
 

@@ -2,7 +2,7 @@ import { Question } from "@/app/data/FormData";
 import { FormControl, InputLabel, MenuItem } from "@mui/material";
 import Select from "@mui/material/Select";
 
-export function MultiSelectInput({
+export function SelectInput({
     question,
 }: {
     question: Readonly<Question>

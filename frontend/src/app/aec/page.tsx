@@ -3,7 +3,7 @@ import { FormStepContext } from "@/app/context/FormContext";
 import { GridQuestion } from "@/app/data/FormData";
 import { CheckboxInput } from "@/app/inputs/checkbox";
 import { GridInput } from "@/app/inputs/grid";
-import { MultiSelectInput } from "@/app/inputs/multiselect";
+import { SelectInput } from "@/app/inputs/select";
 import { TextInput } from "@/app/inputs/text";
 import { Box, List, ListItem } from "@mui/material";
 import Button from "@mui/material/Button";
@@ -50,42 +50,42 @@ export default function Page() {
                                 {section.questions.map((question, index) => {
                                     if (question.type === "text") {
                                         return (
-                                            <ListItem key={index}>
+                                            <ListItem key={index} className="mb-2">
                                                 <TextInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     if (question.type === "textarea") {
                                         return (
-                                            <ListItem key={index}>
+                                            <ListItem key={index} className="mb-6">
                                                 <TextAreaInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "checkbox") {
                                         return (
-                                            <ListItem key={index}>
+                                            <ListItem key={index} className="mb-1">
                                                 <CheckboxInput question={question} />
                                             </ListItem>
                                         )
                                     }
-                                    else if (question.type === "multiselect") {
+                                    else if (question.type === "select") {
                                         return (
-                                            <ListItem key={index}>
-                                                <MultiSelectInput question={question} />
+                                            <ListItem key={index} className="mb-6">
+                                                <SelectInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "date") {
                                         return (
-                                            <ListItem key={index}>
+                                            <ListItem key={index} className="mb-4">
                                                 <DateInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "grid") {
                                         return (
-                                            <ListItem key={index}>
+                                            <ListItem key={index} className="mb-8">
                                                 <GridInput {...question as GridQuestion} />
                                             </ListItem>
                                         )

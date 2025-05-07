@@ -97,7 +97,7 @@ export function GridInput(question : Readonly<GridQuestion>) {
 
     return (
         <div className="w-full">
-            <Typography variant="h5">{question.label}</Typography>
+            <Typography variant="h6">{question.label}</Typography>
             <p>{question.description}</p>
 
             <DataGrid
@@ -153,12 +153,12 @@ function getHeaders({
             case "checkbox":
                 columnType = "boolean";
                 break;
-            case "multiselect":
+            case "select":
                 columnType = "singleSelect";
                 break;
-            // case "date":
-            //     columnType = "date";
-            //     break;
+            case "date":
+                columnType = "date";
+                break;
             default:
                 columnType = "string";
         }
