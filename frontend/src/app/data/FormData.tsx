@@ -1,7 +1,7 @@
 /**
  * ApplicationForm interface represents the structure of an application form.
  */
-type PrimitiveType = string | number | boolean | null;
+export type PrimitiveType = string | number | boolean | null;
 
 export interface ApplicationForm {
     name: string;

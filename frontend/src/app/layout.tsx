@@ -41,7 +41,7 @@ export default function RootLayout({
       >
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            <L10nProvider children={children} />
+            <L10nProvider>{children}</L10nProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

@@ -1,4 +1,4 @@
-import { GridQuestion } from "@/app/data/FormData";
+import { PrimitiveType, GridQuestion } from "@/app/data/FormData";
 import AddIcon from '@mui/icons-material/Add';
 import CancelIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,7 +31,7 @@ declare module '@mui/x-data-grid' {
         setRowModesModel: (
             newModel: (oldModel: GridRowModesModel) => GridRowModesModel,
         ) => void;
-        emptyRow: { [key: string]: any };
+        emptyRow: { [key: string]: PrimitiveType };
     }
 }
 
@@ -203,7 +203,7 @@ function getHeaders({
 
 function getInitialRows(question: GridQuestion) {
     const rows = question.values.map((value, _) => {
-        const row: { [key: string]: any } = {};
+        const row: { [key: string]: PrimitiveType } = {};
         // Unique ID for each row
         row['id'] = uuidv6();
 
@@ -220,7 +220,7 @@ function getInitialRows(question: GridQuestion) {
 }
 
 function getEmptyRow(question: GridQuestion) {
-    const row: { [key: string]: any } = {};
+    const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
     question.columns.forEach((column, _) => {
         row[column.label] = '';
@@ -247,11 +247,13 @@ function getEditActions({
     if (isInEditMode) {
         return [
             <GridActionsCellItem
+                key={`${id}-save`}
                 icon={<SaveIcon />}
                 label="Save"
                 onClick={handleSaveClick(id)}
             />,
             <GridActionsCellItem
+                key={`${id}-cancel`}
                 icon={<CancelIcon />}
                 label="Cancel"
                 className="textPrimary"
@@ -263,6 +265,7 @@ function getEditActions({
 
     return [
         <GridActionsCellItem
+            key={`${id}-edit`}
             icon={<EditIcon />}
             label="Edit"
             className="textPrimary"
@@ -270,6 +273,7 @@ function getEditActions({
             color="inherit"
         />,
         <GridActionsCellItem
+            key={`${id}-delete`}
             icon={<DeleteIcon />}
             label="Delete"
             onClick={handleDeleteClick(id)}

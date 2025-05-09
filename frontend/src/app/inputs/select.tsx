@@ -16,7 +16,7 @@ export function SelectInput({
             >
                 {question.options?.map((option) => {
                     return (
-                        <MenuItem value={option}>
+                        <MenuItem key={option} value={option}>
                             {option}
                         </MenuItem>
                     )

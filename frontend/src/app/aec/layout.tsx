@@ -10,7 +10,9 @@ import { FormStepContext } from '../context/FormContext';
 import { ApplicationForm } from '../data/FormData';
 import { ApplicationSteps } from './steps';
 
-const formData: ApplicationForm = require('@/app/data/formData.json');
+import untypedFormData from '@/app/data/formData.json';
+const formData: ApplicationForm = untypedFormData;
+
 const drawerWidth = 320;
 const useStyles = makeStyles({
     drawerPaper: {
