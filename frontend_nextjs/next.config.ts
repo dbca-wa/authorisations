@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   output: 'export',
 
   // Base path for static exporting
-  basePath: '/dbca-authorisations',
+  // basePath: '/dbca-authorisations',
 };
 
 export default nextConfig;

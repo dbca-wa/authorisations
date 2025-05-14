@@ -1,5 +1,5 @@
 // router.tsx with error handling
-import { createBrowserRouter, redirect } from "react-router";
+import { createBrowserRouter } from "react-router";
 import App from "./App";
 
 // Layouts
