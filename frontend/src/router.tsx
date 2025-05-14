@@ -3,6 +3,7 @@ import { createBrowserRouter, redirect } from "react-router";
 import App from "./App";
 
 // Layouts
+import { MainLayout } from "./components/layout/MainLayout";
 // import AuthLayout from "@/components/layout/AuthLayout";
 // import MainLayout from "@/components/layout/MainLayout";
 
@@ -20,7 +21,7 @@ import App from "./App";
 // import { getAuthStore } from "./stores/storeUtils";
 
 // Error component
-// import ErrorPage from "./components/ErrorPage";
+import ErrorPage from "./components/ErrorPage";
 
 // Guards
 // const authGuard = () => {
@@ -55,11 +56,12 @@ import App from "./App";
 export const router = createBrowserRouter([
 	{
 		path: "/",
+		errorElement: <ErrorPage />,
 		Component: App,
 	},
 	{
 		path: "/aec",
-		element: <div>Hello World</div>,
+		Component: MainLayout,
 	},
 	// {
 	// 	path: "/",
