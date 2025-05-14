@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'authorisations.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
@@ -66,7 +66,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'authorisations.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database
@@ -78,7 +78,7 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '5432',
         'NAME': 'authorisations',
-        'USER': 'dbuser',
+        'USER': 'authorisations_user',
         'PASSWORD': 'p@ssword',
         # 'OPTIONS': {
         #     "service": "my_service",
@@ -123,6 +123,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATIC_ROOT = BASE_DIR / "static"
+
+# print(BASE_DIR)
+STATICFILES_DIRS = [
+    BASE_DIR / "staticfiles",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
