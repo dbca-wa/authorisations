@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -66,25 +66,25 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-        'NAME': 'authorisations',
-        'USER': 'authorisations_user',
-        'PASSWORD': 'p@ssword',
-        # 'OPTIONS': {
-        #     "service": "my_service",
-        #     "passfile": ".my_pgpass",
-        # },
-    }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'HOST': '127.0.0.1',
+    #     'PORT': '5432',
+    #     'NAME': 'authorisations',
+    #     'USER': 'authorisations_user',
+    #     'PASSWORD': 'p@ssword',
+    #     # 'OPTIONS': {
+    #     #     "service": "my_service",
+    #     #     "passfile": ".my_pgpass",
+    #     # },
+    # }
 }
 
 

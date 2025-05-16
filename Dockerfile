@@ -22,7 +22,7 @@ FROM python:3.13.3 AS builder_backend
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV TZ="Australia/Perth"
-
+ENV PYTHONPATH=/app
 
 # Install system dependencies
 RUN apt-get clean
@@ -30,27 +30,10 @@ RUN apt-get update
 RUN apt-get upgrade -y
 RUN apt-get install --no-install-recommends -y curl wget gcc tzdata
 
-
 # Install Poetry
 RUN pip install --upgrade pip
 RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 -
 ENV PATH="${PATH}:/etc/poetry/bin"
-
-# Set working directory
-WORKDIR /app
-
-# Move local files to container
-COPY backend/* /app/
-
-# Copy the frontend production build here
-COPY --from=builder_frontend /client/dist/ /app/staticfiles/
-
-# Install dependencies with Poetry
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-root
-
-# Collect static
-RUN python manage.py collectstatic --noinput
 
 # Create a non-root user to run the app
 ARG UID=10001
@@ -58,12 +41,30 @@ ARG GID=10001
 RUN groupadd -g "${GID}" appuser \
     && useradd --create-home --home-dir /home/appuser --no-log-init --uid "${UID}" --gid "${GID}" appuser
 
+# Set working directory
+WORKDIR /app
+
+# Move local files to container
+COPY backend/. /app
+
+# Copy the frontend production build here
+COPY --from=builder_frontend /client/dist/ /app/staticfiles/
+
 # /app folder ownership
 RUN chown -R ${UID}:${GID} /app
-RUN chmod +x /app/entrypoint.sh
 
 # Switch to non-root user
-USER ${UID}
+USER appuser
+
+# Install dependencies with Poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-root
+
+
+# ENTRYPOINT ["python", "sleep.py"]
+
+# Collect static
+RUN python manage.py collectstatic --noinput
 
 # Expose django app on port 8080
 EXPOSE 8080
