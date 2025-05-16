@@ -3,7 +3,7 @@ FROM oven/bun:1.2.13-slim AS builder_frontend
 
 # Copy the entire frontend folder
 WORKDIR /client
-COPY frontend /client/
+COPY frontend/. /client
 
 # Install dependencies, including devDependencies needed for the build process (no --omit=dev)
 # RUN npm install
@@ -30,6 +30,7 @@ RUN apt-get update
 RUN apt-get upgrade -y
 RUN apt-get install --no-install-recommends -y curl wget gcc tzdata
 
+
 # Install Poetry
 RUN pip install --upgrade pip
 RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 -
@@ -40,6 +41,7 @@ ARG UID=10001
 ARG GID=10001
 RUN groupadd -g "${GID}" appuser \
     && useradd --create-home --home-dir /home/appuser --no-log-init --uid "${UID}" --gid "${GID}" appuser
+RUN echo 'alias ls="ls -lah --color=auto"' >> /home/appuser/.bash_aliases
 
 # Set working directory
 WORKDIR /app
