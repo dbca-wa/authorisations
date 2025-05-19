@@ -20,6 +20,7 @@ from home import home_page
 
 urlpatterns = [
     path("", home_page),
+    path("a/", include("applications.urls")),
     path("dbnow/", include("dbnow.urls")),
     path('admin/', admin.site.urls),
 ]

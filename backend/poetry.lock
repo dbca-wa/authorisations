@@ -37,6 +37,24 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-vite"
+version = "3.1.0"
+description = "Integration of Vite in a Django project."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "django_vite-3.1.0-py3-none-any.whl", hash = "sha256:4e46572bd6b1ce70784be129205dc2ffcbc7a3c19fea50bebfb72b327bbde5fc"},
+    {file = "django_vite-3.1.0.tar.gz", hash = "sha256:8b4ffe4a9fa81ff568bfb195e74dde8694aaf13fd4b656ae60bf59cce08b85e8"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+
+[package.extras]
+dev = ["black"]
+
+[[package]]
 name = "gunicorn"
 version = "23.0.0"
 description = "WSGI HTTP Server for UNIX"
@@ -125,4 +143,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "b271e0f46a906816a3f7cda7a2241831f847ac4dac0cb3a204e0fcf00102b5e9"
+content-hash = "dff7851aa36e215007e52dfb144a8c7cffbb86c420ce7f090b7621267cddeac5"
