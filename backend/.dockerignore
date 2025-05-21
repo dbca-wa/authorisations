@@ -95,6 +95,8 @@ venv/
 */*/*.swp
 */*/*/*.swp
 
-
-# Django collect static folder
+# Django collected static folder
 static
+
+# Frontend generated assets - to be collected from
+assets

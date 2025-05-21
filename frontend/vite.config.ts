@@ -12,7 +12,7 @@ export default defineConfig({
   ],
   build: {
     manifest: "manifest.json",
-    outDir: resolve("./assets"),
+    outDir: resolve("./dist"),
     rollupOptions: {
       // overwrite default .html entry
       input: 'src/main.tsx',
