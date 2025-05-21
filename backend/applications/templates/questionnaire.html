@@ -1,0 +1,15 @@
+{% load django_vite %}
+<!doctype html>
+<html lang="en">
+  <head>
+      {% vite_react_refresh %}
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      {% vite_hmr_client %}
+      {% vite_asset 'src/main.tsx' %}
+    <title>Django + Vite + React + TS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

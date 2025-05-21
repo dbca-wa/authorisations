@@ -1,6 +1,5 @@
 // router.tsx with error handling
 import { createBrowserRouter } from "react-router";
-import App from "./App";
 
 // Layouts
 import { MainLayout } from "./components/layout/MainLayout";
@@ -55,13 +54,10 @@ import ErrorPage from "./components/ErrorPage";
 
 export const router = createBrowserRouter([
 	{
-		path: "/",
-		errorElement: <ErrorPage />,
-		Component: App,
-	},
-	{
-		path: "/aec",
+		// path: import.meta.env.BASE_URL + "aec",
+		path: "/a/aec",
 		Component: MainLayout,
+		errorElement: <ErrorPage />,
 	},
 	// {
 	// 	path: "/",
