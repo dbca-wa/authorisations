@@ -1,5 +1,5 @@
 # =================== BUILD FRONTEND ===================
-FROM ubuntu:24.04 AS builder_frontend
+FROM ubuntu:24.04 as builder_frontend
 
 # Install system upgrades & dependencies
 RUN apt-get clean
