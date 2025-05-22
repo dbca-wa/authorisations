@@ -34,7 +34,7 @@ stages:
         containerRegistry: DockerGitHub
         repository: ghcr.io/dbca-wa/authorisations
       env:
-        DOCKER_BUILDKIT: 1
+        DOCKER_BUILDKIT: 0
     - task: Docker@2
       displayName: Dev Build image and Push
       inputs:
@@ -46,4 +46,4 @@ stages:
         containerRegistry: DockerGitHub
         repository: ghcr.io/dbca-wa/docker_app_dev
       env:
-        DOCKER_BUILDKIT: 1
+        DOCKER_BUILDKIT: 0
