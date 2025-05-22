@@ -1,5 +1,5 @@
 # =================== BUILD FRONTEND ===================
-FROM ubuntu:24.04 as builder_frontend
+FROM ubuntu:24.04 AS builder_frontend
 
 # Install system upgrades & dependencies
 RUN apt-get clean
@@ -22,7 +22,7 @@ RUN cd /tmp/frontend; npm install; npm run build
 
 
 # =================== BUILD BACKEND ===================
-FROM ubuntu:24.04 AS builder_backend
+FROM builder_frontend AS builder_backend
 
 # # Environment setup
 ENV DEBIAN_FRONTEND=noninteractive
