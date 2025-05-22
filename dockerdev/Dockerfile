@@ -1,5 +1,5 @@
 # Prepare the base environment.
-FROM ghcr.io/dbca-wa/animal-ethics:latest as builder_base_dockerdev
+FROM ghcr.io/dbca-wa/authorisations:latest as builder_base_dockerdev
 USER root
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y patch
