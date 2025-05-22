@@ -1,7 +1,10 @@
 # =================== BUILD FRONTEND ===================
 FROM ubuntu:24.04 AS builder_frontend
+
+# Environment setup
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Australia/Perth
+
 # Install system upgrades & dependencies
 RUN apt-get clean
 RUN apt-get update
@@ -23,11 +26,11 @@ RUN cd /tmp/frontend; npm install; npm run build
 
 
 # =================== BUILD BACKEND ===================
-FROM builder_frontend AS builder_backend
+FROM ubuntu:24.04 AS builder_backend
 
-# # Environment setup
+# Environment setup
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ="Australia/Perth"
+ENV TZ=Australia/Perth
 
 # Install system upgrades & dependencies
 RUN apt-get clean
@@ -58,13 +61,6 @@ COPY backend /app
 # Copy the frontend generated assets
 COPY --from=builder_frontend /tmp/frontend/dist /app/assets
 
-# Install virtualenv & dependencies (within the project folder)
-RUN poetry config virtualenvs.in-project true
-RUN poetry install --no-root --no-interaction --no-ansi
-
-# Collect static (inside the virtualenv)
-RUN poetry run python manage.py collectstatic --noinput
-
 # DBCA default Scripts
 RUN wget https://raw.githubusercontent.com/dbca-wa/wagov_utils/main/wagov_utils/bin/default_script_installer.sh -O /tmp/default_script_installer.sh
 RUN chmod 755 /tmp/default_script_installer.sh
@@ -84,10 +80,18 @@ RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
+WORKDIR /app
+
+# Install virtualenv & dependencies (within the project folder)
+RUN poetry config virtualenvs.in-project true
+RUN poetry install --no-root --no-interaction --no-ansi
 
 # Use the virtualenv python always
 ENV PATH="/app/.venv/bin:${PATH}"
 ENV PYTHONPATH=/app
+
+# Collect static (inside the virtualenv)
+RUN python manage.py collectstatic --noinput
 
 # Expose django app on port 8080
 EXPOSE 8080
