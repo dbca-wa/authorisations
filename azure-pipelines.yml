@@ -32,7 +32,7 @@ stages:
               latest
               $(tagDate)
         containerRegistry: DockerGitHub
-        repository: ghcr.io/dbca-wa/animal-ethics
+        repository: ghcr.io/dbca-wa/authorisations
       env:
         DOCKER_BUILDKIT: 1
     - task: Docker@2
@@ -41,8 +41,8 @@ stages:
         command: buildAndPush
         dockerfile: '$(Build.SourcesDirectory)/dockerdev/Dockerfile'
         tags: |
-              animal_ethics_dev_latest
-              animal_ethics_dev_$(tagDate)
+              authorisations_dev_latest
+              authorisations_dev_$(tagDate)
         containerRegistry: DockerGitHub
         repository: ghcr.io/dbca-wa/docker_app_dev
       env:
