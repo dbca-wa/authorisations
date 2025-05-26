@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -138,6 +139,7 @@ STATIC_ROOT = BASE_DIR / "static"
 # The source of static files to be collected from
 STATICFILES_DIRS = [
     BASE_DIR / "assets",
+    os.path.abspath(os.path.join(BASE_DIR, "../frontend/dist")),
 ]
 
 # Default primary key field type

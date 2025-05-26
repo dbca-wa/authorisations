@@ -1,5 +1,14 @@
-# =================== BUILDER BASE ===================
-FROM ubuntu:24.04 AS builder_base
+# =================== BUILDER FRONTEND ===================
+FROM node:23-alpine AS builder_frontend
+
+# Copy the project into temporary folder for now
+COPY frontend /tmp/frontend/
+
+# Install frontend dependencies & build assets
+RUN cd /tmp/frontend; npm install; npm run build
+
+# =================== BUILDER BACKEND ===================
+FROM python:3.13-slim AS builder_backend
 
 ## Environment setup
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,32 +18,12 @@ ENV TZ=Australia/Perth
 RUN apt-get clean
 RUN apt-get update
 RUN apt-get upgrade -y
-
-# Install with single comment and let apt-get to solve the dependencies.
-RUN apt-get install --no-install-recommends --fix-missing -y \
-    # command-line tools
-    curl wget git htop vim nano sudo mtr coreutils rsyslog \
-    # libraries
-    tzdata libmagic-dev gcc binutils libproj-dev gdal-bin \
-    bzip2 unzip libpq-dev patch pkg-config ca-certificates \
-    # python-psql
-    python3 python3-setuptools python3-dev postgresql-client
-
-RUN apt remove -y libnode-dev
-RUN apt remove -y libnode72
 RUN update-ca-certificates
+RUN apt-get install --no-install-recommends -y curl wget vim htop procps sudo
 
 # Update timezone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-## FRONTEND
-# Install Node.js
-# https://github.com/nodesource/distributions/
-RUN curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
-RUN bash nodesource_setup.sh
-RUN apt-get install --no-install-recommends -y nodejs
-
-## BACKEND
 # Install Poetry
 RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 -
 ENV PATH="${PATH}:/etc/poetry/bin"
@@ -55,24 +44,17 @@ RUN mkdir /app
 RUN chown -R appuser:appuser /app
 
 # =================== RUNTIME ===================
-FROM builder_base
+FROM builder_backend
 
 # Switch to non-root user
 USER appuser
 WORKDIR /app
 
-# Copy backend code base
+# Copy backend source to container
 COPY --chown=appuser:appuser backend /app/
 
-# Copy frontend code base (to a temp directory)
-COPY --chown=appuser:appuser frontend /tmp/frontend/
-
-# Install frontend dependencies & build assets
-RUN cd /tmp/frontend; npm install; npm run build
-
 # Copy frontend built assets before collecting static
-RUN mkdir /app/assets;
-RUN cp -r /tmp/frontend/dist/* /app/assets/
+COPY --from=builder_frontend --chown=appuser:appuser /tmp/frontend/dist /app/assets
 
 # Create virtualenv & install backend dependencies
 # (this will always create the local `.venv` folder as per `poetry.toml` config)

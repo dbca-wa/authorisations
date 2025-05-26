@@ -1,2 +1,5 @@
 # Collected static files
 static
+
+# Frontend generated assets
+assets

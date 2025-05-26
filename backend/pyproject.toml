@@ -3,16 +3,16 @@ name = "authorisations"
 version = "0.1.0"
 description = "Animal Ethics & Section 40/45 approval process"
 authors = [
-    {name = "Serkan Kibritoglu", email = "serkan.kibritoglu@dbca.wa.gov.au"}
+    {name = "Ecoinformatics, BCS", email = "ecoinformatics.admin@dbca.wa.gov.au"}
 ]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "Django (==5.2)",
     "psycopg (>=3.2.6,<4.0.0)",
-    "gunicorn (>=23.0.0,<24.0.0)",
     "django-vite (>=3.1.0,<4.0.0)",
     "whitenoise (>=6.9.0,<7.0.0)",
+    "gunicorn (>=23.0.0,<24.0.0)",
 ]
 
 
