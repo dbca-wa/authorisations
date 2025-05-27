@@ -11,30 +11,65 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialise environment variables
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False),
+    CSRF_COOKIE_SECURE=(bool, True),
+)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ii@(ne$qts_iy94*&vxy-jk%n@q(%0lxep5w2!6&j*ozf(=fow'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = [
     'localhost',
-    'authorisations-uat-internal-oim03.dbca.wa.gov.au',
-    'authorisations.dbca.wa.gov.au',
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+]
+
+ALLOWED_HOST_UAT = env('ALLOWED_HOST_UAT')
+if ALLOWED_HOST_UAT:
+    ALLOWED_HOSTS.append(ALLOWED_HOST_UAT)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{ALLOWED_HOST_UAT}')
+
+ALLOWED_HOST_PROD = env('ALLOWED_HOST_PROD')
+if ALLOWED_HOST_PROD:
+    ALLOWED_HOSTS.append(ALLOWED_HOST_PROD)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{ALLOWED_HOST_PROD}')
+
+# CSRF and Session settings
+CSRF_COOKIE_NAME = env('CSRF_COOKIE_NAME')  # Set custom CSRF cookie name
+
+
+
+if not DEBUG:
+    SESSION_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
+    CSRF_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
+
+    # Ensure SameSite attribute allows cross-site requests if needed
+    CSRF_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SAMESITE = "None"
+    # Secure attribute is also recommended if using HTTPS
+    CSRF_COOKIE_SECURE = env('CSRF_COOKIE_SECURE')
+    SESSION_COOKIE_SECURE = env('CSRF_COOKIE_SECURE')
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django_vite',
     'django.contrib.admin',
@@ -81,18 +116,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'HOST': '127.0.0.1',
-    #     'PORT': '5432',
-    #     'NAME': 'authorisations',
-    #     'USER': 'authorisations_user',
-    #     'PASSWORD': 'p@ssword',
-    #     # 'OPTIONS': {
-    #     #     "service": "my_service",
-    #     #     "passfile": ".my_pgpass",
-    #     # },
-    # }
+    'default': env.db_url(),
 }
 
 
@@ -118,9 +142,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-au'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = env('TIME_ZONE')
 
 USE_I18N = True
 
@@ -136,7 +160,7 @@ STATIC_URL = 'static/'
 # The directory where the collected static files will be served from
 STATIC_ROOT = BASE_DIR / "static"
 
-# The source of static files to be collected from
+# The source of static files when doing collectstatic
 STATICFILES_DIRS = [
     BASE_DIR / "assets",
     os.path.abspath(os.path.join(BASE_DIR, "../frontend/dist")),
