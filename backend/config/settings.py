@@ -22,7 +22,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
-    CSRF_COOKIE_SECURE=(bool, True),
+    SECURE_ONLY=(bool, True),
 )
 
 # Quick-start development settings - unsuitable for production
@@ -52,19 +52,25 @@ if ALLOWED_HOST_PROD:
     ALLOWED_HOSTS.append(ALLOWED_HOST_PROD)
     CSRF_TRUSTED_ORIGINS.append(f'https://{ALLOWED_HOST_PROD}')
 
-# CSRF and Session settings
+# SSL, CSRF and security settings
 CSRF_COOKIE_NAME = env('CSRF_COOKIE_NAME')  # Set custom CSRF cookie name
+# Non-secure redirection cache: 24 hours in production, 1 minute in debug mode
+SECURE_HSTS_SECONDS = 60 if DEBUG else env('SECURE_HSTS_SECONDS', default=3600 * 24) 
 
 if not DEBUG:
-    SESSION_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
-    CSRF_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
+    SESSION_COOKIE_DOMAIN = env('SECURE_DOMAIN')
+    CSRF_COOKIE_DOMAIN = env('SECURE_DOMAIN')
 
     # Ensure SameSite attribute allows cross-site requests if needed
     CSRF_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SAMESITE = "None"
+    
     # Secure attribute is also recommended if using HTTPS
-    CSRF_COOKIE_SECURE = env('CSRF_COOKIE_SECURE')
-    SESSION_COOKIE_SECURE = env('CSRF_COOKIE_SECURE')
+    CSRF_COOKIE_SECURE = env('SECURE_ONLY')
+    SESSION_COOKIE_SECURE = env('SECURE_ONLY')
+    SECURE_SSL_REDIRECT = env('SECURE_ONLY')
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_ONLY')
+    SECURE_HSTS_PRELOAD = env('SECURE_ONLY')
 
 
 # Application definition
