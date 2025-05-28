@@ -55,8 +55,6 @@ if ALLOWED_HOST_PROD:
 # CSRF and Session settings
 CSRF_COOKIE_NAME = env('CSRF_COOKIE_NAME')  # Set custom CSRF cookie name
 
-
-
 if not DEBUG:
     SESSION_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
     CSRF_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
@@ -119,6 +117,11 @@ DATABASES = {
     'default': env.db_url(),
 }
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -163,17 +166,24 @@ STATIC_ROOT = BASE_DIR / "static"
 # The source of static files when doing collectstatic
 STATICFILES_DIRS = [
     BASE_DIR / "assets",
-    os.path.abspath(os.path.join(BASE_DIR, "../frontend/dist")),
 ]
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# Original frontend build directory - doesn't exist in docker environment
+FRONTEND_DIST = Path(os.path.abspath(BASE_DIR / "../frontend/dist"))
+if FRONTEND_DIST.exists():
+    STATICFILES_DIRS.append(FRONTEND_DIST)
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+# Frontend manifest.json path 
+# (to avoid a warning while doing "collectstatic" the first time)
+MANIFEST_PATH = None
+if os.path.exists(FRONTEND_DIST / 'manifest.json'):
+    MANIFEST_PATH = FRONTEND_DIST / 'manifest.json'
+elif os.path.exists(BASE_DIR / 'assets' / 'manifest.json'):
+    MANIFEST_PATH = BASE_DIR / 'assets' / 'manifest.json'
 
 DJANGO_VITE = {
   'default': {
     'dev_mode': DEBUG,
+    'manifest_path':  MANIFEST_PATH,
   }
 }
