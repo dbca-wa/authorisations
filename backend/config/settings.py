@@ -22,7 +22,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
-    SECURE_ONLY=(bool, True),
+    SECURE_HSTS_SECONDS=(int, 3600 * 24),
+    SECURE_ONLY=(bool, False),
 )
 
 # Quick-start development settings - unsuitable for production
@@ -42,35 +43,36 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
 ]
 
-ALLOWED_HOST_UAT = env('ALLOWED_HOST_UAT')
+ALLOWED_HOST_UAT = env('ALLOWED_HOST_UAT', default=None)
 if ALLOWED_HOST_UAT:
     ALLOWED_HOSTS.append(ALLOWED_HOST_UAT)
     CSRF_TRUSTED_ORIGINS.append(f'https://{ALLOWED_HOST_UAT}')
 
-ALLOWED_HOST_PROD = env('ALLOWED_HOST_PROD')
+ALLOWED_HOST_PROD = env('ALLOWED_HOST_PROD', default=None)
 if ALLOWED_HOST_PROD:
     ALLOWED_HOSTS.append(ALLOWED_HOST_PROD)
     CSRF_TRUSTED_ORIGINS.append(f'https://{ALLOWED_HOST_PROD}')
 
 # SSL, CSRF and security settings
-CSRF_COOKIE_NAME = env('CSRF_COOKIE_NAME')  # Set custom CSRF cookie name
-# Non-secure redirection cache: 24 hours in production, 1 minute in debug mode
-SECURE_HSTS_SECONDS = 60 if DEBUG else env('SECURE_HSTS_SECONDS', default=3600 * 24) 
+CSRF_COOKIE_NAME = env('CSRF_COOKIE_NAME', default=None)  # Set custom CSRF cookie name
+# Non-secure redirection cache: 1 minute in debug mode, 24 hours in production
+SECURE_HSTS_SECONDS = 60 if DEBUG else env('SECURE_HSTS_SECONDS') 
 
 if not DEBUG:
-    SESSION_COOKIE_DOMAIN = env('SECURE_DOMAIN')
-    CSRF_COOKIE_DOMAIN = env('SECURE_DOMAIN')
+    SESSION_COOKIE_DOMAIN = env('SECURE_DOMAIN', default=None)
+    CSRF_COOKIE_DOMAIN = env('SECURE_DOMAIN', default=None)
 
     # Ensure SameSite attribute allows cross-site requests if needed
     CSRF_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SAMESITE = "None"
     
     # Secure attribute is also recommended if using HTTPS
-    CSRF_COOKIE_SECURE = env('SECURE_ONLY')
-    SESSION_COOKIE_SECURE = env('SECURE_ONLY')
-    SECURE_SSL_REDIRECT = env('SECURE_ONLY')
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_ONLY')
-    SECURE_HSTS_PRELOAD = env('SECURE_ONLY')
+    SECURE_ONLY = env('SECURE_ONLY')
+    CSRF_COOKIE_SECURE = SECURE_ONLY
+    SESSION_COOKIE_SECURE = SECURE_ONLY
+    SECURE_SSL_REDIRECT = SECURE_ONLY
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_ONLY
+    SECURE_HSTS_PRELOAD = SECURE_ONLY
 
 
 # Application definition
@@ -153,7 +155,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-au'
 
-TIME_ZONE = env('TIME_ZONE')
+TIME_ZONE = env('TIME_ZONE', default='Australia/Perth')
 
 USE_I18N = True
 
