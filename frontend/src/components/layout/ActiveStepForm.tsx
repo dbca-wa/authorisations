@@ -3,10 +3,10 @@ import { Box, List, ListItem } from "@mui/material";
 import Button from "@mui/material/Button";
 import React from "react";
 import { FormStepContext } from "../../context/FormContext";
-import type { GridQuestion } from "../../context/FormTypes";
 import { CheckboxInput } from "../inputs/checkbox";
 import { DateInput } from "../inputs/date";
 import { GridInput } from "../inputs/grid";
+import { NumberInput } from "../inputs/number";
 import { SelectInput } from "../inputs/select";
 import { TextInput } from "../inputs/text";
 import { TextAreaInput } from "../inputs/textarea";
@@ -55,10 +55,17 @@ export function ActiveStepForm() {
                                             </ListItem>
                                         )
                                     }
-                                    if (question.type === "textarea") {
+                                    else if (question.type === "textarea") {
                                         return (
                                             <ListItem key={index} className="mb-6">
                                                 <TextAreaInput question={question} />
+                                            </ListItem>
+                                        )
+                                    }
+                                    else if (question.type === "number") {
+                                        return (
+                                            <ListItem key={index} className="mb-6">
+                                                <NumberInput question={question} />
                                             </ListItem>
                                         )
                                     }
@@ -86,7 +93,7 @@ export function ActiveStepForm() {
                                     else if (question.type === "grid") {
                                         return (
                                             <ListItem key={index} className="mb-8">
-                                                <GridInput {...question as GridQuestion} />
+                                                <GridInput {...question} />
                                             </ListItem>
                                         )
                                     }

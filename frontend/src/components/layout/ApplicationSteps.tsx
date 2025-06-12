@@ -24,7 +24,7 @@ export function ApplicationSteps({
                             {step.title}
                         </StepLabel>
                         <StepContent>
-                            <Typography>{step.shortDescription}</Typography>
+                            <Typography>{step.description}</Typography>
                         </StepContent>
                     </Step>
                 ))}

@@ -16,7 +16,7 @@ export const FormStepContext = React.createContext<FormStepContextValue>({
     // Default empty step data
     currentStep: {
         title: "",
-        shortDescription: '',
+        description: '',
         sections: [],
     },
 

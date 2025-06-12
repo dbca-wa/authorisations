@@ -23,7 +23,7 @@ import {
 } from '@mui/x-data-grid';
 import React from 'react';
 import { v6 as uuidv6 } from 'uuid';
-import type { GridQuestion, PrimitiveType } from '../../context/FormTypes';
+import type { Question, PrimitiveType } from '../../context/FormTypes';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -37,7 +37,7 @@ declare module '@mui/x-data-grid' {
     }
 }
 
-export function GridInput(question : Readonly<GridQuestion>) {
+export function GridInput(question : Readonly<Question>) {
     // Populate rows with values from the question
     const initialRows = getInitialRows(question);
 
@@ -138,7 +138,7 @@ function getHeaders({
     handleSaveClick,
     handleCancelClick,
 }: {
-    question: GridQuestion;
+    question: Question;
     rowModesModel: GridRowModesModel;
     handleEditClick: (id: GridRowId) => () => void;
     handleDeleteClick: (id: GridRowId) => () => void;
@@ -203,8 +203,8 @@ function getHeaders({
     return columns;
 }
 
-function getInitialRows(question: GridQuestion) {
-    const rows = question.values.map((value, _) => {
+function getInitialRows(question: Question) {
+    const rows = (question.values ?? []).map((value, _) => {
         const row: { [key: string]: PrimitiveType } = {};
         // Unique ID for each row
         row['id'] = uuidv6();
@@ -221,7 +221,7 @@ function getInitialRows(question: GridQuestion) {
     return rows as GridRowsProp;
 }
 
-function getEmptyRow(question: GridQuestion) {
+function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
     question.columns.forEach((column, _) => {

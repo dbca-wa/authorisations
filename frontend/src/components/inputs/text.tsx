@@ -11,7 +11,7 @@ export function TextInput({
         label={question.label}
         defaultValue={question.value}
         helperText={question.description}
-        required={question.isRequired}
+        required={question.is_required}
         variant="outlined"
         className="w-full"
     />
