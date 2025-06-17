@@ -14,7 +14,7 @@ export function SelectInput({
                 label={question.label}
                 defaultValue={question.value || ''}
             >
-                {question.options?.map((option) => {
+                {question.select_options?.map((option) => {
                     return (
                         <MenuItem key={option} value={option}>
                             {option}

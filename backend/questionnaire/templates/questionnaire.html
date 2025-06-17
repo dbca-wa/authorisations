@@ -8,6 +8,13 @@
       {% vite_hmr_client %}
       {% vite_asset 'src/main.tsx' %}
     <title>Django + Vite + React + TS</title>
+    {{ questionnaire|json_script:"questionnaire-data" }}
+    <script>
+      // Temporary function to mimic an API call
+      async function getQuestionnaire(slug) {
+        return JSON.parse(document.getElementById('questionnaire-data').textContent);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

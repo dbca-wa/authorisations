@@ -1,7 +1,7 @@
 from copy import deepcopy
 from drf_jsonschema_serializer import SerializerJSONField, to_jsonschema
 from drf_jsonschema_serializer.convert import converter
-from frozendict import deepfreeze, frozendict
+from frozendict import frozendict
 from jsonschema import Draft202012Validator
 from rest_framework import serializers
 
@@ -53,7 +53,7 @@ class GridQuestionColumnSerialiser(serializers.Serializer):
     description = serializers.CharField(
         max_length=255, required=False, allow_blank=True
     )
-    options = serializers.ListField(
+    select_options = serializers.ListField(
         child=serializers.CharField(max_length=50, allow_blank=True),
         max_length=50,
         required=False,
@@ -69,30 +69,32 @@ class QuestionSerialiser(serializers.Serializer):
         required=True,
     )
     is_required = serializers.BooleanField(
-        default=False, required=False, allow_null=True,
+        default=False, required=False, allow_null=False
     )
     description = serializers.CharField(
-        max_length=1000, required=False, allow_blank=True
+        max_length=1000, required=False, allow_null=False, allow_blank=True
     )
-    options = serializers.ListField(
+    select_options = serializers.ListField(
         child=serializers.CharField(max_length=50),
         max_length=50,
         required=False,
-        allow_empty=False,
         allow_null=True,
+        allow_empty=False,
     )
     grid_columns = serializers.ListField(
         child=SerializerJSONField(GridQuestionColumnSerialiser),
         max_length=10,
         required=False,
-        allow_empty=False,
         allow_null=True,
+        allow_empty=False,
     )
-    max_rows = serializers.IntegerField(
+    grid_max_rows = serializers.IntegerField(
         min_value=1,
         max_value=20,
+        # default=10,
         required=False,
         allow_null=True,
+        # allow_empty=True,
     )
 
 
@@ -140,42 +142,45 @@ class StepSerialiser(serializers.Serializer):
 
 # This should never be modified, therefore we use frozendict
 # (and django-jsonform does modify it when passed as a field construct param)
-_SCHEMA_QUESTIONNAIRE: frozendict = frozendict({
-    "$id": "https://example.com/arrays.schema.json",
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "description": "JSON Schema definition for a questionnaire with steps, sections, and questions.",
-    "title": "Questionnaire Schema",
-    "type": "object",
-    "properties": {
-        "schema_version": {
-            "type": "string",
-            "title": "Schema version",
-            "default": "2025.06-1", # Current version of the schema
-            "readOnly": True,
-            "description": "The version of the questionnaire schema.",
+_SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
+    {
+        "$id": "https://example.com/arrays.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "JSON Schema definition for a questionnaire with steps, sections, and questions.",
+        "title": "Questionnaire Schema",
+        "type": "object",
+        "properties": {
+            "schema_version": {
+                "type": "string",
+                "title": "Schema version",
+                "default": "2025.06-1",  # Current version of the schema
+                "readOnly": True,
+                "description": "The version of the questionnaire schema.",
+            },
+            "steps": {
+                "title": "Steps",
+                "type": "array",
+                "items": {"$ref": "#/$defs/step"},
+                "minItems": 1,
+            },
         },
-        "steps": {
-            "title": "Steps",
-            "type": "array",
-            "items": {"$ref": "#/$defs/step"},
-            "minItems": 1,
+        "$defs": {
+            "step": to_jsonschema(StepSerialiser()),
+            "section": to_jsonschema(SectionSerialiser()),
+            "question": to_jsonschema(QuestionSerialiser()),
         },
-    },
-    "$defs": {
-        "step": to_jsonschema(StepSerialiser()),
-        "section": to_jsonschema(SectionSerialiser()),
-        "question": to_jsonschema(QuestionSerialiser()),
-    },
-})
+    }
+)
+
 
 def get_schema() -> dict:
-    """Always return a deepcopy of the schema to avoid modifications 
+    """Always return a deepcopy of the schema to avoid modifications
     to the original schema (yes, django-jsonform does that).
-    
+
     TODO: Implement schema versioning in the future.
     """
     schema: dict = deepcopy(dict(_SCHEMA_QUESTIONNAIRE))
-    schema['properties']['schema_version']['default'] = "2025.06-1"
+    schema["properties"]["schema_version"]["default"] = "2025.06-1"
     return schema
 
 

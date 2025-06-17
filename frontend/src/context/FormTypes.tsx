@@ -4,7 +4,8 @@
 export type PrimitiveType = string | number | boolean | null;
 
 export interface ApplicationForm {
-    name: string;
+    schema_version: string;
+    // name: string;
     steps: FormStep[];
 }
 
@@ -17,18 +18,17 @@ export interface FormStep {
 export interface FormSection {
     title: string;
     description?: string;
-    // questions: RootQuestion[];
     questions: Question[];
 }
 
 export interface Question {
     label: string;
     type: string;
-    is_required?: boolean;
+    is_required: boolean;
     description?: string;
-    options?: string[]; // For select types
-    max_rows: number; // For grid types, indicates the maximum number of rows
-    columns: GridQuestionColumn[]; 
+    select_options?: string[] | null; // For select types
+    grid_max_rows?: number | null; // For grid types, indicates the maximum number of rows
+    grid_columns?: GridQuestionColumn[] | null; 
     // Remove value & values from Question
     value?: PrimitiveType; // date as string?
     values?: PrimitiveType[][]; // 2D array for grid values
@@ -38,7 +38,7 @@ interface GridQuestionColumn {
     label: string;
     type: string;
     description?: string;
-    options?: string[]; // For select types
+    select_options?: string[]; // For select types
 }
 
 // // Root-level questions can include GridQuestion

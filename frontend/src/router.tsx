@@ -52,11 +52,19 @@ import ErrorPage from "./components/ErrorPage";
 // 	return null;
 // };
 
+// Declare the global function for TypeScript
+declare function getQuestionnaire(slug: string): any;
+
 export const router = createBrowserRouter([
 	{
-		// path: import.meta.env.BASE_URL + "aec",
-		path: "/a/aec",
+		path: "/a/:slug",
 		Component: MainLayout,
+		loader: async ({ params }) => {
+			// Simulate fetching data from a API
+			const questionnaire = await getQuestionnaire(params.slug!);
+			// console.log("Questionnaire:", questionnaire);
+			return questionnaire;
+		},
 		errorElement: <ErrorPage />,
 	},
 	// {

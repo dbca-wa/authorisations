@@ -5,23 +5,27 @@ import Typography from "@mui/material/Typography";
 import React from "react";
 
 import { FormStepContext } from "../../context/FormContext";
-import type { ApplicationForm } from "../../context/FormTypes";
-import untypedFormData from '../../data/formData.json';
+// import type { ApplicationForm } from "../../context/FormTypes";
+// import untypedFormData from '../../data/formData.json';
 import { Sidebar } from "./Sidebar";
 import { ActiveStepForm } from "./ActiveStepForm";
-const formData: ApplicationForm = untypedFormData;
+import { useLoaderData } from "react-router";
+// const formData: ApplicationForm = untypedFormData;
 
 
 export function MainLayout() {
     // Manage activeStep state here
     const [activeStep, setActiveStep] = React.useState(0);
+    
+    const questionnaire = useLoaderData();
+    console.log("Data:", questionnaire);
 
     // Set the FormStepContext value
     const contextValue = {
         setActiveStep,
-        currentStep: formData.steps[activeStep],
+        currentStep: questionnaire.document.steps[activeStep],
         isFirst: activeStep === 0,
-        isLast: activeStep === formData.steps.length - 1,
+        isLast: activeStep === questionnaire.document.steps.length - 1,
     };
 
     return (
@@ -29,12 +33,12 @@ export function MainLayout() {
             <AppBar position="fixed">
                 <Toolbar>
                     <Typography variant="h6" noWrap component="div">
-                        {formData.name}
+                        {questionnaire.name}
                     </Typography>
                 </Toolbar>
             </AppBar>
 
-            <Sidebar steps={formData.steps} activeStep={activeStep} />
+            <Sidebar steps={questionnaire.document.steps} activeStep={activeStep} />
             
             <Box
                 component="main"

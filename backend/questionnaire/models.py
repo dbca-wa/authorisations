@@ -1,7 +1,7 @@
-# from django.contrib.postgres import fields as pg_fields
 from django.db import models
 from django.urls import reverse
 from django_jsonform.models.fields import JSONField
+from rest_framework import serializers
 
 from questionnaire.serialisers import get_schema
 
@@ -36,20 +36,20 @@ class Questionnaire(models.Model):
 
     def __str__(self):
         return f"{self.name} (v{self.version})"
+    
+    @property
+    def serialised(self):
+        """Return the serialised version of the questionnaire."""
+        return QuestionnaireSerialiser(self).data
 
     def get_absolute_url(self):
-        return reverse("questionnaires", kwargs={"slug": self.slug})
+        return reverse("questionnaire", kwargs={"slug": self.slug})
 
-    # moved to save_model() in admin
-    # """Do not actuall save the instance, rather increment the version and save a new instance."""
-    # def save(self, *args, **kwargs):
-    #     # If the instance already exists, increment the version
-    #     if self.pk is not None:
-    #         self.version += 1
-    #         self.pk = None
 
-    #     self.full_clean()
-    #     super().save(*args, **kwargs)
+class QuestionnaireSerialiser(serializers.ModelSerializer):
+    class Meta:
+        model = Questionnaire
+        fields = ("slug", "version", "name", "document")
 
 
 # class Application(models.Model):

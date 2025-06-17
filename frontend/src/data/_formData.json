@@ -1,4 +1,5 @@
 {
+  "name": "Animal Ethics Committee",
   "steps": [
     {
       "title": "Terms of Service",
@@ -9,11 +10,11 @@
             {
               "type": "checkbox",
               "label": "I have read and understood the terms of service.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": true,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Please answer all sections thoroughly and in plain English and ensure all acronyms are defined the first time they are used. The information provided in this application should support the case for ethical acceptability of the project and allow the AEC to assess the project in relation to requirements of the Code."
@@ -24,11 +25,11 @@
             {
               "type": "checkbox",
               "label": "This project does NOT involve death as an endpoint.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "If your project involves death of an animal as a deliberate measure used for evaluating biological or chemical processes, responses or effects please contact the AEC Executive Officer. You will be required to fill out a different form."
@@ -45,11 +46,11 @@
             {
               "type": "checkbox",
               "label": "I have read and understood the scientific integrity agreement.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Respect for animals must underpin all decisions and actions involving the care and use of animals for scientific purposes. Applying high standards of scientific integrity is one of the governing principles outlined in the Australian Code for the Care and Use of Animals for Scientific Purposes - 8th Edition (the Code). Each person involved in the care and use of animals for scientific purposes must consider the governing principles when applying the Code to their specific circumstance.\n\nThe below clauses from the Code contribute to the ethical framework that guides decisions and actions of all people involved in the care and use of animals for scientific purposes.\n\n1.15 Regardless of the potential benefits of a project, the methods used must be scientifically valid, feasible, well designed and carefully conducted so that there is a reasonable expectation that the aims of the project will be achieved. Projects that are not scientifically valid must not be performed, no matter how mild the impact on the wellbeing of the animals.\n\n1.16 Investigators must use methods that accord with current best practice that:\n\ti. take into consideration relevant aspects of species-specific biology, physiology and behaviour\n\tii. are based on the best available scientific evidence, which includes the potential adverse impact of conditions and procedures on the wellbeing of the animals\n\tiii. include strategies to minimise adverse impacts.\n\n1.17 Animals used must be suited to the purpose of the project or activity, taking into account their biological characteristics, including morphology, physiology, behaviour, genetic makeup, temperament and behavioural conditioning, microbiological and nutritional status, and general state of health.\n\nChief Investigators are encouraged to engage with a relevant scientist or biometrician during the project planning phase to ensure projects are scientifically valid, feasible, and well designed. For information on where to obtain scientific advice/assistance to aid in the review process, visit the Animal Ethics Committee intranet or contact the Executive Officer."
@@ -60,11 +61,11 @@
             {
               "type": "checkbox",
               "label": "I endorse this application and confirm the scientific merit of the project.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "I have reviewed this application and assessed the scientific merit of the project. I confirm that proposed aims, design, methodology, and analyses are scientifically rigorous and will adequately inform the research question being posed. Advice has been sought from a consulting/reviewing scientist where necessary."
@@ -81,20 +82,20 @@
             {
               "type": "checkbox",
               "label": "I acknowledge that as CI, I have ultimate responsibility for the care and use of animals in this project and agree to the above conditions and requirements.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "checkbox",
               "label": "I acknowledge that as CI, I have advised all project personnel that they must have read, understood and accepted their responsibilities in accordance with the Code, and are aware of their role and responsibility as part of this project.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "a) The Code:  \n\t• I have read, understood and agree to abide by the Australian Code for the Care and Use of Animals for Scientific Purposes 8th Edition; including Chapter 2.4: Responsibilities of investigators.\nb) Project personnel responsibilities:  \n\t• I will ensure that all project personnel are aware of and understand the techniques, methodology and any conditions approved for this project and any relevant Department Standard Operating Procedures.\n\t• Personnel identified as competent animal handlers have the qualifications, experience and training required for all procedures and species identified for the project, and have the competency to deal with adverse events should they occur.  \n\t• Supervised training by a competent and trained person will be provided for all personnel that do not have the required level of skill and experience.  \nc) Project resources (funding & personnel):\n\t• Adequate resources will be available to ensure that the project is conducted according to the project approval and conditions and animal welfare is not compromised.\nd) Adverse events:\n\t• I agree to notify the AEC of any significant issues relating to this project and to submit an Adverse Event form for any unexpected deaths or injuries at the earliest possible opportunity.\ne) Documentation and reporting:\n\t• I will keep records of the qualifications and / or experience of all listed personnel. \n\t• I agree to submit annual reports by the due date and to the standard required by the AEC.\n\t• I agree to maintain all documentation associated with this project as required under the Code and the Departmental policy on record-keeping.\n\nI acknowledge that all the information contained in the application form is a true and accurate record.\n\nAs per Section 2.4.5 of the Code:"
@@ -111,74 +112,74 @@
             {
               "type": "text",
               "label": "Project Title",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Agency / Company / Institution",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Chief Investigator (CI)",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Current Position",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
               "is_required": true,
-              "grid_columns": []
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Current Reg 25 Licence (BC Act) Number",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Current Science Project Plan (SPP) Approval Number",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Current Section 40 Authorisation (BC Act) Number",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "checkbox",
               "label": "Current CI competency form is attached or provided < 12 months ago",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Please provide a brief summary of the project, including the aims and objectives, and the expected outcomes. This should be written in plain English and should be suitable for publication on the AEC website."
@@ -210,22 +211,21 @@
                 ]
               ],
               "maxRows": 10,
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "text",
                   "label": "Name",
-                  "options": [],
+                  "select_options": [],
                   "description": "",
                   "is_required": true
                 },
                 {
                   "type": "select",
                   "label": "Role",
-                  "options": [
+                  "select_options": [
                     "Chief Investigator",
                     "Researcher",
                     "Field Assistant",
@@ -239,17 +239,18 @@
                 {
                   "type": "text",
                   "label": "Experience",
-                  "options": [],
+                  "select_options": [],
                   "description": "Describe experience with designated fauna and techniques",
                   "is_required": true
                 },
                 {
                   "type": "checkbox",
                   "label": "Training",
-                  "options": [],
+                  "select_options": [],
                   "description": "Is this person training under supervision?"
                 }
-              ]
+              ],
+              "grid_max_rows": null
             }
           ],
           "description": "Please provide the names and roles of all project personnel, including their experience."
@@ -260,38 +261,38 @@
             {
               "type": "checkbox",
               "label": "Are any other institutions or their staff involved in aspects of this project?",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Name of institution",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "AEC Approval number",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Detail other institutions involvement in the project",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": ""
@@ -302,20 +303,20 @@
             {
               "type": "date",
               "label": "Start date",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "date",
               "label": "End date",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": ""
@@ -326,29 +327,29 @@
             {
               "type": "checkbox",
               "label": "I confirm that adequate resources are available to ensure that the project is conducted according to the project approval, conditions and animal welfare is not compromised.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Anticipated funding issues",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Please identify any shortfalls or anticipated issues with resources",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Other resources",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "If funding is not sourced 100% from your institution, please identify other sources.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "... additional description about project resources and / or more explanation ..."
@@ -359,29 +360,29 @@
             {
               "type": "text",
               "label": "Location of fieldwork",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Source of animals",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Location(s) where the animals will be held",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Please describe the detailed information about the each location that the project is planning to operate."
@@ -392,20 +393,20 @@
             {
               "type": "checkbox",
               "label": "This project is not collecting voucher specimens or monitoring in poorly represented areas.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "checkbox",
               "label": "WA Museum / Biogeography Program / Fauna Geneticist been consulted?",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "If this project is collecting voucher specimens or monitoring in poorly represented areas."
@@ -416,7 +417,7 @@
             {
               "type": "select",
               "label": "Purpose of the proposed project",
-              "options": [
+              "select_options": [
                 "Animal management",
                 "Animal production",
                 "Educational outcomes",
@@ -424,10 +425,10 @@
                 "Improve understanding",
                 "Natural environment"
               ],
-              "max_rows": null,
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "grid",
@@ -441,27 +442,27 @@
                 ]
               ],
               "maxRows": 5,
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "text",
                   "label": "Objective",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Explain the relevance, benefits and the justification for the project",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Applicants must demonstrate that the benefits of undertaking the project are justified in relation to the potential impact on animals, e.g How will your project contribute to the conservation of wildlife? How will it improve knowledge and understanding of biodiversity, ecosystems and processes?",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Identify the benefits of the project outcomes and evidence that supports the use of animals."
@@ -478,43 +479,42 @@
             {
               "type": "textarea",
               "label": "Project design description",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "i.e. site locations, number of sites, trap types, numbers of traps, spacing/configuration, frequency and timing of monitoring.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "grid",
               "label": "Species and number of individuals that will be handled or observed",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Please use current taxonomy from the NOMOS - taxonomic names management system.",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "text",
                   "label": "Scientific name",
-                  "options": [],
+                  "select_options": [],
                   "description": "Include subspecies"
                 },
                 {
                   "type": "text",
                   "label": "Common name",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "number",
                   "label": "Total animals",
-                  "options": [],
+                  "select_options": [],
                   "description": "Total number of animals to be handled (or observed) during the project time frame as indicated in Q7."
                 },
                 {
                   "type": "select",
                   "label": "Marking method",
-                  "options": [
+                  "select_options": [
                     "Ear punch or notch",
                     "Ear tag",
                     "Pit tag / microchip",
@@ -535,7 +535,8 @@
                   ],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             }
           ],
           "description": "Please provide a description of the overall project design, methodology and sampling times.\n\nExample: \n•\tThis project will use a 20km transect of 50 small baited cage traps, at 200m intervals, to target medium-sized mammals. \n•\tThe project will also use a grid of 16 pitfall traps, 8 funnel traps, and 8 Elliott traps to target small mammals, reptiles and amphibians. The grid will have four lines of four pitfall buckets with two funnel traps per line, and one Elliott trap at each end of the four pitfall lines.  \n•\tThe project involves trapping at three sites, which will be monitored once per year for each site, and traps will be run for four consecutive nights.\n•\tIt is anticipated that it will take project personnel approximately xx hours to complete trap checking and processing of captures.\n"
@@ -552,29 +553,29 @@
             {
               "type": "checkbox",
               "label": "Alternative LESS INVASIVE OR LOWER IMPACT TECHNIQUES, that would provide comparable data to answer the objectives of this project, ARE AVAILABLE.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "checkbox",
               "label": "The handling or observation of animals in their natural environment is necessary to achieve the objective(s) of this project.  I have investigated and considered alternative options in relation to methods, techniques and equipment that minimise the risk to animal welfare (including disease and direct and indirect disturbance to the habitat).  I have identified that there are no suitable or more appropriate alternatives to achieve the objectives of this project.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Why the available methods are not suitable?",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Less invasive/lower impact methods are available - please identify the techniques and explain why they are not suitable for the project.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Refer Clauses 1.18, 1.19, 1.20 \n\nMethods that replace or partially replace the use of animals must be investigated, considered and, where applicable, implemented to minimise welfare impacts. (Refer clauses 1.18, 1.19, 1.20). \n\nSection 3.3 (3.3.33-3.3.44) Wildlife and field techniques\n\nThe wellbeing of wildlife must be supported and safeguarded by using methods, techniques and equipment that are appropriate and avoid or minimise harm including pain and distress to target and non-target species."
@@ -585,11 +586,11 @@
             {
               "type": "textarea",
               "label": "Explain the necessity for the number of animals to be handled.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Explain how the number of animals to be handled or observed and/or the sampling effort supports the validity of the research. e.g. statistical rigour, training, education. Consider whether the length (number of continuous days’ trapping) and number of survey sessions is appropriate to achieve the outcomes of your project while also minimising the impact on animals.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Refer clauses 1.21 to 1.27 \n\nMinimise the number of animals used while ensuring good statistical and experimental design.\n\nSection 3.3 (3.3.33-3.3.44) Wildlife and field techniques."
@@ -601,15 +602,14 @@
               "type": "grid",
               "label": "Method of capture / observation",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Selecting methods that are appropriate to the species & circumstances; avoiding or minimising harm to target and non-target species.",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "select",
                   "label": "Method",
-                  "options": [
+                  "select_options": [
                     "Aerial survey",
                     "Cage traps (cleared & closed)",
                     "Cage traps (cleared & left open)*",
@@ -641,33 +641,33 @@
                 {
                   "type": "text",
                   "label": "Welfare risks and mitigation measures",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Timing and frequency of trap checking",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Identify the timing and frequency of trap checking and provide justification where these differ from the SOPs.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "grid",
               "label": "Other methods",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Including VHF/GPS/Satellite collars or tags; Vouchering",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "select",
                   "label": "Method",
-                  "options": [
+                  "select_options": [
                     "GPS / Satellite collar",
                     "VHF collar",
                     "Carapace mounted transmitter",
@@ -680,48 +680,48 @@
                   ],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Transmitter specifications",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Type, weight, minimum battery life, release mechanism",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Transmitters length of time",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Length of time transmitters will be left on or checked for replacement.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Re-trapping",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Explain how animals will be re-trapped to check, replace or remove transmitters.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "grid",
               "label": "Method of marking / sampling",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "select",
                   "label": "Method",
-                  "options": [
+                  "select_options": [
                     "Temporary marking",
                     "Pit tag / microchip",
                     "Ear tag",
@@ -746,61 +746,62 @@
                 {
                   "type": "number",
                   "label": "Species and number of animals to be marked",
-                  "options": [],
+                  "select_options": [],
                   "description": "You can refer to the Species Table if all the information is contained in the Table."
                 },
                 {
                   "type": "text",
                   "label": "Welfare risks and mitigation measures",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Detail surgical invasive procedures to be carried out on animals (if applicable)",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Describe pain management plans for surgery (if applicable)",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Further measures",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Identify any further measures that will refine your methods to improve animal welfare outcomes.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Animal handling timeline",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Brief description and expected timeline from start to finish for animal handling. e.g. animals will be removed from trap, morphometrics taken and released at point of capture. On average handling time will be no more than 5 minutes per individual.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Describe transport and/or housing of animals (if applicable)",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Refer Clauses 1.28, 1.29, 1.30 \n\nSteps must be taken at all times to support and safeguard animal wellbeing. Section 3.3 (3.3.33-3.3.44) Wildlife and field techniques."
@@ -817,29 +818,29 @@
             {
               "type": "textarea",
               "label": "Identify key strategies and measures to assess, monitor and manage animal wellbeing, including expected and unexpected adverse events.",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "This section should explain how you will monitor animal welfare and manage impacts including signs of elevated stress, ejected pouch young and unexpected injuries. Include details, where appropriate, on the decision-making steps that project personnel will take regarding adverse events. Include your Euthanasia Plan: briefly outline the decision-making process for determining when an animal should be humanely killed, and any arrangements for euthanasia and/or post mortem examination.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Pest species",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "If pest species (e.g. wild dog, fox, cat, rabbit, black rat, house house) are target or potential non-target species, please identify how you intend to manage these species (eg release at point of capture, euthanase).",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Expected adverse events",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "If you expect to have some adverse events (e.g. predation events, pouch young deaths), please try to provide an estimate of the likely numbers for each type of event.",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Unexpected adverse event: an event that may have a negative impact on the wellbeing of animals and was not foreshadowed in the approved project or activity."
@@ -851,15 +852,14 @@
               "type": "grid",
               "label": "Methods for euthanasia",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "Identify method(s) in table below. If the method is species specific, please use the last (blank) column to identify the species, group of species etc to which this method will be applied.",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "select",
                   "label": "Method",
-                  "options": [
+                  "select_options": [
                     "Benzocaine gel",
                     "Blunt force trauma",
                     "Cervical dislocation",
@@ -877,32 +877,33 @@
                 {
                   "type": "select",
                   "label": "Preference",
-                  "options": [
+                  "select_options": [
                     "Preferred primary method",
                     "Secondary method",
                     "Other method(s)"
                   ],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             },
             {
               "type": "text",
               "label": "Identify the criteria that project personnel will use to confirm death",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             },
             {
               "type": "textarea",
               "label": "Additional information (please include firearms licence # if appropriate)",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": "Euthanasia: the method and procedures for euthanasia must be humane and appropriate to the species and circumstances.\n\nSection 3.3 (3.3.45-3.3.46) Humane killing\n\nThe methods and procedures must produce rapid loss of consciousness until death, be appropriate to the species, age, developmental stage and health of the animal, be reliable, be done in an environment away from other animals, ensure that death is established before disposal of the carcass."
@@ -913,11 +914,11 @@
             {
               "type": "textarea",
               "label": "Any additional information in relation to euthanasia and/or adverse events",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": ""
@@ -935,15 +936,14 @@
               "type": "grid",
               "label": "List ANY administered substances, including sedatives, vitamin injections and substances to be used",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "select",
                   "label": "Name of Substance",
-                  "options": [
+                  "select_options": [
                     "Adrenaline",
                     "Atropine",
                     "Azaperone",
@@ -971,19 +971,19 @@
                 {
                   "type": "text",
                   "label": "Name (if not in list)",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "text",
                   "label": "Active ingredient(s)",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "select",
                   "label": "Action",
-                  "options": [
+                  "select_options": [
                     "Anaesthesia",
                     "Sedation",
                     "Analgesia",
@@ -995,7 +995,7 @@
                 {
                   "type": "select",
                   "label": "Route",
-                  "options": [
+                  "select_options": [
                     "Intracardiac injection",
                     "Intramuscular injection",
                     "Intraperitoneal injection",
@@ -1008,7 +1008,8 @@
                   ],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             }
           ],
           "description": ""
@@ -1020,48 +1021,48 @@
               "type": "grid",
               "label": "Please complete all calculations for all injectables",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "number",
                   "label": "Drug dose (mg/kg) = A",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "number",
                   "label": "Drug concentration (mg/mL) = B",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "number",
                   "label": "Drug dose (mL/kg) = A ÷ B",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "text",
                   "label": "Dept. Health Poison Permit No.",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "text",
                   "label": "Permit holder",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 },
                 {
                   "type": "date",
                   "label": "Poison Permit expiry date",
-                  "options": [],
+                  "select_options": [],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             }
           ],
           "description": ""
@@ -1079,15 +1080,14 @@
               "type": "grid",
               "label": "List of provisions",
               "values": [],
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "select",
                   "label": "Provision",
-                  "options": [
+                  "select_options": [
                     "Vouchered",
                     "Deep burial",
                     "Incinerated",
@@ -1099,14 +1099,15 @@
                 {
                   "type": "select",
                   "label": "Preference",
-                  "options": [
+                  "select_options": [
                     "Preferred primary",
                     "Secondary",
                     "Other"
                   ],
                   "description": ""
                 }
-              ]
+              ],
+              "grid_max_rows": null
             }
           ],
           "description": "Describe provisions that will be made for the animals at the conclusion of fieldwork/experiment?"
@@ -1117,11 +1118,11 @@
             {
               "type": "textarea",
               "label": "References/sources used to prepare this application",
-              "options": [],
-              "max_rows": null,
+              "select_options": [],
               "description": "",
-              "is_required": null,
-              "grid_columns": []
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null
             }
           ],
           "description": ""

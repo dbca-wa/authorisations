@@ -145,7 +145,7 @@ function getHeaders({
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
 }): GridColDef[] {
-    const columns: GridColDef[] = question.columns.map((column, _) => {
+    const columns: GridColDef[] = (question.grid_columns || []).map((column, _) => {
         // Corresponding column type
         let columnType: GridColDef['type'];
         switch (column.type) {
@@ -173,8 +173,8 @@ function getHeaders({
             description: column.description,
             // Material UI column attributes
             type: columnType,
-            valueOptions: columnType === "singleSelect" && column.options
-                ? column.options
+            valueOptions: columnType === "singleSelect" && column.select_options
+                ? column.select_options
                 : null,
             editable: true,
             sortable: false,
@@ -210,7 +210,7 @@ function getInitialRows(question: Question) {
         row['id'] = uuidv6();
 
         // Populate the row with values
-        question.columns.forEach((column, columnIndex) => {
+        question.grid_columns?.forEach((column, columnIndex) => {
             row[column.label] = value[columnIndex] ?? null;
         });
         return row;
@@ -224,7 +224,7 @@ function getInitialRows(question: Question) {
 function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
-    question.columns.forEach((column, _) => {
+    question.grid_columns?.forEach((column, _) => {
         row[column.label] = '';
     });
     return row;
