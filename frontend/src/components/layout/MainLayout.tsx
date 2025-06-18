@@ -18,7 +18,7 @@ export function MainLayout() {
     const [activeStep, setActiveStep] = React.useState(0);
     
     const questionnaire = useLoaderData();
-    console.log("Data:", questionnaire);
+    console.log("Data:", typeof(questionnaire), questionnaire);
 
     // Set the FormStepContext value
     const contextValue = {

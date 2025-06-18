@@ -52,8 +52,28 @@ import ErrorPage from "./components/ErrorPage";
 // 	return null;
 // };
 
-// Declare the global function for TypeScript
-declare function getQuestionnaire(slug: string): any;
+// Temporary function to mimic an API call
+// declare function getQuestionnaire(slug: string): any;
+async function getQuestionnaire(slug: string) {
+	const dataElement = document.getElementById('questionnaire-data');
+	const notFoundResp = Response.json(
+		{ message: `Questionnaire not found: ${slug}` }, 
+		{ status: 404, statusText: 'Not Found' },
+	);
+
+	// console.log('Data Element:', dataElement);
+	if (!dataElement || !dataElement.textContent) {
+		throw notFoundResp;
+	}
+
+	const questionnaire = JSON.parse(dataElement.textContent)
+	if (!questionnaire.document) {
+		throw notFoundResp;
+	}
+
+	return questionnaire;
+}
+
 
 export const router = createBrowserRouter([
 	{
@@ -61,9 +81,7 @@ export const router = createBrowserRouter([
 		Component: MainLayout,
 		loader: async ({ params }) => {
 			// Simulate fetching data from a API
-			const questionnaire = await getQuestionnaire(params.slug!);
-			// console.log("Questionnaire:", questionnaire);
-			return questionnaire;
+			return await getQuestionnaire(params.slug!);
 		},
 		errorElement: <ErrorPage />,
 	},
