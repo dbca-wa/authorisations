@@ -9,7 +9,7 @@ export function NumberInput({
 }) {
     return <TextField
         type="number"
-        label={question.label}
+        label={question.indexText + question.label}
         defaultValue={question.value}
         helperText={question.description}
         required={question.is_required}

@@ -34,65 +34,73 @@ export function ActiveStepForm() {
     }
 
     return (
-        <div className="mt-4 bg-gray-300 p-8 rounded-lg shadow-lg w-full max-w-5xl">
+        <div className="mt-4 bg-gray-300 p-8 w-full max-w-5xl">
             <form>
-                {currentStep.sections.map((section, _) => {
+                {currentStep.sections.map((section, sIndex) => {
+                    // Convert index to letter (A, B, C, ...)
+                    const idxText = String.fromCharCode(65 + sIndex) + ")";
+                    
                     return (
                         <section key={section.title} className="bg-white shadow-lg rounded-lg p-8 mb-6">
                             <h2 className="text-2xl font-bold mb-4">
-                                {section.title}
+                                {idxText} {section.title}
                             </h2>
                             <p className="mb-6 display-linebreak">
                                 {section.description}
                             </p>
 
                             <List>
-                                {section.questions.map((question, index) => {
+                                {section.questions.map((question, qIndex) => {
+                                    // Assign index to question for display purposes only
+                                    // Do not display if there is only one question in the section
+                                    question.indexText = section.questions.length > 1
+                                        ? `${qIndex+1}. ` : "";
+
                                     if (question.type === "text") {
                                         return (
-                                            <ListItem key={index} className="mb-2">
+                                            <ListItem key={qIndex} className="mb-2">
                                                 <TextInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "textarea") {
                                         return (
-                                            <ListItem key={index} className="mb-6">
+                                            <ListItem key={qIndex} className="mb-6">
                                                 <TextAreaInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "number") {
                                         return (
-                                            <ListItem key={index} className="mb-6">
+                                            <ListItem key={qIndex} className="mb-6">
                                                 <NumberInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "checkbox") {
                                         return (
-                                            <ListItem key={index} className="mb-1">
+                                            <ListItem key={qIndex} className="mb-1">
                                                 <CheckboxInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "select") {
                                         return (
-                                            <ListItem key={index} className="mb-6">
+                                            <ListItem key={qIndex} className="mb-6">
                                                 <SelectInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "date") {
                                         return (
-                                            <ListItem key={index} className="mb-4">
+                                            <ListItem key={qIndex} className="mb-4">
                                                 <DateInput question={question} />
                                             </ListItem>
                                         )
                                     }
                                     else if (question.type === "grid") {
                                         return (
-                                            <ListItem key={index} className="mb-8">
+                                            <ListItem key={qIndex} className="mb-8">
                                                 <GridInput {...question} />
                                             </ListItem>
                                         )

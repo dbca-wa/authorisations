@@ -9,7 +9,7 @@ export function SelectInput({
 }) {
     return (
         <FormControl fullWidth>
-            <InputLabel >{question.label}</InputLabel>
+            <InputLabel >{question.indexText}{question.label}</InputLabel>
             <Select
                 label={question.label}
                 defaultValue={question.value || ''}

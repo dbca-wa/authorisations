@@ -13,7 +13,7 @@ export function CheckboxInput({
         <FormControl>
             <FormControlLabel
                 control={<Checkbox />}
-                label={question.label}
+                label={question.indexText + question.label}
                 required={question.is_required}
                 className="w-full"
             />

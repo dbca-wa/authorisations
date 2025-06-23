@@ -22,6 +22,7 @@ export interface FormSection {
 }
 
 export interface Question {
+    indexText?: string; // Generated on display, not stored in JSON
     label: string;
     type: string;
     is_required: boolean;

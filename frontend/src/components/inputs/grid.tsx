@@ -99,7 +99,7 @@ export function GridInput(question : Readonly<Question>) {
 
     return (
         <div className="w-full">
-            <Typography variant="h6">{question.label}</Typography>
+            <Typography variant="h6">{question.indexText}{question.label}</Typography>
             <p>{question.description}</p>
 
             <DataGrid

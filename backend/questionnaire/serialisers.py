@@ -68,6 +68,8 @@ class QuestionSerialiser(serializers.Serializer):
         choices=QUESTION_TYPE_CHOICES + [("grid", "Grid (Matrix of options)")],
         required=True,
     )
+    # Getting validation error; "None is not of type 'boolean'"
+    # while creating a new questionnaire
     is_required = serializers.BooleanField(
         default=False, required=False, allow_null=False
     )
@@ -75,7 +77,7 @@ class QuestionSerialiser(serializers.Serializer):
         max_length=1000, required=False, allow_null=False, allow_blank=True
     )
     select_options = serializers.ListField(
-        child=serializers.CharField(max_length=50),
+        child=serializers.CharField(max_length=100),
         max_length=50,
         required=False,
         allow_null=True,

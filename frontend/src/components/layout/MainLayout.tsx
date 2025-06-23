@@ -42,7 +42,7 @@ export function MainLayout() {
             
             <Box
                 component="main"
-                sx={{ flexGrow: 1, p: 1 }}
+                sx={{ p: 1 }}
             >
                 <Toolbar />
                 <FormStepContext.Provider value={contextValue}>
