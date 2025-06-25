@@ -1,6 +1,8 @@
 "use client";
-import { Box, List, ListItem } from "@mui/material";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
 import React from "react";
 import { FormStepContext } from "../../context/FormContext";
 import { CheckboxInput } from "../inputs/checkbox";
@@ -34,14 +36,14 @@ export function ActiveStepForm() {
     }
 
     return (
-        <div className="mt-4 bg-gray-300 p-8 w-full max-w-5xl">
+        <div className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
             <form>
                 {currentStep.sections.map((section, sIndex) => {
                     // Convert index to letter (A, B, C, ...)
                     const idxText = String.fromCharCode(65 + sIndex) + ")";
-                    
+
                     return (
-                        <section key={section.title} className="bg-white shadow-lg rounded-lg p-8 mb-6">
+                        <section key={section.title} className="bg-white w-full shadow-lg rounded-lg p-8 mb-6">
                             <h2 className="text-2xl font-bold mb-4">
                                 {idxText} {section.title}
                             </h2>
@@ -54,7 +56,7 @@ export function ActiveStepForm() {
                                     // Assign index to question for display purposes only
                                     // Do not display if there is only one question in the section
                                     question.indexText = section.questions.length > 1
-                                        ? `${qIndex+1}. ` : "";
+                                        ? `${qIndex + 1}. ` : "";
 
                                     if (question.type === "text") {
                                         return (
