@@ -1,0 +1,197 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+        },
+        "steps": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "title": "Title"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "title": "Description"
+                },
+                "sections": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "maxLength": 100,
+                                "minLength": 1,
+                                "title": "Title"
+                            },
+                            "description": {
+                                "type": "string",
+                                "maxLength": 255,
+                                "title": "Description"
+                            },
+                            "questions": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": {
+                                            "type": "string",
+                                            "maxLength": 50,
+                                            "minLength": 1,
+                                            "title": "Label"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "enum": [
+                                                "text",
+                                                "textarea",
+                                                "checkbox",
+                                                "select",
+                                                "date",
+                                                "grid"
+                                            ],
+                                            "enumNames": [
+                                                "Text",
+                                                "Textarea Multi-line",
+                                                "Checkbox",
+                                                "Multiple Choice Select",
+                                                "Date",
+                                                "Grid (Matrix of options)"
+                                            ],
+                                            "title": "Type"
+                                        },
+                                        "is_required": {
+                                            "type": "boolean",
+                                            "title": "Is required"
+                                        },
+                                        "value": {
+                                            "type": "string",
+                                            "maxLength": 255,
+                                            "title": "Value"
+                                        },
+                                        "options": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "maxLength": 50
+                                            },
+                                            "title": "Options"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "maxLength": 255,
+                                            "title": "Description"
+                                        },
+                                        "max_rows": {
+                                            "type": "integer",
+                                            "title": "Max rows"
+                                        },
+                                        "columns": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "label": {
+                                                        "type": "string",
+                                                        "maxLength": 50,
+                                                        "minLength": 1,
+                                                        "title": "Label"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "text",
+                                                            "textarea",
+                                                            "checkbox",
+                                                            "select",
+                                                            "date"
+                                                        ],
+                                                        "enumNames": [
+                                                            "Text",
+                                                            "Textarea Multi-line",
+                                                            "Checkbox",
+                                                            "Multiple Choice Select",
+                                                            "Date"
+                                                        ],
+                                                        "title": "Type"
+                                                    },
+                                                    "is_required": {
+                                                        "type": "boolean",
+                                                        "title": "Is required"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "maxLength": 255,
+                                                        "title": "Value"
+                                                    },
+                                                    "options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "maxLength": 50
+                                                        },
+                                                        "title": "Options"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "maxLength": 255,
+                                                        "title": "Description"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "label",
+                                                    "type"
+                                                ]
+                                            },
+                                            "maxItems": 10,
+                                            "title": "Columns"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                }
+                                            },
+                                            "maxItems": 10,
+                                            "title": "Values"
+                                        }
+                                    },
+                                    "required": [
+                                        "label",
+                                        "type"
+                                    ]
+                                },
+                                "title": "Questions"
+                            }
+                        },
+                        "required": [
+                            "title",
+                            "questions"
+                        ]
+                    },
+                    "title": "Sections"
+                }
+            },
+            "required": [
+                "title",
+                "sections"
+            ],
+            "title": "Steps"
+        }
+    },
+    "required": [
+        "name",
+        "steps"
+    ]
+}

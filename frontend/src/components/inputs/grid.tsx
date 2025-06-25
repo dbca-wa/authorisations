@@ -23,7 +23,7 @@ import {
 } from '@mui/x-data-grid';
 import React from 'react';
 import { v6 as uuidv6 } from 'uuid';
-import type { GridQuestion, PrimitiveType } from '../../context/FormTypes';
+import type { Question, PrimitiveType } from '../../context/FormTypes';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -37,7 +37,7 @@ declare module '@mui/x-data-grid' {
     }
 }
 
-export function GridInput(question : Readonly<GridQuestion>) {
+export function GridInput(question : Readonly<Question>) {
     // Populate rows with values from the question
     const initialRows = getInitialRows(question);
 
@@ -99,7 +99,7 @@ export function GridInput(question : Readonly<GridQuestion>) {
 
     return (
         <div className="w-full">
-            <Typography variant="h6">{question.label}</Typography>
+            <Typography variant="h6">{question.indexText}{question.label}</Typography>
             <p>{question.description}</p>
 
             <DataGrid
@@ -138,14 +138,14 @@ function getHeaders({
     handleSaveClick,
     handleCancelClick,
 }: {
-    question: GridQuestion;
+    question: Question;
     rowModesModel: GridRowModesModel;
     handleEditClick: (id: GridRowId) => () => void;
     handleDeleteClick: (id: GridRowId) => () => void;
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
 }): GridColDef[] {
-    const columns: GridColDef[] = question.columns.map((column, _) => {
+    const columns: GridColDef[] = (question.grid_columns || []).map((column, _) => {
         // Corresponding column type
         let columnType: GridColDef['type'];
         switch (column.type) {
@@ -173,8 +173,8 @@ function getHeaders({
             description: column.description,
             // Material UI column attributes
             type: columnType,
-            valueOptions: columnType === "singleSelect" && column.options
-                ? column.options
+            valueOptions: columnType === "singleSelect" && column.select_options
+                ? column.select_options
                 : null,
             editable: true,
             sortable: false,
@@ -203,14 +203,14 @@ function getHeaders({
     return columns;
 }
 
-function getInitialRows(question: GridQuestion) {
-    const rows = question.values.map((value, _) => {
+function getInitialRows(question: Question) {
+    const rows = (question.values ?? []).map((value, _) => {
         const row: { [key: string]: PrimitiveType } = {};
         // Unique ID for each row
         row['id'] = uuidv6();
 
         // Populate the row with values
-        question.columns.forEach((column, columnIndex) => {
+        question.grid_columns?.forEach((column, columnIndex) => {
             row[column.label] = value[columnIndex] ?? null;
         });
         return row;
@@ -221,10 +221,10 @@ function getInitialRows(question: GridQuestion) {
     return rows as GridRowsProp;
 }
 
-function getEmptyRow(question: GridQuestion) {
+function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
-    question.columns.forEach((column, _) => {
+    question.grid_columns?.forEach((column, _) => {
         row[column.label] = '';
     });
     return row;

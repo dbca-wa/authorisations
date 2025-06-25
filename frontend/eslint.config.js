@@ -23,6 +23,13 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      // https://mui.com/material-ui/guides/minimizing-bundle-size/#enforce-best-practices-with-eslint
+      "no-restricted-imports": [
+        "error",
+        {
+          "patterns": [{ "regex": "^@mui/[^/]+$" }]
+        }
+      ]
     },
   },
 )

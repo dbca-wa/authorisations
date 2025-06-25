@@ -22,111 +22,125 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
-    SECURE_ONLY=(bool, True),
+    SECURE_HSTS_SECONDS=(int, 3600 * 24),
+    SECURE_ONLY=(bool, False),
 )
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = [
-    'localhost',
+    "localhost",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
+    "http://localhost:8000",
 ]
 
-ALLOWED_HOST_UAT = env('ALLOWED_HOST_UAT')
+ALLOWED_HOST_UAT = env("ALLOWED_HOST_UAT", default=None)
 if ALLOWED_HOST_UAT:
     ALLOWED_HOSTS.append(ALLOWED_HOST_UAT)
-    CSRF_TRUSTED_ORIGINS.append(f'https://{ALLOWED_HOST_UAT}')
+    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST_UAT}")
 
-ALLOWED_HOST_PROD = env('ALLOWED_HOST_PROD')
+ALLOWED_HOST_PROD = env("ALLOWED_HOST_PROD", default=None)
 if ALLOWED_HOST_PROD:
     ALLOWED_HOSTS.append(ALLOWED_HOST_PROD)
-    CSRF_TRUSTED_ORIGINS.append(f'https://{ALLOWED_HOST_PROD}')
+    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST_PROD}")
 
 # SSL, CSRF and security settings
-CSRF_COOKIE_NAME = env('CSRF_COOKIE_NAME')  # Set custom CSRF cookie name
-# Non-secure redirection cache: 24 hours in production, 1 minute in debug mode
-SECURE_HSTS_SECONDS = 60 if DEBUG else env('SECURE_HSTS_SECONDS', default=3600 * 24) 
+CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME", default=None)  # Set custom CSRF cookie name
+# Non-secure redirection cache: 1 minute in debug mode, 24 hours in production
+SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
 
 if not DEBUG:
-    SESSION_COOKIE_DOMAIN = env('SECURE_DOMAIN')
-    CSRF_COOKIE_DOMAIN = env('SECURE_DOMAIN')
+    SESSION_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
+    CSRF_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
 
     # Ensure SameSite attribute allows cross-site requests if needed
     CSRF_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SAMESITE = "None"
-    
+
     # Secure attribute is also recommended if using HTTPS
-    CSRF_COOKIE_SECURE = env('SECURE_ONLY')
-    SESSION_COOKIE_SECURE = env('SECURE_ONLY')
-    SECURE_SSL_REDIRECT = env('SECURE_ONLY')
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_ONLY')
-    SECURE_HSTS_PRELOAD = env('SECURE_ONLY')
+    SECURE_ONLY = env("SECURE_ONLY")
+    CSRF_COOKIE_SECURE = SECURE_ONLY
+    SESSION_COOKIE_SECURE = SECURE_ONLY
+    SECURE_SSL_REDIRECT = SECURE_ONLY
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_ONLY
+    SECURE_HSTS_PRELOAD = SECURE_ONLY
 
 
 # Application definition
 INSTALLED_APPS = [
-    'django_vite',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'applications',
+    'admin_tools',
+    'admin_tools.theming',
+    'admin_tools.menu',
+    'admin_tools.dashboard',
+    "django_vite",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_jsonform",
+    "questionnaire",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        # "APP_DIRS": True,
+        "OPTIONS": {
+            "debug": DEBUG,
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+            "loaders": [
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+                "admin_tools.template_loaders.Loader",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db_url(),
+    "default": env.db_url(),
 }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Password validation
@@ -134,16 +148,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -151,9 +165,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-au'
+LANGUAGE_CODE = "en-au"
 
-TIME_ZONE = env('TIME_ZONE')
+TIME_ZONE = env("TIME_ZONE", default="Australia/Perth")
 
 USE_I18N = True
 
@@ -164,7 +178,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 # The URL prefix for static files served from STATIC_ROOT
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # The directory where the collected static files will be served from
 STATIC_ROOT = BASE_DIR / "static"
@@ -179,17 +193,21 @@ FRONTEND_DIST = Path(os.path.abspath(BASE_DIR / "../frontend/dist"))
 if FRONTEND_DIST.exists():
     STATICFILES_DIRS.append(FRONTEND_DIST)
 
-# Frontend manifest.json path 
+# Frontend manifest.json path
 # (to avoid a warning while doing "collectstatic" the first time)
 MANIFEST_PATH = None
-if os.path.exists(FRONTEND_DIST / 'manifest.json'):
-    MANIFEST_PATH = FRONTEND_DIST / 'manifest.json'
-elif os.path.exists(BASE_DIR / 'assets' / 'manifest.json'):
-    MANIFEST_PATH = BASE_DIR / 'assets' / 'manifest.json'
+if os.path.exists(FRONTEND_DIST / "manifest.json"):
+    MANIFEST_PATH = FRONTEND_DIST / "manifest.json"
+elif os.path.exists(BASE_DIR / "assets" / "manifest.json"):
+    MANIFEST_PATH = BASE_DIR / "assets" / "manifest.json"
 
 DJANGO_VITE = {
-  'default': {
-    'dev_mode': DEBUG,
-    'manifest_path':  MANIFEST_PATH,
-  }
+    "default": {
+        "dev_mode": DEBUG,
+        "manifest_path": MANIFEST_PATH,
+    }
 }
+
+# Admin dashboard configuration
+ADMIN_TOOLS_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
+ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'config.dashboard.CustomAppIndexDashboard'

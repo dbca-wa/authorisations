@@ -22,5 +22,5 @@ createRoot(document.getElementById('root')!).render(
         <RouterProvider router={router} />
       </LocalizationProvider>
     </ThemeProvider>
-  </StrictMode>,
+  </StrictMode>
 )

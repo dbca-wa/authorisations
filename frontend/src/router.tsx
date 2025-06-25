@@ -21,6 +21,7 @@ import { MainLayout } from "./components/layout/MainLayout";
 
 // Error component
 import ErrorPage from "./components/ErrorPage";
+// import MiniDrawerLayout from "./components/layout/MiniDrawerLayout";
 
 // Guards
 // const authGuard = () => {
@@ -52,11 +53,38 @@ import ErrorPage from "./components/ErrorPage";
 // 	return null;
 // };
 
+// Temporary function to mimic an API call
+// declare function getQuestionnaire(slug: string): any;
+async function getQuestionnaire(slug: string) {
+	const dataElement = document.getElementById('questionnaire-data');
+	const notFoundResp = Response.json(
+		{ message: `Questionnaire not found: ${slug}` }, 
+		{ status: 404, statusText: 'Not Found' },
+	);
+
+	// console.log('Data Element:', dataElement);
+	if (!dataElement || !dataElement.textContent) {
+		throw notFoundResp;
+	}
+
+	const questionnaire = JSON.parse(dataElement.textContent)
+	if (!questionnaire.document) {
+		throw notFoundResp;
+	}
+
+	return questionnaire;
+}
+
+
 export const router = createBrowserRouter([
 	{
-		// path: import.meta.env.BASE_URL + "aec",
-		path: "/a/aec",
+		path: "/a/:slug",
 		Component: MainLayout,
+		// Component: MiniDrawerLayout,
+		loader: async ({ params }) => {
+			// Simulate fetching data from a API
+			return await getQuestionnaire(params.slug!);
+		},
 		errorElement: <ErrorPage />,
 	},
 	// {

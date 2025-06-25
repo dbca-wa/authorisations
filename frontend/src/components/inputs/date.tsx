@@ -8,7 +8,7 @@ export function DateInput({
     question: Readonly<Question>
 }) {
     return <DatePicker
-        label={question.label}
+        label={question.indexText + question.label}
         value={
             question.value && (typeof question.value === 'string')
                 ? dayjs(question.value)
