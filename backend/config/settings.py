@@ -62,9 +62,9 @@ if not DEBUG:
     SESSION_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
     CSRF_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
 
-    # Ensure SameSite attribute allows cross-site requests if needed
-    CSRF_COOKIE_SAMESITE = "None"
-    SESSION_COOKIE_SAMESITE = "None"
+    # Ensure SameSite attribute allows "safe" cross-site requests
+    CSRF_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SAMESITE = "Lax"
 
     # Secure attribute is also recommended if using HTTPS
     SECURE_ONLY = env("SECURE_ONLY")
