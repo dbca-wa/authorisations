@@ -70,9 +70,13 @@ if not DEBUG:
     SECURE_ONLY = env("SECURE_ONLY")
     CSRF_COOKIE_SECURE = SECURE_ONLY
     SESSION_COOKIE_SECURE = SECURE_ONLY
-    SECURE_SSL_REDIRECT = SECURE_ONLY
     SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_ONLY
-    SECURE_HSTS_PRELOAD = SECURE_ONLY
+    
+    # Do not redirect 'https://' because the proxy server (nginx) connection 
+    # may be unsecure that will cause infinite redirection loop 
+    # (if the `SECURE_PROXY_SSL_HEADER` was not set correctly)
+    # SECURE_SSL_REDIRECT = SECURE_ONLY
+    # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
