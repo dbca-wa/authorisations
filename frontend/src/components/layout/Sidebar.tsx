@@ -32,7 +32,10 @@ export function Sidebar({
             open={drawerOpen}
         >
             <DrawerHeader>
-                <IconButton onClick={() => setDrawerOpen(!drawerOpen)}>
+                <IconButton
+                    aria-label="close drawer"
+                    onClick={() => setDrawerOpen(!drawerOpen)}
+                >
                     <ChevronLeftIcon />
                 </IconButton>
             </DrawerHeader>

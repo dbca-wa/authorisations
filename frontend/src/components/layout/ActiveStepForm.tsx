@@ -1,4 +1,3 @@
-"use client";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
@@ -47,9 +46,10 @@ export function ActiveStepForm() {
                             <h2 className="text-2xl font-bold mb-4">
                                 {idxText} {section.title}
                             </h2>
-                            <p className="mb-6 display-linebreak">
-                                {section.description}
-                            </p>
+                            {section.description &&
+                                <p className="mb-6 display-linebreak">
+                                    {section.description}
+                                </p>}
 
                             <List>
                                 {section.questions.map((question, qIndex) => {

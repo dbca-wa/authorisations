@@ -3,6 +3,7 @@ import CancelIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
+import Box from '@mui/material/Box';
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import type {
@@ -23,7 +24,7 @@ import {
 } from '@mui/x-data-grid';
 import React from 'react';
 import { v6 as uuidv6 } from 'uuid';
-import type { Question, PrimitiveType } from '../../context/FormTypes';
+import type { PrimitiveType, Question } from '../../context/FormTypes';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -37,7 +38,7 @@ declare module '@mui/x-data-grid' {
     }
 }
 
-export function GridInput(question : Readonly<Question>) {
+export function GridInput(question: Readonly<Question>) {
     // Populate rows with values from the question
     const initialRows = getInitialRows(question);
 
@@ -98,9 +99,11 @@ export function GridInput(question : Readonly<Question>) {
     });
 
     return (
-        <div className="w-full">
-            <Typography variant="h6">{question.indexText}{question.label}</Typography>
-            <p>{question.description}</p>
+        <Box className="w-full">
+            <Typography variant="h6">
+                {question.indexText}{question.label}
+            </Typography>
+            {question.description && <p>{question.description}</p>}
 
             <DataGrid
                 rows={rows}
@@ -125,8 +128,11 @@ export function GridInput(question : Readonly<Question>) {
                 slotProps={{
                     footer: { setRows, setRowModesModel, emptyRow },
                 }}
+                // display: 'grid' is required for auto-shrinking when sidebar is closed
+                // https://stackoverflow.com/questions/77902885/width-of-the-mui-x-data-grid-becoming-larger-than-the-parent-space-and-stretchin
+                sx={{ display: 'grid' }}
             />
-        </div>
+        </Box>
     );
 }
 
