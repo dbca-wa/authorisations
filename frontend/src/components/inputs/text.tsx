@@ -8,10 +8,10 @@ export function TextInput({
     question: Readonly<Question>,
 }) {
     return <TextField
-        label={question.indexText + question.label}
+        label={question.labelText}
         defaultValue={question.value}
-        helperText={question.description}
-        required={question.is_required}
+        helperText={question.o.description}
+        required={question.o.is_required}
         variant="outlined"
         className="w-full"
     />

@@ -38,7 +38,11 @@ declare module '@mui/x-data-grid' {
     }
 }
 
-export function GridInput(question: Readonly<Question>) {
+export function GridInput({
+    question,
+} : {
+    question: Readonly<Question>,
+}) {
     // Populate rows with values from the question
     const initialRows = getInitialRows(question);
 
@@ -101,9 +105,9 @@ export function GridInput(question: Readonly<Question>) {
     return (
         <Box className="w-full">
             <Typography variant="h6">
-                {question.indexText}{question.label}
+                {question.labelText}
             </Typography>
-            {question.description && <p>{question.description}</p>}
+            {question.o.description && <p>{question.o.description}</p>}
 
             <DataGrid
                 rows={rows}
@@ -151,7 +155,7 @@ function getHeaders({
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
 }): GridColDef[] {
-    const columns: GridColDef[] = (question.grid_columns || []).map((column, _) => {
+    const columns: GridColDef[] = (question.o.grid_columns || []).map((column, _) => {
         // Corresponding column type
         let columnType: GridColDef['type'];
         switch (column.type) {
@@ -216,7 +220,7 @@ function getInitialRows(question: Question) {
         row['id'] = uuidv6();
 
         // Populate the row with values
-        question.grid_columns?.forEach((column, columnIndex) => {
+        question.o.grid_columns?.forEach((column, columnIndex) => {
             row[column.label] = value[columnIndex] ?? null;
         });
         return row;
@@ -230,7 +234,7 @@ function getInitialRows(question: Question) {
 function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
-    question.grid_columns?.forEach((column, _) => {
+    question.o.grid_columns?.forEach((column, _) => {
         row[column.label] = '';
     });
     return row;

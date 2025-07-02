@@ -27,6 +27,7 @@ export function MainLayout() {
     const contextValue = {
         setActiveStep,
         currentStep: questionnaire.document.steps[activeStep],
+        stepIndex: activeStep,
         isFirst: activeStep === 0,
         isLast: activeStep === questionnaire.document.steps.length - 1,
     };

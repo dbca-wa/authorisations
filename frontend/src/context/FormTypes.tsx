@@ -18,18 +18,46 @@ export interface FormStep {
 export interface FormSection {
     title: string;
     description?: string;
-    questions: Question[];
+    questions: IQuestion[];
 }
 
-export interface Question {
-    indexText?: string; // Generated on display, not stored in JSON
+interface IQuestion {
     label: string;
     type: string;
     is_required: boolean;
     description?: string;
     select_options?: string[] | null; // For select types
     grid_max_rows?: number | null; // For grid types, indicates the maximum number of rows
-    grid_columns?: GridQuestionColumn[] | null; 
+    grid_columns?: GridQuestionColumn[] | null;
+}
+
+// Step, section and question indices (used for form validation and display)
+interface IQuestionIndices {
+    step: number;
+    section: number;
+    question: number;
+}
+
+export class Question {
+    public readonly o: IQuestion;
+    public readonly indices: IQuestionIndices;
+
+    constructor(obj: IQuestion, indices: IQuestionIndices) {
+        this.o = obj;
+        this.indices = indices;
+    }
+
+    get id(): string {
+        return `${this.indices.step}-${this.indices.section}-${this.indices.question}`;
+    }
+
+    // Return formmatted label for display
+    get labelText(): string {
+        const formatted = `${this.indices!.question + 1}. ${this.o.label}`;
+        // Append asterisk for required fields
+        return this.o.is_required ? `${formatted} *` : formatted;
+    }
+
     // Remove value & values from Question
     value?: PrimitiveType; // date as string?
     values?: PrimitiveType[][]; // 2D array for grid values

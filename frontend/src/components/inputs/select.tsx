@@ -9,12 +9,13 @@ export function SelectInput({
 }) {
     return (
         <FormControl fullWidth>
-            <InputLabel >{question.indexText}{question.label}</InputLabel>
+            <InputLabel>{question.labelText}</InputLabel>
             <Select
-                label={question.label}
+                label={question.labelText}
                 defaultValue={question.value || ''}
+                required={question.o.is_required}
             >
-                {question.select_options?.map((option) => {
+                {question.o.select_options?.map((option) => {
                     return (
                         <MenuItem key={option} value={option}>
                             {option}
