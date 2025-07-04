@@ -1,28 +1,53 @@
-import { FormControl, InputLabel, MenuItem } from "@mui/material";
+import { FormControl, FormHelperText, InputLabel, MenuItem } from "@mui/material";
 import Select from "@mui/material/Select";
-import type { Question } from "../../context/FormTypes";
+import { Controller } from "react-hook-form";
+import { Question } from "../../context/FormTypes";
+import { ERROR_MSG } from "./errors";
 
 export function SelectInput({
     question,
 }: {
     question: Readonly<Question>
 }) {
-    return (
-        <FormControl fullWidth>
-            <InputLabel>{question.labelText}</InputLabel>
-            <Select
-                label={question.labelText}
-                defaultValue={question.value || ''}
-                required={question.o.is_required}
-            >
-                {question.o.select_options?.map((option) => {
-                    return (
+    return <Controller
+        name={question.id}
+        defaultValue={question.value || ""}
+        rules={{
+            required: question.o.is_required ? ERROR_MSG.required : false,
+        }}
+        render={({ field, fieldState }) => (
+            // Use error attribute on children only, not on FormControl 
+            // so the description helper text will always display normal
+            <FormControl fullWidth>
+                <InputLabel
+                    id={question.id + '-label'}
+                    error={fieldState.invalid}
+                >
+                    {question.labelText}
+                </InputLabel>
+                <Select
+                    {...field}
+                    label={question.labelText}
+                    labelId={question.id + '-label'}
+                    error={fieldState.invalid}
+                >
+                    {question.o.select_options?.map((option) => (
                         <MenuItem key={option} value={option}>
                             {option}
                         </MenuItem>
-                    )
-                })}
-            </Select>
-        </FormControl>
-    );
+                    ))}
+                </Select>
+                {fieldState.invalid &&
+                    <FormHelperText error>
+                        {fieldState.error?.message}
+                    </FormHelperText>
+                }
+                {question.o.description &&
+                    <FormHelperText>
+                        {question.o.description}
+                    </FormHelperText>
+                }
+            </FormControl>
+        )}
+    />;
 }

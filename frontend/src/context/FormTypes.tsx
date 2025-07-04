@@ -1,21 +1,18 @@
-/**
- * ApplicationForm interface represents the structure of an application form.
- */
 export type PrimitiveType = string | number | boolean | null;
 
-export interface ApplicationForm {
-    schema_version: string;
-    // name: string;
-    steps: FormStep[];
-}
+// export interface IApplicationForm {
+//     schema_version: string;
+//     // name: string;
+//     steps: FormStep[];
+// }
 
-export interface FormStep {
+export interface IFormStep {
     title: string;
     description: string;
-    sections: FormSection[];
+    sections: IFormSection[];
 }
 
-export interface FormSection {
+export interface IFormSection {
     title: string;
     description?: string;
     questions: IQuestion[];
@@ -28,7 +25,7 @@ interface IQuestion {
     description?: string;
     select_options?: string[] | null; // For select types
     grid_max_rows?: number | null; // For grid types, indicates the maximum number of rows
-    grid_columns?: GridQuestionColumn[] | null;
+    grid_columns?: IGridQuestionColumn[] | null;
 }
 
 // Step, section and question indices (used for form validation and display)
@@ -63,7 +60,7 @@ export class Question {
     values?: PrimitiveType[][]; // 2D array for grid values
 }
 
-interface GridQuestionColumn {
+interface IGridQuestionColumn {
     label: string;
     type: string;
     description?: string;

@@ -4,12 +4,12 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import React from "react";
 import {
-    FormProvider,
-    useForm,
+    useFormContext,
     type FieldValues,
     type SubmitHandler
 } from "react-hook-form";
 import { FormStepContext } from "../../context/FormContext";
+import { Question, type IFormSection } from "../../context/FormTypes";
 import { CheckboxInput } from "../inputs/checkbox";
 import { DateInput } from "../inputs/date";
 import { GridInput } from "../inputs/grid";
@@ -17,21 +17,19 @@ import { NumberInput } from "../inputs/number";
 import { SelectInput } from "../inputs/select";
 import { TextInput } from "../inputs/text";
 import { TextAreaInput } from "../inputs/textarea";
-import { Question, type FormSection } from "../../context/FormTypes";
 
-
-// type Inputs = {
-//     example: string
-//     exampleRequired: string
-// }
 
 export function ActiveStepForm() {
     // Destructure values from the context
     const {
-        setActiveStep, currentStep, stepIndex,
+        setActiveStep,
+        currentStep,
+        stepIndex,
         isFirst, isLast,
     } = React.useContext(FormStepContext);
-    // const step = formData.steps[activeSection];
+
+    // We only need submit handler here from the form context
+    const { handleSubmit } = useFormContext();
 
     const handleBack = () => {
         setActiveStep((prevStep) => prevStep - 1); // Update the step
@@ -49,56 +47,74 @@ export function ActiveStepForm() {
     //     alert("Form submitted successfully! - NOT");
     // }
 
-    const methods = useForm()
-    const onSubmit: SubmitHandler<FieldValues> = (data) => console.log(data)
-    // const onError: SubmitHandler<FieldValues> = (errors) => console.log(errors)
+    const onSubmit: SubmitHandler<FieldValues> = (data) => {
+        // TODO: Do send the answers and progress to backend
+        console.log("Data:", data)
 
-    // console.log(watch("example")) // watch input value by passing the name of it
+        // Next step
+        setActiveStep((prevStep) => prevStep + 1);
+    }
+
+    // Do custom scroll and focus because MUI wraps input elements in many layers
+    const onError: SubmitHandler<FieldValues> = (errors) => {
+        const firstErrorField = Object.keys(errors)[0];
+        const errorElement = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+        if (errorElement) {
+            errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+            // Only focus if tabIndex is not -1 
+            // (skip components that are not meant to be focused)
+            if (errorElement.tabIndex !== -1)
+                errorElement.focus();
+        }
+    }
 
     return (
         <div className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
-            <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(onSubmit)}>
-                    {currentStep.sections.map((section, sIndex) => {
-                        // return <p key={sIndex}>asdasdsad</p>
-                        return <Section key={sIndex} stepIndex={stepIndex} section={section} sIndex={sIndex} />
-                    })}
+            <form onSubmit={handleSubmit(onSubmit, onError)}>
+                {currentStep.sections.map((section, sIndex) => {
+                    return <Section
+                        key={stepIndex + "-" + sIndex}
+                        stepIndex={stepIndex}
+                        section={section}
+                        sectionIndex={sIndex}
+                    />
+                })}
 
-                    <Box justifyContent={"space-around"} display="flex" mt={4}>
-                        {!isFirst && (
-                            <Button variant="outlined" onClick={handleBack}>
-                                Back
-                            </Button>
-                        )}
+                <Box justifyContent={"space-around"} display="flex" mt={4}>
+                    {!isFirst && (
+                        <Button variant="outlined" onClick={handleBack}>
+                            Back
+                        </Button>
+                    )}
 
-                        {!isLast && (
-                            <Button variant="contained" type="submit">
-                                Continue
-                            </Button>
-                        )}
+                    {!isLast && (
+                        <Button variant="contained" type="submit">
+                            Continue
+                        </Button>
+                    )}
 
-                        {isLast && (
-                            <Button variant="contained" type="submit">
-                                Submit
-                            </Button>
-                        )}
-                    </Box>
-                </form>
-            </FormProvider>
+                    {isLast && (
+                        <Button variant="contained" type="submit">
+                            Submit
+                        </Button>
+                    )}
+                </Box>
+            </form>
         </div>
     );
 }
 
 
 const Section = ({
-    stepIndex, section, sIndex,
+    stepIndex, section, sectionIndex,
 }: {
     stepIndex: number,
-    section: FormSection,
-    sIndex: number,
+    section: IFormSection,
+    sectionIndex: number,
 }) => {
     // Convert index to letter (A, B, C, ...)
-    const idxText = String.fromCharCode(65 + sIndex) + ")";
+    const idxText = String.fromCharCode(65 + sectionIndex) + ")";
 
     return (
         <section className="bg-white w-full shadow-lg rounded-lg p-8 mb-6">
@@ -116,7 +132,7 @@ const Section = ({
                     // For internal tracking, form validation and label formatting
                     const question = new Question(questionObj, {
                         step: stepIndex,
-                        section: sIndex,
+                        section: sectionIndex,
                         question: qIndex,
                     })
 
@@ -161,7 +177,6 @@ const Section = ({
                         </ListItem>
                     );
                 })}
-
             </List>
         </section>
     )

@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import React from "react";
 
 import { styled } from '@mui/material/styles';
+import { FormProvider, useForm } from 'react-hook-form';
 import { useLoaderData } from "react-router";
 import { FormStepContext } from "../../context/FormContext";
 import { ActiveStepForm } from "./ActiveStepForm";
@@ -15,21 +16,26 @@ import { DRAWER_WIDTH, Sidebar } from "./Sidebar";
 
 export function MainLayout() {
     // Drawer state
-    const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const [drawerOpen, setDrawerOpen] = React.useState(true);
 
     // Manage activeStep state here
-    const [activeStep, setActiveStep] = React.useState(0);
+    const [stepIndex, setActiveStep] = React.useState(0);
 
     const questionnaire = useLoaderData();
     // console.log("Data:", typeof (questionnaire), questionnaire);
 
+    const formMethods = useForm({
+        // We do custom scroll, see onError function when submit
+        shouldFocusError: false,
+    })
+
     // Set the FormStepContext value
-    const contextValue = {
+    const stepContext = {
         setActiveStep,
-        currentStep: questionnaire.document.steps[activeStep],
-        stepIndex: activeStep,
-        isFirst: activeStep === 0,
-        isLast: activeStep === questionnaire.document.steps.length - 1,
+        currentStep: questionnaire.document.steps[stepIndex],
+        stepIndex: stepIndex,
+        isFirst: stepIndex === 0,
+        isLast: stepIndex === questionnaire.document.steps.length - 1,
     };
 
     return (
@@ -55,7 +61,7 @@ export function MainLayout() {
             </AppBar>
             <Sidebar
                 steps={questionnaire.document.steps}
-                activeStep={activeStep}
+                activeStep={stepIndex}
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
             />
@@ -66,8 +72,10 @@ export function MainLayout() {
                     p: 2,
                 }}
             >
-                <FormStepContext.Provider value={contextValue}>
-                    <ActiveStepForm />
+                <FormStepContext.Provider value={stepContext}>
+                    <FormProvider {...formMethods}>
+                        <ActiveStepForm />
+                    </FormProvider>
                 </FormStepContext.Provider>
             </Box>
         </Box>
