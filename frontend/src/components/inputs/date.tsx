@@ -1,8 +1,8 @@
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
 import { Controller } from 'react-hook-form';
 import { Question } from '../../context/FormTypes';
 import { ERROR_MSG } from './errors';
+import dayjs from 'dayjs';
 
 export function DateInput({
     question,
@@ -12,8 +12,9 @@ export function DateInput({
     return <Controller
         name={question.id}
         defaultValue={
-            question.value && (typeof question.value === 'string')
-                ? dayjs(question.value)
+            // Always pass the actual string value to the DatePicker
+            question.value && typeof question.value === "string"
+                ? question.value
                 : null
         }
         rules={{
@@ -23,6 +24,11 @@ export function DateInput({
             <DatePicker
                 {...field}
                 label={question.labelText}
+                value={field.value ? dayjs(field.value) : null}
+                // Convert to "YYYY-MM-DD" string or null
+                onChange={
+                    (value) => field.onChange(value ? value.format('YYYY-MM-DD') : null)
+                }
                 slotProps={{
                     textField: {
                         error: fieldState.invalid,
