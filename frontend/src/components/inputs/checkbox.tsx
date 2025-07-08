@@ -2,22 +2,43 @@ import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
-import type { Question } from "../../context/FormTypes";
+import { Controller } from "react-hook-form";
+import { Question } from "../../context/FormTypes";
+import { ERROR_MSG } from "./errors";
 
 export function CheckboxInput({
     question,
 }: {
     question: Readonly<Question>
 }) {
-    return (
-        <FormControl>
-            <FormControlLabel
-                control={<Checkbox />}
-                label={question.indexText + question.label}
-                required={question.is_required}
-                className="w-full"
-            />
-            {question.description && <FormHelperText>{question.description}</FormHelperText>}
-        </FormControl>
-    );
+    return <Controller
+        name={question.id}
+        defaultValue={question.value || false}
+        rules={{
+            required: question.o.is_required ? ERROR_MSG.required : false,
+        }}
+        render={({ field, fieldState }) => (
+            <FormControl>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            {...field}
+                            checked={!!field.value}
+                        />
+                    }
+                    label={question.labelText}
+                />
+                {fieldState.invalid &&
+                    <FormHelperText error>
+                        {fieldState.error?.message}
+                    </FormHelperText>
+                }
+                {question.o.description &&
+                    <FormHelperText>
+                        {question.o.description}
+                    </FormHelperText>
+                }
+            </FormControl>
+        )}
+    />
 }

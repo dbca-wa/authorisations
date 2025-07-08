@@ -4,13 +4,13 @@ import StepIcon from '@mui/material/StepIcon';
 import StepLabel from '@mui/material/StepLabel';
 import Stepper from '@mui/material/Stepper';
 import Typography from '@mui/material/Typography';
-import type { FormStep } from '../../context/FormTypes';
+import type { IFormStep } from '../../context/FormTypes';
 
 
 export function ApplicationSteps({
     steps, activeStep, drawerOpen,
 }: Readonly<{
-    steps: FormStep[];
+    steps: IFormStep[];
     activeStep: number;
     drawerOpen: boolean;
 }>) {
@@ -38,7 +38,7 @@ export function ApplicationSteps({
 const StepItem = ({
     step, index, activeStep, drawerOpen,
 }: {
-    step: FormStep;
+    step: IFormStep;
     index: number;
     activeStep: number;
     drawerOpen: boolean;

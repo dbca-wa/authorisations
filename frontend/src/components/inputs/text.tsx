@@ -1,18 +1,40 @@
+import Box from "@mui/material/Box";
+import FormHelperText from "@mui/material/FormHelperText";
 import TextField from "@mui/material/TextField";
-import type { Question } from "../../context/FormTypes";
+import { Controller } from "react-hook-form";
+import { Question } from "../../context/FormTypes";
+import { ERROR_MSG } from "./errors";
 
 
 export function TextInput({
     question,
-} : {
+}: {
     question: Readonly<Question>,
 }) {
-    return <TextField
-        label={question.indexText + question.label}
-        defaultValue={question.value}
-        helperText={question.description}
-        required={question.is_required}
-        variant="outlined"
-        className="w-full"
+
+    return <Controller
+        name={question.id}
+        defaultValue={question.value || ""}
+        rules={{
+            required: question.o.is_required ? ERROR_MSG.required : false,
+        }}
+        render={({ field, fieldState }) => (
+            <Box className="w-full">
+                <TextField
+                    {...field}
+                    label={question.labelText}
+                    helperText={fieldState.invalid
+                        ? fieldState.error?.message : question.o.description}
+                    error={fieldState.invalid}
+                    variant="outlined"
+                    className="w-full"
+                />
+                {fieldState.invalid && question.o.description && (
+                    <FormHelperText>
+                        {question.o.description}
+                    </FormHelperText>
+                )}
+            </Box>
+        )}
     />
 }
