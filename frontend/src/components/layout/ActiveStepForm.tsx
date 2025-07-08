@@ -6,6 +6,7 @@ import React from "react";
 import {
     useFormContext,
     type FieldValues,
+    type SubmitErrorHandler,
     type SubmitHandler
 } from "react-hook-form";
 import { FormStepContext } from "../../context/FormContext";
@@ -55,23 +56,35 @@ export function ActiveStepForm() {
         setActiveStep((prevStep) => prevStep + 1);
     }
 
-    // Do custom scroll and focus because MUI wraps input elements in many layers
-    const onError: SubmitHandler<FieldValues> = (errors) => {
+    // Do custom scroll and focus because ...
+    // MUI wraps input elements in many layers and default behaviour is buggy
+    const onError: SubmitErrorHandler<FieldValues> = (errors) => {
+        // console.log('errors:', errors)
         const firstErrorField = Object.keys(errors)[0];
-        const errorElement = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+
+        // Try to find a container with the id
+        const errorElement = document.getElementById(`field-${firstErrorField}`) as HTMLElement;
+
         if (errorElement) {
             errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
 
             // Only focus if tabIndex is not -1 
             // (skip components that are not meant to be focused)
-            if (errorElement.tabIndex !== -1)
+            if (typeof errorElement.focus === "function" && errorElement.tabIndex !== -1)
                 errorElement.focus();
+        }
+    }
+
+    const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+        // Prevent default form submission on Enter key
+        if (event.key === "Enter") {
+            event.preventDefault();
         }
     }
 
     return (
         <div className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
-            <form onSubmit={handleSubmit(onSubmit, onError)}>
+            <form onSubmit={handleSubmit(onSubmit, onError)} onKeyDown={onKeyDown}>
                 {currentStep.sections.map((section, sIndex) => {
                     return <Section
                         key={stepIndex + "-" + sIndex}
@@ -137,42 +150,34 @@ const Section = ({
                     })
 
                     let inputComponent = null;
-                    let marginClass = "mb-4";
                     switch (question.o.type) {
                         case "text":
                             inputComponent = <TextInput question={question} />;
-                            // marginClass = "mb-2";
                             break;
                         case "textarea":
                             inputComponent = <TextAreaInput question={question} />;
-                            // marginClass = "mb-6";
                             break;
                         case "number":
                             inputComponent = <NumberInput question={question} />;
-                            // marginClass = "mb-6";
                             break;
                         case "checkbox":
                             inputComponent = <CheckboxInput question={question} />;
-                            // marginClass = "mb-1";
                             break;
                         case "select":
                             inputComponent = <SelectInput question={question} />;
-                            // marginClass = "mb-6";
                             break;
                         case "date":
                             inputComponent = <DateInput question={question} />;
-                            // marginClass = "mb-4";
                             break;
                         case "grid":
                             inputComponent = <GridInput question={question} />;
-                            // marginClass = "mb-8";
                             break;
                         default:
                             throw new Error(`Unknown question type: ${question.o.type}`);
                     }
 
                     return (
-                        <ListItem key={qIndex} className={marginClass}>
+                        <ListItem id={`field-${question.id}`} key={qIndex} className="mb-4">
                             {inputComponent}
                         </ListItem>
                     );

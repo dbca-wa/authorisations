@@ -22,8 +22,8 @@ export function CheckboxInput({
                 <FormControlLabel
                     control={
                         <Checkbox
-                            checked={!!field.value}
                             {...field}
+                            checked={!!field.value}
                         />
                     }
                     label={question.labelText}

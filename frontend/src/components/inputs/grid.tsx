@@ -5,6 +5,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import Box from '@mui/material/Box';
 import Button from "@mui/material/Button";
+import FormHelperText from '@mui/material/FormHelperText';
 import Typography from "@mui/material/Typography";
 import type {
     GridColDef,
@@ -18,13 +19,13 @@ import type {
 import {
     DataGrid,
     GridActionsCellItem,
-    GridRowEditStopReasons,
     GridRowModes,
     Toolbar,
 } from '@mui/x-data-grid';
 import React from 'react';
+import { useController, type ValidateResult } from 'react-hook-form';
 import { v6 as uuidv6 } from 'uuid';
-import type { PrimitiveType, Question } from '../../context/FormTypes';
+import { type PrimitiveType, Question } from '../../context/FormTypes';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -40,36 +41,73 @@ declare module '@mui/x-data-grid' {
 
 export function GridInput({
     question,
-} : {
+}: {
     question: Readonly<Question>,
 }) {
-    // Populate rows with values from the question
-    const initialRows = getInitialRows(question);
+    const { field, fieldState } = useController({
+        name: question.id,
+        defaultValue: getInitialRows(question),
+        rules: {
+            validate: (): ValidateResult => {
+                return Array.isArray(rows) && rows.length > 0
+                    ? true
+                    : "At least one record must be provided.";
+            }
+        },
+    })
+
+    // Populate rows with state from the form controller
+    const [rows, _setRows] = React.useState<GridRowsProp>(field.value);
+
+    // Attach the react-hook-form `onChange()` update to keep it in sync
+    const setRows = (newRows: React.SetStateAction<GridRowsProp>) => {
+        // Support both function and value for setState
+        const value = typeof newRows === "function"
+            ? (newRows as (prev: GridRowsProp) => GridRowsProp)(rows)
+            : newRows;
+
+        // Update the react state value
+        _setRows(value);
+
+        // Sync with react-hook-form
+        field.onChange(value);
+    }
+
+    // State for DataGrid row editing mode
+    const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>({});
+    const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
+        setRowModesModel(newRowModesModel);
+    };
+
+    const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
+        console.log("row turns to view mode:", params, event);
+    };
+
+    const processRowUpdate = (newRow: GridRowModel) => {
+        const updatedRow = { ...newRow, isNew: false };
+        setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+        return updatedRow;
+    };
 
     // Create an empty row for adding new record functionality
     const emptyRow = getEmptyRow(question);
 
-    const [rows, setRows] = React.useState(initialRows);
-    const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>({});
-
-    const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
-        if (params.reason === GridRowEditStopReasons.rowFocusOut) {
-            event.defaultMuiPrevented = true;
-        }
-    };
-
+    // Row editing edit handler
     const handleEditClick = (id: GridRowId) => () => {
         setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
     };
 
+    // Row editing save handler
     const handleSaveClick = (id: GridRowId) => () => {
         setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
     };
 
+    // Row editing delete handler
     const handleDeleteClick = (id: GridRowId) => () => {
         setRows(rows.filter((row) => row.id !== id));
     };
 
+    // Row editing cancel handler
     const handleCancelClick = (id: GridRowId) => () => {
         setRowModesModel({
             ...rowModesModel,
@@ -80,16 +118,6 @@ export function GridInput({
         if (editedRow!.isNew) {
             setRows(rows.filter((row) => row.id !== id));
         }
-    };
-
-    const processRowUpdate = (newRow: GridRowModel) => {
-        const updatedRow = { ...newRow, isNew: false };
-        setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
-        return updatedRow;
-    };
-
-    const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
-        setRowModesModel(newRowModesModel);
     };
 
     // Define column definitions for the DataGrid
@@ -122,7 +150,7 @@ export function GridInput({
                 // Autosizing is glitching; using fluid with with header `flex` property
                 disableAutosize={true}
                 onRowModesModelChange={handleRowModesModelChange}
-                onRowEditStop={handleRowEditStop}
+                // onRowEditStop={handleRowEditStop}
                 processRowUpdate={processRowUpdate}
                 // Replace the default footer with a custom one
                 hideFooter={false}
@@ -136,9 +164,15 @@ export function GridInput({
                 // https://stackoverflow.com/questions/77902885/width-of-the-mui-x-data-grid-becoming-larger-than-the-parent-space-and-stretchin
                 sx={{ display: 'grid' }}
             />
+            {fieldState.invalid &&
+                <FormHelperText error>
+                    {fieldState.error?.message}
+                </FormHelperText>
+            }
         </Box>
     );
 }
+
 
 function getHeaders({
     question,
@@ -213,9 +247,9 @@ function getHeaders({
     return columns;
 }
 
-function getInitialRows(question: Question) {
+function getInitialRows(question: Question): GridRowsProp {
     const rows = (question.values ?? []).map((value, _) => {
-        const row: { [key: string]: PrimitiveType } = {};
+        const row: GridRowModel = {};
         // Unique ID for each row
         row['id'] = uuidv6();
 
@@ -295,9 +329,7 @@ function getEditActions({
 }
 
 
-function CustomFooterComponent(
-    props: GridSlotProps['footer']
-) {
+function CustomFooterComponent(props: GridSlotProps['footer']) {
     const { setRows, setRowModesModel, emptyRow } = props;
     // First field to focus on
     const firstField = Object.keys(emptyRow)[0];

@@ -20,7 +20,7 @@ export function SelectInput({
             // so the description helper text will always display normal
             <FormControl fullWidth>
                 <InputLabel
-                    id={question.id + '-label'}
+                    id={"label-" + question.id}
                     error={fieldState.invalid}
                 >
                     {question.labelText}
@@ -28,7 +28,7 @@ export function SelectInput({
                 <Select
                     {...field}
                     label={question.labelText}
-                    labelId={question.id + '-label'}
+                    labelId={"label-" + question.id}
                     error={fieldState.invalid}
                 >
                     {question.o.select_options?.map((option) => (
