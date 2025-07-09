@@ -9,12 +9,11 @@ import FormHelperText from '@mui/material/FormHelperText';
 import Typography from "@mui/material/Typography";
 import type {
     GridColDef,
-    GridEventListener,
     GridRowId,
     GridRowModel,
     GridRowModesModel,
     GridRowsProp,
-    GridSlotProps,
+    GridSlotProps
 } from '@mui/x-data-grid';
 import {
     DataGrid,
@@ -79,9 +78,9 @@ export function GridInput({
         setRowModesModel(newRowModesModel);
     };
 
-    const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
-        console.log("row turns to view mode:", params, event);
-    };
+    // const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
+    //     console.log("row turns to view mode:", params, event);
+    // };
 
     const processRowUpdate = (newRow: GridRowModel) => {
         const updatedRow = { ...newRow, isNew: false };
