@@ -2,10 +2,12 @@ import AddIcon from '@mui/icons-material/Add';
 import CancelIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import InfoIcon from '@mui/icons-material/Info';
 import SaveIcon from '@mui/icons-material/Save';
 import Box from '@mui/material/Box';
 import Button from "@mui/material/Button";
 import FormHelperText from '@mui/material/FormHelperText';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from "@mui/material/Typography";
 import type {
     GridColDef,
@@ -212,7 +214,15 @@ function getHeaders({
 
         return {
             field: column.label,
-            headerName: column.label,
+            // Add info icon next to text if it has a description
+            renderHeader: () => column.description ? (
+                <Tooltip title={column.description}>
+                    <span style={{ display: "inline-flex", alignItems: "start" }}>
+                        {column.label}
+                        <InfoIcon fontSize="inherit" style={{ marginLeft: 4 }} />
+                    </span>
+                </Tooltip>
+            ) : column.label,
             description: column.description,
             // Material UI column attributes
             type: columnType,
