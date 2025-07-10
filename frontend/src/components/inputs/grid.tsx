@@ -50,9 +50,9 @@ export function GridInput({
         defaultValue: getInitialRows(question),
         rules: {
             validate: (): ValidateResult => {
-                return Array.isArray(rows) && rows.length > 0
-                    ? true
-                    : "At least one record must be provided.";
+                return question.o.is_required && rows.length === 0
+                    ? "At least one record must be provided."
+                    : true;
             }
         },
     })
