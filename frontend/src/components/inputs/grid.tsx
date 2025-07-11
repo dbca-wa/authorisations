@@ -9,6 +9,12 @@ import Button from "@mui/material/Button";
 import FormHelperText from '@mui/material/FormHelperText';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from "@mui/material/Typography";
+import React from 'react';
+
+import { useController, type ValidateResult } from 'react-hook-form';
+import { v6 as uuidv6 } from 'uuid';
+import { type PrimitiveType, Question } from '../../context/FormTypes';
+
 import type {
     GridColDef,
     GridRowId,
@@ -23,10 +29,6 @@ import {
     GridRowModes,
     Toolbar,
 } from '@mui/x-data-grid';
-import React from 'react';
-import { useController, type ValidateResult } from 'react-hook-form';
-import { v6 as uuidv6 } from 'uuid';
-import { type PrimitiveType, Question } from '../../context/FormTypes';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -63,15 +65,15 @@ export function GridInput({
     // Attach the react-hook-form `onChange()` update to keep it in sync
     const setRows = (newRows: React.SetStateAction<GridRowsProp>) => {
         // Support both function and value for setState
-        const value = typeof newRows === "function"
+        const updatedRows = typeof newRows === "function"
             ? (newRows as (prev: GridRowsProp) => GridRowsProp)(rows)
             : newRows;
 
         // Update the react state value
-        _setRows(value);
+        _setRows(updatedRows);
 
         // Sync with react-hook-form
-        field.onChange(value);
+        field.onChange(updatedRows);
     }
 
     // State for DataGrid row editing mode

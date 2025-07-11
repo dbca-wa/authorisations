@@ -4,39 +4,40 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import React from "react";
+import React, { type SetStateAction } from "react";
 
 import { styled } from '@mui/material/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useLoaderData } from "react-router";
+import { AnswersManager } from '../../context/AnswersManager';
 import { FormStepContext } from "../../context/FormContext";
+import type { IQuestionnaire } from '../../context/FormTypes';
+import { ReviewPage } from '../ReviewPage';
 import { ActiveStepForm } from "./ActiveStepForm";
-import { DRAWER_WIDTH, Sidebar } from "./Sidebar";
+import { Sidebar } from "./Sidebar";
+import { DRAWER_WIDTH } from '../../context/Constants';
 
 
-export function MainLayout() {
+export const MainLayout = () => {
     // Drawer state
     const [drawerOpen, setDrawerOpen] = React.useState(true);
 
     // Manage activeStep state here
     const [stepIndex, setActiveStep] = React.useState(0);
 
+    // Load questionnaire data from the loader
     const questionnaire = useLoaderData();
-    // console.log("Data:", typeof (questionnaire), questionnaire);
+
+    // Load stored answers from local storage
+    const storedAnswers = React.useMemo(
+        () => AnswersManager.getAnswers("application-id"), []
+    );
 
     const formMethods = useForm({
+        defaultValues: storedAnswers,
         // We do custom scroll, see onError function when submit
         shouldFocusError: false,
-    })
-
-    // Set the FormStepContext value
-    const stepContext = {
-        setActiveStep,
-        currentStep: questionnaire.document.steps[stepIndex],
-        stepIndex: stepIndex,
-        isFirst: stepIndex === 0,
-        isLast: stepIndex === questionnaire.document.steps.length - 1,
-    };
+    });
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -65,18 +66,14 @@ export function MainLayout() {
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
             />
-            <Box
-                component="main"
-                sx={{
-                    marginTop: "64px",
-                    p: 2,
-                }}
-            >
-                <FormStepContext.Provider value={stepContext}>
-                    <FormProvider {...formMethods}>
-                        <ActiveStepForm />
-                    </FormProvider>
-                </FormStepContext.Provider>
+            <Box component="main" sx={{ marginTop: "64px", p: 2 }}>
+                <FormProvider {...formMethods}>
+                    <MainLayoutContent
+                        questionnaire={questionnaire.document}
+                        stepIndex={stepIndex}
+                        setActiveStep={setActiveStep}
+                    />
+                </FormProvider>
             </Box>
         </Box>
     );
@@ -110,3 +107,32 @@ const AppBar = styled(MuiAppBar, {
         },
     ],
 }));
+
+
+const MainLayoutContent = ({
+    questionnaire, stepIndex, setActiveStep,
+}: {
+    questionnaire: IQuestionnaire;
+    stepIndex: number;
+    setActiveStep: (step: SetStateAction<number>) => void;
+}) => {
+    // We are on the review page
+    if (stepIndex === questionnaire.steps.length) {
+        return <ReviewPage />;
+    }
+
+    // We are on an active step form
+    const stepContext = {
+        setActiveStep,
+        currentStep: questionnaire.steps[stepIndex],
+        stepIndex,
+        isFirst: stepIndex === 0,
+        isLast: stepIndex === questionnaire.steps.length - 1,
+    };
+
+    return (
+        <FormStepContext.Provider value={stepContext}>
+            <ActiveStepForm />
+        </FormStepContext.Provider>
+    );
+}

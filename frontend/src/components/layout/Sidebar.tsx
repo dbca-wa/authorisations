@@ -5,9 +5,8 @@ import IconButton from '@mui/material/IconButton';
 import { styled, type CSSObject, type Theme } from '@mui/material/styles';
 import type { IFormStep } from '../../context/FormTypes';
 import { ApplicationSteps } from './ApplicationSteps';
+import { DRAWER_WIDTH } from '../../context/Constants';
 
-
-export const DRAWER_WIDTH = 320;
 
 export function Sidebar({
     steps,

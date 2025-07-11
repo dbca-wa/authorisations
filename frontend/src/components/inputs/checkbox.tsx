@@ -4,7 +4,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import { Controller } from "react-hook-form";
 import { Question } from "../../context/FormTypes";
-import { ERROR_MSG } from "./errors";
+import { ERROR_MSG } from "../../context/Constants";
 
 export function CheckboxInput({
     question,

@@ -2,7 +2,7 @@ import { FormControl, FormHelperText, InputLabel, MenuItem } from "@mui/material
 import Select from "@mui/material/Select";
 import { Controller } from "react-hook-form";
 import { Question } from "../../context/FormTypes";
-import { ERROR_MSG } from "./errors";
+import { ERROR_MSG } from "../../context/Constants";
 
 export function SelectInput({
     question,

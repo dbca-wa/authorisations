@@ -9,8 +9,10 @@ import {
     type SubmitErrorHandler,
     type SubmitHandler
 } from "react-hook-form";
+
 import { FormStepContext } from "../../context/FormContext";
 import { Question, type IFormSection } from "../../context/FormTypes";
+import { AnswersManager } from "../../context/AnswersManager";
 import { CheckboxInput } from "../inputs/checkbox";
 import { DateInput } from "../inputs/date";
 import { GridInput } from "../inputs/grid";
@@ -20,7 +22,7 @@ import { TextInput } from "../inputs/text";
 import { TextAreaInput } from "../inputs/textarea";
 
 
-export function ActiveStepForm() {
+export const ActiveStepForm = () => {
     // Destructure values from the context
     const {
         setActiveStep,
@@ -33,26 +35,16 @@ export function ActiveStepForm() {
     const { handleSubmit } = useFormContext();
 
     const handleBack = () => {
-        setActiveStep((prevStep) => prevStep - 1); // Update the step
+        setActiveStep((prevStep) => prevStep - 1);
     };
 
-    // const handleNext = (event: React.FormEvent<HTMLFormElement>) => {
-    //     // Do not actually submit the form
-    //     event.preventDefault();
-
-    //     setActiveStep((prevStep) => prevStep + 1); // Update the step
-    // };
-
-    // Show dummy confirmation message for now
-    // const handleSubmit = () => {
-    //     alert("Form submitted successfully! - NOT");
-    // }
-
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
-        // TODO: Do send the answers and progress to backend
         console.log("Data:", data)
 
-        // Next step
+        // TODO: Replace with actual application ID
+        AnswersManager.setAnswers("application-id", data);
+
+        // Next step (or the review page)
         setActiveStep((prevStep) => prevStep + 1);
     }
 

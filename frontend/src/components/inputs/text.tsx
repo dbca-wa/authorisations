@@ -3,7 +3,7 @@ import FormHelperText from "@mui/material/FormHelperText";
 import TextField from "@mui/material/TextField";
 import { Controller } from "react-hook-form";
 import { Question } from "../../context/FormTypes";
-import { ERROR_MSG } from "./errors";
+import { ERROR_MSG } from "../../context/Constants";
 
 
 export function TextInput({

@@ -1,10 +1,9 @@
 export type PrimitiveType = string | number | boolean | null;
 
-// export interface IApplicationForm {
-//     schema_version: string;
-//     // name: string;
-//     steps: FormStep[];
-// }
+export interface IQuestionnaire {
+    schema_version: string;
+    steps: IFormStep[];
+}
 
 export interface IFormStep {
     title: string;
@@ -16,6 +15,13 @@ export interface IFormSection {
     title: string;
     description?: string;
     questions: IQuestion[];
+}
+
+interface IGridQuestionColumn {
+    label: string;
+    type: string;
+    description?: string;
+    select_options?: string[]; // For select types
 }
 
 interface IQuestion {
@@ -60,30 +66,6 @@ export class Question {
     values?: PrimitiveType[][]; // 2D array for grid values
 }
 
-interface IGridQuestionColumn {
-    label: string;
-    type: string;
-    description?: string;
-    select_options?: string[]; // For select types
+export interface IAnswers {
+
 }
-
-// // Root-level questions can include GridQuestion
-// export type RootQuestion = Question | GridQuestion;
-
-// // Nested questions cannot include GridQuestion
-// export interface Question {
-//     label: string;
-//     type: string;
-//     is_required?: boolean;
-//     value?: PrimitiveType; // date as string?
-//     options?: string[]; // For select types
-//     description?: string;
-// }
-
-// export interface GridQuestion extends Omit<Question, "value"> {
-//     type: "grid";
-//     max_rows: number;
-//     // Only basic Question types allowed here
-//     columns: Question[]; 
-//     values: PrimitiveType[][]; // 2D array for grid values
-// }
