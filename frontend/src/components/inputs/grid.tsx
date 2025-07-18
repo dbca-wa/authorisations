@@ -9,11 +9,13 @@ import Button from "@mui/material/Button";
 import FormHelperText from '@mui/material/FormHelperText';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from "@mui/material/Typography";
+import dayjs from 'dayjs';
 import React from 'react';
 
 import { useController, type ValidateResult } from 'react-hook-form';
 import { v6 as uuidv6 } from 'uuid';
 import { type PrimitiveType, Question } from '../../context/FormTypes';
+import { assert } from '../../Utils';
 
 import type {
     GridColDef,
@@ -42,6 +44,22 @@ declare module '@mui/x-data-grid' {
     }
 }
 
+// Helper to convert date strings to Date objects for DataGrid
+const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
+    return (value || []).map((row) => {
+        const newRow = { ...row };
+        question.o.grid_columns?.forEach((column) => {
+            if (column.type === "date") {
+                assert(typeof newRow[column.label] === "string",
+                    `Expected "${column.label}" to be a string, but got ${typeof newRow[column.label]}`);
+
+                newRow[column.label] = dayjs(newRow[column.label]).toDate();
+            }
+        });
+        return newRow;
+    });
+}
+
 export function GridInput({
     question,
 }: {
@@ -49,7 +67,6 @@ export function GridInput({
 }) {
     const { field, fieldState } = useController({
         name: question.id,
-        defaultValue: getInitialRows(question),
         rules: {
             validate: (): ValidateResult => {
                 return question.o.is_required && rows.length === 0
@@ -60,7 +77,9 @@ export function GridInput({
     })
 
     // Populate rows with state from the form controller
-    const [rows, _setRows] = React.useState<GridRowsProp>(field.value);
+    const [rows, _setRows] = React.useState<GridRowsProp>(
+        toGridRows(field.value, question)
+    );
 
     // Attach the react-hook-form `onChange()` update to keep it in sync
     const setRows = (newRows: React.SetStateAction<GridRowsProp>) => {
@@ -72,8 +91,20 @@ export function GridInput({
         // Update the react state value
         _setRows(updatedRows);
 
+        // Convert Date objects to YYYY-MM-DD strings for form state
+        // Do create a new array to avoid mutating the original state
+        const formRows = updatedRows.map((row) => {
+            const newRow = { ...row };
+            question.o.grid_columns?.forEach((column) => {
+                if (column.type === "date" && newRow[column.label] instanceof Date) {
+                    newRow[column.label] = dayjs(newRow[column.label]).format('YYYY-MM-DD');
+                }
+            });
+            return newRow;
+        });
+
         // Sync with react-hook-form
-        field.onChange(updatedRows);
+        field.onChange(formRows);
     }
 
     // State for DataGrid row editing mode
@@ -258,24 +289,6 @@ function getHeaders({
     return columns;
 }
 
-function getInitialRows(question: Question): GridRowsProp {
-    const rows = (question.values ?? []).map((value, _) => {
-        const row: GridRowModel = {};
-        // Unique ID for each row
-        row['id'] = uuidv6();
-
-        // Populate the row with values
-        question.o.grid_columns?.forEach((column, columnIndex) => {
-            row[column.label] = value[columnIndex] ?? null;
-        });
-        return row;
-    });
-
-    // console.log("Grid rows:", rows);
-
-    return rows as GridRowsProp;
-}
-
 function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
@@ -362,12 +375,6 @@ function CustomFooterComponent(props: GridSlotProps['footer']) {
 
     return (
         <Toolbar>
-            {/* Use explicit button instead of ToolbarButton */}
-            {/* <Tooltip title="Add record">
-                <ToolbarButton onClick={() => { }}>
-                    <AddIcon fontSize="small" />
-                </ToolbarButton>
-            </Tooltip> */}
             <Button variant="outlined" startIcon={<AddIcon />} onClick={handleClick}>
                 Add Record
             </Button>

@@ -4,40 +4,58 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import React, { type SetStateAction } from "react";
+import React from "react";
 
 import { styled } from '@mui/material/styles';
+import type { FieldValues, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useLoaderData } from "react-router";
 import { AnswersManager } from '../../context/AnswersManager';
-import { FormStepContext } from "../../context/FormContext";
-import type { IQuestionnaire } from '../../context/FormTypes';
-import { ReviewPage } from '../ReviewPage';
-import { ActiveStepForm } from "./ActiveStepForm";
-import { Sidebar } from "./Sidebar";
 import { DRAWER_WIDTH } from '../../context/Constants';
+import type { IAnswers, IQuestionnaire } from '../../context/FormTypes';
+import { ActiveStepForm } from "./ActiveStepForm";
+import { ReviewPage } from './ReviewPage';
+import { Sidebar } from "./Sidebar";
 
 
 export const MainLayout = () => {
     // Drawer state
-    const [drawerOpen, setDrawerOpen] = React.useState(true);
+    const [drawerOpen, setDrawerOpen] = React.useState<boolean>(true);
 
     // Manage activeStep state here
-    const [stepIndex, setActiveStep] = React.useState(0);
+    const [stepIndex, setActiveStep] = React.useState<number>(0);
 
     // Load questionnaire data from the loader
-    const questionnaire = useLoaderData();
+    const questionnaireRecord = useLoaderData();
 
     // Load stored answers from local storage
-    const storedAnswers = React.useMemo(
+    const storedAnswers = React.useMemo<IAnswers>(
         () => AnswersManager.getAnswers("application-id"), []
     );
 
-    const formMethods = useForm({
+    const formParams: UseFormProps<IAnswers> = {
         defaultValues: storedAnswers,
         // We do custom scroll, see onError function when submit
         shouldFocusError: false,
-    });
+    };
+    const formMethods = useForm<FieldValues>(formParams);
+
+    const handleBack = (): void => {
+        // Store form values before going back
+        AnswersManager.setAnswers("application-id", formMethods.getValues());
+
+        setActiveStep((prevStep) => prevStep - 1);
+    };
+
+    const handleContinue: SubmitHandler<FieldValues> = (data) => {
+        console.log("Form data:", data)
+
+        // TODO: Replace with actual application ID
+        AnswersManager.setAnswers("application-id", data);
+
+        // Next step (or the review page)
+        setActiveStep((prevStep) => prevStep + 1);
+    }
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -56,12 +74,12 @@ export const MainLayout = () => {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div">
-                        {questionnaire.name}
+                        {questionnaireRecord.name}
                     </Typography>
                 </Toolbar>
             </AppBar>
             <Sidebar
-                steps={questionnaire.document.steps}
+                steps={questionnaireRecord.document.steps}
                 activeStep={stepIndex}
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
@@ -69,9 +87,10 @@ export const MainLayout = () => {
             <Box component="main" sx={{ marginTop: "64px", p: 2 }}>
                 <FormProvider {...formMethods}>
                     <MainLayoutContent
-                        questionnaire={questionnaire.document}
+                        handleBack={handleBack}
+                        handleContinue={handleContinue}
+                        questionnaire={questionnaireRecord.document}
                         stepIndex={stepIndex}
-                        setActiveStep={setActiveStep}
                     />
                 </FormProvider>
             </Box>
@@ -110,29 +129,31 @@ const AppBar = styled(MuiAppBar, {
 
 
 const MainLayoutContent = ({
-    questionnaire, stepIndex, setActiveStep,
+    handleBack,
+    handleContinue,
+    questionnaire, stepIndex,
 }: {
+    handleBack: () => void;
+    handleContinue: SubmitHandler<FieldValues>;
     questionnaire: IQuestionnaire;
     stepIndex: number;
-    setActiveStep: (step: SetStateAction<number>) => void;
 }) => {
     // We are on the review page
     if (stepIndex === questionnaire.steps.length) {
-        return <ReviewPage />;
+        return (
+            <ReviewPage
+                questionnaire={questionnaire}
+                onBack={handleBack}
+            />
+        );
     }
 
-    // We are on an active step form
-    const stepContext = {
-        setActiveStep,
-        currentStep: questionnaire.steps[stepIndex],
-        stepIndex,
-        isFirst: stepIndex === 0,
-        isLast: stepIndex === questionnaire.steps.length - 1,
-    };
-
     return (
-        <FormStepContext.Provider value={stepContext}>
-            <ActiveStepForm />
-        </FormStepContext.Provider>
+        <ActiveStepForm
+            handleBack={handleBack}
+            handleContinue={handleContinue}
+            currentStep={questionnaire.steps[stepIndex]}
+            stepIndex={stepIndex}
+        />
     );
 }

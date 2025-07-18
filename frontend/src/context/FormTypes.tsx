@@ -17,14 +17,14 @@ export interface IFormSection {
     questions: IQuestion[];
 }
 
-interface IGridQuestionColumn {
+export interface IGridQuestionColumn {
     label: string;
     type: string;
     description?: string;
     select_options?: string[]; // For select types
 }
 
-interface IQuestion {
+export interface IQuestion {
     label: string;
     type: string;
     is_required: boolean;
@@ -60,12 +60,16 @@ export class Question {
         // Append asterisk for required fields
         return this.o.is_required ? `${formatted} *` : formatted;
     }
-
-    // Remove value & values from Question
-    value?: PrimitiveType; // date as string?
-    values?: PrimitiveType[][]; // 2D array for grid values
 }
 
-export interface IAnswers {
 
+export interface IGridAnswerRow {
+    // Keyed by column label
+    [key: string]: PrimitiveType;
+}
+
+export type IAnswer = PrimitiveType | IGridAnswerRow[];
+
+export interface IAnswers {
+    [key: string]: IAnswer;
 }

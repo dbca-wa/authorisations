@@ -14,7 +14,6 @@ export function TextInput({
 
     return <Controller
         name={question.id}
-        defaultValue={question.value || ""}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}

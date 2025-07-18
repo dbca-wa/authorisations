@@ -1,7 +1,6 @@
 import type { IAnswers } from "./FormTypes";
 
 
-
 export class AnswersManager {
     private static getItem(key: string): IAnswers | null {
         const item = localStorage.getItem(key);
@@ -12,16 +11,12 @@ export class AnswersManager {
         localStorage.setItem(key, JSON.stringify(value));
     }
 
-    // private static removeItem(key: string): void {
-    //     localStorage.removeItem(key);
-    // }
-
     private static getKey(applicationId: string): string {
         return `answers_${applicationId}`;
     }
 
     public static getAnswers(applicationId: string): IAnswers {
-        console.log("Getting answers for application ID:", applicationId);
+        // console.log("Getting answers for application ID:", applicationId);
         const key = this.getKey(applicationId);
         return this.getItem(key) || {};
     }
