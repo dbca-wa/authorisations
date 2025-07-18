@@ -1,8 +1,8 @@
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Controller } from 'react-hook-form';
-import { Question } from '../../context/FormTypes';
-import { ERROR_MSG } from './errors';
 import dayjs from 'dayjs';
+import { Controller } from 'react-hook-form';
+import { ERROR_MSG } from '../../context/Constants';
+import { Question } from '../../context/FormTypes';
 
 export function DateInput({
     question,
@@ -11,12 +11,6 @@ export function DateInput({
 }) {
     return <Controller
         name={question.id}
-        defaultValue={
-            // Always pass the actual string value to the DatePicker
-            question.value && typeof question.value === "string"
-                ? question.value
-                : null
-        }
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}

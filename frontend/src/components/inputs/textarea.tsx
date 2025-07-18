@@ -3,7 +3,7 @@ import FormHelperText from "@mui/material/FormHelperText";
 import TextField from "@mui/material/TextField";
 import { Controller } from "react-hook-form";
 import { Question } from "../../context/FormTypes";
-import { ERROR_MSG } from "./errors";
+import { ERROR_MSG } from "../../context/Constants";
 
 export function TextAreaInput({
     question,
@@ -12,7 +12,6 @@ export function TextAreaInput({
 }) {
     return <Controller
         name={question.id}
-        defaultValue={question.value || ""}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}

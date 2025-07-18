@@ -20,7 +20,7 @@ import { MainLayout } from "./components/layout/MainLayout";
 // import { getAuthStore } from "./stores/storeUtils";
 
 // Error component
-import ErrorPage from "./components/ErrorPage";
+import ErrorPage from "./components/layout/ErrorPage";
 // import MiniDrawerLayout from "./components/layout/MiniDrawerLayout";
 
 // Guards
@@ -80,7 +80,6 @@ export const router = createBrowserRouter([
 	{
 		path: "/a/:slug",
 		Component: MainLayout,
-		// Component: MiniDrawerLayout,
 		loader: async ({ params }) => {
 			// Simulate fetching data from a API
 			return await getQuestionnaire(params.slug!);

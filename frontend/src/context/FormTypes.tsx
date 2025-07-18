@@ -1,10 +1,9 @@
 export type PrimitiveType = string | number | boolean | null;
 
-// export interface IApplicationForm {
-//     schema_version: string;
-//     // name: string;
-//     steps: FormStep[];
-// }
+export interface IQuestionnaire {
+    schema_version: string;
+    steps: IFormStep[];
+}
 
 export interface IFormStep {
     title: string;
@@ -18,7 +17,14 @@ export interface IFormSection {
     questions: IQuestion[];
 }
 
-interface IQuestion {
+export interface IGridQuestionColumn {
+    label: string;
+    type: string;
+    description?: string;
+    select_options?: string[]; // For select types
+}
+
+export interface IQuestion {
     label: string;
     type: string;
     is_required: boolean;
@@ -54,36 +60,16 @@ export class Question {
         // Append asterisk for required fields
         return this.o.is_required ? `${formatted} *` : formatted;
     }
-
-    // Remove value & values from Question
-    value?: PrimitiveType; // date as string?
-    values?: PrimitiveType[][]; // 2D array for grid values
 }
 
-interface IGridQuestionColumn {
-    label: string;
-    type: string;
-    description?: string;
-    select_options?: string[]; // For select types
+
+export interface IGridAnswerRow {
+    // Keyed by column label
+    [key: string]: PrimitiveType;
 }
 
-// // Root-level questions can include GridQuestion
-// export type RootQuestion = Question | GridQuestion;
+export type IAnswer = PrimitiveType | IGridAnswerRow[];
 
-// // Nested questions cannot include GridQuestion
-// export interface Question {
-//     label: string;
-//     type: string;
-//     is_required?: boolean;
-//     value?: PrimitiveType; // date as string?
-//     options?: string[]; // For select types
-//     description?: string;
-// }
-
-// export interface GridQuestion extends Omit<Question, "value"> {
-//     type: "grid";
-//     max_rows: number;
-//     // Only basic Question types allowed here
-//     columns: Question[]; 
-//     values: PrimitiveType[][]; // 2D array for grid values
-// }
+export interface IAnswers {
+    [key: string]: IAnswer;
+}

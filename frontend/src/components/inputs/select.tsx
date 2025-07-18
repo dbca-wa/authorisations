@@ -2,7 +2,7 @@ import { FormControl, FormHelperText, InputLabel, MenuItem } from "@mui/material
 import Select from "@mui/material/Select";
 import { Controller } from "react-hook-form";
 import { Question } from "../../context/FormTypes";
-import { ERROR_MSG } from "./errors";
+import { ERROR_MSG } from "../../context/Constants";
 
 export function SelectInput({
     question,
@@ -11,7 +11,6 @@ export function SelectInput({
 }) {
     return <Controller
         name={question.id}
-        defaultValue={question.value || ""}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}

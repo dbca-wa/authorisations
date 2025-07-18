@@ -2,11 +2,21 @@ import AddIcon from '@mui/icons-material/Add';
 import CancelIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import InfoIcon from '@mui/icons-material/Info';
 import SaveIcon from '@mui/icons-material/Save';
 import Box from '@mui/material/Box';
 import Button from "@mui/material/Button";
 import FormHelperText from '@mui/material/FormHelperText';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from "@mui/material/Typography";
+import dayjs from 'dayjs';
+import React from 'react';
+
+import { useController, type ValidateResult } from 'react-hook-form';
+import { v6 as uuidv6 } from 'uuid';
+import { type PrimitiveType, Question } from '../../context/FormTypes';
+import { assert } from '../../Utils';
+
 import type {
     GridColDef,
     GridRowId,
@@ -21,10 +31,6 @@ import {
     GridRowModes,
     Toolbar,
 } from '@mui/x-data-grid';
-import React from 'react';
-import { useController, type ValidateResult } from 'react-hook-form';
-import { v6 as uuidv6 } from 'uuid';
-import { type PrimitiveType, Question } from '../../context/FormTypes';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -38,6 +44,22 @@ declare module '@mui/x-data-grid' {
     }
 }
 
+// Helper to convert date strings to Date objects for DataGrid
+const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
+    return (value || []).map((row) => {
+        const newRow = { ...row };
+        question.o.grid_columns?.forEach((column) => {
+            if (column.type === "date") {
+                assert(typeof newRow[column.label] === "string",
+                    `Expected "${column.label}" to be a string, but got ${typeof newRow[column.label]}`);
+
+                newRow[column.label] = dayjs(newRow[column.label]).toDate();
+            }
+        });
+        return newRow;
+    });
+}
+
 export function GridInput({
     question,
 }: {
@@ -45,31 +67,44 @@ export function GridInput({
 }) {
     const { field, fieldState } = useController({
         name: question.id,
-        defaultValue: getInitialRows(question),
         rules: {
             validate: (): ValidateResult => {
-                return Array.isArray(rows) && rows.length > 0
-                    ? true
-                    : "At least one record must be provided.";
+                return question.o.is_required && rows.length === 0
+                    ? "At least one record must be provided."
+                    : true;
             }
         },
     })
 
     // Populate rows with state from the form controller
-    const [rows, _setRows] = React.useState<GridRowsProp>(field.value);
+    const [rows, _setRows] = React.useState<GridRowsProp>(
+        toGridRows(field.value, question)
+    );
 
     // Attach the react-hook-form `onChange()` update to keep it in sync
     const setRows = (newRows: React.SetStateAction<GridRowsProp>) => {
         // Support both function and value for setState
-        const value = typeof newRows === "function"
+        const updatedRows = typeof newRows === "function"
             ? (newRows as (prev: GridRowsProp) => GridRowsProp)(rows)
             : newRows;
 
         // Update the react state value
-        _setRows(value);
+        _setRows(updatedRows);
+
+        // Convert Date objects to YYYY-MM-DD strings for form state
+        // Do create a new array to avoid mutating the original state
+        const formRows = updatedRows.map((row) => {
+            const newRow = { ...row };
+            question.o.grid_columns?.forEach((column) => {
+                if (column.type === "date" && newRow[column.label] instanceof Date) {
+                    newRow[column.label] = dayjs(newRow[column.label]).format('YYYY-MM-DD');
+                }
+            });
+            return newRow;
+        });
 
         // Sync with react-hook-form
-        field.onChange(value);
+        field.onChange(formRows);
     }
 
     // State for DataGrid row editing mode
@@ -212,7 +247,15 @@ function getHeaders({
 
         return {
             field: column.label,
-            headerName: column.label,
+            // Add info icon next to text if it has a description
+            renderHeader: () => column.description ? (
+                <Tooltip title={column.description}>
+                    <span style={{ display: "inline-flex", alignItems: "start" }}>
+                        {column.label}
+                        <InfoIcon fontSize="inherit" style={{ marginLeft: 4 }} />
+                    </span>
+                </Tooltip>
+            ) : column.label,
             description: column.description,
             // Material UI column attributes
             type: columnType,
@@ -244,24 +287,6 @@ function getHeaders({
     })
 
     return columns;
-}
-
-function getInitialRows(question: Question): GridRowsProp {
-    const rows = (question.values ?? []).map((value, _) => {
-        const row: GridRowModel = {};
-        // Unique ID for each row
-        row['id'] = uuidv6();
-
-        // Populate the row with values
-        question.o.grid_columns?.forEach((column, columnIndex) => {
-            row[column.label] = value[columnIndex] ?? null;
-        });
-        return row;
-    });
-
-    // console.log("Grid rows:", rows);
-
-    return rows as GridRowsProp;
 }
 
 function getEmptyRow(question: Question) {
@@ -350,12 +375,6 @@ function CustomFooterComponent(props: GridSlotProps['footer']) {
 
     return (
         <Toolbar>
-            {/* Use explicit button instead of ToolbarButton */}
-            {/* <Tooltip title="Add record">
-                <ToolbarButton onClick={() => { }}>
-                    <AddIcon fontSize="small" />
-                </ToolbarButton>
-            </Tooltip> */}
             <Button variant="outlined" startIcon={<AddIcon />} onClick={handleClick}>
                 Add Record
             </Button>
