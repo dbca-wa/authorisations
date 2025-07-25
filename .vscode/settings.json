@@ -1,0 +1,7 @@
+{
+    "html.format.templating": true,
+    "django.snippets.exclude": [
+        "cms",
+        "wagtail"
+    ]
+}

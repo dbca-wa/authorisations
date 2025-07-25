@@ -1,17 +1,17 @@
 from django.contrib import admin, auth
-from django.template.response import TemplateResponse
-from django.urls import path
 
-from questionnaire.forms import QuestionnaireForm
-from questionnaire.models import Questionnaire
-
+from questionnaires.forms import QuestionnaireForm
+from questionnaires.models import Questionnaire
 
 # Replace the default UserProfileAdmin to prevent deletion
 admin.site.unregister(auth.models.User)
+
+
 @admin.register(auth.models.User)
 class UserProfileAdmin(auth.admin.UserAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
+
     actions = None
 
 
@@ -49,7 +49,7 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         extra_context["show_save_and_add_another"] = False
         extra_context["show_save_and_continue"] = False
         extra_context["show_save"] = True
-        
+
         return super().add_view(request, form_url, extra_context)
 
     def get_readonly_fields(self, request, obj=None):
@@ -71,22 +71,6 @@ class QuestionnaireAdmin(admin.ModelAdmin):
 
         # Save and return
         return super().save_model(request, obj, form, change)
-    
+
     def get_queryset(self, request):
         return super().get_queryset(request).distinct("slug")
-    
-    # def get_urls(self):
-    #     urls = super().get_urls()
-    #     my_urls = [path("my_view/", self.admin_site.admin_view(self.my_view))]
-    #     return my_urls + urls
-    
-    # def my_view(self, request):
-    #     # ...
-    #     context = dict(
-    #         # Include common variables for rendering the admin template.
-    #         self.admin_site.each_context(request),
-    #         # Anything else you want in the context...
-    #         key='hello world!',
-    #     )
-    #     return TemplateResponse(request, "sometemplate.html", context)
-

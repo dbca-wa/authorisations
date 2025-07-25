@@ -4,10 +4,10 @@ import StepIcon from '@mui/material/StepIcon';
 import StepLabel from '@mui/material/StepLabel';
 import Stepper from '@mui/material/Stepper';
 import Typography from '@mui/material/Typography';
-import type { IFormStep } from '../../context/FormTypes';
+import type { IFormStep } from '../../../context/FormTypes';
 
 
-export function ApplicationSteps({
+export function FormSteps({
     steps, activeStep, drawerOpen,
 }: Readonly<{
     steps: IFormStep[];

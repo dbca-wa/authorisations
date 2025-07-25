@@ -12,7 +12,10 @@ import Typography from "@mui/material/Typography";
 import { grey } from "@mui/material/colors";
 import React from "react";
 import { useFormContext } from "react-hook-form";
-import type { IAnswer, IAnswers, IGridAnswerRow, IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../context/FormTypes";
+import type {
+    IAnswer, IAnswers, IGridAnswerRow,
+    IGridQuestionColumn, IQuestion, IQuestionnaire,
+} from "../../../context/FormTypes";
 
 function humanizeBoolean(val: IAnswer): string {
     if (val === true) return "Yes";
@@ -38,7 +41,7 @@ const onSubmit = () => {
     alert("Submitted! (implement server-side integration here)");
 };
 
-export function ReviewPage({
+export function FormReviewPage({
     questionnaire,
     onBack,
 }: {
@@ -49,7 +52,7 @@ export function ReviewPage({
     const answers: IAnswers = getValues();
 
     return (
-        <div className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
+        <Box className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
             <Typography variant="h4" gutterBottom>
                 Review your answers
             </Typography>
@@ -170,6 +173,6 @@ export function ReviewPage({
                     Submit
                 </Button>
             </Box>
-        </div>
+        </Box>
     );
 }

@@ -3,7 +3,7 @@ from django_jsonform.utils import join_coords
 from jsonschema import ValidationError, validate
 from django_jsonform.validators import JSONSchemaValidationError
 
-from questionnaire.serialisers import get_schema
+from questionnaires.serialisers import get_schema
 
 
 class QuestionnaireForm(forms.ModelForm):

@@ -3,12 +3,12 @@ import Divider from '@mui/material/Divider';
 import MuiDrawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import { styled, type CSSObject, type Theme } from '@mui/material/styles';
-import type { IFormStep } from '../../context/FormTypes';
-import { ApplicationSteps } from './ApplicationSteps';
-import { DRAWER_WIDTH } from '../../context/Constants';
+import type { IFormStep } from '../../../context/FormTypes';
+import { FormSteps } from './FormSteps';
+import { DRAWER_WIDTH } from '../../../context/Constants';
 
 
-export function Sidebar({
+export function FormSidebar({
     steps,
     activeStep,
     drawerOpen,
@@ -39,7 +39,7 @@ export function Sidebar({
                 </IconButton>
             </DrawerHeader>
             <Divider />
-            <ApplicationSteps
+            <FormSteps
                 steps={steps}
                 activeStep={activeStep}
                 drawerOpen={drawerOpen}

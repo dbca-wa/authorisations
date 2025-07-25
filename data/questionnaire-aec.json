@@ -18,7 +18,7 @@
             {
               "type": "checkbox",
               "label": "Monkeys eat bananas?",
-              "description": "",
+              "description": "While we all enjoy seeing a monkey eat bananas in the zoo, monkeys in the wild do not eat bananas. Bananas are domesticated plants that do not grow in the wild, and thus almost all wild monkeys have never had a taste of bananas.",
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
@@ -130,7 +130,7 @@
               "type": "text",
               "label": "Agency / Company / Institution",
               "description": "",
-              "is_required": true,
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -138,8 +138,8 @@
             {
               "type": "text",
               "label": "Chief Investigator (CI)",
-              "description": "",
-              "is_required": true,
+              "description": "The person in charge conducting the research or educational activity involving animals.",
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -148,7 +148,7 @@
               "type": "text",
               "label": "Current Position",
               "description": "",
-              "is_required": true,
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -184,7 +184,7 @@
               "type": "checkbox",
               "label": "Current CI competency form is attached or provided < 12 months ago",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -224,7 +224,7 @@
               "grid_columns": [
                 {
                   "type": "text",
-                  "label": "Name",
+                  "label": "Full name",
                   "description": "",
                   "is_required": true,
                   "select_options": []
@@ -244,7 +244,7 @@
                   ]
                 },
                 {
-                  "type": "text",
+                  "type": "number",
                   "label": "Experience",
                   "description": "Describe experience with designated fauna and techniques",
                   "is_required": true,
@@ -252,7 +252,7 @@
                 },
                 {
                   "type": "checkbox",
-                  "label": "Training",
+                  "label": "Under training",
                   "description": "Is this person training under supervision?",
                   "select_options": []
                 }
@@ -297,7 +297,7 @@
               "type": "textarea",
               "label": "Detail other institutions involvement in the project",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -311,8 +311,8 @@
             {
               "type": "date",
               "label": "Start date",
-              "description": "",
-              "is_required": false,
+              "description": "Anticipated start date of the project.",
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -425,8 +425,8 @@
             {
               "type": "select",
               "label": "Purpose of the proposed project",
-              "description": "",
-              "is_required": false,
+              "description": "If there are more than one category this project fits in, choose the closest and most related one.",
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": [
@@ -450,8 +450,8 @@
                 ]
               ],
               "maxRows": 5,
-              "description": "",
-              "is_required": false,
+              "description": "Aims and objectives are crucial components of planning, guiding efforts towards a desired outcome. Aims are broad, overarching statements of purpose, while objectives are specific, measurable steps taken to achieve those aims. Aims provide the general direction, and objectives detail how to get there.",
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "text",

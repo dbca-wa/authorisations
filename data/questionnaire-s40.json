@@ -36,7 +36,7 @@
           "description": "Information that you provide will be used and disclosed in accordance with sections 274 and 275 of the BC Act.  This may include use for license or authorisation monitoring and compliance, to inform you of any license or  authorisation legislative requirements or changes, and disclosure to other State and Commonwealth agencies for  administration or enforcement purposes. You also consent to the release of information in relation to the granting  of the authorisation, and any conditions of the authorisation, in response to inquiries made to the Department. Applicant declaration: All details provided by me to the Department of Biodiversity, Conservation and Attractions (DBCA) in relation to  this application are true and correct, and I consent to the use and disclosure of information for the purposes described above."
         }
       ],
-      "description": ""
+      "description": "Read and accept our terms of service."
     },
     {
       "title": "Application Details",
@@ -308,7 +308,73 @@
           "description": ""
         }
       ],
-      "description": ""
+      "description": "Contact, institution and other approvals."
+    },
+    {
+      "title": "Flora",
+      "sections": [
+        {
+          "title": "Details of the threatened flora",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Scientific name(s) of threatened flora to be taken or disturbed",
+              "description": "(if more than one taxon please list all)",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "text",
+              "label": "Registered DBCA database population number/s of the threatened flora (if known)",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Total number(s) and condition of plants in threatened flora population(s) subject to the proposed  activity (include reproductive maturity): (e.g. mature / juvenile / seedlings)",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Number(s) of plants and parts of plants likely to be taken or disturbed (e.g. leaves, flowers, fruits, seeds  on ground, stem, roots, above ground plants, whole plants) at the time proposed",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Total number of populations",
+              "description": "Total number of populations, number of plants and condition of the species",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Detail regenerative characteristics of the threatened flora as applicable to activity, where known: e.g.  known to regenerate from soil stored seed after disturbance",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Scientific name(s) of threatened flora to be taken or disturbed"
+        }
+      ],
+      "description": "Details of the threatened flora"
     }
   ],
   "schema_version": "2025.06-1"

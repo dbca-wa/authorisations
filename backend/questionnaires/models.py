@@ -1,0 +1,53 @@
+from django.db import models
+from django.urls import reverse
+from django_jsonform.models.fields import JSONField
+from rest_framework import serializers
+
+from questionnaires.serialisers import get_schema
+
+
+class Questionnaire(models.Model):
+    slug = models.SlugField(
+        max_length=20, null=False, blank=False, unique=False, db_index=False
+    )
+    version = models.PositiveSmallIntegerField(default=1, blank=False, null=False)
+    name = models.CharField(max_length=100, blank=False, null=False)
+    description = models.TextField(max_length=500, blank=False, null=False)
+    document = JSONField(
+        schema=get_schema(),
+        blank=False,
+        null=False,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        "auth.User",
+        related_name="questionnaires",
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                "slug",
+                models.F("version").desc(),
+                name="unique_slug_version_desc",
+                include=["name"],
+            )
+        ]
+
+    def __str__(self):
+        return f'Questionnaire "{self.name}" (v{self.version})'
+
+    @property
+    def serialised(self):
+        """Return the serialised version of the questionnaire."""
+        return QuestionnaireSerialiser(self).data
+
+    def get_absolute_url(self):
+        return reverse("questionnaire", kwargs={"slug": self.slug})
+
+
+class QuestionnaireSerialiser(serializers.ModelSerializer):
+    class Meta:
+        model = Questionnaire
+        fields = ("slug", "version", "name", "description", "created_at", "document")

@@ -1,5 +1,14 @@
 export type PrimitiveType = string | number | boolean | null;
 
+export interface IQuestionnaireData {
+    slug: string;
+    version: number;
+    name: string;
+    description: string;
+    created_at: string;
+    document: IQuestionnaire;
+}
+
 export interface IQuestionnaire {
     schema_version: string;
     steps: IFormStep[];
@@ -56,7 +65,7 @@ export class Question {
 
     // Return formmatted label for display
     get labelText(): string {
-        const formatted = `${this.indices!.question + 1}. ${this.o.label}`;
+        const formatted = `${this.indices.question + 1}. ${this.o.label}`;
         // Append asterisk for required fields
         return this.o.is_required ? `${formatted} *` : formatted;
     }
