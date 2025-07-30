@@ -100,20 +100,6 @@ class QuestionSerialiser(serializers.Serializer):
     )
 
 
-# TODO: How do we store the answers?
-# class QuestionnaireGridQuestion(QuestionnaireQuestion):
-#     value = serializers.CharField(max_length=255, required=False, allow_blank=True)
-#     values = serializers.ListField(
-#         child=serializers.ListField(
-#             child=serializers.CharField(max_length=255, allow_blank=True),
-#             allow_empty=True,
-#         ),
-#         max_length=10,
-#         required=False,
-#         allow_empty=True,
-#     )
-
-
 class SectionSerialiser(serializers.Serializer):
     title = serializers.CharField(max_length=100, required=True)
     description = serializers.CharField(
@@ -142,7 +128,7 @@ class StepSerialiser(serializers.Serializer):
     )
 
 
-# This should never be modified, therefore we use frozendict
+# This should never be modified on runtime, therefore we use frozendict
 # (and django-jsonform does modify it when passed as a field construct param)
 _SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
     {
@@ -155,7 +141,7 @@ _SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
             "schema_version": {
                 "type": "string",
                 "title": "Schema version",
-                "default": "2025.06-1",  # Current version of the schema
+                "default": "2025.07-1",  # Current version of the schema
                 "readOnly": True,
                 "description": "The version of the questionnaire schema.",
             },
@@ -166,6 +152,8 @@ _SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
                 "minItems": 1,
             },
         },
+        "required": ["schema_version", "steps"],
+        "additionalProperties": False,
         "$defs": {
             "step": to_jsonschema(StepSerialiser()),
             "section": to_jsonschema(SectionSerialiser()),
@@ -175,16 +163,16 @@ _SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
 )
 
 
-def get_schema() -> dict:
+def get_questionnaire_schema() -> dict:
     """Always return a deepcopy of the schema to avoid modifications
     to the original schema (yes, django-jsonform does that).
 
     TODO: Implement schema versioning in the future.
     """
     schema: dict = deepcopy(dict(_SCHEMA_QUESTIONNAIRE))
-    schema["properties"]["schema_version"]["default"] = "2025.06-1"
+    schema["properties"]["schema_version"]["default"] = "2025.07-1"
     return schema
 
 
 # Do check the schema validation at the startup
-Draft202012Validator.check_schema(get_schema())
+Draft202012Validator.check_schema(get_questionnaire_schema())

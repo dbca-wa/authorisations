@@ -13,6 +13,7 @@ import { MainLayout } from "./components/layout/main/MainLayout";
 import { RESPONSE_404 } from './context/Constants';
 import type { IRoute } from './context/Types';
 import { NewApplication } from './components/layout/main/NewApplication';
+import { MyApplications } from './components/layout/main/MyApplications';
 
 // Guards
 // const authGuard = () => {
@@ -51,6 +52,7 @@ export const ROUTES: IRoute[] = [
 		label: "My Applications",
 		path: "/my-applications",
 		icon: <TopicIcon />,
+		component: MyApplications,
 		divider: false,
 	},
 	{
@@ -86,7 +88,7 @@ const getJsonData = async () => {
 	return JSON.parse(dataElement.textContent);
 }
 
-async function getQuestionnaire() {
+const getQuestionnaire = async () => {
 	const questionnaire = await getJsonData();
 	// Check if the required fields are present
 	if (!questionnaire.slug || !questionnaire.version || !questionnaire.name || !questionnaire.document) {

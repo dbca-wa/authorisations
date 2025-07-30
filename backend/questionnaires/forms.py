@@ -3,7 +3,7 @@ from django_jsonform.utils import join_coords
 from jsonschema import ValidationError, validate
 from django_jsonform.validators import JSONSchemaValidationError
 
-from questionnaires.serialisers import get_schema
+from questionnaires.serialisers import get_questionnaire_schema
 
 
 class QuestionnaireForm(forms.ModelForm):
@@ -18,7 +18,7 @@ class QuestionnaireForm(forms.ModelForm):
         TODO: Maybe implement multi validation error mapping (yeah nah).
         """
         try:
-            validate(value, get_schema())
+            validate(value, get_questionnaire_schema())
         except ValidationError as e:
             # Get the exact coordinate from error path
             coor: str = join_coords(*list(e.absolute_path))

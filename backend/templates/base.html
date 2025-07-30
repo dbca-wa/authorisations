@@ -10,7 +10,7 @@
   {% vite_asset 'src/main.tsx' %}
   <title>{% block title %}{% endblock %} : DBCA Authorisations</title>
   {% spaceless %}
-    {% if json_data %}
+    {% if json_data is not None %}
       {{ json_data|json_script:'json-data' }}
     {% endif %}
   {% endspaceless %}

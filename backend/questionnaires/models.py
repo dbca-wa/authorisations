@@ -3,10 +3,13 @@ from django.urls import reverse
 from django_jsonform.models.fields import JSONField
 from rest_framework import serializers
 
-from questionnaires.serialisers import get_schema
+from questionnaires.serialisers import get_questionnaire_schema
 
 
 class Questionnaire(models.Model):
+    """Model to represent a questionnaire with steps, sections, and questions."""
+    
+    id = models.BigAutoField(primary_key=True)
     slug = models.SlugField(
         max_length=20, null=False, blank=False, unique=False, db_index=False
     )
@@ -14,7 +17,7 @@ class Questionnaire(models.Model):
     name = models.CharField(max_length=100, blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
     document = JSONField(
-        schema=get_schema(),
+        schema=get_questionnaire_schema(),
         blank=False,
         null=False,
     )
@@ -30,7 +33,7 @@ class Questionnaire(models.Model):
             models.UniqueConstraint(
                 "slug",
                 models.F("version").desc(),
-                name="unique_slug_version_desc",
+                name="qnaire_unique_slug_version_desc",
                 include=["name"],
             )
         ]

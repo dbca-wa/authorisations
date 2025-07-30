@@ -7,7 +7,7 @@ from applications.models import Application
 class ApplicationAdmin(admin.ModelAdmin):
     """Admin interface for managing applications."""
 
-    list_display = ("user", "questionnaire", "status", "created_at", "updated_at")
+    list_display = ("user", "questionnaire", "status", "created_at")
     list_filter = ("status", "created_at")
     search_fields = ("user__username", "questionnaire__name")
     readonly_fields = ("created_at", "updated_at")
@@ -16,7 +16,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return request.user.is_staff
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False

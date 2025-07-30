@@ -1,5 +1,8 @@
 export type PrimitiveType = string | number | boolean | null;
 
+/** 
+ * Interface for a questionnaire data including meta data 
+ */
 export interface IQuestionnaireData {
     slug: string;
     version: number;
@@ -9,6 +12,9 @@ export interface IQuestionnaireData {
     document: IQuestionnaire;
 }
 
+/**
+ * Interface for a questionnaire document in JSON Schema structure
+ */
 export interface IQuestionnaire {
     schema_version: string;
     steps: IFormStep[];
@@ -43,13 +49,18 @@ export interface IQuestion {
     grid_columns?: IGridQuestionColumn[] | null;
 }
 
-// Step, section and question indices (used for form validation and display)
+/**
+ * Step, section and question indices (used for form validation and display)
+ */
 interface IQuestionIndices {
     step: number;
     section: number;
     question: number;
 }
 
+/**
+ * Class representing a question with its indices in the questionnaire form
+ */
 export class Question {
     public readonly o: IQuestion;
     public readonly indices: IQuestionIndices;
@@ -71,14 +82,37 @@ export class Question {
     }
 }
 
+/**
+ * Interface for application data, which includes the answers and meta data
+ */
+export interface IApplicationData {
+    key: string;
+    questionnaire_slug: string;
+    questionnaire_version: number;
+    questionnaire_name: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    submitted_at: string | null;
+    answers: IAnswers;
+}
 
+/**
+ * Interface corresponding to a grid answer row, where each column is keyed by its label
+ */
 export interface IGridAnswerRow {
     // Keyed by column label
     [key: string]: PrimitiveType;
 }
 
+/**
+ * Interface for an answer, which can be either a primitive type or an array of grid answer rows
+ */
 export type IAnswer = PrimitiveType | IGridAnswerRow[];
 
+/**
+ * Interface for an application answer document in JSON Schema structure
+ */
 export interface IAnswers {
     [key: string]: IAnswer;
 }

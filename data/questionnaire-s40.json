@@ -89,7 +89,7 @@
               "type": "text",
               "label": "Email address",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -153,13 +153,13 @@
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": [
-                "Yes",
+                "Yes (please list them below)",
                 "No"
               ]
             },
             {
               "type": "textarea",
-              "label": "If yes, please provide details and offence date",
+              "label": "Please provide details and offence date",
               "description": "",
               "is_required": false,
               "grid_columns": [],
@@ -311,7 +311,7 @@
       "description": "Contact, institution and other approvals."
     },
     {
-      "title": "Flora",
+      "title": "Details of the threatened flora ",
       "sections": [
         {
           "title": "Details of the threatened flora",
@@ -372,9 +372,438 @@
             }
           ],
           "description": "Scientific name(s) of threatened flora to be taken or disturbed"
+        },
+        {
+          "title": "Proposed activity",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Provide a brief description of the activities that will or may take threatened flora.   Relevant information attached:  ",
+              "description": "Note: “to take or disturb” also refers to inadvertent or accidental impact to the threatened flora and surrounding habitat.  If renewing a threatened flora authorisation, please advise if the activities authorised under the previous authorisation were completed and the number of plants taken to date. ",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
         }
       ],
       "description": "Details of the threatened flora"
+    },
+    {
+      "title": "Land details",
+      "sections": [
+        {
+          "title": "Location of proposed activity:",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Location details: street address, lot/location no., lease no., and/or reserve no., and local government area) ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "Map of proposed areas(s)",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Map attached?",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes",
+                "no"
+              ]
+            }
+          ],
+          "description": "Please attach a map which includes the location of the threatened flora and the area/s proposed to be impacted by the activity. "
+        },
+        {
+          "title": "Shapefile and/or GPS Coordinates",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Shapefile and/or GPS Coordinates uploaded?",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes",
+                "no"
+              ]
+            }
+          ],
+          "description": "please upload a shapefile and/or GPS Coordinates "
+        }
+      ],
+      "description": "land details "
+    },
+    {
+      "title": " Proposed activity ",
+      "sections": [
+        {
+          "title": "Provide a brief description of the activities that will or may take threatened flora. ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Activities to be underatken",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Note: “to take or disturb” also refers to inadvertent or accidental impact to the threatened flora and surrounding habitat.  If renewing a threatened flora authorisation, please advise if the activities authorised under the previous authorisation were completed and the number of plants taken to date."
+        },
+        {
+          "title": "Is this activity part of an ongoing project? ",
+          "questions": [
+            {
+              "type": "select",
+              "label": "is this an ongoining project?",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes (please provide details below) ",
+                "no"
+              ]
+            },
+            {
+              "type": "textarea",
+              "label": "Details of ongoing activities   ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "grid",
+              "label": "Approximate duration of the proposed activities which will result in taking of threatened flora: ",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Activity:",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "date",
+                  "label": "Commence:",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "date",
+                  "label": "Cease",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "Purpose of and need for the proposed activities: ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Purpose of and need for the proposed activities: ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Purpose of and need for the proposed activities: "
+        },
+        {
+          "title": "Additional comments in support of application",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "additional comments",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "(e.g. discussion with DBCA District/Regional staff and/or Species and Communities Program). "
+        }
+      ],
+      "description": " Proposed activity "
+    },
+    {
+      "title": "Mitgation",
+      "sections": [
+        {
+          "title": "Demonstrate the application of the mitigation hierarchy. ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Demonstrate the application of the mitigation hierarchy. ",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Provide evidence that avoidance and mitigation options have been pursued to eliminate, reduce risk, or otherwise mitigate the need for, and scale of, the impact of the proposed activity on the threatened flora (before, during and after the proposed activity). Where there is a significant risk to threatened flora, detail what steps will be taken to reduce the longer-term impact."
+        }
+      ],
+      "description": ""
+    },
+    {
+      "title": "Monitoring ",
+      "sections": [
+        {
+          "title": "Monitoring impact",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Is monitoring to be undertaken?",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes (please provide details below)",
+                "No"
+              ]
+            },
+            {
+              "type": "textarea",
+              "label": "Please provide details on pre and/or post activity monitoring  ",
+              "description": "(Attach detailed monitoring plan where applicable).",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Consideration must be given to the monitoring effects of activities on the species be monitored?"
+        }
+      ],
+      "description": ""
+    },
+    {
+      "title": "Additional site impacts ",
+      "sections": [
+        {
+          "title": "Is there risk of additional site impacts  ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "please list all site impacts ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "select",
+              "label": "will additional details be attached ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes.",
+                "no."
+              ]
+            }
+          ],
+          "description": "Provide details below or attach information which describe impacts to surrounding habitat which may cause secondary (indirect) impacts to the threatened flora:"
+        }
+      ],
+      "description": "impacts on the site in question "
+    },
+    {
+      "title": "Presence of other conservation significant species or communities ",
+      "sections": [
+        {
+          "title": "Has the presence of all threatened ecological communities and species been considered??",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "I have undertaken research to the best of my ability and determined the following species and or Communities are also present within the area of activity  ",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "All applications must include assessment of possible pressence or occurrences of threatened ecological communities and species in impacted areas of activity "
+        },
+        {
+          "title": "The following instances of conservation significant Flora has been identified!",
+          "questions": [
+            {
+              "type": "grid",
+              "label": "Priority Flora",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Species name",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "The following instances of conservation significant ecological communities has been identified!",
+          "questions": [
+            {
+              "type": "grid",
+              "label": "Threatened Ecological Community's ",
+              "description": "You may require a threatened ecological community authorisation. Please refer to DBCA’s Authorisation to modify a threatened ecological community. ",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Comunity Name",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "The following instances of conservation significant Fauna has been identified!",
+          "questions": [
+            {
+              "type": "grid",
+              "label": "Fauna name ",
+              "description": "you may require a threatened fauna authorisation Authorisation to take and disturb threatened fauna. ",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Threatened Fauna Name ",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        }
+      ],
+      "description": ""
+    },
+    {
+      "title": "Check list of attachments (where applicable):  ",
+      "sections": [
+        {
+          "title": "check list of Supporting documentation",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "Other approvals documents (as applicable).",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Aerial photograph or map with a north arrow clearly identifying the threatened flora to be impact.",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "Aerial photograph or map with a north arrow clearly identifying the threatened flora to be impact."
+              ]
+            },
+            {
+              "type": "checkbox",
+              "label": "Shapefile of area in question (where available).",
+              "description": "Shapefile of area in question (where available).",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Monitoring program.",
+              "description": "Monitoring program.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Environmental surveys.",
+              "description": "Environmental surveys.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Photos of application area.",
+              "description": "Photos of application area.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Additional supporting Information (please describe below): ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        }
+      ],
+      "description": ""
     }
   ],
   "schema_version": "2025.06-1"

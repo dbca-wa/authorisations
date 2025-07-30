@@ -34,7 +34,7 @@ export const FormActiveStep = ({
     const { handleSubmit } = useFormContext();
 
     return (
-        <Box className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
+        <Box className="bg-gray-300 p-8 min-w-4xl max-w-7xl">
             <form onSubmit={handleSubmit(handleContinue, onError)} onKeyDown={onKeyDown}>
                 {currentStep.sections.map((section, sectionIndex) => {
                     return <Section

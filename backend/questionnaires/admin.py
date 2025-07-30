@@ -53,9 +53,9 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         return super().add_view(request, form_url, extra_context)
 
     def get_readonly_fields(self, request, obj=None):
-        # Existing object slug cannot be changed, (the name actually can)
+        # Existing object slug cannot be changed
         if obj is not None:
-            return self.readonly_fields + ("slug", "name")
+            return self.readonly_fields + ("slug",)
 
         return self.readonly_fields
 

@@ -12,7 +12,7 @@ def my_applications(request):
     return render(
         request,
         "my-applications.html",
-        {"applications": []},
+        {"json_data": []},
     )
 
 
