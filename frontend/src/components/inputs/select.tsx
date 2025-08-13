@@ -1,7 +1,7 @@
 import { FormControl, FormHelperText, InputLabel, MenuItem } from "@mui/material";
 import Select from "@mui/material/Select";
 import { Controller } from "react-hook-form";
-import { Question } from "../../context/FormTypes";
+import { Question } from "../../context/types/Questionnaire";
 import { ERROR_MSG } from "../../context/Constants";
 
 export function SelectInput({
@@ -10,7 +10,7 @@ export function SelectInput({
     question: Readonly<Question>
 }) {
     return <Controller
-        name={question.id}
+        name={question.key}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}
@@ -19,7 +19,7 @@ export function SelectInput({
             // so the description helper text will always display normal
             <FormControl fullWidth>
                 <InputLabel
-                    id={"label-" + question.id}
+                    id={"label-" + question.key}
                     error={fieldState.invalid}
                 >
                     {question.labelText}
@@ -27,7 +27,7 @@ export function SelectInput({
                 <Select
                     {...field}
                     label={question.labelText}
-                    labelId={"label-" + question.id}
+                    labelId={"label-" + question.key}
                     error={fieldState.invalid}
                 >
                     {question.o.select_options?.map((option) => (

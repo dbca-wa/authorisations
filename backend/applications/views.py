@@ -1,6 +1,10 @@
+from api.models import ClientConfig
+from api.serialisers import ClientConfigSerialiser
+from django.middleware.csrf import get_token
 from django.shortcuts import render
-
+from django.views.decorators.csrf import ensure_csrf_cookie
 from questionnaires.models import Questionnaire
+from questionnaires.models import QuestionnaireSerialiser
 
 
 def my_applications(request):
@@ -16,16 +20,25 @@ def my_applications(request):
     )
 
 
+@ensure_csrf_cookie
 def new_application(request):
     """View to handle the creation of a new application."""
 
     # Fetch the latest version of questionnaires, grouped by slug
     questionnaires = Questionnaire.objects.order_by("slug", "-version").distinct("slug")
 
+    # Get config with CSRF token
+    config = ClientConfig(get_token(request))
+
+    # import pdb; pdb.set_trace()
+
     return render(
         request,
         "new-application.html",
-        {"json_data": [q.serialised for q in questionnaires]},
+        {
+            "json_data": [QuestionnaireSerialiser(q).data for q in questionnaires],
+            "config": ClientConfigSerialiser(config).data,
+        },
     )
 
 
@@ -45,5 +58,5 @@ def display_new_application(request, slug):
     return render(
         request,
         "questionnaire.html",
-        {"json_data": questionnaire.serialised},
+        {"json_data": QuestionnaireSerialiser(questionnaire).data},
     )

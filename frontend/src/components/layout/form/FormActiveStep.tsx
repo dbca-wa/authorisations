@@ -10,7 +10,9 @@ import {
     type SubmitErrorHandler
 } from "react-hook-form";
 
-import { Question, type IFormSection, type IFormStep } from "../../../context/FormTypes";
+import { type IFormSection } from "../../../context/types/Application";
+import { Question } from "../../../context/types/Questionnaire";
+import { type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
 import { GridInput } from "../../inputs/grid";
@@ -156,7 +158,7 @@ const Section = ({
                     }
 
                     return (
-                        <ListItem id={`field-${question.id}`} key={qIndex} className="mb-4">
+                        <ListItem id={`field-${question.key}`} key={qIndex} className="mb-4">
                             {inputComponent}
                         </ListItem>
                     );

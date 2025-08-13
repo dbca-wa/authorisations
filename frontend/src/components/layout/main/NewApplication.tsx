@@ -1,11 +1,26 @@
+import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
+import React from "react";
+
 import { Box, Button, Card, List, ListItem, Typography } from "@mui/material";
+import { AxiosError } from 'axios';
 import { useLoaderData } from "react-router";
-import type { IQuestionnaireData } from "../../../context/FormTypes";
+import { ApiManager } from '../../../context/ApiManager';
+import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
+import type { IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { EmptyStateComponent } from "./EmptyState";
 
+
+
 export const NewApplication = () => {
+    // const config = ConfigManager.get('');
+    // console.log("Config:", config)
+
     const questionnaires = useLoaderData<IQuestionnaireData[]>();
-    // console.log('Questionnaires:', questionnaires);
+    console.log('Questionnaires:', questionnaires);
+
+    // Creating a new application in progress state
+    const [inProgress, setInProgress] = React.useState<string>("");
+
 
     return (
         <Box className="p-8 min-w-4xl max-w-7xl">
@@ -16,7 +31,12 @@ export const NewApplication = () => {
             {questionnaires.length === 0 ? <EmptyStateComponent /> :
                 <List>
                     {questionnaires.map((q) =>
-                        <Questionnaire key={q.slug} questionnaire={q} />)}
+                        <Questionnaire
+                            key={q.slug}
+                            questionnaire={q}
+                            inProgress={inProgress}
+                            setInProgress={setInProgress}
+                        />)}
                 </List>
             }
         </Box>
@@ -25,9 +45,11 @@ export const NewApplication = () => {
 
 /** Display a MUI card the given questionnaire with a link to start a new application for it */
 const Questionnaire = ({
-    questionnaire,
+    questionnaire, inProgress, setInProgress,
 }: {
     questionnaire: IQuestionnaireData;
+    inProgress: string;
+    setInProgress: React.Dispatch<React.SetStateAction<string>>;
 }) => {
     const localDate = new Date(questionnaire.created_at).toLocaleDateString()
 
@@ -43,11 +65,13 @@ const Questionnaire = ({
                 </Typography>
                 <Box display="flex" justifyContent="flex-end" mt={2}>
                     <Button
-                        variant="contained"
+                        variant="outlined"
                         color="info"
-                        onClick={() => {
-                            console.log("Starting application for:", questionnaire.name);
-                        }}
+                        loadingPosition='start'
+                        loading={inProgress === questionnaire.slug}
+                        disabled={Boolean(inProgress)}
+                        startIcon={<CreateOutlinedIcon />}
+                        onClick={() => startApplication({ questionnaire, setInProgress })}
                     >
                         Start Application
                     </Button>
@@ -55,4 +79,68 @@ const Questionnaire = ({
             </Card>
         </ListItem>
     );
+}
+
+
+const startApplication = async ({
+    questionnaire, setInProgress,
+}: {
+    questionnaire: IQuestionnaireData;
+    setInProgress: React.Dispatch<React.SetStateAction<string>>;
+}) => {
+    setInProgress(questionnaire.slug);
+
+    // Check if there is already an application in progress for this questionnaire
+    const existingApplications: IApplicationData[] | null = await ApiManager.fetchApplications()
+        .catch((error: AxiosError) => {
+            console.error('Error fetching applications:', error);
+            alert("[Warning dialog goes here] Failed to fetch existing applications. Please try again later.");
+            return null;
+        })
+
+    // Stop progress if fetching applications failed
+    if (existingApplications === null) {
+        setInProgress("");
+        return;
+    }
+
+    // Find in-progress applications
+    const inProgressApplication = existingApplications.find((app: IApplicationData) =>
+        app.questionnaire_slug === questionnaire.slug && !finalisedStatuses.includes(app.status)
+        // && app.created_by !=== self.user
+    );
+
+    console.log("Existing applications:", existingApplications);
+    // console.log("Headers:", existingApplications.headers.getSetCookie())
+
+    // return;
+
+    // If there is an in-progress application, display the warning dialog
+    if (inProgressApplication) {
+        // console.log("inProgressApplication:", inProgressApplication);
+        console.warn("You already have an in-progress application for this questionnaire.");
+        // alert('[Warning dialog goes here] You already have an in-progress application..')
+        // setInProgress("");
+        // return;
+    }
+
+    // Do create a new application and redirect to it
+    const applicationData: IApplicationData | null = await ApiManager.createApplication(questionnaire.slug)
+        .catch((error: AxiosError) => {
+            console.error('Error creating application:', error);
+            alert('[Warning dialog goes here] Failed to create an application. Please try again later.')
+            return null;
+        });
+
+    if (applicationData === null) {
+        setInProgress("");
+        return;
+    }
+
+    console.log("Post result:", applicationData)
+
+    // const applicationId = result.data.id;
+    // window.location.href = `/a/${applicationId}`;
+
+    // setInProgress("");
 }

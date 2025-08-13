@@ -11,7 +11,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
 import { DRAWER_WIDTH } from '../../../context/Constants';
-import type { IRoute } from '../../../context/Types';
+import type { IRoute } from "../../../context/types/Generic";
 import { ROUTES } from '../../../router';
 
 

@@ -10,6 +10,9 @@ urlpatterns = [
     path("new-application", new_application, name="new-application"),
     path("q/<slug:slug>", display_new_application, name="questionnaire"),
     
+    # Api
+    path("api/", include("api.urls")),
+    
     # Admin and admin tools
     path("dbnow", db_now_view, name="db-now"),
     path("admin/", admin.site.urls),

@@ -4,7 +4,7 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import { useLoaderData } from "react-router";
-import type { IApplicationData } from "../../../context/FormTypes";
+import type { IApplicationData } from "../../../context/types/Application";
 import { EmptyStateComponent } from "./EmptyState";
 
 

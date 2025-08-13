@@ -14,8 +14,9 @@ import React from 'react';
 
 import { useController, type ValidateResult } from 'react-hook-form';
 import { v6 as uuidv6 } from 'uuid';
-import { type PrimitiveType, Question } from '../../context/FormTypes';
-import { assert } from '../../Utils';
+import { Question } from "../../context/types/Questionnaire";
+import { type PrimitiveType } from "../../context/types/Generic";
+import { assert } from '../../context/Utils';
 
 import type {
     GridColDef,
@@ -66,7 +67,7 @@ export function GridInput({
     question: Readonly<Question>,
 }) {
     const { field, fieldState } = useController({
-        name: question.id,
+        name: question.key,
         rules: {
             validate: (): ValidateResult => {
                 return question.o.is_required && rows.length === 0

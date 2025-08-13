@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 from django_jsonform.models.fields import JSONField
 
-from applications.serialisers import get_answers_schema
+from .schema import get_answers_schema
 
 
 class ApplicationStatus(models.TextChoices):
@@ -22,32 +22,36 @@ class Application(models.Model):
     """Model to represent an application."""
 
     id = models.BigAutoField(primary_key=True)
-    key = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    user = models.ForeignKey(
+    key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    owner = models.ForeignKey(
         "auth.User",
         on_delete=models.PROTECT,
         related_name="applications",
         db_index=False,
+        editable=False,
     )
     questionnaire = models.ForeignKey(
         "questionnaires.Questionnaire",
         on_delete=models.PROTECT,
         related_name="applications",
         db_index=False,
+        editable=False,
     )
     status = models.CharField(
         max_length=20,
         choices=ApplicationStatus.choices,
         default=ApplicationStatus.DRAFT,
+        editable=False,
     )
-    answers = JSONField(
+    document = JSONField(
         schema=get_answers_schema(),
         blank=False,
         null=False,
+        editable=True,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    submitted_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    submitted_at = models.DateTimeField(blank=True, null=True, editable=False)
 
     # Create multiple column indexes for:
     # - user, status, created_at DESC
@@ -56,8 +60,8 @@ class Application(models.Model):
         ordering = ["-created_at"]
         indexes = [
             models.Index(
-                fields=["user", "status", "-created_at"],
-                name="apps_user_status_idx",
+                fields=["owner", "status", "-created_at"],
+                name="apps_owner_status_idx",
             ),
             models.Index(
                 fields=["questionnaire", "status", "-created_at"],
@@ -66,7 +70,7 @@ class Application(models.Model):
         ]
 
     def __str__(self):
-        return f"Application #{self.id} by {self.user.username} for {self.questionnaire.name}"
+        return f"Application #{self.id} by {self.owner.username} for {self.questionnaire.name}"
 
 
 # def certificate_path(instance, filename):

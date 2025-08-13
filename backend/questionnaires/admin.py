@@ -23,9 +23,22 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         "slug",
         "-version",
     )
-    readonly_fields = ("version", "created_at", "created_by")
+    readonly_fields = ("version", "created_at", "created_by", "slug")
+    editable_fields = ("name", "description", "document")
+    
     save_as = False
     save_as_continue = False
+    
+    fieldsets = (
+        # This is the first fieldset, appearing at the top
+        (None, {
+            'fields': readonly_fields, # Include your read-only fields here
+        }),
+        # A subsequent fieldset for editable fields
+        ('Editable Fields', {
+            'fields': editable_fields,
+        }),
+    )
 
     def has_add_permission(self, request, obj=None):
         return request.user.is_superuser
@@ -53,11 +66,30 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         return super().add_view(request, form_url, extra_context)
 
     def get_readonly_fields(self, request, obj=None):
-        # Existing object slug cannot be changed
-        if obj is not None:
-            return self.readonly_fields + ("slug",)
+        readonly_fields = list(self.readonly_fields)
+        
+        # Only super users can change it
+        if self.has_add_permission(request, obj):
+            readonly_fields.remove("slug")
+        
+        return readonly_fields
+    
+    def get_fieldsets(self, request, obj=None):
+        # If "slug" is not readonly, add it to editable fields
+        readonly_fields = self.get_readonly_fields(request, obj)
+        editable_fields = list(self.editable_fields)
+        
+        if "slug" not in readonly_fields:
+            editable_fields.insert(0, "slug")
 
-        return self.readonly_fields
+        return (
+            (None, {
+                'fields': readonly_fields,
+            }),
+            ('Editable Fields', {
+                'fields': tuple(editable_fields),
+            }),
+        )
 
     def save_model(self, request, obj, form, change):
         # If the object is being changed, increment the version

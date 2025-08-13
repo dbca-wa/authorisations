@@ -11,7 +11,7 @@ import { ErrorPage } from "./components/layout/ErrorPage";
 import { FormLayout } from "./components/layout/form/FormLayout";
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { RESPONSE_404 } from './context/Constants';
-import type { IRoute } from './context/Types';
+import type { IRoute } from "./context/types/Generic";
 import { NewApplication } from './components/layout/main/NewApplication';
 import { MyApplications } from './components/layout/main/MyApplications';
 

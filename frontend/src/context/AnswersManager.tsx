@@ -1,4 +1,4 @@
-import type { IAnswers } from "./FormTypes";
+import type { IAnswers } from "./types/Application";
 
 
 export class AnswersManager {

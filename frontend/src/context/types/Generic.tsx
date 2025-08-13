@@ -1,4 +1,5 @@
 
+export type PrimitiveType = string | number | boolean | null;
 
 export interface IRoute {
     label: string;
@@ -7,3 +8,4 @@ export interface IRoute {
     component?: React.ComponentType<any>;
     divider: boolean;
 }
+

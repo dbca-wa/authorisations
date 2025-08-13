@@ -14,8 +14,10 @@ import React from "react";
 import { useFormContext } from "react-hook-form";
 import type {
     IAnswer, IAnswers, IGridAnswerRow,
-    IGridQuestionColumn, IQuestion, IQuestionnaire,
-} from "../../../context/FormTypes";
+    IQuestionnaire,
+} from "../../../context/types/Application";
+import type { IGridQuestionColumn } from "../../../context/types/Questionnaire";
+import type { IQuestion } from "../../../context/types/Questionnaire";
 
 function humanizeBoolean(val: IAnswer): string {
     if (val === true) return "Yes";

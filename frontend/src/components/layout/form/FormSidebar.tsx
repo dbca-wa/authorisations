@@ -3,7 +3,7 @@ import Divider from '@mui/material/Divider';
 import MuiDrawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import { styled, type CSSObject, type Theme } from '@mui/material/styles';
-import type { IFormStep } from '../../../context/FormTypes';
+import type { IFormStep } from "../../../context/types/Questionnaire";
 import { FormSteps } from './FormSteps';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 
