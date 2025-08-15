@@ -3,7 +3,7 @@ import React from "react";
 
 import { Box, Button, Card, List, ListItem, Typography } from "@mui/material";
 import { AxiosError } from 'axios';
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IQuestionnaireData } from "../../../context/types/Questionnaire";
@@ -16,7 +16,7 @@ export const NewApplication = () => {
     // console.log("Config:", config)
 
     const questionnaires = useLoaderData<IQuestionnaireData[]>();
-    console.log('Questionnaires:', questionnaires);
+    // console.log('Questionnaires:', questionnaires);
 
     // Creating a new application in progress state
     const [inProgress, setInProgress] = React.useState<string>("");
@@ -51,6 +51,7 @@ const Questionnaire = ({
     inProgress: string;
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
 }) => {
+    const navigate: NavigateFunction = useNavigate();
     const localDate = new Date(questionnaire.created_at).toLocaleDateString()
 
     return (
@@ -71,7 +72,7 @@ const Questionnaire = ({
                         loading={inProgress === questionnaire.slug}
                         disabled={Boolean(inProgress)}
                         startIcon={<CreateOutlinedIcon />}
-                        onClick={() => startApplication({ questionnaire, setInProgress })}
+                        onClick={() => startApplication({ questionnaire, setInProgress, navigate })}
                     >
                         Start Application
                     </Button>
@@ -83,10 +84,11 @@ const Questionnaire = ({
 
 
 const startApplication = async ({
-    questionnaire, setInProgress,
+    questionnaire, setInProgress, navigate
 }: {
     questionnaire: IQuestionnaireData;
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
+    navigate: NavigateFunction;
 }) => {
     setInProgress(questionnaire.slug);
 
@@ -107,40 +109,34 @@ const startApplication = async ({
     // Find in-progress applications
     const inProgressApplication = existingApplications.find((app: IApplicationData) =>
         app.questionnaire_slug === questionnaire.slug && !finalisedStatuses.includes(app.status)
-        // && app.created_by !=== self.user
+        // && app.owner === self.user
     );
 
     console.log("Existing applications:", existingApplications);
-    // console.log("Headers:", existingApplications.headers.getSetCookie())
-
-    // return;
 
     // If there is an in-progress application, display the warning dialog
     if (inProgressApplication) {
         // console.log("inProgressApplication:", inProgressApplication);
         console.warn("You already have an in-progress application for this questionnaire.");
-        // alert('[Warning dialog goes here] You already have an in-progress application..')
+        alert('[Warning dialog goes here] You already have an in-progress application..')
         // setInProgress("");
         // return;
     }
 
     // Do create a new application and redirect to it
-    const applicationData: IApplicationData | null = await ApiManager.createApplication(questionnaire.slug)
+    const newApplication: IApplicationData | null = await ApiManager.createApplication(questionnaire.slug)
         .catch((error: AxiosError) => {
             console.error('Error creating application:', error);
             alert('[Warning dialog goes here] Failed to create an application. Please try again later.')
             return null;
         });
 
-    if (applicationData === null) {
+    if (newApplication === null) {
         setInProgress("");
         return;
     }
 
-    console.log("Post result:", applicationData)
+    // console.log("Created new application:", newApplication)
 
-    // const applicationId = result.data.id;
-    // window.location.href = `/a/${applicationId}`;
-
-    // setInProgress("");
+    navigate(`/a/${newApplication.key}`);
 }

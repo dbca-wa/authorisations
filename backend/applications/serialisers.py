@@ -14,17 +14,22 @@ class ApplicationSerialiser(
     Serializer for the Application model.
     """
 
-    # questionnaire_id = serializers.PrimaryKeyRelatedField(
-    #     source="questionnaire.id",
-    #     read_only=True,
-    # )
     owner = serializers.CharField(
         source="owner.username",
         required=False,
         read_only=True,
     )
+    # questionnaire_id = serializers.PrimaryKeyRelatedField(
+    #     source="questionnaire.id",
+    #     read_only=True,
+    # )
     questionnaire_slug = serializers.SlugField(
         source="questionnaire.slug",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_name = serializers.CharField(
+        source="questionnaire.name",
         required=False,
         read_only=True,
     )
@@ -39,6 +44,7 @@ class ApplicationSerialiser(
             "key",
             "owner",
             # "questionnaire_id",
+            "questionnaire_name",
             "questionnaire_slug",
             "status",
             "created_at",

@@ -14,6 +14,9 @@ import { RESPONSE_404 } from './context/Constants';
 import type { IRoute } from "./context/types/Generic";
 import { NewApplication } from './components/layout/main/NewApplication';
 import { MyApplications } from './components/layout/main/MyApplications';
+import type { IApplicationData } from './context/types/Application';
+import { ApiManager } from './context/ApiManager';
+import type { AxiosError } from 'axios';
 
 // Guards
 // const authGuard = () => {
@@ -52,15 +55,23 @@ export const ROUTES: IRoute[] = [
 		label: "My Applications",
 		path: "/my-applications",
 		icon: <TopicIcon />,
-		component: MyApplications,
 		divider: false,
+		component: MyApplications,
+		loader: async () => {
+			return await ApiManager.fetchApplications()
+				.catch((error: AxiosError) => {
+					console.error('Error fetching applications:', error);
+					alert("[Warning dialog goes here] Failed to fetch my applications. Please try again later.");
+					return [];
+				})
+		},
 	},
 	{
 		label: "New Application",
 		path: "/new-application",
 		icon: <CreateNewFolderIcon />,
-		component: NewApplication,
 		divider: true,
+		component: NewApplication,
 	},
 	{
 		label: "Settings",
@@ -104,17 +115,14 @@ export const router = createBrowserRouter(
 		...ROUTES.map(route => ({
 			path: route.path,
 			element: <MainLayout route={route} />,
-			loader: async ({ }: LoaderFunctionArgs) => {
-				// Simulate fetching data from a API
-				return await getJsonData();
-			},
+			loader: route.loader ? route.loader : getJsonData,
 			errorElement: <ErrorPage />,
 		})),
 
 		// Other routes
 		...[
 			{
-				path: "/q/:slug",
+				path: "/a/:key",
 				Component: FormLayout,
 				// loader: async ({ params }: LoaderFunctionArgs) => {
 				loader: async ({ }: LoaderFunctionArgs) => {

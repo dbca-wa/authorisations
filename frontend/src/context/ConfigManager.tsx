@@ -25,7 +25,7 @@ export class ConfigManager {
             throw new TypeError("Config data is not an object.");
         }
 
-        console.log("Config parsed:", this._config)
+        // console.log("Config parsed:", this._config)
         return this._config;
     }
 }

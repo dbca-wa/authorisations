@@ -2,25 +2,25 @@ from api.models import ClientConfig
 from api.serialisers import ClientConfigSerialiser
 from django.middleware.csrf import get_token
 from django.shortcuts import render
-from django.views.decorators.csrf import ensure_csrf_cookie
-from questionnaires.models import Questionnaire
-from questionnaires.models import QuestionnaireSerialiser
+from questionnaires.models import Questionnaire, QuestionnaireSerialiser
+
+from .models import Application
 
 
 def my_applications(request):
     """View to display the user's applications."""
 
-    # Fetch the user's applications from the database
+    # Get config with CSRF token
+    config = ClientConfig(get_token(request))
 
     # Render the application form template with the provided name
     return render(
         request,
         "my-applications.html",
-        {"json_data": []},
+        {"config": ClientConfigSerialiser(config).data},
     )
 
 
-@ensure_csrf_cookie
 def new_application(request):
     """View to handle the creation of a new application."""
 
@@ -29,8 +29,6 @@ def new_application(request):
 
     # Get config with CSRF token
     config = ClientConfig(get_token(request))
-
-    # import pdb; pdb.set_trace()
 
     return render(
         request,
@@ -52,11 +50,34 @@ def display_new_application(request, slug):
         # If the questionnaire does not exist, return a 404 error
         return render(request, "404.html", status=404)
 
-    print(f"User: {request.user.is_authenticated} - {request.user.username}")
+    # print(f"User: {request.user.is_authenticated} - {request.user.username}")
 
     # Render the application form template with the provided name
     return render(
         request,
         "questionnaire.html",
         {"json_data": QuestionnaireSerialiser(questionnaire).data},
+    )
+
+
+def resume_application(request, key):
+    """Resume an application based on the key provided in the URL."""
+    # Find the application by key
+    try:
+        application = Application.objects.get(key=key)
+    except Application.DoesNotExist:
+        # If the application does not exist, return a 404 error
+        return render(request, "404.html", status=404)
+
+    # Get config with CSRF token
+    config = ClientConfig(get_token(request))
+
+    # Render the application form template with the provided name
+    return render(
+        request,
+        "resume-application.html",
+        {
+            "json_data": QuestionnaireSerialiser(application.questionnaire).data,
+            "config": ClientConfigSerialiser(config).data,
+        },
     )

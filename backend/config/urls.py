@@ -1,4 +1,4 @@
-from applications.views import display_new_application, my_applications, new_application
+from applications.views import my_applications, new_application, resume_application
 from django.contrib import admin
 from django.urls import include, path
 from dbnow.views import db_now_view
@@ -8,7 +8,8 @@ urlpatterns = [
     path("", home_page),
     path("my-applications", my_applications, name="my-applications"),
     path("new-application", new_application, name="new-application"),
-    path("q/<slug:slug>", display_new_application, name="questionnaire"),
+    # path("q/<slug:slug>", display_new_application, name="questionnaire"),
+    path("a/<slug:key>", resume_application, name="resume-application"),
     
     # Api
     path("api/", include("api.urls")),

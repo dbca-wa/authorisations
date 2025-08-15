@@ -1,9 +1,14 @@
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
-import { useLoaderData } from "react-router";
+import dayjs from 'dayjs';
+import relativeTime from "dayjs/plugin/relativeTime";
+import { redirect, useLoaderData, useNavigate } from "react-router";
 import type { IApplicationData } from "../../../context/types/Application";
 import { EmptyStateComponent } from "./EmptyState";
 
@@ -36,12 +41,20 @@ const Application = ({
 }: {
     application: IApplicationData;
 }) => {
+    // Format dates
+    dayjs.extend(relativeTime)
+    const createdAtRelative = dayjs(application.created_at).fromNow()
+    const updatedAtRelative = dayjs(application.updated_at).fromNow()
+
+    const navigate = useNavigate();
+
     return (
-        <ListItem>
-            <Box className="p-8 w-full" sx={{ borderRadius: 2 }}>
-                <Typography variant="h6">{application.key}</Typography>
+        <ListItem sx={{ marginBottom: 2 }}>
+            <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
+                <Typography variant="h6">{application.questionnaire_name}</Typography>
                 <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    {application.created_at}
+                    Created {createdAtRelative} <br />
+                    Updated {updatedAtRelative}
                 </Typography>
                 <Typography variant="body1" color="textPrimary" gutterBottom>
                     {application.status}
@@ -50,24 +63,32 @@ const Application = ({
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={() => {
-                            console.log("Resuming application:", application.key);
-                        }}
+                        loadingPosition='start'
+                        loading={false}
+                        disabled={Boolean(false)}
+                        startIcon={<PlayArrowRoundedIcon />}
+                        onClick={() => navigate(`/a/${application.key}`)}
                     >
-                        Resume Application
+                        Continue
                     </Button>
                     <Button
                         variant="outlined"
                         color="secondary"
+                        loadingPosition='start'
+                        loading={false}
+                        disabled={Boolean(false)}
+                        startIcon={<DownloadRoundedIcon />}
                         onClick={() => {
                             console.log("Downloading certificate for:", application.key);
                         }}
                         sx={{ marginLeft: 2 }}
                     >
-                        Download Certificate
+                        Certificate
                     </Button>
                 </Box>
-            </Box>
+            </Card>
         </ListItem>
+
+
     )
 }
