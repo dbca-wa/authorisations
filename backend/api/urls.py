@@ -1,11 +1,12 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import ApplicationViewSet
+from .views import ApplicationViewSet, QuestionnaireViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
-router = routers.DefaultRouter()
+router = routers.DefaultRouter(trailing_slash=False)
 router.register("applications", ApplicationViewSet)
+router.register("questionnaires", QuestionnaireViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

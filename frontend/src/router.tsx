@@ -10,44 +10,12 @@ import { createBrowserRouter } from "react-router";
 import { ErrorPage } from "./components/layout/ErrorPage";
 import { FormLayout } from "./components/layout/form/FormLayout";
 import { MainLayout } from "./components/layout/main/MainLayout";
-import { RESPONSE_404 } from './context/Constants';
-import type { IRoute } from "./context/types/Generic";
-import { NewApplication } from './components/layout/main/NewApplication';
 import { MyApplications } from './components/layout/main/MyApplications';
-import type { IApplicationData } from './context/types/Application';
+import { NewApplication } from './components/layout/main/NewApplication';
 import { ApiManager } from './context/ApiManager';
-import type { AxiosError } from 'axios';
-
-// Guards
-// const authGuard = () => {
-// 	const authStore = getAuthStore();
-// 	if (!authStore.isAuthenticated) {
-// 		return redirect("/auth/login");
-// 	}
-// 	return null;
-// };
-
-// const guestGuard = () => {
-// 	const authStore = getAuthStore();
-// 	if (authStore.isAuthenticated) {
-// 		return redirect("/");
-// 	}
-// 	return null;
-// };
-
-// const adminGuard = () => {
-// 	const authStore = getAuthStore();
-// 	// default auth guard
-// 	if (!authStore.isAuthenticated) {
-// 		return redirect("/auth/login");
-// 	}
-// 	// Prevent access for non-admins by redirecting to dashboard
-// 	if (!authStore.isAdmin) {
-// 		return redirect("/");
-// 	}
-// 	return null;
-// };
-
+import type { IApplicationData } from './context/types/Application';
+import type { IRoute } from "./context/types/Generic";
+import { getResponse, handleApiError } from './context/Utils';
 
 // Routes for the application (text, path and icon)
 export const ROUTES: IRoute[] = [
@@ -58,12 +26,7 @@ export const ROUTES: IRoute[] = [
 		divider: false,
 		component: MyApplications,
 		loader: async () => {
-			return await ApiManager.fetchApplications()
-				.catch((error: AxiosError) => {
-					console.error('Error fetching applications:', error);
-					alert("[Warning dialog goes here] Failed to fetch my applications. Please try again later.");
-					return [];
-				})
+			return await ApiManager.fetchApplications().catch(handleApiError);
 		},
 	},
 	{
@@ -72,6 +35,9 @@ export const ROUTES: IRoute[] = [
 		icon: <CreateNewFolderIcon />,
 		divider: true,
 		component: NewApplication,
+		loader: async () => {
+			return await ApiManager.fetchQuestionnaires().catch(handleApiError);
+		},
 	},
 	{
 		label: "Settings",
@@ -89,25 +55,29 @@ export const ROUTES: IRoute[] = [
 
 
 // Temporary function to mimic an API call
-const getJsonData = async () => {
-	const dataElement = document.getElementById('json-data');
+// const getJsonData = async () => {
+// 	const dataElement = document.getElementById('json-data');
 
-	if (!dataElement || !dataElement.textContent) {
-		throw RESPONSE_404;
-	}
+// 	if (!dataElement || !dataElement.textContent) {
+// 		throw getResponse(
+// 			404,
+// 			"Not Found",
+// 			"This document cannot be found or you may not have the permission to view it."
+// 		);
+// 	}
 
-	return JSON.parse(dataElement.textContent);
-}
+// 	return JSON.parse(dataElement.textContent);
+// }
 
-const getQuestionnaire = async () => {
-	const questionnaire = await getJsonData();
-	// Check if the required fields are present
-	if (!questionnaire.slug || !questionnaire.version || !questionnaire.name || !questionnaire.document) {
-		throw RESPONSE_404;
-	}
+// const getQuestionnaire = async () => {
+// 	const questionnaire = await getJsonData();
+// 	// Check if the required fields are present
+// 	if (!questionnaire.slug || !questionnaire.version || !questionnaire.name || !questionnaire.document) {
+// 		throw RESPONSE_404;
+// 	}
 
-	return questionnaire;
-}
+// 	return questionnaire;
+// }
 
 export const router = createBrowserRouter(
 	[
@@ -115,21 +85,28 @@ export const router = createBrowserRouter(
 		...ROUTES.map(route => ({
 			path: route.path,
 			element: <MainLayout route={route} />,
-			loader: route.loader ? route.loader : getJsonData,
+			// loader: route.loader ? route.loader : getJsonData,
+			loader: route.loader,
 			errorElement: <ErrorPage />,
 		})),
 
-		// Other routes
+		// Application editing route
 		...[
 			{
 				path: "/a/:key",
 				Component: FormLayout,
-				// loader: async ({ params }: LoaderFunctionArgs) => {
-				loader: async ({ }: LoaderFunctionArgs) => {
-					// Simulate fetching data from a API
-					return await getQuestionnaire();
-				},
 				errorElement: <ErrorPage />,
+				loader: async ({ params }: LoaderFunctionArgs) => {
+					const app = await ApiManager
+						.getApplication(params.key!)
+						.catch(handleApiError);
+
+					const questionnaire = await ApiManager
+						.getQuestionnaire(app.questionnaire_slug, app.questionnaire_version)
+						.catch(handleApiError);
+
+					return { app, questionnaire };
+				},
 			},
 		],
 	]

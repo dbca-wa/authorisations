@@ -28,6 +28,7 @@ export interface IApplicationData {
     // questionnaire_id: number;
     questionnaire_slug: string;
     questionnaire_name: string;
+    questionnaire_version: number;
     status: ApplicationStatus;
     created_at: string;
     updated_at: string;

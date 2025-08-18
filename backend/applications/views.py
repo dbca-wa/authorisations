@@ -25,7 +25,7 @@ def new_application(request):
     """View to handle the creation of a new application."""
 
     # Fetch the latest version of questionnaires, grouped by slug
-    questionnaires = Questionnaire.objects.order_by("slug", "-version").distinct("slug")
+    # questionnaires = Questionnaire.objects.order_by("slug", "-version").distinct("slug")
 
     # Get config with CSRF token
     config = ClientConfig(get_token(request))
@@ -34,40 +34,35 @@ def new_application(request):
         request,
         "new-application.html",
         {
-            "json_data": [QuestionnaireSerialiser(q).data for q in questionnaires],
+            # "json_data": [QuestionnaireSerialiser(q).data for q in questionnaires],
             "config": ClientConfigSerialiser(config).data,
         },
     )
 
 
-def display_new_application(request, slug):
-    """Display a new application form for the questionnaire based on the `slug`
-    provided in the URL."""
-    # Find the questionnaire by slug
-    try:
-        questionnaire = Questionnaire.objects.filter(slug=slug).latest("version")
-    except Questionnaire.DoesNotExist:
-        # If the questionnaire does not exist, return a 404 error
-        return render(request, "404.html", status=404)
+# def display_new_application(request, slug):
+#     """Display a new application form for the questionnaire based on the `slug`
+#     provided in the URL."""
+#     # Find the questionnaire by slug
+#     try:
+#         questionnaire = Questionnaire.objects.filter(slug=slug).latest("version")
+#     except Questionnaire.DoesNotExist:
+#         # If the questionnaire does not exist, return a 404 error
+#         return render(request, "error.html", status=404)
 
-    # print(f"User: {request.user.is_authenticated} - {request.user.username}")
-
-    # Render the application form template with the provided name
-    return render(
-        request,
-        "questionnaire.html",
-        {"json_data": QuestionnaireSerialiser(questionnaire).data},
-    )
+#     # Render the application form template with the provided name
+#     return render(
+#         request,
+#         "questionnaire.html",
+#         {"json_data": QuestionnaireSerialiser(questionnaire).data},
+#     )
 
 
 def resume_application(request, key):
     """Resume an application based on the key provided in the URL."""
-    # Find the application by key
-    try:
-        application = Application.objects.get(key=key)
-    except Application.DoesNotExist:
-        # If the application does not exist, return a 404 error
-        return render(request, "404.html", status=404)
+    # Verify application key access
+    # if not Application.has_access(request.user, key):
+    #     return render(request, "error.html", status=404)
 
     # Get config with CSRF token
     config = ClientConfig(get_token(request))
@@ -77,7 +72,8 @@ def resume_application(request, key):
         request,
         "resume-application.html",
         {
-            "json_data": QuestionnaireSerialiser(application.questionnaire).data,
+            # "json_data": QuestionnaireSerialiser(application.questionnaire).data,
             "config": ClientConfigSerialiser(config).data,
         },
     )
+

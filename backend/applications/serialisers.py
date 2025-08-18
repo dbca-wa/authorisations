@@ -7,9 +7,8 @@ from .schema import get_answers_schema
 
 
 # class ApplicationSerialiser(serializers.HyperlinkedModelSerializer):
-class ApplicationSerialiser(
-    JsonSchemaSerialiserMixin, serializers.ModelSerializer
-):
+# class ApplicationSerialiser(serializers.ModelSerializer):
+class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializer):
     """
     Serializer for the Application model.
     """
@@ -25,6 +24,11 @@ class ApplicationSerialiser(
     # )
     questionnaire_slug = serializers.SlugField(
         source="questionnaire.slug",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_version = serializers.IntegerField(
+        source="questionnaire.version",
         required=False,
         read_only=True,
     )
@@ -44,8 +48,9 @@ class ApplicationSerialiser(
             "key",
             "owner",
             # "questionnaire_id",
-            "questionnaire_name",
             "questionnaire_slug",
+            "questionnaire_version",
+            "questionnaire_name",
             "status",
             "created_at",
             "updated_at",

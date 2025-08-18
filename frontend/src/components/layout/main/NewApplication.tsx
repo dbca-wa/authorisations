@@ -3,7 +3,7 @@ import React from "react";
 
 import { Box, Button, Card, List, ListItem, Typography } from "@mui/material";
 import { AxiosError } from 'axios';
-import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
+import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IQuestionnaireData } from "../../../context/types/Questionnaire";
@@ -51,8 +51,8 @@ const Questionnaire = ({
     inProgress: string;
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
 }) => {
-    const navigate: NavigateFunction = useNavigate();
     const localDate = new Date(questionnaire.created_at).toLocaleDateString()
+    const navigate: NavigateFunction = useNavigate();
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -84,7 +84,7 @@ const Questionnaire = ({
 
 
 const startApplication = async ({
-    questionnaire, setInProgress, navigate
+    questionnaire, setInProgress, navigate, 
 }: {
     questionnaire: IQuestionnaireData;
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
@@ -137,6 +137,6 @@ const startApplication = async ({
     }
 
     // console.log("Created new application:", newApplication)
-
-    navigate(`/a/${newApplication.key}`);
+    const navOptions: NavigateOptions = { viewTransition: true }
+    navigate(`/a/${newApplication.key}`, navOptions);
 }

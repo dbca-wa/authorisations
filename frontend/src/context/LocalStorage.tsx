@@ -1,7 +1,7 @@
 import type { IAnswers } from "./types/Application";
 
 
-export class AnswersManager {
+export class LocalStorage {
     private static getItem(key: string): IAnswers | null {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : null;
@@ -11,18 +11,18 @@ export class AnswersManager {
         localStorage.setItem(key, JSON.stringify(value));
     }
 
-    private static getKey(applicationId: string): string {
+    private static getAnswersKey(applicationId: string): string {
         return `answers_${applicationId}`;
     }
 
     public static getAnswers(applicationId: string): IAnswers {
         // console.log("Getting answers for application ID:", applicationId);
-        const key = this.getKey(applicationId);
+        const key = this.getAnswersKey(applicationId);
         return this.getItem(key) || {};
     }
 
     public static setAnswers(applicationId: string, answers: IAnswers): void {
-        const key = this.getKey(applicationId);
+        const key = this.getAnswersKey(applicationId);
         this.setItem(key, answers);
     }
 }

@@ -9,7 +9,7 @@ class ClientConfig:
     Configuration for the client-side API.
     """
 
-    base_url: str = "/api/"
+    base_url: str = "/api"
     csrf_header: str = settings.CSRF_HEADER_CLIENT
     csrf_token: str = None
 

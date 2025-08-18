@@ -2,6 +2,7 @@ import type { AxiosRequestConfig } from "axios";
 import axios from "axios";
 import { ConfigManager } from "./ConfigManager";
 import type { IApplicationData } from "./types/Application";
+import type { IQuestionnaireData } from "./types/Questionnaire";
 
 
 export class ApiManager {
@@ -26,24 +27,42 @@ export class ApiManager {
         requestConfig.headers[clientConfig.csrf_header] = clientConfig.csrf_token;
 
         return requestConfig;
+    }
 
+    public static async getApplication(key: string): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IApplicationData>(`/applications/${key}`, requestConfig);
+
+        return response.data;
     }
 
     public static async fetchApplications(): Promise<IApplicationData[]> {
         const requestConfig = ApiManager.getRequestConfig();
-        const response = await axios.get<IApplicationData[]>("applications/", requestConfig);
-        
+        const response = await axios.get<IApplicationData[]>("/applications", requestConfig);
+
         return response.data;
     }
 
     public static async createApplication(questionnaireSlug: string): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
-        const response = await axios.post<IApplicationData>("applications/", {
+        const response = await axios.post<IApplicationData>("/applications", {
             questionnaire_slug: questionnaireSlug,
-            // document: {
-            //     "answers": {"0-0-0": "Hello :)"},
-            // },
         }, requestConfig);
+
+        return response.data;
+    }
+
+    public static async getQuestionnaire(slug: string, version: number): Promise<IQuestionnaireData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const url = `/questionnaires/${slug}` + (version ? `?version=${version}` : '');
+        const response = await axios.get<IQuestionnaireData>(url, requestConfig);
+
+        return response.data;
+    }
+
+    public static async fetchQuestionnaires(): Promise<IQuestionnaireData[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IQuestionnaireData[]>("/questionnaires", requestConfig);
 
         return response.data;
     }

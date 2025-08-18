@@ -15,10 +15,10 @@ import React from "react";
 import { styled } from '@mui/material/styles';
 import type { FieldValues, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useLoaderData } from "react-router";
-import { AnswersManager } from '../../../context/AnswersManager';
+import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from "react-router";
 import { DRAWER_WIDTH } from '../../../context/Constants';
-import type { IAnswers } from '../../../context/types/Application';
+import { LocalStorage } from '../../../context/LocalStorage';
+import type { IAnswers, IApplicationData } from '../../../context/types/Application';
 import type { IQuestionnaire, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { FormActiveStep } from "./FormActiveStep";
 import { FormReviewPage } from './FormReviewPage';
@@ -32,13 +32,13 @@ export const FormLayout = () => {
     // Manage activeStep state here
     const [stepIndex, setActiveStep] = React.useState<number>(0);
 
-    // Load questionnaire data from the loader
-    const questionnaireData = useLoaderData<IQuestionnaireData>();
-    // console.log('Questionnaire data:', questionnaireData);
+    // Fetch application from API
+    const { app, questionnaire } =
+        useLoaderData<{ app: IApplicationData, questionnaire: IQuestionnaireData }>();
 
     // Load stored answers from local storage
     const storedAnswers = React.useMemo<IAnswers>(
-        () => AnswersManager.getAnswers("application-id"), []
+        () => LocalStorage.getAnswers("application-id"), []
     );
 
     const formParams: UseFormProps<IAnswers> = {
@@ -50,7 +50,7 @@ export const FormLayout = () => {
 
     const handleBack = (): void => {
         // Store form values before going back
-        AnswersManager.setAnswers("application-id", formMethods.getValues());
+        LocalStorage.setAnswers("application-id", formMethods.getValues());
 
         setActiveStep((prevStep) => prevStep - 1);
     };
@@ -59,7 +59,7 @@ export const FormLayout = () => {
         console.log("Form data:", data)
 
         // TODO: Replace with actual application ID
-        AnswersManager.setAnswers("application-id", data);
+        LocalStorage.setAnswers("application-id", data);
 
         // Next step (or the review page)
         setActiveStep((prevStep) => prevStep + 1);
@@ -67,8 +67,6 @@ export const FormLayout = () => {
 
     // Account menu state and handlers
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
-    const handleClose = () => setAnchorEl(null);
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -87,53 +85,16 @@ export const FormLayout = () => {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div">
-                        {questionnaireData.name}
+                        {app.questionnaire_name}
                     </Typography>
-                    <Box sx={{ marginLeft: 'auto' }}>
-                        <IconButton
-                            size="large"
-                            aria-label="account of current user"
-                            aria-controls="menu-appbar"
-                            aria-haspopup="true"
-                            onClick={handleMenu}
-                            color="inherit"
-                        >
-                            <AccountCircle />
-                        </IconButton>
-                        <Menu
-                            id="menu-appbar"
-                            anchorEl={anchorEl}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'right',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                            sx={{
-                                '& .MuiMenuItem-root': { gap: 1.5 }
-                                , '& .MuiSvgIcon-root': { fontSize: 'inherit' }
-                            }}
-                        >
-                            <MenuItem component="a" href="/my-applications">
-                                <TopicIcon /> My applications
-                            </MenuItem>
-                            <MenuItem component="a" href="/settings">
-                                <SettingsIcon /> Settings
-                            </MenuItem>
-                            <MenuItem component="a" href="mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations Application">
-                                <RateReviewIcon /> Feedback
-                            </MenuItem>
-                        </Menu>
-                    </Box>
+                    <AccountMenu
+                        anchorEl={anchorEl}
+                        setAnchorEl={setAnchorEl}
+                    />
                 </Toolbar>
             </AppBar>
             <FormSidebar
-                steps={questionnaireData.document.steps}
+                steps={questionnaire.document.steps}
                 activeStep={stepIndex}
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
@@ -143,7 +104,7 @@ export const FormLayout = () => {
                     <FormLayoutContent
                         handleBack={handleBack}
                         handleContinue={handleContinue}
-                        questionnaire={questionnaireData.document}
+                        questionnaire={questionnaire.document}
                         stepIndex={stepIndex}
                     />
                 </FormProvider>
@@ -180,6 +141,77 @@ const AppBar = styled(MuiAppBar, {
         },
     ],
 }));
+
+
+const AccountMenu = ({
+    anchorEl, setAnchorEl,
+}: {
+    anchorEl: null | HTMLElement;
+    setAnchorEl: React.Dispatch<React.SetStateAction<null | HTMLElement>>;
+}) => {
+    const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
+    const handleClose = () => setAnchorEl(null);
+    const navOptions: NavigateOptions = { viewTransition: true }
+    const navigate: NavigateFunction = useNavigate();
+
+    return (
+        <Box sx={{ marginLeft: 'auto' }}>
+            <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleMenu}
+                color="inherit"
+            >
+                <AccountCircle />
+            </IconButton>
+            <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                sx={{
+                    '& .MuiMenuItem-root': { gap: 1.5 }
+                    , '& .MuiSvgIcon-root': { fontSize: 'inherit' }
+                }}
+            >
+                <MenuItem
+                    onClick={() => {
+                        navigate("/my-applications", navOptions);
+                        handleClose();
+                    }}
+                >
+                    <TopicIcon /> My applications
+                </MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        navigate("/settings", navOptions);
+                        handleClose();
+                    }}
+                >
+                    <SettingsIcon /> Settings
+                </MenuItem>
+                <MenuItem
+                    component="a"
+                    href="mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations Application"
+                    onClick={handleClose}
+                >
+                    <RateReviewIcon /> Feedback
+                </MenuItem>
+            </Menu>
+        </Box>
+    )
+}
 
 
 const FormLayoutContent = ({

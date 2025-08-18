@@ -3,7 +3,6 @@ from drf_jsonschema_serializer.convert import converter
 from rest_framework import serializers
 
 
-
 class ReferenceField(serializers.Field):
     """
     A custom field to handle references in the JSON Schema.

@@ -8,7 +8,7 @@ import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
-import { redirect, useLoaderData, useNavigate } from "react-router";
+import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from "react-router";
 import type { IApplicationData } from "../../../context/types/Application";
 import { EmptyStateComponent } from "./EmptyState";
 
@@ -46,7 +46,8 @@ const Application = ({
     const createdAtRelative = dayjs(application.created_at).fromNow()
     const updatedAtRelative = dayjs(application.updated_at).fromNow()
 
-    const navigate = useNavigate();
+    const navOptions: NavigateOptions = { viewTransition: true }
+    const navigate: NavigateFunction = useNavigate();
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -62,12 +63,12 @@ const Application = ({
                 <Box display="flex" justifyContent="flex-end" mt={2}>
                     <Button
                         variant="contained"
-                        color="primary"
+                        color="success"
                         loadingPosition='start'
                         loading={false}
                         disabled={Boolean(false)}
                         startIcon={<PlayArrowRoundedIcon />}
-                        onClick={() => navigate(`/a/${application.key}`)}
+                        onClick={() => navigate(`/a/${application.key}`, navOptions)}
                     >
                         Continue
                     </Button>
@@ -88,7 +89,5 @@ const Application = ({
                 </Box>
             </Card>
         </ListItem>
-
-
     )
 }

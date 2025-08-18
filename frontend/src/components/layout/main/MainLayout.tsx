@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import type { IRoute } from "../../../context/types/Generic";
 import { ROUTES } from '../../../router';
+import { useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
 
 
 export const MainLayout = ({
@@ -20,6 +21,7 @@ export const MainLayout = ({
 }: {
     route: IRoute,
 }) => {
+
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
@@ -41,6 +43,9 @@ export const MainLayout = ({
 
 const Sidebar = () => {
     const currentPath = window.location.pathname;
+    const navOptions: NavigateOptions = { viewTransition: true }
+    const navigate: NavigateFunction = useNavigate();
+
     return (
         <Drawer
             variant="permanent"
@@ -57,7 +62,7 @@ const Sidebar = () => {
                         ROUTES.map((route) => (
                             <ListItem key={route.path} disablePadding divider={route.divider}>
                                 <ListItemButton
-                                    href={route.path}
+                                    onClick={() => navigate(route.path, navOptions)}
                                     selected={currentPath === route.path}
                                 >
                                     <ListItemIcon>{route.icon}</ListItemIcon>
