@@ -92,8 +92,8 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
         if version:
             try:
                 return queryset.get(**filter_kwargs)
-            except Questionnaire.DoesNotExist:
-                raise NotFound(f"Questionnaire (v{version}) not found.")
+            except Questionnaire.DoesNotExist as error:
+                raise NotFound(str(error))
 
         # No (integer) version number requested, return the latest
         return queryset.filter(**filter_kwargs).latest("version")

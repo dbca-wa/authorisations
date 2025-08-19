@@ -8,7 +8,6 @@ urlpatterns = [
     path("", home_page),
     path("my-applications", my_applications, name="my-applications"),
     path("new-application", new_application, name="new-application"),
-    # path("q/<slug:slug>", display_new_application, name="questionnaire"),
     path("a/<slug:key>", resume_application, name="resume-application"),
     
     # Api

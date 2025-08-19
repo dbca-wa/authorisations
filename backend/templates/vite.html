@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   {% vite_hmr_client %}
   {% vite_asset 'src/main.tsx' %}
-  <title>{% block title %}{% endblock %} : DBCA Authorisations</title>
+  <title>{{ title }} : DBCA Authorisations</title>
   {% if json_data is not None %}
   {{ json_data|json_script:'json-data' }}
   {% endif %}
