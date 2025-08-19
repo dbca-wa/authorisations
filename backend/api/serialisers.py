@@ -43,7 +43,7 @@ class ClientConfigSerialiser(serializers.Serializer):
     Serializer for the ClientConfig model.
     """
 
-    base_url = serializers.CharField(default=ClientConfig.base_url)
+    api_base = serializers.CharField(default=ClientConfig.api_base)
     csrf_header = serializers.CharField(default=ClientConfig.csrf_header)
     csrf_token = serializers.CharField(required=False, allow_blank=True)
 

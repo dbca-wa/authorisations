@@ -1,5 +1,5 @@
 export interface IConfig {
-    base_url: string;
+    api_base: string;
     csrf_header: string;
     csrf_token: string;
 }

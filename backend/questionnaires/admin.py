@@ -68,8 +68,8 @@ class QuestionnaireAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(self.readonly_fields)
         
-        # Only super users can change it
-        if self.has_add_permission(request, obj):
+        # Slug to be defined once; when creating a new record
+        if obj is None:
             readonly_fields.remove("slug")
         
         return readonly_fields

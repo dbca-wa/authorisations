@@ -16,7 +16,7 @@ export class ApiManager {
             withCredentials: false,
             withXSRFToken: true,
             xsrfHeaderName: clientConfig.csrf_header,
-            baseURL: clientConfig.base_url,
+            baseURL: clientConfig.api_base,
             headers: {
                 'Content-Type': 'application/json',
                 // Allow dynamic string keys for headers
