@@ -1,4 +1,5 @@
 import type { AxiosError } from "axios";
+import React from "react";
 
 // Simple browser-safe assert
 export function assert(condition: boolean, message: string): void {
@@ -22,3 +23,10 @@ export const handleApiError = (error: AxiosError) => {
     throw getResponse(
         error.status!, error.response!.statusText, error.message);
 };
+
+
+export const scrollToTop = (dependencies: React.DependencyList = []) => {
+    React.useEffect(() => {
+        window.scrollTo(0, 0);
+    }, dependencies);
+}

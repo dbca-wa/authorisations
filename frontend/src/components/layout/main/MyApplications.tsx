@@ -3,12 +3,13 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
+import Link from '@mui/material/Link';
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from "react-router";
+import { useLoaderData } from "react-router";
 import type { IApplicationData } from "../../../context/types/Application";
 import { EmptyStateComponent } from "./EmptyState";
 
@@ -46,9 +47,6 @@ const Application = ({
     const createdAtRelative = dayjs(application.created_at).fromNow()
     const updatedAtRelative = dayjs(application.updated_at).fromNow()
 
-    const navOptions: NavigateOptions = { viewTransition: true }
-    const navigate: NavigateFunction = useNavigate();
-
     return (
         <ListItem sx={{ marginBottom: 2 }}>
             <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
@@ -61,17 +59,31 @@ const Application = ({
                     {application.status}
                 </Typography>
                 <Box display="flex" justifyContent="flex-end" mt={2}>
-                    <Button
-                        variant="contained"
-                        color="success"
-                        loadingPosition='start'
-                        loading={false}
-                        disabled={Boolean(false)}
-                        startIcon={<PlayArrowRoundedIcon />}
-                        onClick={() => navigate(`/a/${application.key}`, navOptions)}
+                    <Link
+                        target="_blank"
+                        rel="noopener"
+                        underline="none"
+                        aria-label="Continue application"
+                        onClick={() => {
+                            window.open(
+                                `/a/${application.key}`, // link
+                                `auth_${application.key}`, // window name
+                                "toolbar=no, menubar=no, location=no, status=no, resizable=yes, scrollbars=yes"
+                            );
+                        }}
                     >
-                        Continue
-                    </Button>
+                        <Button
+                            // onClick={() => navigate(`/a/${application.key}`, navOptions)}
+                            variant="contained"
+                            color="success"
+                            loadingPosition='start'
+                            loading={false}
+                            disabled={Boolean(false)}
+                            startIcon={<PlayArrowRoundedIcon />}
+                        >
+                            Continue
+                        </Button>
+                    </Link>
                     <Button
                         variant="outlined"
                         color="secondary"

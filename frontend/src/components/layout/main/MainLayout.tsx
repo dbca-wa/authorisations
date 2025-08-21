@@ -10,10 +10,11 @@ import ListItemText from '@mui/material/ListItemText';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
+import { useEffect } from 'react';
+import { useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import type { IRoute } from "../../../context/types/Generic";
 import { ROUTES } from '../../../router';
-import { useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
 
 
 export const MainLayout = ({
@@ -21,6 +22,11 @@ export const MainLayout = ({
 }: {
     route: IRoute,
 }) => {
+    // Update page title
+    useEffect(() => {
+        document.title = `${route.label} : DBCA Authorisations`;
+    }, [route.label]);
+
 
     return (
         <Box sx={{ display: 'flex' }}>

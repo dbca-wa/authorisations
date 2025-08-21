@@ -10,9 +10,7 @@ import {
     type SubmitErrorHandler
 } from "react-hook-form";
 
-import { type IFormSection } from "../../../context/types/Application";
-import { Question } from "../../../context/types/Questionnaire";
-import { type IFormStep } from "../../../context/types/Questionnaire";
+import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
 import { GridInput } from "../../inputs/grid";

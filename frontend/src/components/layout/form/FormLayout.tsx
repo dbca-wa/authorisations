@@ -1,46 +1,47 @@
-import AccountCircle from '@mui/icons-material/AccountCircle';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import MenuIcon from '@mui/icons-material/Menu';
-import RateReviewIcon from '@mui/icons-material/RateReview';
-import SettingsIcon from '@mui/icons-material/Settings';
-import TopicIcon from '@mui/icons-material/Topic';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import SaveIcon from '@mui/icons-material/Save';
 import MuiAppBar, { type AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import React from "react";
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import React from 'react';
 
 import { styled } from '@mui/material/styles';
 import type { FieldValues, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from "react-router";
+import { useLoaderData, useNavigate, type NavigateFunction } from 'react-router';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { LocalStorage } from '../../../context/LocalStorage';
 import type { IAnswers, IApplicationData } from '../../../context/types/Application';
-import type { IQuestionnaire, IQuestionnaireData } from "../../../context/types/Questionnaire";
-import { FormActiveStep } from "./FormActiveStep";
+import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
 import { FormReviewPage } from './FormReviewPage';
-import { FormSidebar } from "./FormSidebar";
+import { FormSidebar } from './FormSidebar';
+import { scrollToTop } from '../../../context/Utils';
+import { FormActiveStep } from './FormActiveStep';
 
 
 export const FormLayout = () => {
+    // Fetch application and questionnaire from API
+    const { app, questionnaire } =
+        useLoaderData<{ app: IApplicationData, questionnaire: IQuestionnaireData }>();
+
+    // Load stored answers from local storage
+    const storedAnswers = React.useMemo<IAnswers>(
+        () => LocalStorage.getAnswers(app.key), []
+    );
+
     // Drawer state
     const [drawerOpen, setDrawerOpen] = React.useState<boolean>(true);
 
     // Manage activeStep state here
     const [stepIndex, setActiveStep] = React.useState<number>(0);
 
-    // Fetch application from API
-    const { app, questionnaire } =
-        useLoaderData<{ app: IApplicationData, questionnaire: IQuestionnaireData }>();
-
-    // Load stored answers from local storage
-    const storedAnswers = React.useMemo<IAnswers>(
-        () => LocalStorage.getAnswers("application-id"), []
-    );
-
+    // Form methods & state
     const formParams: UseFormProps<IAnswers> = {
         defaultValues: storedAnswers,
         // We do custom scroll, see onError function when submit
@@ -50,16 +51,16 @@ export const FormLayout = () => {
 
     const handleBack = (): void => {
         // Store form values before going back
-        LocalStorage.setAnswers("application-id", formMethods.getValues());
+        LocalStorage.setAnswers(app.key, formMethods.getValues());
 
         setActiveStep((prevStep) => prevStep - 1);
     };
 
     const handleContinue: SubmitHandler<FieldValues> = (data) => {
-        console.log("Form data:", data)
+        // console.log("Form data:", data)
 
-        // TODO: Replace with actual application ID
-        LocalStorage.setAnswers("application-id", data);
+        // Save answers to local storage
+        LocalStorage.setAnswers(app.key, data);
 
         // Next step (or the review page)
         setActiveStep((prevStep) => prevStep + 1);
@@ -67,6 +68,11 @@ export const FormLayout = () => {
 
     // Account menu state and handlers
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+    // Change page title
+    React.useEffect(() => {
+        document.title = `${app.questionnaire_name} : DBCA Authorisations`;
+    }, [app.questionnaire_name]);
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -151,7 +157,6 @@ const AccountMenu = ({
 }) => {
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
-    const navOptions: NavigateOptions = { viewTransition: true }
     const navigate: NavigateFunction = useNavigate();
 
     return (
@@ -164,7 +169,7 @@ const AccountMenu = ({
                 onClick={handleMenu}
                 color="inherit"
             >
-                <AccountCircle />
+                <MoreVertIcon />
             </IconButton>
             <Menu
                 id="menu-appbar"
@@ -187,26 +192,25 @@ const AccountMenu = ({
             >
                 <MenuItem
                     onClick={() => {
-                        navigate("/my-applications", navOptions);
+                        console.log("Saving application")
                         handleClose();
                     }}
                 >
-                    <TopicIcon /> My applications
+                    <SaveIcon /> Save
                 </MenuItem>
                 <MenuItem
                     onClick={() => {
-                        navigate("/settings", navOptions);
-                        handleClose();
+                        // Assuming we're in a popup window
+                        window.close();
+
+                        // If we are not in a popup, we can navigate to my applications
+                        if (!window.closed) {
+                            handleClose();
+                            navigate("/my-applications", { replace: true })
+                        }
                     }}
                 >
-                    <SettingsIcon /> Settings
-                </MenuItem>
-                <MenuItem
-                    component="a"
-                    href="mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations Application"
-                    onClick={handleClose}
-                >
-                    <RateReviewIcon /> Feedback
+                    <ExitToAppIcon /> Exit
                 </MenuItem>
             </Menu>
         </Box>
@@ -224,6 +228,8 @@ const FormLayoutContent = ({
     questionnaire: IQuestionnaire;
     stepIndex: number;
 }) => {
+    scrollToTop([stepIndex]);
+
     // We are on the review page
     if (stepIndex === questionnaire.steps.length) {
         return (

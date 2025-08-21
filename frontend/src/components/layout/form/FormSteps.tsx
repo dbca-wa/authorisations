@@ -21,7 +21,11 @@ export function FormSteps({
             sx={{ margin: 2.5 }}
         >
             {steps.map((step, index) => (
-                <Step key={step.title} expanded={activeStep === index}>
+                <Step
+                    key={step.title} 
+                    completed={index < activeStep}
+                    expanded={activeStep === index}
+                >
                     <StepItem
                         step={step}
                         index={index}

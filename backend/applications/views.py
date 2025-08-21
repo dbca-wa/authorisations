@@ -4,8 +4,8 @@ from django.middleware.csrf import get_token
 from django.shortcuts import render
 
 
-def generic_vite_template(request, title):
-    """Generic view to render a Vite template with a title."""
+def generic_template(request):
+    """Generic view to render a Vite (SPA) template."""
 
     # Get config with CSRF token
     config = ClientConfig(get_token(request))
@@ -14,23 +14,8 @@ def generic_vite_template(request, title):
     return render(
         request,
         "vite.html",
-        {
-            "config": ClientConfigSerialiser(config).data,
-            "title": title,
-        },
+        {"config": ClientConfigSerialiser(config).data},
     )
-
-
-def my_applications(request):
-    """View to display the user's applications."""
-
-    return generic_vite_template(request, "My applications")
-
-
-def new_application(request):
-    """View to handle the creation of a new application."""
-    
-    return generic_vite_template(request, "New application")
 
 
 def resume_application(request, key):
@@ -38,5 +23,5 @@ def resume_application(request, key):
     # Verify application key access - return proper 404
     # if not Application.has_access(request.user, key):
     #     return render(request, "error.html", status=404)
-    
-    return generic_vite_template(request, "Resume application")
+
+    return generic_template(request)

@@ -11,18 +11,18 @@ export class LocalStorage {
         localStorage.setItem(key, JSON.stringify(value));
     }
 
-    private static getAnswersKey(applicationId: string): string {
-        return `answers_${applicationId}`;
+    private static getAnswersKey(applicationKey: string): string {
+        return `answers_${applicationKey}`;
     }
 
-    public static getAnswers(applicationId: string): IAnswers {
-        // console.log("Getting answers for application ID:", applicationId);
-        const key = this.getAnswersKey(applicationId);
+    public static getAnswers(applicationKey: string): IAnswers {
+        // console.log("Getting answers for application:", applicationKey);
+        const key = this.getAnswersKey(applicationKey);
         return this.getItem(key) || {};
     }
 
-    public static setAnswers(applicationId: string, answers: IAnswers): void {
-        const key = this.getAnswersKey(applicationId);
+    public static setAnswers(applicationKey: string, answers: IAnswers): void {
+        const key = this.getAnswersKey(applicationKey);
         this.setItem(key, answers);
     }
 }
