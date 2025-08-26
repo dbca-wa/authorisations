@@ -6,8 +6,6 @@ from .models import Application
 from .schema import get_answers_schema
 
 
-# class ApplicationSerialiser(serializers.HyperlinkedModelSerializer):
-# class ApplicationSerialiser(serializers.ModelSerializer):
 class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializer):
     """
     Serializer for the Application model.
@@ -18,10 +16,6 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
-    # questionnaire_id = serializers.PrimaryKeyRelatedField(
-    #     source="questionnaire.id",
-    #     read_only=True,
-    # )
     questionnaire_slug = serializers.SlugField(
         source="questionnaire.slug",
         required=False,
@@ -47,7 +41,6 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         fields = (
             "key",
             "owner",
-            # "questionnaire_id",
             "questionnaire_slug",
             "questionnaire_version",
             "questionnaire_name",
@@ -78,10 +71,10 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
     def validate_document(self, value):
         schema = get_answers_schema()
-        
+
         # Validate and return with the JSON schema
         return self._validate_document(value, schema)
-    
+
     def validate_questionnaire_slug(self, value):
         """
         Validate the questionnaire slug to ensure it exists in the database.
@@ -107,19 +100,6 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Intentionally return the original value
         return value
 
-    def validate(self, data):
-        # Make sure we have the questionnaire object
-        questionnaire: Questionnaire = self.context.get("questionnaire", None)
-        if questionnaire is None:
-            raise serializers.ValidationError("Questionnaire is required")
-
-        validated_data = super().validate(data)
-
-        # This should override the provided "questionnaire" dict field: {"slug": "aec"}
-        validated_data["questionnaire"] = questionnaire
-
-        return validated_data
-
     def create(self, validated_data):
         """
         Create a new Application instance.
@@ -127,24 +107,23 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Add user to validated data
         validated_data["owner"] = self.context["request"].user
 
+        # Make sure we have the questionnaire object
+        try:
+            validated_data["questionnaire"] = self.context["questionnaire"]
+        except KeyError:
+            raise LookupError("'questionnaire_slug' is required")
+
         # Create a fresh document with questionnaire schema version
         validated_data["document"] = {
-            "answers": {},  # initially empty answers
             "schema_version": None,  # to be set later
+            "answers": {},  # initially empty answers
         }
 
-        # Hardcode the schema version from the questionnaire
-        try:
-            validated_data["document"]["schema_version"] = self.context[
-                "questionnaire"
-            ].document["schema_version"]
-        except KeyError:
-            # we are past beyond raising a validation error
-            raise LookupError(
-                "Selected questionnaire doesn't have a schema version, "
-                "this is required to create your application and shouldn't happen. "
-                "Please contact Ecoinformatics support."
-            )
+        # Hardcode the version from the current schema
+        schema = get_answers_schema()
+        validated_data["document"]["schema_version"] = schema["properties"][
+            "schema_version"
+        ]["default"]
 
         return super().create(validated_data)
 
@@ -154,13 +133,3 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     #     instance.created = validated_data.get("created", instance.created)
     #     instance.save()
     #     return instance
-
-    # def create(self, validated_data):
-    #     """
-    #     Create a new Application instance.
-    #     """
-    #     # print(validated_data)
-    #     # import pdb; pdb.set_trace()
-
-    #         **validated_data
-    #     )

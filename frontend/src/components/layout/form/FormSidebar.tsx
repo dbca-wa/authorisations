@@ -3,19 +3,24 @@ import Divider from '@mui/material/Divider';
 import MuiDrawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import { styled, type CSSObject, type Theme } from '@mui/material/styles';
+import { DRAWER_WIDTH } from '../../../context/Constants';
+import type { IAnswers } from '../../../context/types/Application';
 import type { IFormStep } from "../../../context/types/Questionnaire";
 import { FormSteps } from './FormSteps';
-import { DRAWER_WIDTH } from '../../../context/Constants';
 
 
 export function FormSidebar({
     steps,
     activeStep,
+    saveAnswers,
+    setActiveStep,
     drawerOpen,
     setDrawerOpen,
 }: Readonly<{
     steps: IFormStep[];
     activeStep: number;
+    saveAnswers: (answers?: IAnswers) => Promise<void>;
+    setActiveStep: React.Dispatch<React.SetStateAction<number>>;
     drawerOpen: boolean;
     setDrawerOpen: (open: boolean) => void;
 }>) {
@@ -43,6 +48,8 @@ export function FormSidebar({
                 steps={steps}
                 activeStep={activeStep}
                 drawerOpen={drawerOpen}
+                saveAnswers={saveAnswers}
+                setActiveStep={setActiveStep}
             />
         </Drawer>
     );

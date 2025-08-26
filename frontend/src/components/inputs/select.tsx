@@ -26,6 +26,7 @@ export function SelectInput({
                 </InputLabel>
                 <Select
                     {...field}
+                    value={field.value || ''}
                     label={question.labelText}
                     labelId={"label-" + question.key}
                     error={fieldState.invalid}

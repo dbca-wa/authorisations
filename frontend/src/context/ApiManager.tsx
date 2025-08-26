@@ -1,7 +1,7 @@
 import type { AxiosRequestConfig } from "axios";
 import axios from "axios";
 import { ConfigManager } from "./ConfigManager";
-import type { IApplicationData } from "./types/Application";
+import type { IAnswers, IApplicationData } from "./types/Application";
 import type { IQuestionnaireData } from "./types/Questionnaire";
 
 
@@ -47,6 +47,18 @@ export class ApiManager {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.post<IApplicationData>("/applications", {
             questionnaire_slug: questionnaireSlug,
+        }, requestConfig);
+
+        return response.data;
+    }
+
+    public static async updateApplication(key: string, version: string, answers: IAnswers): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.put<IApplicationData>(`/applications/${key}`, {
+            document: {
+                schema_version: version,
+                answers: answers,
+            }
         }, requestConfig);
 
         return response.data;

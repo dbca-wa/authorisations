@@ -1,6 +1,42 @@
 {
   "steps": [
     {
+      "title": "Scientific Review",
+      "sections": [
+        {
+          "title": "Endorsement",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "I endorse this application and confirm the scientific merit of the project.",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "I have reviewed this application and assessed the scientific merit of the project. I confirm that proposed aims, design, methodology, and analyses are scientifically rigorous and will adequately inform the research question being posed. Advice has been sought from a consulting/reviewing scientist where necessary."
+        },
+        {
+          "title": "Scientific Integrity",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "I have read and understood the scientific integrity agreement.",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Respect for animals must underpin all decisions and actions involving the care and use of animals for scientific purposes. Applying high standards of scientific integrity is one of the governing principles outlined in the Australian Code for the Care and Use of Animals for Scientific Purposes - 8th Edition (the Code). Each person involved in the care and use of animals for scientific purposes must consider the governing principles when applying the Code to their specific circumstance.\n\nThe below clauses from the Code contribute to the ethical framework that guides decisions and actions of all people involved in the care and use of animals for scientific purposes.\n\n1.15 Regardless of the potential benefits of a project, the methods used must be scientifically valid, feasible, well designed and carefully conducted so that there is a reasonable expectation that the aims of the project will be achieved. Projects that are not scientifically valid must not be performed, no matter how mild the impact on the wellbeing of the animals.\n\n1.16 Investigators must use methods that accord with current best practice that:\n\ti. take into consideration relevant aspects of species-specific biology, physiology and behaviour\n\tii. are based on the best available scientific evidence, which includes the potential adverse impact of conditions and procedures on the wellbeing of the animals\n\tiii. include strategies to minimise adverse impacts.\n\n1.17 Animals used must be suited to the purpose of the project or activity, taking into account their biological characteristics, including morphology, physiology, behaviour, genetic makeup, temperament and behavioural conditioning, microbiological and nutritional status, and general state of health.\n\nChief Investigators are encouraged to engage with a relevant scientist or biometrician during the project planning phase to ensure projects are scientifically valid, feasible, and well designed. For information on where to obtain scientific advice/assistance to aid in the review process, visit the Animal Ethics Committee intranet or contact the Executive Officer."
+        }
+      ],
+      "description": "Submit your project for scientific review."
+    },
+    {
       "title": "Terms of Service",
       "sections": [
         {
@@ -10,15 +46,6 @@
               "type": "checkbox",
               "label": "I have read and understood the terms of service.",
               "description": "",
-              "is_required": false,
-              "grid_columns": [],
-              "grid_max_rows": null,
-              "select_options": []
-            },
-            {
-              "type": "checkbox",
-              "label": "Monkeys eat bananas?",
-              "description": "While we all enjoy seeing a monkey eat bananas in the zoo, monkeys in the wild do not eat bananas. Bananas are domesticated plants that do not grow in the wild, and thus almost all wild monkeys have never had a taste of bananas.",
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
@@ -44,42 +71,6 @@
         }
       ],
       "description": "Read and accept the terms of service."
-    },
-    {
-      "title": "Scientific Review",
-      "sections": [
-        {
-          "title": "Scientific Integrity",
-          "questions": [
-            {
-              "type": "checkbox",
-              "label": "I have read and understood the scientific integrity agreement.",
-              "description": "",
-              "is_required": true,
-              "grid_columns": [],
-              "grid_max_rows": null,
-              "select_options": []
-            }
-          ],
-          "description": "Respect for animals must underpin all decisions and actions involving the care and use of animals for scientific purposes. Applying high standards of scientific integrity is one of the governing principles outlined in the Australian Code for the Care and Use of Animals for Scientific Purposes - 8th Edition (the Code). Each person involved in the care and use of animals for scientific purposes must consider the governing principles when applying the Code to their specific circumstance.\n\nThe below clauses from the Code contribute to the ethical framework that guides decisions and actions of all people involved in the care and use of animals for scientific purposes.\n\n1.15 Regardless of the potential benefits of a project, the methods used must be scientifically valid, feasible, well designed and carefully conducted so that there is a reasonable expectation that the aims of the project will be achieved. Projects that are not scientifically valid must not be performed, no matter how mild the impact on the wellbeing of the animals.\n\n1.16 Investigators must use methods that accord with current best practice that:\n\ti. take into consideration relevant aspects of species-specific biology, physiology and behaviour\n\tii. are based on the best available scientific evidence, which includes the potential adverse impact of conditions and procedures on the wellbeing of the animals\n\tiii. include strategies to minimise adverse impacts.\n\n1.17 Animals used must be suited to the purpose of the project or activity, taking into account their biological characteristics, including morphology, physiology, behaviour, genetic makeup, temperament and behavioural conditioning, microbiological and nutritional status, and general state of health.\n\nChief Investigators are encouraged to engage with a relevant scientist or biometrician during the project planning phase to ensure projects are scientifically valid, feasible, and well designed. For information on where to obtain scientific advice/assistance to aid in the review process, visit the Animal Ethics Committee intranet or contact the Executive Officer."
-        },
-        {
-          "title": "Endorsement",
-          "questions": [
-            {
-              "type": "checkbox",
-              "label": "I endorse this application and confirm the scientific merit of the project.",
-              "description": "",
-              "is_required": true,
-              "grid_columns": [],
-              "grid_max_rows": null,
-              "select_options": []
-            }
-          ],
-          "description": "I have reviewed this application and assessed the scientific merit of the project. I confirm that proposed aims, design, methodology, and analyses are scientifically rigorous and will adequately inform the research question being posed. Advice has been sought from a consulting/reviewing scientist where necessary."
-        }
-      ],
-      "description": "Submit your project for scientific review."
     },
     {
       "title": "Competencies & Declarations",
@@ -130,7 +121,7 @@
               "type": "text",
               "label": "Agency / Company / Institution",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -138,8 +129,8 @@
             {
               "type": "text",
               "label": "Chief Investigator (CI)",
-              "description": "The person in charge conducting the research or educational activity involving animals.",
-              "is_required": false,
+              "description": "",
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -148,7 +139,7 @@
               "type": "text",
               "label": "Current Position",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -184,7 +175,7 @@
               "type": "checkbox",
               "label": "Current CI competency form is attached or provided < 12 months ago",
               "description": "",
-              "is_required": true,
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -224,7 +215,7 @@
               "grid_columns": [
                 {
                   "type": "text",
-                  "label": "Full name",
+                  "label": "Name",
                   "description": "",
                   "is_required": true,
                   "select_options": []
@@ -244,7 +235,7 @@
                   ]
                 },
                 {
-                  "type": "number",
+                  "type": "text",
                   "label": "Experience",
                   "description": "Describe experience with designated fauna and techniques",
                   "is_required": true,
@@ -252,7 +243,7 @@
                 },
                 {
                   "type": "checkbox",
-                  "label": "Under training",
+                  "label": "Training",
                   "description": "Is this person training under supervision?",
                   "select_options": []
                 }
@@ -297,7 +288,7 @@
               "type": "textarea",
               "label": "Detail other institutions involvement in the project",
               "description": "",
-              "is_required": true,
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -311,8 +302,8 @@
             {
               "type": "date",
               "label": "Start date",
-              "description": "Anticipated start date of the project.",
-              "is_required": true,
+              "description": "",
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": []
@@ -425,8 +416,8 @@
             {
               "type": "select",
               "label": "Purpose of the proposed project",
-              "description": "If there are more than one category this project fits in, choose the closest and most related one.",
-              "is_required": true,
+              "description": "",
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
               "select_options": [
@@ -450,8 +441,8 @@
                 ]
               ],
               "maxRows": 5,
-              "description": "Aims and objectives are crucial components of planning, guiding efforts towards a desired outcome. Aims are broad, overarching statements of purpose, while objectives are specific, measurable steps taken to achieve those aims. Aims provide the general direction, and objectives detail how to get there.",
-              "is_required": true,
+              "description": "",
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "text",

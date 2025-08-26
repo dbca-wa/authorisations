@@ -1,5 +1,4 @@
 import type { AxiosError } from "axios";
-import React from "react";
 
 // Simple browser-safe assert
 export function assert(condition: boolean, message: string): void {
@@ -25,8 +24,29 @@ export const handleApiError = (error: AxiosError) => {
 };
 
 
-export const scrollToTop = (dependencies: React.DependencyList = []) => {
-    React.useEffect(() => {
-        window.scrollTo(0, 0);
-    }, dependencies);
+export const scrollToTop = () => {
+    window.scrollTo(0, 0);
+}
+
+export const scrollToQuestion = ({
+    stepIndex, sectionIndex = 0, questionIndex = 0,
+}: {
+    stepIndex: number;
+    sectionIndex?: number;
+    questionIndex?: number;
+}) => {
+    const elementId = `q-${stepIndex}-${sectionIndex}-${questionIndex}`;
+    const element = document.getElementById(elementId) as HTMLElement;
+
+    if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+}
+
+export const openExternalWindow = (url: string, name: string = "_blank") => {
+    window.open(
+        url, // link
+        `auth_${name}`, // window name
+        "toolbar=no, menubar=no, location=no, status=no, resizable=yes, scrollbars=yes"
+    );
 }

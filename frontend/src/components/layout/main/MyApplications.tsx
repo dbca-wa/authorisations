@@ -1,4 +1,3 @@
-import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -11,6 +10,7 @@ import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useLoaderData } from "react-router";
 import type { IApplicationData } from "../../../context/types/Application";
+import { openExternalWindow } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
 
 
@@ -62,18 +62,10 @@ const Application = ({
                     <Link
                         target="_blank"
                         rel="noopener"
-                        underline="none"
                         aria-label="Continue application"
-                        onClick={() => {
-                            window.open(
-                                `/a/${application.key}`, // link
-                                `auth_${application.key}`, // window name
-                                "toolbar=no, menubar=no, location=no, status=no, resizable=yes, scrollbars=yes"
-                            );
-                        }}
+                        onClick={() => openExternalWindow(`/a/${application.key}`, application.key)}
                     >
                         <Button
-                            // onClick={() => navigate(`/a/${application.key}`, navOptions)}
                             variant="contained"
                             color="success"
                             loadingPosition='start'
@@ -84,7 +76,7 @@ const Application = ({
                             Continue
                         </Button>
                     </Link>
-                    <Button
+                    {/* <Button
                         variant="outlined"
                         color="secondary"
                         loadingPosition='start'
@@ -97,7 +89,7 @@ const Application = ({
                         sx={{ marginLeft: 2 }}
                     >
                         Certificate
-                    </Button>
+                    </Button> */}
                 </Box>
             </Card>
         </ListItem>

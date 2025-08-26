@@ -2,7 +2,7 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import MenuIcon from '@mui/icons-material/Menu';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SaveIcon from '@mui/icons-material/Save';
-import MuiAppBar, { type AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -11,19 +11,53 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import React from 'react';
 
+import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled } from '@mui/material/styles';
 import type { FieldValues, SubmitHandler, UseFormProps } from 'react-hook-form';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData, useNavigate, type NavigateFunction } from 'react-router';
+import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { LocalStorage } from '../../../context/LocalStorage';
 import type { IAnswers, IApplicationData } from '../../../context/types/Application';
 import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
+import { handleApiError, scrollToTop } from '../../../context/Utils';
+import { FormActiveStep } from './FormActiveStep';
 import { FormReviewPage } from './FormReviewPage';
 import { FormSidebar } from './FormSidebar';
-import { scrollToTop } from '../../../context/Utils';
-import { FormActiveStep } from './FormActiveStep';
 
+
+
+const _saveAnswers = async (
+    key: string,
+    version: string,
+    answers: IAnswers,
+) => {
+    // Check if we have internet connection
+    if (window.navigator.onLine) {
+        const response = await ApiManager.updateApplication(key, version, answers)
+            // Successfully save to API    
+            .then((resp) => {
+                // TODO: Clear the local storage
+                console.log("Saved answers to API:", resp)
+                return resp;
+            })
+            // Display error to user
+            .catch(handleApiError);
+
+        // Something went wrong with the API call, save to local storage
+        if (!response) {
+            console.warn("Failed to save answers to API, saving to local storage");
+            LocalStorage.setAnswers(key, answers);
+        }
+    }
+    // We are offline
+    else {
+        // Save answers to local storage
+        console.log("Offline... saving answers to local storage");
+        LocalStorage.setAnswers(key, answers);
+    }
+}
 
 export const FormLayout = () => {
     // Fetch application and questionnaire from API
@@ -31,9 +65,11 @@ export const FormLayout = () => {
         useLoaderData<{ app: IApplicationData, questionnaire: IQuestionnaireData }>();
 
     // Load stored answers from local storage
-    const storedAnswers = React.useMemo<IAnswers>(
-        () => LocalStorage.getAnswers(app.key), []
-    );
+    // const storedAnswers = React.useMemo<IAnswers>(
+    //     () => LocalStorage.getAnswers(app.key), []
+    // );
+
+    // console.log("Stored answers:", storedAnswers);
 
     // Drawer state
     const [drawerOpen, setDrawerOpen] = React.useState<boolean>(true);
@@ -41,30 +77,42 @@ export const FormLayout = () => {
     // Manage activeStep state here
     const [stepIndex, setActiveStep] = React.useState<number>(0);
 
-    // Form methods & state
-    const formParams: UseFormProps<IAnswers> = {
-        defaultValues: storedAnswers,
+    // Form methods
+    const formMethods = useForm<IAnswers>({
+        defaultValues: app.document.answers,
         // We do custom scroll, see onError function when submit
         shouldFocusError: false,
+    } as UseFormProps<IAnswers>);
+
+    // Form state (subscribed version)
+    const {
+        isDirty,
+    } = useFormState({ control: formMethods.control });
+
+    const saveAnswers = async () => {
+        // No changes to save
+        if (!isDirty) return;
+
+        const answers: IAnswers = formMethods.getValues();
+        await _saveAnswers(app.key, app.document.schema_version, answers);
+
+        // Reset the form state with the saved answers - not dirty anymore
+        formMethods.reset(answers);
     };
-    const formMethods = useForm<FieldValues>(formParams);
 
-    const handleBack = (): void => {
-        // Store form values before going back
-        LocalStorage.setAnswers(app.key, formMethods.getValues());
-
+    const handleBack = async () => {
+        await saveAnswers()
+        // Previous step
         setActiveStep((prevStep) => prevStep - 1);
     };
 
-    const handleContinue: SubmitHandler<FieldValues> = (data) => {
-        // console.log("Form data:", data)
-
-        // Save answers to local storage
-        LocalStorage.setAnswers(app.key, data);
+    const handleContinue: SubmitHandler<IAnswers> = async (_: IAnswers) => {
+        // Assuming the validated data `_` param is same as formMethods.getValues()
+        await saveAnswers()
 
         // Next step (or the review page)
         setActiveStep((prevStep) => prevStep + 1);
-    }
+    };
 
     // Account menu state and handlers
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -73,6 +121,23 @@ export const FormLayout = () => {
     React.useEffect(() => {
         document.title = `${app.questionnaire_name} : DBCA Authorisations`;
     }, [app.questionnaire_name]);
+
+    // Scroll to top when step changes
+    React.useEffect(() => scrollToTop(), [stepIndex]);
+
+    // Warn users trying to close or reload with unsaved changes
+    React.useEffect(() => {
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            if (isDirty) {
+                event.preventDefault();
+                // Modern browsers often ignore custom messages for 
+                // security reasons and display a generic message.
+                return (event.returnValue = ''); // Some browsers require returnValue to be set
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -96,12 +161,16 @@ export const FormLayout = () => {
                     <AccountMenu
                         anchorEl={anchorEl}
                         setAnchorEl={setAnchorEl}
+                        isDirty={isDirty}
+                        saveAnswers={saveAnswers}
                     />
                 </Toolbar>
             </AppBar>
             <FormSidebar
                 steps={questionnaire.document.steps}
                 activeStep={stepIndex}
+                saveAnswers={saveAnswers}
+                setActiveStep={setActiveStep}
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
             />
@@ -151,9 +220,13 @@ const AppBar = styled(MuiAppBar, {
 
 const AccountMenu = ({
     anchorEl, setAnchorEl,
+    isDirty,
+    saveAnswers,
 }: {
     anchorEl: null | HTMLElement;
     setAnchorEl: React.Dispatch<React.SetStateAction<null | HTMLElement>>;
+    isDirty: boolean;
+    saveAnswers: () => Promise<void>;
 }) => {
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
@@ -191,8 +264,9 @@ const AccountMenu = ({
                 }}
             >
                 <MenuItem
+                    disabled={!isDirty}
                     onClick={() => {
-                        console.log("Saving application")
+                        saveAnswers();
                         handleClose();
                     }}
                 >
@@ -228,7 +302,6 @@ const FormLayoutContent = ({
     questionnaire: IQuestionnaire;
     stepIndex: number;
 }) => {
-    scrollToTop([stepIndex]);
 
     // We are on the review page
     if (stepIndex === questionnaire.steps.length) {

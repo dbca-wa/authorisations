@@ -93,8 +93,8 @@ export function GridInput({
         _setRows(updatedRows);
 
         // Convert Date objects to YYYY-MM-DD strings for form state
-        // Do create a new array to avoid mutating the original state
         const formRows = updatedRows.map((row) => {
+            // Do create a new array to avoid mutating the original state
             const newRow = { ...row };
             question.o.grid_columns?.forEach((column) => {
                 if (column.type === "date" && newRow[column.label] instanceof Date) {

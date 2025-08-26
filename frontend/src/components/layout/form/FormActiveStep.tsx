@@ -6,10 +6,10 @@ import Stack from "@mui/material/Stack";
 import React from "react";
 import {
     useFormContext,
-    type FieldValues,
     type SubmitErrorHandler
 } from "react-hook-form";
 
+import type { IAnswers } from "../../../context/types/Application";
 import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
@@ -25,7 +25,7 @@ export const FormActiveStep = ({
     currentStep, stepIndex,
 }: {
     handleBack: () => void;
-    handleContinue: (data: FieldValues) => void;
+    handleContinue: (data: IAnswers) => void;
     currentStep: IFormStep;
     stepIndex: number;
 }) => {
@@ -64,12 +64,12 @@ export const FormActiveStep = ({
 
 // Do custom scroll and focus because ...
 // MUI wraps input elements in many layers and default behaviour is buggy
-const onError: SubmitErrorHandler<FieldValues> = (errors) => {
-    // console.log('errors:', errors)
+const onError: SubmitErrorHandler<IAnswers> = (errors) => {
     const firstErrorField = Object.keys(errors)[0];
+    // console.log('errors:', errors)
 
     // Try to find a container with the id
-    const errorElement = document.getElementById(`feild-${firstErrorField}`) as HTMLElement;
+    const errorElement = document.getElementById(`q-${firstErrorField}`) as HTMLElement;
 
     if (errorElement) {
         errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -156,7 +156,7 @@ const Section = ({
                     }
 
                     return (
-                        <ListItem id={`field-${question.key}`} key={qIndex} className="mb-4">
+                        <ListItem id={`q-${question.key}`} key={qIndex} className="mb-4">
                             {inputComponent}
                         </ListItem>
                     );

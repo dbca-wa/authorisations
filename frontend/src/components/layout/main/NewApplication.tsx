@@ -3,12 +3,12 @@ import React from "react";
 
 import { Box, Button, Card, List, ListItem, Typography } from "@mui/material";
 import { AxiosError } from 'axios';
-import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from "react-router";
+import { useLoaderData } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IQuestionnaireData } from "../../../context/types/Questionnaire";
+import { openExternalWindow } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
-
 
 
 export const NewApplication = () => {
@@ -52,7 +52,6 @@ const Questionnaire = ({
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
 }) => {
     const localDate = new Date(questionnaire.created_at).toLocaleDateString()
-    const navigate: NavigateFunction = useNavigate();
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -72,7 +71,7 @@ const Questionnaire = ({
                         loading={inProgress === questionnaire.slug}
                         disabled={Boolean(inProgress)}
                         startIcon={<CreateOutlinedIcon />}
-                        onClick={() => startApplication({ questionnaire, setInProgress, navigate })}
+                        onClick={() => startApplication({ questionnaire, setInProgress })}
                     >
                         Start Application
                     </Button>
@@ -84,11 +83,10 @@ const Questionnaire = ({
 
 
 const startApplication = async ({
-    questionnaire, setInProgress, navigate, 
+    questionnaire, setInProgress,
 }: {
     questionnaire: IQuestionnaireData;
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
-    navigate: NavigateFunction;
 }) => {
     setInProgress(questionnaire.slug);
 
@@ -137,6 +135,5 @@ const startApplication = async ({
     }
 
     // console.log("Created new application:", newApplication)
-    const navOptions: NavigateOptions = { viewTransition: true }
-    navigate(`/a/${newApplication.key}`, navOptions);
+    openExternalWindow(`/a/${newApplication.key}`, newApplication.key);
 }
