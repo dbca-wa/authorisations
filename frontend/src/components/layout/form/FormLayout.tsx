@@ -15,7 +15,7 @@ import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled } from '@mui/material/styles';
 import type { FieldValues, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
-import { useLoaderData, useNavigate, type NavigateFunction } from 'react-router';
+import { useLoaderData } from 'react-router';
 import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { LocalStorage } from '../../../context/LocalStorage';
@@ -230,7 +230,7 @@ const AccountMenu = ({
 }) => {
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
-    const navigate: NavigateFunction = useNavigate();
+    // const navigate: NavigateFunction = useNavigate();
 
     return (
         <Box sx={{ marginLeft: 'auto' }}>
@@ -278,10 +278,10 @@ const AccountMenu = ({
                         window.close();
 
                         // If we are not in a popup, we can navigate to my applications
-                        if (!window.closed) {
-                            handleClose();
-                            navigate("/my-applications", { replace: true })
-                        }
+                        // if (!window.closed) {
+                        //     handleClose();
+                        //     navigate("/my-applications", { replace: true })
+                        // }
                     }}
                 >
                     <ExitToAppIcon /> Exit

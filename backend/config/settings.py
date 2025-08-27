@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_jsonform",
+    "users",
     "questionnaires",
     "applications",
 ]
@@ -154,6 +155,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": env.db_url(),
 }
+
+# Default user model
+AUTH_USER_MODEL = "users.User"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -242,7 +247,6 @@ ALLOWED_EMAIL_SUFFIXES = []
 # Django Rest Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # 'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [

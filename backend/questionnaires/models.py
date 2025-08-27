@@ -1,9 +1,7 @@
+from api.serialisers import JsonSchemaSerialiserMixin
 from django.db import models
-from django.urls import reverse
 from django_jsonform.models.fields import JSONField
 from rest_framework import serializers
-
-from api.serialisers import JsonSchemaSerialiserMixin
 
 from .schema import get_questionnaire_schema
 
@@ -35,7 +33,7 @@ class Questionnaire(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     created_by = models.ForeignKey(
-        "auth.User",
+        "users.User",
         related_name="questionnaires",
         on_delete=models.PROTECT,
         editable=False,
@@ -54,9 +52,6 @@ class Questionnaire(models.Model):
     def __str__(self):
         return f'Questionnaire "{self.name}" (v{self.version})'
 
-    # def get_absolute_url(self):
-    #     return reverse("questionnaire", kwargs={"slug": self.slug})
-
 
 class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializer):
     """Serializer for the Questionnaire model.
@@ -66,19 +61,12 @@ class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerial
 
     class Meta:
         model = Questionnaire
-        fields = (
-            "slug", "version", "name", 
-            "description", "created_at", "document"
-        )
+        fields = ("slug", "version", "name", "description", "created_at", "document")
         # All fields are read-only by default (see `.get_fields()` method).
         read_only_fields = fields
-    
+
     def validate_document(self, value):
         schema = get_questionnaire_schema()
-        
+
         # Validate and return with the JSON schema
         return self._validate_document(value, schema)
-    
-    
-    
-    

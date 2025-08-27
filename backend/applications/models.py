@@ -25,7 +25,7 @@ class Application(models.Model):
     id = models.BigAutoField(primary_key=True)
     key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     owner = models.ForeignKey(
-        "auth.User",
+        "users.User",
         on_delete=models.PROTECT,
         related_name="applications",
         db_index=False,

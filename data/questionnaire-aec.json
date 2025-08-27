@@ -1,4 +1,6 @@
 {
+  "name": "Care and Use of Animals for Scientific Purposes",
+  "description": "The application process for using animals for scientific or educational purposes in Western Australia, integrating the Animal Welfare Act 2002, the Biodiversity Conservation Act 2016, and the Australian Code for the Care and Use of Animals for Scientific Purposes. It is designed to guide applicants, investigators, Animal Ethics Committee (AEC) members, and other stakeholders through the process.",
   "steps": [
     {
       "title": "Scientific Review",

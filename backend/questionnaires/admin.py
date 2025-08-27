@@ -1,18 +1,7 @@
-from django.contrib import admin, auth
+from django.contrib import admin
 
 from questionnaires.forms import QuestionnaireForm
 from questionnaires.models import Questionnaire
-
-# Replace the default UserProfileAdmin to prevent deletion
-admin.site.unregister(auth.models.User)
-
-
-@admin.register(auth.models.User)
-class UserProfileAdmin(auth.admin.UserAdmin):
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    actions = None
 
 
 @admin.register(Questionnaire)
@@ -25,19 +14,25 @@ class QuestionnaireAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("version", "created_at", "created_by", "slug")
     editable_fields = ("name", "description", "document")
-    
+
     save_as = False
     save_as_continue = False
-    
+
     fieldsets = (
         # This is the first fieldset, appearing at the top
-        (None, {
-            'fields': readonly_fields, # Include your read-only fields here
-        }),
+        (
+            None,
+            {
+                "fields": readonly_fields,  # Include your read-only fields here
+            },
+        ),
         # A subsequent fieldset for editable fields
-        ('Editable Fields', {
-            'fields': editable_fields,
-        }),
+        (
+            "Editable Fields",
+            {
+                "fields": editable_fields,
+            },
+        ),
     )
 
     def has_add_permission(self, request, obj=None):
@@ -67,28 +62,34 @@ class QuestionnaireAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(self.readonly_fields)
-        
+
         # Slug to be defined once; when creating a new record
         if obj is None:
             readonly_fields.remove("slug")
-        
+
         return readonly_fields
-    
+
     def get_fieldsets(self, request, obj=None):
         # If "slug" is not readonly, add it to editable fields
         readonly_fields = self.get_readonly_fields(request, obj)
         editable_fields = list(self.editable_fields)
-        
+
         if "slug" not in readonly_fields:
             editable_fields.insert(0, "slug")
 
         return (
-            (None, {
-                'fields': readonly_fields,
-            }),
-            ('Editable Fields', {
-                'fields': tuple(editable_fields),
-            }),
+            (
+                None,
+                {
+                    "fields": readonly_fields,
+                },
+            ),
+            (
+                "Editable Fields",
+                {
+                    "fields": tuple(editable_fields),
+                },
+            ),
         )
 
     def save_model(self, request, obj, form, change):
