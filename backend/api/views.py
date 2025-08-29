@@ -22,9 +22,13 @@ class ApplicationViewSet(
     serializer_class = ApplicationSerialiser
     lookup_field = "key"
 
-    # Ensure users can only see their own applications
-    def filter_queryset(self, queryset):
-        return super().filter_queryset(queryset).filter(owner=self.request.user)
+    def get_queryset(self):
+        """
+        This view should return a list of all the applications
+        for the currently authenticated user.
+        """
+        # Ensure users can only see their own applications
+        return super().get_queryset().filter(owner=self.request.user)
 
 
 class VersionFilterBackend(filters.BaseFilterBackend):
@@ -76,7 +80,7 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
 
         # No (integer) version number requested, return the latest
         return queryset.filter(**filter_kwargs).latest("version")
-    
+
     def list(self, request, *args, **kwargs):
         """
         Override to return the latest version of each questionnaire.
