@@ -15,6 +15,7 @@ export type ApplicationStatus =
 
 
 export const finalisedStatuses: ApplicationStatus[] = [
+    "DISCARDED",
     "APPROVED",
     "REJECTED",
 ]

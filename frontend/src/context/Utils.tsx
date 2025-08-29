@@ -50,3 +50,6 @@ export const openExternalWindow = (url: string, name: string = "_blank") => {
         "toolbar=no, menubar=no, location=no, status=no, resizable=yes, scrollbars=yes"
     );
 }
+
+export const sleep = (ms: number) => new Promise( resolve => setTimeout(resolve, ms) );
+

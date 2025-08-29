@@ -3,8 +3,9 @@ import React from "react";
 
 import { Box, Button, Card, List, ListItem, Typography } from "@mui/material";
 import { AxiosError } from 'axios';
-import { useLoaderData } from "react-router";
+import { Link, useLoaderData, useNavigate, type NavigateFunction } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
+import DialogProvider, { useDialog, type DialogOptions } from '../../../context/Dialogs';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openExternalWindow } from '../../../context/Utils';
@@ -21,7 +22,6 @@ export const NewApplication = () => {
     // Creating a new application in progress state
     const [inProgress, setInProgress] = React.useState<string>("");
 
-
     return (
         <Box className="p-8 min-w-4xl max-w-7xl">
             <Typography variant="h4" gutterBottom>
@@ -29,15 +29,17 @@ export const NewApplication = () => {
             </Typography>
             <p>Select a questionnaire to start a new application.</p>
             {questionnaires.length === 0 ? <EmptyStateComponent /> :
-                <List>
-                    {questionnaires.map((q) =>
-                        <Questionnaire
-                            key={q.slug}
-                            questionnaire={q}
-                            inProgress={inProgress}
-                            setInProgress={setInProgress}
-                        />)}
-                </List>
+                <DialogProvider>
+                    <List>
+                        {questionnaires.map((q) =>
+                            <Questionnaire
+                                key={q.slug}
+                                questionnaire={q}
+                                inProgress={inProgress}
+                                setInProgress={setInProgress}
+                            />)}
+                    </List>
+                </DialogProvider>
             }
         </Box>
     );
@@ -52,6 +54,8 @@ const Questionnaire = ({
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
 }) => {
     const localDate = new Date(questionnaire.created_at).toLocaleDateString()
+    const navigate: NavigateFunction = useNavigate();
+    const { showDialog, hideDialog } = useDialog();
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -71,7 +75,12 @@ const Questionnaire = ({
                         loading={inProgress === questionnaire.slug}
                         disabled={Boolean(inProgress)}
                         startIcon={<CreateOutlinedIcon />}
-                        onClick={() => startApplication({ questionnaire, setInProgress })}
+                        onClick={() => startApplication({
+                            questionnaire,
+                            setInProgress,
+                            navigate,
+                            showDialog, hideDialog,
+                        })}
                     >
                         Start Application
                     </Button>
@@ -82,11 +91,37 @@ const Questionnaire = ({
 }
 
 
+const createNewApplication = async (
+    questionnaire_slug: string,
+    navigate: NavigateFunction,
+) => {
+    // Do create a new application and redirect to it
+    const newApplication: IApplicationData | null = await ApiManager.createApplication(questionnaire_slug)
+        .catch((error: AxiosError) => {
+            console.error('Error creating application:', error);
+            alert('[Warning dialog goes here] Failed to create an application. Please try again later.')
+            return null;
+        });
+
+    if (newApplication === null) {
+        return;
+    }
+
+    // // console.log("Created new application:", newApplication)
+    openExternalWindow(`/a/${newApplication.key}`, newApplication.key);
+
+    navigate('/my-applications', { viewTransition: true });
+}
+
 const startApplication = async ({
-    questionnaire, setInProgress,
+    questionnaire, setInProgress, navigate,
+    showDialog, hideDialog,
 }: {
     questionnaire: IQuestionnaireData;
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
+    navigate: NavigateFunction;
+    showDialog: (options: DialogOptions) => void;
+    hideDialog: () => void;
 }) => {
     setInProgress(questionnaire.slug);
 
@@ -107,33 +142,47 @@ const startApplication = async ({
     // Find in-progress applications
     const inProgressApplication = existingApplications.find((app: IApplicationData) =>
         app.questionnaire_slug === questionnaire.slug && !finalisedStatuses.includes(app.status)
-        // && app.owner === self.user
     );
 
     console.log("Existing applications:", existingApplications);
 
-    // If there is an in-progress application, display the warning dialog
     if (inProgressApplication) {
+        // If there is an in-progress application, display the warning dialog
         // console.log("inProgressApplication:", inProgressApplication);
         console.warn("You already have an in-progress application for this questionnaire.");
-        alert('[Warning dialog goes here] You already have an in-progress application..')
-        // setInProgress("");
-        // return;
-    }
+        // alert('[Warning dialog goes here] You already have an in-progress application..')
 
-    // Do create a new application and redirect to it
-    const newApplication: IApplicationData | null = await ApiManager.createApplication(questionnaire.slug)
-        .catch((error: AxiosError) => {
-            console.error('Error creating application:', error);
-            alert('[Warning dialog goes here] Failed to create an application. Please try again later.')
-            return null;
+        showDialog({
+            title: "Create a new one?",
+            content: <>
+                <Typography>You already have <Link to="/my-applications">application(s)</Link> that
+                    are in-progress for this questionnaire. </Typography><br />
+                <Typography>Are you sure you want to proceed and create a new one?</Typography>
+            </>,
+            actions: (
+                <>
+                    <Button onClick={() => {
+                        hideDialog();
+                        setInProgress("");
+                    }}>Cancel</Button>
+                    <Button onClick={async () => {
+                        console.log("Confirmed!");
+                        await createNewApplication(questionnaire.slug, navigate);
+                    }}>
+                        Confirm
+                    </Button>
+                </>
+            )
         });
-
-    if (newApplication === null) {
-        setInProgress("");
-        return;
+    }
+    // No active application of this kind
+    else {
+        await createNewApplication(questionnaire.slug, navigate);
     }
 
-    // console.log("Created new application:", newApplication)
-    openExternalWindow(`/a/${newApplication.key}`, newApplication.key);
+    // setInProgress("");
+
+    // await sleep(3000);
+    // console.log("Redirecting to the my applications page...")
+    // navigate('/my-applications', { viewTransition: true });
 }

@@ -86,8 +86,10 @@ export const FormLayout = () => {
 
     // Form state (subscribed version)
     const {
-        isDirty,
+        isDirty, 
+        // dirtyFields,
     } = useFormState({ control: formMethods.control });
+    // console.log("isDirty:", isDirty, dirtyFields)
 
     const saveAnswers = async () => {
         // No changes to save
@@ -277,11 +279,9 @@ const AccountMenu = ({
                         // Assuming we're in a popup window
                         window.close();
 
-                        // If we are not in a popup, we can navigate to my applications
-                        // if (!window.closed) {
-                        //     handleClose();
-                        //     navigate("/my-applications", { replace: true })
-                        // }
+                        // If there are unsaved changes and user cancels the closing...
+                        // do nothing.
+                        // if (!window.closed) { }
                     }}
                 >
                     <ExitToAppIcon /> Exit
