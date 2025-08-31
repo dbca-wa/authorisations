@@ -14,8 +14,9 @@ import React from 'react';
 
 import { useController, type ValidateResult } from 'react-hook-form';
 import { v6 as uuidv6 } from 'uuid';
-import { type PrimitiveType, Question } from '../../context/FormTypes';
-import { assert } from '../../Utils';
+import { Question } from "../../context/types/Questionnaire";
+import { type PrimitiveType } from "../../context/types/Generic";
+import { assert } from '../../context/Utils';
 
 import type {
     GridColDef,
@@ -36,7 +37,7 @@ import {
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
 declare module '@mui/x-data-grid' {
     interface FooterPropsOverrides {
-        setRows: (newRows: (oldRows: GridRowsProp) => GridRowsProp) => void;
+        setRows: (newRows: React.SetStateAction<GridRowsProp>) => void;
         setRowModesModel: (
             newModel: (oldModel: GridRowModesModel) => GridRowModesModel,
         ) => void;
@@ -50,10 +51,14 @@ const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
         const newRow = { ...row };
         question.o.grid_columns?.forEach((column) => {
             if (column.type === "date") {
-                assert(typeof newRow[column.label] === "string",
-                    `Expected "${column.label}" to be a string, but got ${typeof newRow[column.label]}`);
+                assert(
+                    typeof newRow[column.label] === "string" || newRow[column.label] === null,
+                    `Expected "${column.label}" to be a string or null, but got ${typeof newRow[column.label]}`
+                );
 
-                newRow[column.label] = dayjs(newRow[column.label]).toDate();
+                if (newRow[column.label]) {
+                    newRow[column.label] = dayjs(newRow[column.label]).toDate();
+                }
             }
         });
         return newRow;
@@ -66,7 +71,7 @@ export function GridInput({
     question: Readonly<Question>,
 }) {
     const { field, fieldState } = useController({
-        name: question.id,
+        name: question.key,
         rules: {
             validate: (): ValidateResult => {
                 return question.o.is_required && rows.length === 0
@@ -82,7 +87,7 @@ export function GridInput({
     );
 
     // Attach the react-hook-form `onChange()` update to keep it in sync
-    const setRows = (newRows: React.SetStateAction<GridRowsProp>) => {
+    const setRows = (newRows: React.SetStateAction<GridRowsProp>): void => {
         // Support both function and value for setState
         const updatedRows = typeof newRows === "function"
             ? (newRows as (prev: GridRowsProp) => GridRowsProp)(rows)
@@ -92,8 +97,8 @@ export function GridInput({
         _setRows(updatedRows);
 
         // Convert Date objects to YYYY-MM-DD strings for form state
-        // Do create a new array to avoid mutating the original state
         const formRows = updatedRows.map((row) => {
+            // Do create a new array to avoid mutating the original state
             const newRow = { ...row };
             question.o.grid_columns?.forEach((column) => {
                 if (column.type === "date" && newRow[column.label] instanceof Date) {

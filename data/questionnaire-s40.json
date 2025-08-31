@@ -1,0 +1,810 @@
+{
+  "steps": [
+    {
+      "title": "Terms & Conditions",
+      "sections": [
+        {
+          "title": "Note to Applicants",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "I have read and understood terms and conditions",
+              "options": [],
+              "max_rows": null,
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "• Please complete all sections.\n• Applications for threatened flora authorisations must be submitted at least 6-8 weeks prior to the proposed  take or disturbance of the species.\n• If the application is incomplete or does not have sufficient detail to assess the level of risk to the threatened  flora, an assessor may contact the applicant via phone or email to request further detail or decline the  application due to insufficient information, and request resubmission.\n• The risk to the conservation of biodiversity is considered in accordance with “Guideline for assessing risks  to the conservation of biodiversity associated with threatened species and threatened ecological  communities”.\n• To reduce the level of risk to species, conditions may be applied to authorisations to adequately mitigate or  offset the impact\n• Activities that directly or indirectly cause the take or disturbance of listed threatened flora require a Ministerial  authorisation under s 40 of the Biodiversity Conservation Act 2016 (BC Act).\n• To take includes to gather, pluck, cut, pull up, destroy, dig up, remove, harvest or damage flora by any means. \n• To disturb is to engage in an activity that has the effect, whether directly or indirectly, of altering the long\u0002term persistence of the flora in its habitat.\n• An application for a threatened flora authorisation should be completed for any activity that has the  potential, whether directly or indirectly, of taking or disturbing threatened flora. Please contact  speciesandcommunities@dbca.wa.gov.au for advice if you are unsure your activity will meet the definition  of take of disturb.\n• Information on the location of threatened flora populations can be requested through Species and  Communities Program by emailing flora.data@dbca.wa.gov.au.\n• Completed application form to be emailed to: speciesandcommunities@dbca.wa.gov.au with all relevant  attachments, or forwarded to: Species and Communities Program, Department of Biodiversity, Conservation  and Attractions, Locked Bag 104 Bentley Delivery Centre WA 6983.\n• Further information may be obtained from the DBCA website Authorisation to take and disturb threatened  flora or by emailing speciesandcommunities@dbca.wa.gov.au.."
+        },
+        {
+          "title": "Disclosure and declaration",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "All details provided by me to the Department of Biodiversity, Conservation and Attractions (DBCA) in relation to  this application are true and correct, and I consent to the use and disclosure of information for the purposes  described above",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Information that you provide will be used and disclosed in accordance with sections 274 and 275 of the BC Act.  This may include use for license or authorisation monitoring and compliance, to inform you of any license or  authorisation legislative requirements or changes, and disclosure to other State and Commonwealth agencies for  administration or enforcement purposes. You also consent to the release of information in relation to the granting  of the authorisation, and any conditions of the authorisation, in response to inquiries made to the Department. Applicant declaration: All details provided by me to the Department of Biodiversity, Conservation and Attractions (DBCA) in relation to  this application are true and correct, and I consent to the use and disclosure of information for the purposes described above."
+        }
+      ],
+      "description": "Read and accept our terms of service."
+    },
+    {
+      "title": "Application Details",
+      "sections": [
+        {
+          "title": "Contact Person",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Title",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "Mr.",
+                "Ms.",
+                "Mrs.",
+                "Other"
+              ]
+            },
+            {
+              "type": "text",
+              "label": "First name",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "text",
+              "label": "Last name",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "text",
+              "label": "Contact phone number",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "text",
+              "label": "Email address",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Physical address",
+              "description": "Residential or associated institution / company / group address.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Postcode",
+              "description": "Physical address postcode",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Postal address same as physical address",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Postal address",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Postcode",
+              "description": "Postal address postcode",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "Criminal History",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Have you been convicted of an offence under the BC Act in the past five years?",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "Yes (please list them below)",
+                "No"
+              ]
+            },
+            {
+              "type": "textarea",
+              "label": "Please provide details and offence date",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "Institution / Company / Group",
+          "questions": [
+            {
+              "type": "text",
+              "label": "Associated institution/company/group (if applicable)",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "select",
+              "label": "Land ownership details",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "Occupier/lessee",
+                "Owner",
+                "Public authority",
+                "Other"
+              ]
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "Other approvals",
+          "questions": [
+            {
+              "type": "text",
+              "label": "Previous authorisation no.",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "date",
+              "label": "Expiry date",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "select",
+              "label": "Is your proposal subject to other approvals?",
+              "description": "e.g. licenses or other authorisations under the BC Act, and/or  approvals under the (Part IV and V Environmental Protection Act 1986), the Planning and Development Act 2005,  Mining Act 1978, and Environment Protection and Biodiversity Conservation Act 1999. Note: Assessments may  be undertaken concurrently by the appropriate organisations under each applicable legislation.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "Yes (please list them below)",
+                "No"
+              ]
+            },
+            {
+              "type": "grid",
+              "label": "List of other approvals required",
+              "description": "Please indicate if the approval is pending or if  it has been issued. If approvals have been issued, where available, please attach a copy or provide a link to  the approval/relevant information (e.g. Ministerial Statement). Please insert additional rows if multiple approvals  are required:",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "checkbox",
+                  "label": "Issued",
+                  "description": "The approval has been already issued or still pending",
+                  "select_options": []
+                },
+                {
+                  "type": "text",
+                  "label": "Approval type",
+                  "description": "Can this be list of options?",
+                  "select_options": []
+                },
+                {
+                  "type": "text",
+                  "label": "Approval number / reference (if applicable)",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "date",
+                  "label": "Approval date",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "number",
+                  "label": "Period of approval (years)",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "select",
+                  "label": "Copy of approval [FILE]",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "textarea",
+                  "label": "Additional",
+                  "description": "Further information and/or details of relevant conditions on the approval (can refer to above attachment if appropriate):",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "select",
+              "label": "Parallel processing",
+              "description": "If your proposal is currently being assessed under Part IV of the Environmental Protection Act 1986, please indicate below if you would like this application to be considered for parallel processing.",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "Yes, please consider this application for parallel processing.",
+                "No, I do not wish to be considered for parallel processing."
+              ]
+            },
+            {
+              "type": "text",
+              "label": "Proposal name and Environment Online reference number",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        }
+      ],
+      "description": "Contact, institution and other approvals."
+    },
+    {
+      "title": "Details of the threatened flora ",
+      "sections": [
+        {
+          "title": "Details of the threatened flora",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Scientific name(s) of threatened flora to be taken or disturbed",
+              "description": "(if more than one taxon please list all)",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "text",
+              "label": "Registered DBCA database population number/s of the threatened flora (if known)",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Total number(s) and condition of plants in threatened flora population(s) subject to the proposed  activity (include reproductive maturity): (e.g. mature / juvenile / seedlings)",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Number(s) of plants and parts of plants likely to be taken or disturbed (e.g. leaves, flowers, fruits, seeds  on ground, stem, roots, above ground plants, whole plants) at the time proposed",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "number",
+              "label": "Total number of populations",
+              "description": "Total number of populations, number of plants and condition of the species",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Detail regenerative characteristics of the threatened flora as applicable to activity, where known: e.g.  known to regenerate from soil stored seed after disturbance",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Scientific name(s) of threatened flora to be taken or disturbed"
+        },
+        {
+          "title": "Proposed activity",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Provide a brief description of the activities that will or may take threatened flora.   Relevant information attached:  ",
+              "description": "Note: “to take or disturb” also refers to inadvertent or accidental impact to the threatened flora and surrounding habitat.  If renewing a threatened flora authorisation, please advise if the activities authorised under the previous authorisation were completed and the number of plants taken to date. ",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        }
+      ],
+      "description": "Details of the threatened flora"
+    },
+    {
+      "title": "Land details",
+      "sections": [
+        {
+          "title": "Location of proposed activity:",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Location details: street address, lot/location no., lease no., and/or reserve no., and local government area) ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "Map of proposed areas(s)",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Map attached?",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes",
+                "no"
+              ]
+            }
+          ],
+          "description": "Please attach a map which includes the location of the threatened flora and the area/s proposed to be impacted by the activity. "
+        },
+        {
+          "title": "Shapefile and/or GPS Coordinates",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Shapefile and/or GPS Coordinates uploaded?",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes",
+                "no"
+              ]
+            }
+          ],
+          "description": "please upload a shapefile and/or GPS Coordinates "
+        }
+      ],
+      "description": "land details "
+    },
+    {
+      "title": " Proposed activity ",
+      "sections": [
+        {
+          "title": "Provide a brief description of the activities that will or may take threatened flora. ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Activities to be underatken",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Note: “to take or disturb” also refers to inadvertent or accidental impact to the threatened flora and surrounding habitat.  If renewing a threatened flora authorisation, please advise if the activities authorised under the previous authorisation were completed and the number of plants taken to date."
+        },
+        {
+          "title": "Is this activity part of an ongoing project? ",
+          "questions": [
+            {
+              "type": "select",
+              "label": "is this an ongoining project?",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes (please provide details below) ",
+                "no"
+              ]
+            },
+            {
+              "type": "textarea",
+              "label": "Details of ongoing activities   ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "grid",
+              "label": "Approximate duration of the proposed activities which will result in taking of threatened flora: ",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Activity:",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "date",
+                  "label": "Commence:",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "date",
+                  "label": "Cease",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "Purpose of and need for the proposed activities: ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Purpose of and need for the proposed activities: ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Purpose of and need for the proposed activities: "
+        },
+        {
+          "title": "Additional comments in support of application",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "additional comments",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "(e.g. discussion with DBCA District/Regional staff and/or Species and Communities Program). "
+        }
+      ],
+      "description": " Proposed activity "
+    },
+    {
+      "title": "Mitgation",
+      "sections": [
+        {
+          "title": "Demonstrate the application of the mitigation hierarchy. ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "Demonstrate the application of the mitigation hierarchy. ",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Provide evidence that avoidance and mitigation options have been pursued to eliminate, reduce risk, or otherwise mitigate the need for, and scale of, the impact of the proposed activity on the threatened flora (before, during and after the proposed activity). Where there is a significant risk to threatened flora, detail what steps will be taken to reduce the longer-term impact."
+        }
+      ],
+      "description": ""
+    },
+    {
+      "title": "Monitoring ",
+      "sections": [
+        {
+          "title": "Monitoring impact",
+          "questions": [
+            {
+              "type": "select",
+              "label": "Is monitoring to be undertaken?",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes (please provide details below)",
+                "No"
+              ]
+            },
+            {
+              "type": "textarea",
+              "label": "Please provide details on pre and/or post activity monitoring  ",
+              "description": "(Attach detailed monitoring plan where applicable).",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Consideration must be given to the monitoring effects of activities on the species be monitored?"
+        }
+      ],
+      "description": ""
+    },
+    {
+      "title": "Additional site impacts ",
+      "sections": [
+        {
+          "title": "Is there risk of additional site impacts  ",
+          "questions": [
+            {
+              "type": "textarea",
+              "label": "please list all site impacts ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "select",
+              "label": "will additional details be attached ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "yes.",
+                "no."
+              ]
+            }
+          ],
+          "description": "Provide details below or attach information which describe impacts to surrounding habitat which may cause secondary (indirect) impacts to the threatened flora:"
+        }
+      ],
+      "description": "impacts on the site in question "
+    },
+    {
+      "title": "Presence of other conservation significant species or communities ",
+      "sections": [
+        {
+          "title": "Has the presence of all threatened ecological communities and species been considered??",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "I have undertaken research to the best of my ability and determined the following species and or Communities are also present within the area of activity  ",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "All applications must include assessment of possible pressence or occurrences of threatened ecological communities and species in impacted areas of activity "
+        },
+        {
+          "title": "The following instances of conservation significant Flora has been identified!",
+          "questions": [
+            {
+              "type": "grid",
+              "label": "Priority Flora",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Species name",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "The following instances of conservation significant ecological communities has been identified!",
+          "questions": [
+            {
+              "type": "grid",
+              "label": "Threatened Ecological Community's ",
+              "description": "You may require a threatened ecological community authorisation. Please refer to DBCA’s Authorisation to modify a threatened ecological community. ",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Comunity Name",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        },
+        {
+          "title": "The following instances of conservation significant Fauna has been identified!",
+          "questions": [
+            {
+              "type": "grid",
+              "label": "Fauna name ",
+              "description": "you may require a threatened fauna authorisation Authorisation to take and disturb threatened fauna. ",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Threatened Fauna Name ",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        }
+      ],
+      "description": ""
+    },
+    {
+      "title": "Check list of attachments (where applicable):  ",
+      "sections": [
+        {
+          "title": "check list of Supporting documentation",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "Other approvals documents (as applicable).",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Aerial photograph or map with a north arrow clearly identifying the threatened flora to be impact.",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": [
+                "Aerial photograph or map with a north arrow clearly identifying the threatened flora to be impact."
+              ]
+            },
+            {
+              "type": "checkbox",
+              "label": "Shapefile of area in question (where available).",
+              "description": "Shapefile of area in question (where available).",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Monitoring program.",
+              "description": "Monitoring program.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Environmental surveys.",
+              "description": "Environmental surveys.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Photos of application area.",
+              "description": "Photos of application area.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Additional supporting Information (please describe below): ",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": ""
+        }
+      ],
+      "description": ""
+    }
+  ],
+  "schema_version": "2025.06-1"
+}

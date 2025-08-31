@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
-export default function ErrorPage() {
+export const ErrorPage = () => {
 	const error = useRouteError();
 
 	let errorMessage = "An unexpected error has occurred";

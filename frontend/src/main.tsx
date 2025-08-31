@@ -15,7 +15,17 @@ import './index.css';
 import { router } from './router';
 
 
-const theme = createTheme({});
+const theme = createTheme({
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+  },
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -54,8 +54,19 @@ if ALLOWED_HOST_PROD:
     CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST_PROD}")
 
 # SSL, CSRF and security settings
-CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME", default=None)  # Set custom CSRF cookie name
-# Non-secure redirection cache: 1 minute in debug mode, 24 hours in production
+
+# Use sessions for CSRF protection without disclosing CSRF token in cookies
+CSRF_USE_SESSIONS = True
+
+# Set custom the CSRF header name that Django will look on the request headers
+# for token validation when authenticating via AJAX etc. 
+CSRF_HEADER_NAME = env("CSRF_HEADER_NAME", default="HTTP_X_CSRFTOKEN")
+CSRF_HEADER_CLIENT = env("CSRF_HEADER_CLIENT", default="X-CsrfToken")
+
+# Set custom CSRF cookie name (probably the session key as well)
+CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME", default="csrftoken")
+
+# Non-secure redirection cache: 1 minute in debug mode, longer in production
 SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
 
 if not DEBUG:
@@ -92,8 +103,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "django_jsonform",
-    "questionnaire",
+    "users",
+    "questionnaires",
+    "applications",
 ]
 
 MIDDLEWARE = [
@@ -103,6 +117,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "dbca_utils.middleware.SSOLoginMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -140,6 +155,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": env.db_url(),
 }
+
+# Default user model
+AUTH_USER_MODEL = "users.User"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -215,3 +234,22 @@ DJANGO_VITE = {
 # Admin dashboard configuration
 ADMIN_TOOLS_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
 ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'config.dashboard.CustomAppIndexDashboard'
+
+# Explicitly set the model backend
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# auth2: only allow accounts with specific email suffixes
+ALLOWED_EMAIL_SUFFIXES = []
+
+
+# Django Rest Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}

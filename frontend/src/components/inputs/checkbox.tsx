@@ -3,7 +3,7 @@ import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import { Controller } from "react-hook-form";
-import { Question } from "../../context/FormTypes";
+import { Question } from "../../context/types/Questionnaire";
 import { ERROR_MSG } from "../../context/Constants";
 
 export function CheckboxInput({
@@ -12,7 +12,7 @@ export function CheckboxInput({
     question: Readonly<Question>
 }) {
     return <Controller
-        name={question.id}
+        name={question.key}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}

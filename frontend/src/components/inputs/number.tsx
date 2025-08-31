@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import FormHelperText from "@mui/material/FormHelperText";
 import TextField from "@mui/material/TextField";
 import { Controller } from "react-hook-form";
-import { Question } from "../../context/FormTypes";
+import { Question } from "../../context/types/Questionnaire";
 import { ERROR_MSG } from "../../context/Constants";
 
 
@@ -13,7 +13,7 @@ export function NumberInput({
 }) {
 
     return <Controller
-        name={question.id}
+        name={question.key}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}

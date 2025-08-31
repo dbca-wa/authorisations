@@ -1,29 +1,20 @@
-"""
-URL configuration for DBCA Authorisations project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
+from applications.views import generic_template, resume_application
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
+from dbnow.views import db_now_view
 from home import home_page
-
 
 urlpatterns = [
     path("", home_page),
-    path("a/", include("questionnaire.urls")),
-    path("dbnow/", include("dbnow.urls")),
+    path("my-applications", generic_template, name="my-applications"),
+    path("new-application", generic_template, name="new-application"),
+    path("a/<slug:key>", resume_application, name="resume-application"),
+    
+    # Api
+    path("api/", include("api.urls")),
+    
+    # Admin and admin tools
+    path("dbnow", db_now_view, name="db-now"),
     path("admin/", admin.site.urls),
-    path('admin_tools/', include('admin_tools.urls')),
+    path("admin_tools/", include("admin_tools.urls")),
 ]

@@ -1,0 +1,84 @@
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import CssBaseline from '@mui/material/CssBaseline';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+
+import { useEffect } from 'react';
+import { useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
+import { DRAWER_WIDTH } from '../../../context/Constants';
+import type { IRoute } from "../../../context/types/Generic";
+import { ROUTES } from '../../../router';
+
+
+export const MainLayout = ({
+    route,
+}: {
+    route: IRoute,
+}) => {
+    // Update page title
+    useEffect(() => {
+        document.title = `${route.label} : DBCA Authorisations`;
+    }, [route.label]);
+
+
+    return (
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Toolbar>
+                    <Typography variant="h6" noWrap component="div">
+                        Authorisations Framework
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <Sidebar />
+            <Box component="main" sx={{ marginTop: "64px", p: 3 }}>
+                {route.component && <route.component />}
+            </Box>
+        </Box>
+    );
+}
+
+
+const Sidebar = () => {
+    const currentPath = window.location.pathname;
+    const navOptions: NavigateOptions = { viewTransition: true }
+    const navigate: NavigateFunction = useNavigate();
+
+    return (
+        <Drawer
+            variant="permanent"
+            sx={{
+                width: DRAWER_WIDTH,
+                flexShrink: 0,
+                [`& .MuiDrawer-paper`]: { width: DRAWER_WIDTH, boxSizing: 'border-box' },
+            }}
+        >
+            <Toolbar />
+            <Box sx={{ overflow: 'auto' }}>
+                <List>
+                    {
+                        ROUTES.map((route) => (
+                            <ListItem key={route.path} disablePadding divider={route.divider}>
+                                <ListItemButton
+                                    onClick={() => navigate(route.path, navOptions)}
+                                    selected={currentPath === route.path}
+                                >
+                                    <ListItemIcon>{route.icon}</ListItemIcon>
+                                    <ListItemText primary={route.label} />
+                                </ListItemButton>
+                            </ListItem>
+                        ))
+                    }
+                </List>
+            </Box>
+        </Drawer>
+    );
+}
