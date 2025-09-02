@@ -43,13 +43,13 @@ export const scrollToQuestion = ({
     }
 }
 
-export const openExternalWindow = (url: string, name: string = "_blank") => {
-    window.open(
-        url, // link
-        `auth_${name}`, // window name
-        "toolbar=no, menubar=no, location=no, status=no, resizable=yes, scrollbars=yes"
-    );
+export const openNewTab = (url: string, name: string = "_blank") => {
+    const newWindow = window.open(url, name, 'noopener');
+    if (newWindow) {
+        newWindow.opener = null;  // extra safety
+        newWindow.focus();
+    }
 }
 
-export const sleep = (ms: number) => new Promise( resolve => setTimeout(resolve, ms) );
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
