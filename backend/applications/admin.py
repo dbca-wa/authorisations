@@ -16,8 +16,9 @@ class ApplicationAdmin(admin.ModelAdmin):
         "key", "owner", 
         "questionnaire", "status",
         "created_at", "updated_at", "submitted_at",
+        "document",
     )
-    editable_fields = ("document", )
+    editable_fields = ()
     
     fieldsets = (
         # This is the first fieldset, appearing at the top
