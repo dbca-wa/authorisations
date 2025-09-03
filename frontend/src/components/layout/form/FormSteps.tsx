@@ -1,3 +1,4 @@
+import WarningIcon from '@mui/icons-material/Warning';
 import Step from '@mui/material/Step';
 import StepButton from '@mui/material/StepButton';
 import StepContent from '@mui/material/StepContent';
@@ -6,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import type React from 'react';
 import type { IFormStep } from "../../../context/types/Questionnaire";
 import { scrollToQuestion } from '../../../context/Utils';
+import StepLabel from '@mui/material/StepLabel';
 
 
 export function FormSteps({
@@ -52,6 +54,22 @@ export function FormSteps({
                     />
                 </Step>
             ))}
+
+            <Step
+                key="Review"
+                completed={false}
+                // disabled={activeStep < steps.length}
+                disabled={false}
+                expanded={activeStep === steps.length}
+            >
+                <StepItem
+                    step={{ title: "Review", description: "Check your application before you submit.", sections: [] }}
+                    index={steps.length}
+                    activeStep={activeStep}
+                    drawerOpen={drawerOpen}
+                    onClick={() => handleStepClick(steps.length)}
+                />
+            </Step>
         </Stepper>
     );
 }
@@ -67,28 +85,38 @@ const StepItem = ({
     drawerOpen: boolean;
     onClick: () => void;
 }) => {
+
+
+    const error: boolean = index == activeStep;
     const isDisabled = index > activeStep;
+    
+    const icon = error ? <WarningIcon color="error" /> : null
 
     // If the drawer is closed, we only show the step icon
     if (!drawerOpen) {
         // Checkmark icon if the step is in past
-        // const icon = index >= activeStep ? index + 1 : "✓";
         return (
-            <StepButton onClick={onClick} disabled={isDisabled} />
+            <StepButton
+                onClick={onClick}
+                disabled={isDisabled}
+                icon={icon}
+            />
         );
     }
 
     // If the drawer is open, we show the step label and content
     return (
         <>
-            <StepButton onClick={onClick} disabled={isDisabled}>
-                {step.title}
+            <StepButton
+                disabled={isDisabled}
+                icon={icon}
+                onClick={onClick}
+            >
+                <Typography fontWeight="fontWeightBold" >{step.title}</Typography>
             </StepButton>
-            {activeStep === index &&
-                <StepContent>
-                    <Typography>{step.description}</Typography>
-                </StepContent>
-            }
+            <StepContent>
+                <Typography>{step.description}</Typography>
+            </StepContent>
         </>
     );
 };

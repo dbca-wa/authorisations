@@ -27,38 +27,6 @@ import { FormReviewPage } from './FormReviewPage';
 import { FormSidebar } from './FormSidebar';
 
 
-
-const _saveAnswers = async (
-    key: string,
-    version: string,
-    answers: IAnswers,
-) => {
-    // Check if we have internet connection
-    if (window.navigator.onLine) {
-        const response = await ApiManager.updateApplication(key, version, answers)
-            // Successfully save to API    
-            .then((resp) => {
-                // TODO: Clear the local storage
-                console.log("Saved answers to API:", resp)
-                return resp;
-            })
-            // Display error to user
-            .catch(handleApiError);
-
-        // Something went wrong with the API call, save to local storage
-        if (!response) {
-            console.warn("Failed to save answers to API, saving to local storage");
-            LocalStorage.setAnswers(key, answers);
-        }
-    }
-    // We are offline
-    else {
-        // Save answers to local storage
-        console.log("Offline... saving answers to local storage");
-        LocalStorage.setAnswers(key, answers);
-    }
-}
-
 export const FormLayout = () => {
     // Fetch application and questionnaire from API
     const { app, questionnaire } =
@@ -117,7 +85,7 @@ export const FormLayout = () => {
     };
 
     // Account menu state and handlers
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
 
     // Change page title
     React.useEffect(() => {
@@ -161,8 +129,8 @@ export const FormLayout = () => {
                         {app.questionnaire_name}
                     </Typography>
                     <AccountMenu
-                        anchorEl={anchorEl}
-                        setAnchorEl={setAnchorEl}
+                        anchorEl={menuAnchorEl}
+                        setAnchorEl={setMenuAnchorEl}
                         isDirty={isDirty}
                         saveAnswers={saveAnswers}
                     />
@@ -321,4 +289,36 @@ const FormLayoutContent = ({
             stepIndex={stepIndex}
         />
     );
+}
+
+
+const _saveAnswers = async (
+    key: string,
+    version: string,
+    answers: IAnswers,
+) => {
+    // Check if we have internet connection
+    if (window.navigator.onLine) {
+        const response = await ApiManager.updateApplication(key, version, answers)
+            // Successfully save to API    
+            .then((resp) => {
+                // TODO: Clear the local storage
+                console.log("Saved answers to API:", resp)
+                return resp;
+            })
+            // Display error to user
+            .catch(handleApiError);
+
+        // Something went wrong with the API call, save to local storage
+        if (!response) {
+            console.warn("Failed to save answers to API, saving to local storage");
+            LocalStorage.setAnswers(key, answers);
+        }
+    }
+    // We are offline
+    else {
+        // Save answers to local storage
+        console.log("Offline... saving answers to local storage");
+        LocalStorage.setAnswers(key, answers);
+    }
 }
