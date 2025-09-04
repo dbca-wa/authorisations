@@ -5,31 +5,38 @@ import StepContent from '@mui/material/StepContent';
 import Stepper from '@mui/material/Stepper';
 import Typography from '@mui/material/Typography';
 import type React from 'react';
+import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IFormStep } from "../../../context/types/Questionnaire";
-import { scrollToQuestion } from '../../../context/Utils';
-import StepLabel from '@mui/material/StepLabel';
 
+
+const reviewStep = {
+    title: "Review",
+    description: "Check your application before you submit.",
+    sections: [],
+};
 
 export function FormSteps({
-    steps, activeStep, saveAnswers, setActiveStep, drawerOpen,
+    drawerOpen,
+    steps, activeStep,
+    handleSubmit,
+    completedSteps,
 }: Readonly<{
+    drawerOpen: boolean;
     steps: IFormStep[];
     activeStep: number;
-    saveAnswers: () => Promise<void>;
-    setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-    drawerOpen: boolean;
+    handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
+    completedSteps: NumberedBooleanObj;
 }>) {
     const handleStepClick = async (index: number) => {
-        // Allow clicking the current step to scroll to top of it
+        // Current step
         if (index === activeStep) {
-            scrollToQuestion({ stepIndex: index });
+            // Do nothing 
+            // scrollToQuestion({ stepIndex: index });
         }
-        // Allow clicking previous (completed) steps to navigate back
-        else if (index < activeStep) {
-            await saveAnswers();
-            setActiveStep(index);
+        // Previous or future steps that we can click
+        else {
+            await handleSubmit(index)();
         }
-        // Clicks on future steps are disabled and will do nothing.
     };
 
     return (
@@ -38,36 +45,38 @@ export function FormSteps({
             orientation="vertical"
             sx={{ margin: 2.5 }}
         >
-            {steps.map((step, index) => (
-                <Step
-                    key={step.title}
-                    completed={index < activeStep}
-                    disabled={index > activeStep}
+            {steps.map((step, index) => {
+                const isCompleted: boolean = completedSteps[index] || false;
+                const hasError: boolean = completedSteps[index] === false;
+
+                return <Step
+                    key={index}
+                    completed={isCompleted}
+                    disabled={!isCompleted}
                     expanded={activeStep === index}
                 >
                     <StepItem
                         step={step}
-                        index={index}
-                        activeStep={activeStep}
                         drawerOpen={drawerOpen}
                         onClick={() => handleStepClick(index)}
+                        isActive={activeStep === index}
+                        hasError={hasError}
                     />
                 </Step>
-            ))}
+            })}
 
             <Step
-                key="Review"
+                key={steps.length}
                 completed={false}
-                // disabled={activeStep < steps.length}
-                disabled={false}
+                disabled={true}
                 expanded={activeStep === steps.length}
             >
                 <StepItem
-                    step={{ title: "Review", description: "Check your application before you submit.", sections: [] }}
-                    index={steps.length}
-                    activeStep={activeStep}
+                    step={reviewStep}
                     drawerOpen={drawerOpen}
                     onClick={() => handleStepClick(steps.length)}
+                    isActive={activeStep === steps.length}
+                    hasError={false}
                 />
             </Step>
         </Stepper>
@@ -76,43 +85,35 @@ export function FormSteps({
 
 
 const StepItem = ({
-    step, index, activeStep,
-    drawerOpen, onClick,
+    step,
+    drawerOpen,
+    onClick,
+    isActive,
+    hasError,
 }: {
     step: IFormStep;
-    index: number;
-    activeStep: number;
     drawerOpen: boolean;
     onClick: () => void;
+    isActive: boolean;
+    hasError: boolean;
 }) => {
-
-
-    const error: boolean = index == activeStep;
-    const isDisabled = index > activeStep;
-    
-    const icon = error ? <WarningIcon color="error" /> : null
+    const icon = hasError ? <WarningIcon color="error" /> : null;
 
     // If the drawer is closed, we only show the step icon
     if (!drawerOpen) {
         // Checkmark icon if the step is in past
         return (
-            <StepButton
-                onClick={onClick}
-                disabled={isDisabled}
-                icon={icon}
-            />
+            <StepButton icon={icon} onClick={onClick} />
         );
     }
 
     // If the drawer is open, we show the step label and content
     return (
         <>
-            <StepButton
-                disabled={isDisabled}
-                icon={icon}
-                onClick={onClick}
-            >
-                <Typography fontWeight="fontWeightBold" >{step.title}</Typography>
+            <StepButton icon={icon} onClick={onClick}>
+                <Typography fontWeight={isActive ? "fontWeightBold" : "fontWeightRegular"}>
+                    {step.title}
+                </Typography>
             </StepButton>
             <StepContent>
                 <Typography>{step.description}</Typography>

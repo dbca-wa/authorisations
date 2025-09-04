@@ -13,13 +13,14 @@ import React from 'react';
 
 import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled } from '@mui/material/styles';
-import type { FieldValues, SubmitHandler, UseFormProps } from 'react-hook-form';
+import type { SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
 import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { LocalStorage } from '../../../context/LocalStorage';
 import type { IAnswers, IApplicationData } from '../../../context/types/Application';
+import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
 import { handleApiError, scrollToTop } from '../../../context/Utils';
 import { FormActiveStep } from './FormActiveStep';
@@ -45,6 +46,9 @@ export const FormLayout = () => {
     // Manage activeStep state here
     const [stepIndex, setActiveStep] = React.useState<number>(0);
 
+    // Manage completed steps
+    const [completedSteps, setCompleted] = React.useState<NumberedBooleanObj>({});
+
     // Form methods
     const formMethods = useForm<IAnswers>({
         defaultValues: app.document.answers,
@@ -54,35 +58,51 @@ export const FormLayout = () => {
 
     // Form state (subscribed version)
     const {
-        isDirty, 
+        isDirty,
         // dirtyFields,
     } = useFormState({ control: formMethods.control });
     // console.log("isDirty:", isDirty, dirtyFields)
 
-    const saveAnswers = async () => {
+    const saveAnswers = async (answers?: IAnswers) => {
         // No changes to save
         if (!isDirty) return;
 
-        const answers: IAnswers = formMethods.getValues();
-        await _saveAnswers(app.key, app.document.schema_version, answers);
+        answers = answers || formMethods.getValues();
+        await _doSaveAnswers(app.key, app.document.schema_version, answers);
 
         // Reset the form state with the saved answers - not dirty anymore
         formMethods.reset(answers);
     };
 
-    const handleBack = async () => {
-        await saveAnswers()
-        // Previous step
-        setActiveStep((prevStep) => prevStep - 1);
-    };
+    const handleSubmit = (nextStep: React.SetStateAction<number>): AsyncVoidAction => {
+        const onValid: SubmitHandler<IAnswers> = async (answers: IAnswers) => {
+            // Set the current step as completed
+            setCompleted((completed) => ({
+                ...completed,
+                [stepIndex]: true,
+            }));
+            // Save answers via API
+            await saveAnswers(answers);
+            // Set the new active step
+            setActiveStep(nextStep);
+        }
 
-    const handleContinue: SubmitHandler<IAnswers> = async (_: IAnswers) => {
-        // Assuming the validated data `_` param is same as formMethods.getValues()
-        await saveAnswers()
+        const onError: SubmitErrorHandler<IAnswers> = async (errors) => {
+            // Set the current step as failed
+            setCompleted((completed) => ({
+                ...completed,
+                [stepIndex]: false,
+            }));
+            // Call the actual error handler
+            return onInvalid(errors);
+        }
 
-        // Next step (or the review page)
-        setActiveStep((prevStep) => prevStep + 1);
-    };
+        console.log("completedSteps:", completedSteps)
+
+        // Return the callable function for triggering validation, 
+        // then to switch to the given step if validation is successful
+        return formMethods.handleSubmit(onValid, onError);
+    }
 
     // Account menu state and handlers
     const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -137,18 +157,17 @@ export const FormLayout = () => {
                 </Toolbar>
             </AppBar>
             <FormSidebar
-                steps={questionnaire.document.steps}
-                activeStep={stepIndex}
-                saveAnswers={saveAnswers}
-                setActiveStep={setActiveStep}
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
+                steps={questionnaire.document.steps}
+                activeStep={stepIndex}
+                handleSubmit={handleSubmit}
+                completedSteps={completedSteps}
             />
             <Box component="main" sx={{ marginTop: "64px", p: 2 }}>
                 <FormProvider {...formMethods}>
                     <FormLayoutContent
-                        handleBack={handleBack}
-                        handleContinue={handleContinue}
+                        handleSubmit={handleSubmit}
                         questionnaire={questionnaire.document}
                         stepIndex={stepIndex}
                     />
@@ -200,7 +219,6 @@ const AccountMenu = ({
 }) => {
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
-    // const navigate: NavigateFunction = useNavigate();
 
     return (
         <Box sx={{ marginLeft: 'auto' }}>
@@ -261,12 +279,10 @@ const AccountMenu = ({
 
 
 const FormLayoutContent = ({
-    handleBack,
-    handleContinue,
+    handleSubmit,
     questionnaire, stepIndex,
 }: {
-    handleBack: () => void;
-    handleContinue: SubmitHandler<FieldValues>;
+    handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction,
     questionnaire: IQuestionnaire;
     stepIndex: number;
 }) => {
@@ -274,17 +290,13 @@ const FormLayoutContent = ({
     // We are on the review page
     if (stepIndex === questionnaire.steps.length) {
         return (
-            <FormReviewPage
-                questionnaire={questionnaire}
-                onBack={handleBack}
-            />
+            <FormReviewPage questionnaire={questionnaire} />
         );
     }
 
     return (
         <FormActiveStep
-            handleBack={handleBack}
-            handleContinue={handleContinue}
+            handleSubmit={handleSubmit}
             currentStep={questionnaire.steps[stepIndex]}
             stepIndex={stepIndex}
         />
@@ -292,7 +304,7 @@ const FormLayoutContent = ({
 }
 
 
-const _saveAnswers = async (
+const _doSaveAnswers = async (
     key: string,
     version: string,
     answers: IAnswers,
@@ -320,5 +332,24 @@ const _saveAnswers = async (
         // Save answers to local storage
         console.log("Offline... saving answers to local storage");
         LocalStorage.setAnswers(key, answers);
+    }
+}
+
+// Do custom scroll and focus because ...
+// MUI wraps input elements in many layers and default behaviour is buggy
+const onInvalid: SubmitErrorHandler<IAnswers> = (errors) => {
+    const firstErrorField = Object.keys(errors)[0];
+    // console.log('errors:', errors)
+
+    // Try to find a container with the id
+    const errorElement = document.getElementById(`q-${firstErrorField}`) as HTMLElement;
+
+    if (errorElement) {
+        errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // Only focus if tabIndex is not -1 
+        // (skip components that are not meant to be focused)
+        if (typeof errorElement.focus === "function" && errorElement.tabIndex !== -1)
+            errorElement.focus();
     }
 }

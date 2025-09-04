@@ -4,25 +4,25 @@ import MuiDrawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import { styled, type CSSObject, type Theme } from '@mui/material/styles';
 import { DRAWER_WIDTH } from '../../../context/Constants';
-import type { IAnswers } from '../../../context/types/Application';
+import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IFormStep } from "../../../context/types/Questionnaire";
 import { FormSteps } from './FormSteps';
 
 
 export function FormSidebar({
-    steps,
-    activeStep,
-    saveAnswers,
-    setActiveStep,
     drawerOpen,
     setDrawerOpen,
+    steps,
+    activeStep,
+    handleSubmit,
+    completedSteps,
 }: Readonly<{
-    steps: IFormStep[];
-    activeStep: number;
-    saveAnswers: (answers?: IAnswers) => Promise<void>;
-    setActiveStep: React.Dispatch<React.SetStateAction<number>>;
     drawerOpen: boolean;
     setDrawerOpen: (open: boolean) => void;
+    steps: IFormStep[];
+    activeStep: number;
+    handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
+    completedSteps: NumberedBooleanObj;
 }>) {
     return (
         <Drawer
@@ -45,11 +45,11 @@ export function FormSidebar({
             </DrawerHeader>
             <Divider />
             <FormSteps
+                drawerOpen={drawerOpen}
                 steps={steps}
                 activeStep={activeStep}
-                drawerOpen={drawerOpen}
-                saveAnswers={saveAnswers}
-                setActiveStep={setActiveStep}
+                handleSubmit={handleSubmit}
+                completedSteps={completedSteps}
             />
         </Drawer>
     );

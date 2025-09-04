@@ -43,11 +43,14 @@ const onSubmit = () => {
 
 export function FormReviewPage({
     questionnaire,
-    onBack,
+    // onBack,
 }: {
     questionnaire: IQuestionnaire;
-    onBack: () => void;
+    // onBack: () => void;
 }) {
+    const onBack = () => {
+        console.log("back button")
+    }
     const { getValues } = useFormContext<IAnswers>();
     const answers: IAnswers = getValues();
 
