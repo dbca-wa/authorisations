@@ -76,7 +76,8 @@ export const FormLayout = () => {
     // console.log("isDirty:", isDirty, dirtyFields)
 
     /**
-     * Obviously saves form state only if the it was dirty 
+     * Saves the current form answers to the API,
+     * or to local storage if offline or API fails,
      * then resets the form state to not dirty.
      * @returns Promise<void>
      */
@@ -84,9 +85,6 @@ export const FormLayout = () => {
         newActiveStep?: number,
         currentValidatedSteps?: NumberedBooleanObj,
     ) => {
-        // No changes to save
-        if (!isDirty) return;
-
         // Convert form answers to document structure
         const answers: IFormAnswers = formMethods.getValues();
         const document: IFormDocument = {
