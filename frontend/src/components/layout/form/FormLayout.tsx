@@ -71,9 +71,7 @@ export const FormLayout = () => {
     // Form state (subscribed version)
     const {
         isDirty,
-        // dirtyFields,
     } = useFormState({ control: formMethods.control });
-    // console.log("isDirty:", isDirty, dirtyFields)
 
     /**
      * Saves the current form answers to the API,
@@ -112,10 +110,10 @@ export const FormLayout = () => {
     const handleSubmit = (nextStep: React.SetStateAction<number>): AsyncVoidAction => {
         const onValid: SubmitHandler<IFormAnswers> = async (_: IFormAnswers) => {
             // Calculate the next state for validated steps
-            const newValidatedSteps = {
-                ...validatedSteps,
-                [activeStep]: true,
-            };
+            const newValidatedSteps = { ...validatedSteps };
+            // Watch out for the review step, which is outside the range of steps array
+            if (activeStep < questionnaire.document.steps.length) 
+                newValidatedSteps[activeStep] = true;
             // Set the new state (for next render)
             setValidSteps(newValidatedSteps);
 
@@ -337,7 +335,7 @@ const AccountMenu = ({
 
 const FormLayoutContent = ({
     handleSubmit,
-    questionnaire, 
+    questionnaire,
     activeStep,
 }: {
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction,
@@ -348,7 +346,10 @@ const FormLayoutContent = ({
     // We are on the review page
     if (activeStep === questionnaire.steps.length) {
         return (
-            <FormReviewPage questionnaire={questionnaire} />
+            <FormReviewPage
+                questionnaire={questionnaire}
+                handleSubmit={handleSubmit}
+            />
         );
     }
 
@@ -372,7 +373,7 @@ const _doSaveAnswers = async (
             // Successfully save to API    
             .then((resp) => {
                 // TODO: Clear the local storage
-                console.log("Saved answers to API:", resp)
+                // console.log("Saved answers to API:", resp)
                 return resp;
             })
             // Display error to user

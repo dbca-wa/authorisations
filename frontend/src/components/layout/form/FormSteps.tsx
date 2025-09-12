@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import type React from 'react';
 import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IFormStep } from "../../../context/types/Questionnaire";
+import _ from 'underscore';
 
 
 const reviewStep = {
@@ -39,6 +40,10 @@ export function FormSteps({
         }
     };
 
+    // All the steps has `is_valid: true`, so we can enable the review step
+    const isReviewEnabled = _.size(validatedSteps) === steps.length &&
+        _.every(validatedSteps, (v) => v === true);
+
     return (
         <Stepper
             activeStep={activeStep}
@@ -67,8 +72,8 @@ export function FormSteps({
 
             <Step
                 key={steps.length}
-                completed={false}
-                disabled={true}
+                completed={isReviewEnabled}
+                disabled={!isReviewEnabled}
                 expanded={activeStep === steps.length}
             >
                 <StepItem

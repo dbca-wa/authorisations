@@ -10,11 +10,13 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { grey } from "@mui/material/colors";
+import dayjs from "dayjs";
 import React from "react";
 import { useFormContext } from "react-hook-form";
 import type {
     IAnswer, IFormAnswers, IGridAnswerRow,
 } from "../../../context/types/Application";
+import type { AsyncVoidAction } from "../../../context/types/Generic";
 import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
 
 function humanizeBoolean(val: IAnswer): string {
@@ -38,19 +40,17 @@ function isEmptyAnswer(answer: any) {
 
 // Dummy submit handler for now
 const onSubmit = () => {
+    
     alert("Submitted! (implement server-side integration here)");
 };
 
 export function FormReviewPage({
     questionnaire,
-    // onBack,
+    handleSubmit,
 }: {
     questionnaire: IQuestionnaire;
-    // onBack: () => void;
+    handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
 }) {
-    const onBack = () => {
-        console.log("back button")
-    }
     const { getValues } = useFormContext<IFormAnswers>();
     const answers: IFormAnswers = getValues();
 
@@ -92,7 +92,7 @@ export function FormReviewPage({
                                                     if (Array.isArray(answer)) {
                                                         if (answer.length === 0) {
                                                             displayAnswer = (
-                                                                <Typography sx={{ color: grey[500] }}>N/A</Typography>
+                                                                <Typography sx={{ color: grey[500] }}>(not answered)</Typography>
                                                             );
                                                         } else {
                                                             displayAnswer = (
@@ -115,7 +115,7 @@ export function FormReviewPage({
                                                                                         if (typeof cellValue === "boolean") {
                                                                                             displayValue = humanizeBoolean(cellValue);
                                                                                         } else if (cellValue === null || cellValue === undefined || (typeof cellValue === "string" && cellValue.trim() === "")) {
-                                                                                            displayValue = <Typography sx={{ color: grey[500] }}>N/A</Typography>;
+                                                                                            displayValue = <Typography sx={{ color: grey[500] }}>(not answered)</Typography>;
                                                                                         } else {
                                                                                             displayValue = String(cellValue);
                                                                                         }
@@ -135,17 +135,21 @@ export function FormReviewPage({
                                                         );
                                                     }
                                                     break;
-                                                case "select":
                                                 case "date":
+                                                    displayAnswer = isEmptyAnswer(answer)
+                                                        ? <Typography sx={{ color: grey[500] }}>(not answered)</Typography>
+                                                        : <Typography sx={{ fontWeight: "bold" }}>{dayjs(answer as string).format('DD/MM/YYYY')}</Typography>;
+                                                    break;
+                                                case "select":
                                                 case "number":
                                                     displayAnswer = isEmptyAnswer(answer)
-                                                        ? <Typography sx={{ color: grey[500] }}>N/A</Typography>
+                                                        ? <Typography sx={{ color: grey[500] }}>(not answered)</Typography>
                                                         : <Typography sx={{ fontWeight: "bold" }}>{String(answer)}</Typography>;
                                                     break;
                                                 case "textarea":
                                                 case "text":
                                                     displayAnswer = isEmptyAnswer(answer)
-                                                        ? <Typography sx={{ color: grey[500] }}>N/A</Typography>
+                                                        ? <Typography sx={{ color: grey[500] }}>(not answered)</Typography>
                                                         : <Typography sx={{ fontWeight: "bold" }}>{String(answer)}</Typography>;
                                                     break;
                                                 default:
@@ -169,7 +173,7 @@ export function FormReviewPage({
                 ))}
             </Stack>
             <Box justifyContent="space-around" display="flex" mt={4}>
-                <Button variant="outlined" onClick={onBack}>
+                <Button variant="outlined" onClick={handleSubmit((prev) => prev - 1)}>
                     Back
                 </Button>
                 <Button variant="contained" color="primary" onClick={onSubmit}>
