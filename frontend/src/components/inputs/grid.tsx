@@ -48,7 +48,7 @@ declare module '@mui/x-data-grid' {
 // Helper to convert date strings to Date objects for DataGrid
 const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
     return (value || []).map((row) => {
-        const newRow = { ...row };
+        const newRow: Record<string, any> = { _id: uuidv6(), _isNew: false, ...row, };
         question.o.grid_columns?.forEach((column) => {
             if (column.type === "date") {
                 assert(
@@ -100,7 +100,8 @@ export function GridInput({
         // Convert Date objects to YYYY-MM-DD strings for form state
         const formRows = updatedRows.map((row) => {
             // Do create a new array to avoid mutating the original state
-            const newRow = { ...row };
+            // also remove the internal _id and _isNew fields
+            const { _id, _isNew, ...newRow } = row;
             question.o.grid_columns?.forEach((column) => {
                 if (column.type === "date" && newRow[column.label] instanceof Date) {
                     newRow[column.label] = dayjs(newRow[column.label]).format('YYYY-MM-DD');
@@ -124,8 +125,8 @@ export function GridInput({
     // };
 
     const processRowUpdate = (newRow: GridRowModel) => {
-        const updatedRow = { ...newRow, isNew: false };
-        setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+        const updatedRow = { ...newRow, _isNew: false };
+        setRows(rows.map((row) => (row._id === newRow._id ? updatedRow : row)));
         return updatedRow;
     };
 
@@ -144,7 +145,7 @@ export function GridInput({
 
     // Row editing delete handler
     const handleDeleteClick = (id: GridRowId) => () => {
-        setRows(rows.filter((row) => row.id !== id));
+        setRows(rows.filter((row) => row._id !== id));
     };
 
     // Row editing cancel handler
@@ -154,9 +155,9 @@ export function GridInput({
             [id]: { mode: GridRowModes.View, ignoreModifications: true },
         });
 
-        const editedRow = rows.find((row) => row.id === id);
-        if (editedRow!.isNew) {
-            setRows(rows.filter((row) => row.id !== id));
+        const editedRow = rows.find((row) => row._id === id);
+        if (editedRow!._isNew) {
+            setRows(rows.filter((row) => row._id !== id));
         }
     };
 
@@ -178,6 +179,7 @@ export function GridInput({
             {question.o.description && <p>{question.o.description}</p>}
 
             <DataGrid
+                getRowId={(row) => row._id}
                 rows={rows}
                 columns={columns}
                 editMode="row"
@@ -370,7 +372,7 @@ function CustomFooterComponent(props: GridSlotProps['footer']) {
 
         setRows((oldRows) => [
             ...oldRows,
-            { id: newId, ...emptyRow, isNew: true },
+            { _id: newId, ...emptyRow, _isNew: true },
         ]);
 
         setRowModesModel((oldModel) => ({
