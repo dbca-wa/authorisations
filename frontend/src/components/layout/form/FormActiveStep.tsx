@@ -10,19 +10,18 @@ import { Question, type IFormSection, type IFormStep } from "../../../context/ty
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
 import { GridInput } from "../../inputs/grid";
-import { NumberInput } from "../../inputs/number";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import { TextAreaInput } from "../../inputs/textarea";
 
 
 export const FormActiveStep = ({
     handleSubmit,
-    currentStep, stepIndex,
+    currentStep, 
+    activeStep,
 }: {
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
     currentStep: IFormStep;
-    stepIndex: number;
+    activeStep: number;
 }) => {
 
     return (
@@ -30,15 +29,15 @@ export const FormActiveStep = ({
             <form onSubmit={handleSubmit((prev) => prev + 1)} onKeyDown={onKeyDown}>
                 {currentStep.sections.map((section, sectionIndex) => {
                     return <Section
-                        key={stepIndex + "-" + sectionIndex}
-                        stepIndex={stepIndex}
+                        key={activeStep + "." + sectionIndex}
+                        stepIndex={activeStep}
                         section={section}
                         sectionIndex={sectionIndex}
                     />
                 })}
 
                 <Box justifyContent={"space-around"} display="flex" mt={4}>
-                    {stepIndex !== 0 && (
+                    {activeStep !== 0 && (
                         <Button variant="outlined" onClick={handleSubmit((prev) => prev - 1)}>
                             Back
                         </Button>
@@ -104,13 +103,9 @@ const Section = ({
                     let inputComponent = null;
                     switch (question.o.type) {
                         case "text":
-                            inputComponent = <TextInput question={question} />;
-                            break;
                         case "textarea":
-                            inputComponent = <TextAreaInput question={question} />;
-                            break;
                         case "number":
-                            inputComponent = <NumberInput question={question} />;
+                            inputComponent = <TextInput question={question} />;
                             break;
                         case "checkbox":
                             inputComponent = <CheckboxInput question={question} />;

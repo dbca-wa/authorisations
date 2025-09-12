@@ -15,14 +15,14 @@ export function FormSidebar({
     steps,
     activeStep,
     handleSubmit,
-    completedSteps,
+    validatedSteps,
 }: Readonly<{
     drawerOpen: boolean;
     setDrawerOpen: (open: boolean) => void;
     steps: IFormStep[];
     activeStep: number;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
-    completedSteps: NumberedBooleanObj;
+    validatedSteps: NumberedBooleanObj;
 }>) {
     return (
         <Drawer
@@ -49,7 +49,7 @@ export function FormSidebar({
                 steps={steps}
                 activeStep={activeStep}
                 handleSubmit={handleSubmit}
-                completedSteps={completedSteps}
+                validatedSteps={validatedSteps}
             />
         </Drawer>
     );

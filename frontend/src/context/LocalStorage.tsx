@@ -1,28 +1,28 @@
-import type { IAnswers } from "./types/Application";
+import type { IFormDocument } from "./types/Application";
 
 
 export class LocalStorage {
-    private static getItem(key: string): IAnswers | null {
+    private static getItem(key: string): Object | null {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : null;
     }
 
-    private static setItem(key: string, value: IAnswers): void {
+    private static setItem(key: string, value: Object): void {
         localStorage.setItem(key, JSON.stringify(value));
     }
 
-    private static getAnswersKey(applicationKey: string): string {
-        return `answers_${applicationKey}`;
+    private static getKey(key: string): string {
+        return `auth_${key}`;
     }
 
-    public static getAnswers(applicationKey: string): IAnswers {
+    public static getFormState(applicationKey: string): IFormDocument | null {
         // console.log("Getting answers for application:", applicationKey);
-        const key = this.getAnswersKey(applicationKey);
-        return this.getItem(key) || {};
+        const key = this.getKey(applicationKey);
+        return this.getItem(key) as IFormDocument | null;
     }
 
-    public static setAnswers(applicationKey: string, answers: IAnswers): void {
-        const key = this.getAnswersKey(applicationKey);
-        this.setItem(key, answers);
+    public static setFormState(applicationKey: string, document: IFormDocument): void {
+        const key = this.getKey(applicationKey);
+        this.setItem(key, document);
     }
 }

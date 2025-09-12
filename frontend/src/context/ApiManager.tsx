@@ -1,7 +1,7 @@
 import type { AxiosRequestConfig } from "axios";
 import axios from "axios";
 import { ConfigManager } from "./ConfigManager";
-import type { IAnswers, IApplicationData } from "./types/Application";
+import type { IApplicationData, IFormDocument } from "./types/Application";
 import type { IQuestionnaireData } from "./types/Questionnaire";
 
 
@@ -52,14 +52,10 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async updateApplication(key: string, version: string, answers: IAnswers): Promise<IApplicationData> {
+    public static async updateApplication(key: string, document: IFormDocument): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
-        const response = await axios.put<IApplicationData>(`/applications/${key}`, {
-            document: {
-                schema_version: version,
-                answers: answers,
-            }
-        }, requestConfig);
+        const response = await axios.put<IApplicationData>(
+            `/applications/${key}`, { document: document }, requestConfig);
 
         return response.data;
     }

@@ -19,13 +19,13 @@ export function FormSteps({
     drawerOpen,
     steps, activeStep,
     handleSubmit,
-    completedSteps,
+    validatedSteps,
 }: Readonly<{
     drawerOpen: boolean;
     steps: IFormStep[];
     activeStep: number;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
-    completedSteps: NumberedBooleanObj;
+    validatedSteps: NumberedBooleanObj;
 }>) {
     const handleStepClick = async (index: number) => {
         // Current step
@@ -46,8 +46,8 @@ export function FormSteps({
             sx={{ margin: 2.5 }}
         >
             {steps.map((step, index) => {
-                const isCompleted: boolean = completedSteps[index] || false;
-                const hasError: boolean = completedSteps[index] === false;
+                const isCompleted: boolean = validatedSteps[index] || false;
+                const hasError: boolean = validatedSteps[index] === false;
 
                 return <Step
                     key={index}

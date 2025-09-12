@@ -11,6 +11,7 @@ export function SelectInput({
 }) {
     return <Controller
         name={question.key}
+        defaultValue=""
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}
@@ -26,7 +27,6 @@ export function SelectInput({
                 </InputLabel>
                 <Select
                     {...field}
-                    value={field.value || ''}
                     label={question.labelText}
                     labelId={"label-" + question.key}
                     error={fieldState.invalid}

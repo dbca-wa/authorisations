@@ -13,7 +13,7 @@ import { grey } from "@mui/material/colors";
 import React from "react";
 import { useFormContext } from "react-hook-form";
 import type {
-    IAnswer, IAnswers, IGridAnswerRow,
+    IAnswer, IFormAnswers, IGridAnswerRow,
 } from "../../../context/types/Application";
 import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
 
@@ -32,9 +32,9 @@ function isEmptyAnswer(answer: any) {
     );
 }
 
-function getAnswerKey(stepIdx: number, sectionIdx: number, questionIdx: number) {
-    return `${stepIdx}-${sectionIdx}-${questionIdx}`;
-}
+// function getAnswerKey(stepIdx: number, sectionIdx: number, questionIdx: number) {
+//     return `${stepIdx}.${sectionIdx}-${questionIdx}`;
+// }
 
 // Dummy submit handler for now
 const onSubmit = () => {
@@ -51,8 +51,8 @@ export function FormReviewPage({
     const onBack = () => {
         console.log("back button")
     }
-    const { getValues } = useFormContext<IAnswers>();
-    const answers: IAnswers = getValues();
+    const { getValues } = useFormContext<IFormAnswers>();
+    const answers: IFormAnswers = getValues();
 
     return (
         <Box className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
@@ -76,8 +76,8 @@ export function FormReviewPage({
                                     </Typography>
                                     <Stack spacing={2}>
                                         {section.questions.map((question: IQuestion, questionIdx: number) => {
-                                            const answerKey = getAnswerKey(stepIdx, sectionIdx, questionIdx);
-                                            const answer = answers[answerKey];
+                                            // const answerKey = getAnswerKey(stepIdx, sectionIdx, questionIdx);
+                                            const answer = answers[stepIdx][`${sectionIdx}-${questionIdx}`];
                                             let displayAnswer: React.ReactNode = null;
 
                                             switch (question.type) {

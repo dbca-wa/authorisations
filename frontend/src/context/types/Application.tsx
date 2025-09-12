@@ -26,7 +26,6 @@ export const finalisedStatuses: ApplicationStatus[] = [
 export interface IApplicationData {
     key: string;
     owner: string;
-    // questionnaire_id: number;
     questionnaire_slug: string;
     questionnaire_name: string;
     questionnaire_version: number;
@@ -34,10 +33,7 @@ export interface IApplicationData {
     created_at: string;
     updated_at: string;
     submitted_at: string | null;
-    document: {
-        answers: IAnswers;
-        schema_version: string;
-    };
+    document: IFormDocument;
 }
 
 /**
@@ -54,8 +50,30 @@ export interface IGridAnswerRow {
 export type IAnswer = PrimitiveType | IGridAnswerRow[];
 
 /**
- * Interface for an application answer document in JSON Schema structure
+ * The form state for each step, keyed by step index
  */
-export interface IAnswers {
-    [key: string]: IAnswer;
+export interface IFormAnswers {
+    [stepIndex: number]: {
+        [qKey: string]: IAnswer;
+    };
+}
+
+/**
+ * Interface for the state of each step in the application form
+ */
+export interface IStepState {
+    is_valid: boolean | null;
+    answers: {
+        [qKey: string]: IAnswer;
+    };
+}
+
+/**
+ * Interface for an application form document in JSON Schema structure.
+ * This is essentially the current state of the form.
+ */
+export interface IFormDocument {
+    schema_version: string;
+    active_step: number;
+    steps: IStepState[];
 }

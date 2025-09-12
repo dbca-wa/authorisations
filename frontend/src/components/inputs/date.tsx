@@ -11,14 +11,15 @@ export function DateInput({
 }) {
     return <Controller
         name={question.key}
+        defaultValue={null}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}
         render={({ field, fieldState }) => (
             <DatePicker
-                {...field}
                 label={question.labelText}
                 value={field.value ? dayjs(field.value) : null}
+                
                 // Convert to "YYYY-MM-DD" string or null
                 onChange={
                     (value) => field.onChange(value ? value.format('YYYY-MM-DD') : null)

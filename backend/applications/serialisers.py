@@ -111,12 +111,14 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         try:
             validated_data["questionnaire"] = self.context["questionnaire"]
         except KeyError:
-            raise LookupError("'questionnaire_slug' is required")
+            raise serializers.ValidationError("'questionnaire_slug' is required")
 
         # Create a fresh document with questionnaire schema version
         validated_data["document"] = {
             "schema_version": None,  # to be set later
-            "answers": {},  # initially empty answers
+            # initially with single step
+            "active_step": 0,
+            "steps": [{"is_valid": None, "answers": {}}],
         }
 
         # Hardcode the version from the current schema
@@ -125,6 +127,8 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             "schema_version"
         ]["default"]
 
+        # Validate and return with the JSON schema
+        self._validate_document(validated_data["document"], schema)
         return super().create(validated_data)
 
     # def update(self, instance, validated_data):

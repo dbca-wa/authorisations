@@ -72,6 +72,7 @@ export function GridInput({
 }) {
     const { field, fieldState } = useController({
         name: question.key,
+        defaultValue: [],
         rules: {
             validate: (): ValidateResult => {
                 return question.o.is_required && rows.length === 0
