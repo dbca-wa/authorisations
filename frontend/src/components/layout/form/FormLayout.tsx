@@ -27,6 +27,8 @@ import { handleApiError, scrollToTop } from '../../../context/Utils';
 import { FormActiveStep } from './FormActiveStep';
 import { FormReviewPage } from './FormReviewPage';
 import { FormSidebar } from './FormSidebar';
+import { useSnackbar } from '../../../context/Snackbar';
+import type { AlertColor } from '@mui/material/Alert';
 
 
 export const FormLayout = () => {
@@ -46,6 +48,8 @@ export const FormLayout = () => {
 
     // Current active step index
     const [activeStep, setActiveStep] = React.useState<number>(app.document.active_step);
+
+    const { showSnackbar } = useSnackbar();
 
     // Manage completed steps
     const [validatedSteps, setValidSteps] = React.useState<NumberedBooleanObj>(
@@ -95,7 +99,7 @@ export const FormLayout = () => {
             })),
         };
         // console.log("document:", document)
-        await _doSaveAnswers(app.key, document);
+        await _doSaveAnswers(app.key, document, showSnackbar);
 
         // Reset the form state with the saved answers - not dirty anymore
         formMethods.reset(answers);
@@ -112,7 +116,7 @@ export const FormLayout = () => {
             // Calculate the next state for validated steps
             const newValidatedSteps = { ...validatedSteps };
             // Watch out for the review step, which is outside the range of steps array
-            if (activeStep < questionnaire.document.steps.length) 
+            if (activeStep < questionnaire.document.steps.length)
                 newValidatedSteps[activeStep] = true;
             // Set the new state (for next render)
             setValidSteps(newValidatedSteps);
@@ -366,6 +370,7 @@ const FormLayoutContent = ({
 const _doSaveAnswers = async (
     key: string,
     document: IFormDocument,
+    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
 ) => {
     // Check if we have internet connection
     if (window.navigator.onLine) {
@@ -377,7 +382,12 @@ const _doSaveAnswers = async (
                 return resp;
             })
             // Display error to user
-            .catch(handleApiError);
+            .catch((error) => {
+                const message = error.response?.data?.document[0] ?? error.response;
+                showSnackbar(`Failed to save answers: ${message}`, "error");
+                handleApiError(error);
+                return null;
+            });
 
         // Something went wrong with the API call, save to local storage
         if (!response) {

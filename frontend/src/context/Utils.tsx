@@ -7,7 +7,7 @@ export function assert(condition: boolean, message: string): void {
     }
 }
 
-export const getResponse = (status: number, statusText: string, message: string) => {
+const getResponse = (status: number, statusText: string, message: string) => {
     return Response.json(
         { message: message },
         { status: status, statusText: statusText }
@@ -16,7 +16,7 @@ export const getResponse = (status: number, statusText: string, message: string)
 
 export const handleApiError = (error: AxiosError) => {
     if (import.meta.env.DEV) {
-        console.error('Error while fetching applications:', error);
+        console.error('API Error:', error);
     }
 
     throw getResponse(

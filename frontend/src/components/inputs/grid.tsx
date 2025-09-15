@@ -47,7 +47,7 @@ declare module '@mui/x-data-grid' {
 
 // Helper to convert date strings to Date objects for DataGrid
 const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
-    return (value || []).map((row) => {
+    return value.map((row) => {
         const newRow: Record<string, any> = { _id: uuidv6(), _isNew: false, ...row, };
         question.o.grid_columns?.forEach((column) => {
             if (column.type === "date") {
@@ -269,7 +269,7 @@ function getHeaders({
             type: columnType,
             valueOptions: columnType === "singleSelect" && column.select_options
                 ? column.select_options
-                : null,
+                : undefined,
             editable: true,
             sortable: false,
             headerAlign: "center",
