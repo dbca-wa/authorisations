@@ -35,7 +35,7 @@ export const scrollToQuestion = ({
     sectionIndex?: number;
     questionIndex?: number;
 }) => {
-    const elementId = `q-${stepIndex}-${sectionIndex}-${questionIndex}`;
+    const elementId = `q-${stepIndex}.${sectionIndex}-${questionIndex}`;
     const element = document.getElementById(elementId) as HTMLElement;
 
     if (element) {

@@ -1,3 +1,5 @@
+import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
+import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
@@ -16,7 +18,7 @@ import { TextInput } from "../../inputs/text";
 
 export const FormActiveStep = ({
     handleSubmit,
-    currentStep, 
+    currentStep,
     activeStep,
 }: {
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
@@ -38,12 +40,22 @@ export const FormActiveStep = ({
 
                 <Box justifyContent={"space-around"} display="flex" mt={4}>
                     {activeStep !== 0 && (
-                        <Button variant="outlined" onClick={handleSubmit((prev) => prev - 1)}>
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            startIcon={<KeyboardArrowLeftRoundedIcon />}
+                            onClick={handleSubmit((prev) => prev - 1)}
+                        >
                             Back
                         </Button>
                     )}
 
-                    <Button variant="contained" type="submit">
+                    <Button
+                        variant="contained"
+                        size="large"
+                        endIcon={<KeyboardArrowRightRoundedIcon />}
+                        type="submit"
+                    >
                         Continue
                     </Button>
                 </Box>

@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import React from 'react';
 import _ from 'underscore';
 
+import type { AlertColor } from '@mui/material/Alert';
 import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled } from '@mui/material/styles';
 import type { FieldErrors, SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
@@ -20,15 +21,14 @@ import { useLoaderData } from 'react-router';
 import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { LocalStorage } from '../../../context/LocalStorage';
-import type { IFormAnswers, IApplicationData, IFormDocument } from '../../../context/types/Application';
+import { useSnackbar } from '../../../context/Snackbar';
+import type { IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
 import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
 import { handleApiError, scrollToTop } from '../../../context/Utils';
 import { FormActiveStep } from './FormActiveStep';
 import { FormReviewPage } from './FormReviewPage';
 import { FormSidebar } from './FormSidebar';
-import { useSnackbar } from '../../../context/Snackbar';
-import type { AlertColor } from '@mui/material/Alert';
 
 
 export const FormLayout = () => {
@@ -92,7 +92,7 @@ export const FormLayout = () => {
         const document: IFormDocument = {
             schema_version: app.document.schema_version,
             active_step: newActiveStep ?? activeStep,
-            steps: questionnaire.document.steps.map((_, index) => ({
+            steps: questionnaire.document.steps.map((_step, index) => ({
                 // Use the passed-in object first, falling back to the state variable
                 is_valid: (currentValidatedSteps ?? validatedSteps)[index] ?? null,
                 answers: answers[index] ?? {},
@@ -111,7 +111,7 @@ export const FormLayout = () => {
      * @returns The callable function for triggering validation.
      * @example Go to next step on successful validation: `onSubmit={handleSubmit((prev) => prev + 1)}`
      */
-    const handleSubmit = (nextStep: React.SetStateAction<number>): AsyncVoidAction => {
+    const handleSubmit = (nextStep: React.SetStateAction<number>,): AsyncVoidAction => {
         const onValid: SubmitHandler<IFormAnswers> = async (_: IFormAnswers) => {
             // Calculate the next state for validated steps
             const newValidatedSteps = { ...validatedSteps };
@@ -121,11 +121,11 @@ export const FormLayout = () => {
             // Set the new state (for next render)
             setValidSteps(newValidatedSteps);
 
+            // Determine the next step index
+            const nextStepInt = nextStep instanceof Function ? nextStep(activeStep) : nextStep;
+
             // Save answers via API
-            await saveAnswers(
-                nextStep instanceof Function ? nextStep(activeStep) : nextStep,
-                newValidatedSteps,
-            );
+            await saveAnswers(nextStepInt, newValidatedSteps);
             // Set the new active step
             setActiveStep(nextStep);
         }
