@@ -2,7 +2,7 @@ from api.serialisers import JsonSchemaSerialiserMixin
 from questionnaires.models import Questionnaire
 from rest_framework import serializers
 
-from .models import Application
+from .models import Application, ApplicationStatus
 from .schema import get_answers_schema
 
 
@@ -58,21 +58,44 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         request = self.context.get("request", None)
         isPost = request.method == "POST"
         isPut = request.method == "PUT"
+        isPatch = request.method == "PATCH"
 
         # Questionnaire slug is required when first creating
         fields["questionnaire_slug"].required = isPost
         fields["questionnaire_slug"].read_only = not isPost
 
-        # Document field is not required and read-only when creating
+        # Document field is required only when updating
         fields["document"].required = isPut
         fields["document"].read_only = not isPut
 
+        # Status field is required only when updating via PATCH
+        fields["status"].required = isPatch
+        fields["status"].read_only = not isPatch
+        
         return fields
 
+    def validate_status(self, value):
+        """
+        Validate the status field to ensure only allowed transitions.
+        """
+        # Draft -> Submitted
+        if (
+            self.instance.status == ApplicationStatus.DRAFT
+            and value == ApplicationStatus.SUBMITTED
+        ):
+            return value
+
+        raise serializers.ValidationError(
+            f"Invalid status transition from {self.instance.status} to {value}"
+        )
+
     def validate_document(self, value):
-        schema = get_answers_schema()
+        if self.instance.status != ApplicationStatus.DRAFT:
+            raise serializers.ValidationError(
+                f"Cannot modify document with status '{self.instance.status}'")
 
         # Validate and return with the JSON schema
+        schema = get_answers_schema()
         return self._validate_document(value, schema)
 
     def validate_questionnaire_slug(self, value):
@@ -130,10 +153,3 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Validate and return with the JSON schema
         self._validate_document(validated_data["document"], schema)
         return super().create(validated_data)
-
-    # def update(self, instance, validated_data):
-    #     instance.email = validated_data.get("email", instance.email)
-    #     instance.content = validated_data.get("content", instance.content)
-    #     instance.created = validated_data.get("created", instance.created)
-    #     instance.save()
-    #     return instance

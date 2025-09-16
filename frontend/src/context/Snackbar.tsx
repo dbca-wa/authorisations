@@ -46,7 +46,7 @@ export default function SnackbarProvider({ children }: { children: ReactNode }) 
                 open={open}
                 autoHideDuration={5000}
                 onClose={handleClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
             >
                 {/* The Alert component provides the styling (color, icon) */}
                 <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }} variant="filled">

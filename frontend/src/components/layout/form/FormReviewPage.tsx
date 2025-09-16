@@ -1,3 +1,4 @@
+import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded';
 import EditIcon from '@mui/icons-material/Edit';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -18,29 +19,56 @@ import dayjs from "dayjs";
 import React from "react";
 
 import { grey } from "@mui/material/colors";
+import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
+import { ApiManager } from '../../../context/ApiManager';
+import { useSnackbar } from '../../../context/Snackbar';
 import type { IAnswer, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
+import { handleApiError } from '../../../context/Utils';
 
-
-// Dummy submit handler for now
-const onSubmit = () => {
-
-    alert("Submitted! (implement server-side integration here)");
-};
 
 export function FormReviewPage({
+    userCanEdit,
+    setUserCanEdit,
     questionnaire,
+    applicationKey,
     handleSubmit,
 }: {
+    userCanEdit: boolean,
+    setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     questionnaire: IQuestionnaire;
+    applicationKey: string;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
 }) {
     const { getValues } = useFormContext<IFormAnswers>();
     const answers: IFormAnswers = getValues();
 
     const [hasConfirmed, setHasConfirmed] = React.useState<boolean>(false);
+
+    const { showSnackbar } = useSnackbar();
+
+    // Dummy submit handler for now
+    const onFinalSubmit = async () => {
+        // alert("Submitted! (implement server-side integration here)");
+        await ApiManager.submitApplication(applicationKey)
+            // Successfully save to API    
+            .then((resp) => {
+                showSnackbar("Application has been successfully submitted and is read-only now.", "success");
+                setUserCanEdit(false);
+                return resp;
+            })
+            // Display the error message to user and log to console
+            .catch((error: AxiosError) => {
+                const message = (error.response?.data as any)?.status?.[0] ?? error.message;
+                showSnackbar(`Failed to submit: ${message}`, "error");
+                handleApiError(error);
+                return null;
+            });
+
+        // if (!response) return;
+    };
 
     return (
         <Box className="bg-gray-300 p-8 min-w-3xl max-w-7xl">
@@ -58,6 +86,7 @@ export function FormReviewPage({
                             <IconButton
                                 size="small" color="primary" aria-label="edit step"
                                 onClick={handleSubmit(stepIdx)}
+                                disabled={!userCanEdit}
                             >
                                 <EditIcon />
                             </IconButton>
@@ -112,7 +141,8 @@ export function FormReviewPage({
             <Box justifyContent="space-around" display="flex" mt={4}>
                 <FormControl>
                     <FormControlLabel
-                        control={<Checkbox checked={hasConfirmed} />}
+                        control={<Checkbox checked={hasConfirmed || !userCanEdit} />}
+                        disabled={!userCanEdit}
                         onChange={(_event, checked) => setHasConfirmed(checked)}
                         label="I confirm that the information provided in this application is accurate and complete."
                     />
@@ -121,8 +151,9 @@ export function FormReviewPage({
             <Box justifyContent="space-around" display="flex">
                 <Button
                     variant="contained" size="large" color="success"
-                    onClick={onSubmit}
-                    disabled={!hasConfirmed}
+                    onClick={onFinalSubmit}
+                    disabled={!hasConfirmed || !userCanEdit}
+                    startIcon={<AssignmentTurnedInRoundedIcon />}
                 >
                     Submit Application
                 </Button>

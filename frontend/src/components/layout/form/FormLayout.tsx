@@ -15,6 +15,7 @@ import _ from 'underscore';
 import type { AlertColor } from '@mui/material/Alert';
 import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled } from '@mui/material/styles';
+import type { AxiosError } from 'axios';
 import type { FieldErrors, SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
@@ -46,8 +47,13 @@ export const FormLayout = () => {
     // Drawer open/close state
     const [drawerOpen, setDrawerOpen] = React.useState<boolean>(true);
 
-    // Current active step index
-    const [activeStep, setActiveStep] = React.useState<number>(app.document.active_step);
+    // Can the user edit the form?
+    const [userCanEdit, setUserCanEdit] = React.useState<boolean>(app.status === "DRAFT");
+
+    // Current active step index (or the review page if not editable)
+    const [activeStep, setActiveStep] = React.useState<number>(
+        userCanEdit ? app.document.active_step : questionnaire.document.steps.length
+    );
 
     const { showSnackbar } = useSnackbar();
 
@@ -216,6 +222,7 @@ export const FormLayout = () => {
                 </Toolbar>
             </AppBar>
             <FormSidebar
+                userCanEdit={userCanEdit}
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
                 steps={questionnaire.document.steps}
@@ -226,9 +233,12 @@ export const FormLayout = () => {
             <Box component="main" sx={{ marginTop: "64px", p: 2 }}>
                 <FormProvider {...formMethods}>
                     <FormLayoutContent
+                        userCanEdit={userCanEdit}
+                        setUserCanEdit={setUserCanEdit}
                         handleSubmit={handleSubmit}
                         questionnaire={questionnaire.document}
                         activeStep={activeStep}
+                        applicationKey={app.key}
                     />
                 </FormProvider>
             </Box>
@@ -338,21 +348,30 @@ const AccountMenu = ({
 
 
 const FormLayoutContent = ({
+    userCanEdit,
+    setUserCanEdit,
     handleSubmit,
     questionnaire,
     activeStep,
+    applicationKey,
 }: {
+    userCanEdit: boolean;
+    setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction,
     questionnaire: IQuestionnaire;
     activeStep: number;
+    applicationKey: string;
 }) => {
 
     // We are on the review page
     if (activeStep === questionnaire.steps.length) {
         return (
             <FormReviewPage
+                userCanEdit={userCanEdit}
+                setUserCanEdit={setUserCanEdit}
                 questionnaire={questionnaire}
                 handleSubmit={handleSubmit}
+                applicationKey={applicationKey}
             />
         );
     }
@@ -379,12 +398,13 @@ const _doSaveAnswers = async (
             .then((resp) => {
                 // TODO: Clear the local storage
                 // console.log("Saved answers to API:", resp)
+                showSnackbar("Application saved", "success");
                 return resp;
             })
-            // Display error to user
-            .catch((error) => {
-                const message = error.response?.data?.document[0] ?? error.response;
-                showSnackbar(`Failed to save answers: ${message}`, "error");
+            // Display the error message to user and log to console
+            .catch((error: AxiosError) => {
+                const message = (error.response?.data as any)?.document?.[0] ?? error.message;
+                showSnackbar(`Failed to save: ${message}`, "error");
                 handleApiError(error);
                 return null;
             });

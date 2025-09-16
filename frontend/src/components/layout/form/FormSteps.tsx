@@ -17,11 +17,13 @@ const reviewStep = {
 };
 
 export function FormSteps({
-    drawerOpen,
+    userCanEdit,
+    drawerOpen, 
     steps, activeStep,
     handleSubmit,
     validatedSteps,
 }: Readonly<{
+    userCanEdit: boolean;
     drawerOpen: boolean;
     steps: IFormStep[];
     activeStep: number;
@@ -57,7 +59,7 @@ export function FormSteps({
                 return <Step
                     key={index}
                     completed={isCompleted}
-                    disabled={!isCompleted}
+                    disabled={!isCompleted || !userCanEdit}
                     expanded={activeStep === index}
                 >
                     <StepItem
@@ -73,7 +75,7 @@ export function FormSteps({
             <Step
                 key={steps.length}
                 completed={isReviewEnabled}
-                disabled={!isReviewEnabled}
+                disabled={!isReviewEnabled || !userCanEdit}
                 expanded={activeStep === steps.length}
             >
                 <StepItem

@@ -10,6 +10,7 @@ import { FormSteps } from './FormSteps';
 
 
 export function FormSidebar({
+    userCanEdit,
     drawerOpen,
     setDrawerOpen,
     steps,
@@ -17,6 +18,7 @@ export function FormSidebar({
     handleSubmit,
     validatedSteps,
 }: Readonly<{
+    userCanEdit: boolean;
     drawerOpen: boolean;
     setDrawerOpen: (open: boolean) => void;
     steps: IFormStep[];
@@ -45,6 +47,7 @@ export function FormSidebar({
             </DrawerHeader>
             <Divider />
             <FormSteps
+                userCanEdit={userCanEdit}
                 drawerOpen={drawerOpen}
                 steps={steps}
                 activeStep={activeStep}

@@ -60,6 +60,14 @@ export class ApiManager {
         return response.data;
     }
 
+    public static async submitApplication(key: string): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationData>(
+            `/applications/${key}`, { status: "SUBMITTED" }, requestConfig);
+
+        return response.data;
+    }
+
     public static async getQuestionnaire(slug: string, version: number): Promise<IQuestionnaireData> {
         const requestConfig = ApiManager.getRequestConfig();
         const url = `/questionnaires/${slug}` + (version ? `?version=${version}` : '');
