@@ -1,58 +1,61 @@
+import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
+import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Stack from "@mui/material/Stack";
 import React from "react";
-import {
-    useFormContext,
-    type SubmitErrorHandler
-} from "react-hook-form";
 
-import type { IAnswers } from "../../../context/types/Application";
+import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
 import { GridInput } from "../../inputs/grid";
-import { NumberInput } from "../../inputs/number";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import { TextAreaInput } from "../../inputs/textarea";
 
 
 export const FormActiveStep = ({
-    handleBack, handleContinue,
-    currentStep, stepIndex,
+    handleSubmit,
+    currentStep,
+    activeStep,
 }: {
-    handleBack: () => void;
-    handleContinue: (data: IAnswers) => void;
+    handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
     currentStep: IFormStep;
-    stepIndex: number;
+    activeStep: number;
 }) => {
-
-    // We only need submit handler here from the form context
-    const { handleSubmit } = useFormContext();
 
     return (
         <Box className="bg-gray-300 p-8 min-w-4xl max-w-7xl">
-            <form onSubmit={handleSubmit(handleContinue, onError)} onKeyDown={onKeyDown}>
+            <form onSubmit={handleSubmit((prev) => prev + 1)} onKeyDown={onKeyDown}>
                 {currentStep.sections.map((section, sectionIndex) => {
                     return <Section
-                        key={stepIndex + "-" + sectionIndex}
-                        stepIndex={stepIndex}
+                        key={activeStep + "." + sectionIndex}
+                        stepIndex={activeStep}
                         section={section}
                         sectionIndex={sectionIndex}
                     />
                 })}
 
                 <Box justifyContent={"space-around"} display="flex" mt={4}>
-                    {stepIndex !== 0 && (
-                        <Button variant="outlined" onClick={handleBack}>
+                    {activeStep !== 0 && (
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            startIcon={<KeyboardArrowLeftRoundedIcon />}
+                            onClick={handleSubmit((prev) => prev - 1)}
+                        >
                             Back
                         </Button>
                     )}
 
-                    <Button variant="contained" type="submit">
+                    <Button
+                        variant="contained"
+                        size="large"
+                        endIcon={<KeyboardArrowRightRoundedIcon />}
+                        type="submit"
+                    >
                         Continue
                     </Button>
                 </Box>
@@ -61,25 +64,6 @@ export const FormActiveStep = ({
     );
 }
 
-
-// Do custom scroll and focus because ...
-// MUI wraps input elements in many layers and default behaviour is buggy
-const onError: SubmitErrorHandler<IAnswers> = (errors) => {
-    const firstErrorField = Object.keys(errors)[0];
-    // console.log('errors:', errors)
-
-    // Try to find a container with the id
-    const errorElement = document.getElementById(`q-${firstErrorField}`) as HTMLElement;
-
-    if (errorElement) {
-        errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
-
-        // Only focus if tabIndex is not -1 
-        // (skip components that are not meant to be focused)
-        if (typeof errorElement.focus === "function" && errorElement.tabIndex !== -1)
-            errorElement.focus();
-    }
-}
 
 // Prevent default form submission on Enter key
 const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
@@ -131,13 +115,9 @@ const Section = ({
                     let inputComponent = null;
                     switch (question.o.type) {
                         case "text":
-                            inputComponent = <TextInput question={question} />;
-                            break;
                         case "textarea":
-                            inputComponent = <TextAreaInput question={question} />;
-                            break;
                         case "number":
-                            inputComponent = <NumberInput question={question} />;
+                            inputComponent = <TextInput question={question} />;
                             break;
                         case "checkbox":
                             inputComponent = <CheckboxInput question={question} />;

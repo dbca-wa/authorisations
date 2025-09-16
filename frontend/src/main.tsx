@@ -11,6 +11,7 @@ import 'dayjs/locale/en-au';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
+import SnackbarProvider from './context/Snackbar';
 import './index.css';
 import { router } from './router';
 
@@ -31,7 +32,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-au">
-        <RouterProvider router={router} />
+        <SnackbarProvider>
+          <RouterProvider router={router} />
+        </SnackbarProvider>
       </LocalizationProvider>
     </ThemeProvider>
   </StrictMode>

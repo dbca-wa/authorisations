@@ -10,7 +10,7 @@ import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useLoaderData } from "react-router";
 import type { IApplicationData } from "../../../context/types/Application";
-import { openExternalWindow } from '../../../context/Utils';
+import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
 
 
@@ -63,7 +63,8 @@ const Application = ({
                         target="_blank"
                         rel="noopener"
                         aria-label="Continue application"
-                        onClick={() => openExternalWindow(`/a/${application.key}`, application.key)}
+                        // onClick={() => openExternalWindow(`/a/${application.key}`, application.key)}
+                        onClick={() => openNewTab(`/a/${application.key}`, application.key)}
                     >
                         <Button
                             variant="contained"

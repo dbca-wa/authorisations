@@ -10,16 +10,21 @@ import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import React from 'react';
+import _ from 'underscore';
 
+import type { AlertColor } from '@mui/material/Alert';
 import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled } from '@mui/material/styles';
-import type { FieldValues, SubmitHandler, UseFormProps } from 'react-hook-form';
+import type { AxiosError } from 'axios';
+import type { FieldErrors, SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
 import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { LocalStorage } from '../../../context/LocalStorage';
-import type { IAnswers, IApplicationData } from '../../../context/types/Application';
+import { useSnackbar } from '../../../context/Snackbar';
+import type { IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
+import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
 import { handleApiError, scrollToTop } from '../../../context/Utils';
 import { FormActiveStep } from './FormActiveStep';
@@ -27,97 +32,145 @@ import { FormReviewPage } from './FormReviewPage';
 import { FormSidebar } from './FormSidebar';
 
 
-
-const _saveAnswers = async (
-    key: string,
-    version: string,
-    answers: IAnswers,
-) => {
-    // Check if we have internet connection
-    if (window.navigator.onLine) {
-        const response = await ApiManager.updateApplication(key, version, answers)
-            // Successfully save to API    
-            .then((resp) => {
-                // TODO: Clear the local storage
-                console.log("Saved answers to API:", resp)
-                return resp;
-            })
-            // Display error to user
-            .catch(handleApiError);
-
-        // Something went wrong with the API call, save to local storage
-        if (!response) {
-            console.warn("Failed to save answers to API, saving to local storage");
-            LocalStorage.setAnswers(key, answers);
-        }
-    }
-    // We are offline
-    else {
-        // Save answers to local storage
-        console.log("Offline... saving answers to local storage");
-        LocalStorage.setAnswers(key, answers);
-    }
-}
-
 export const FormLayout = () => {
     // Fetch application and questionnaire from API
     const { app, questionnaire } =
         useLoaderData<{ app: IApplicationData, questionnaire: IQuestionnaireData }>();
 
     // Load stored answers from local storage
-    // const storedAnswers = React.useMemo<IAnswers>(
-    //     () => LocalStorage.getAnswers(app.key), []
+    // const storedAnswers = React.useMemo<IFormAnswers>(
+    //     () => LocalStorage.getFormState(app.key), []
     // );
 
     // console.log("Stored answers:", storedAnswers);
 
-    // Drawer state
+    // Drawer open/close state
     const [drawerOpen, setDrawerOpen] = React.useState<boolean>(true);
 
-    // Manage activeStep state here
-    const [stepIndex, setActiveStep] = React.useState<number>(0);
+    // Can the user edit the form?
+    const [userCanEdit, setUserCanEdit] = React.useState<boolean>(app.status === "DRAFT");
+
+    // Current active step index (or the review page if not editable)
+    const [activeStep, setActiveStep] = React.useState<number>(
+        userCanEdit ? app.document.active_step : questionnaire.document.steps.length
+    );
+
+    const { showSnackbar } = useSnackbar();
+
+    // Manage completed steps
+    const [validatedSteps, setValidSteps] = React.useState<NumberedBooleanObj>(
+        // Calculate initial state from application document
+        app.document.steps.reduce((acc, step, index) => {
+            if (step.is_valid !== null)
+                acc[index] = step.is_valid;
+            return acc;
+        }, {} as NumberedBooleanObj)
+    );
 
     // Form methods
-    const formMethods = useForm<IAnswers>({
-        defaultValues: app.document.answers,
-        // We do custom scroll, see onError function when submit
+    const formMethods = useForm<IFormAnswers>({
+        // Generate default values based on application document
+        defaultValues: app.document.steps.reduce((acc, step, index) => {
+            acc[index] = step.answers ?? {};
+            return acc;
+        }, {} as IFormAnswers),
+        // We do custom scroll, see `onInvalid` function while submit
         shouldFocusError: false,
-    } as UseFormProps<IAnswers>);
+    } as UseFormProps<IFormAnswers>);
 
     // Form state (subscribed version)
     const {
-        isDirty, 
-        // dirtyFields,
+        isDirty,
     } = useFormState({ control: formMethods.control });
-    // console.log("isDirty:", isDirty, dirtyFields)
 
-    const saveAnswers = async () => {
-        // No changes to save
-        if (!isDirty) return;
-
-        const answers: IAnswers = formMethods.getValues();
-        await _saveAnswers(app.key, app.document.schema_version, answers);
+    /**
+     * Saves the current form answers to the API,
+     * or to local storage if offline or API fails,
+     * then resets the form state to not dirty.
+     * @returns Promise<void>
+     */
+    const saveAnswers = async (
+        newActiveStep?: number,
+        currentValidatedSteps?: NumberedBooleanObj,
+    ) => {
+        // Convert form answers to document structure
+        const answers: IFormAnswers = formMethods.getValues();
+        const document: IFormDocument = {
+            schema_version: app.document.schema_version,
+            active_step: newActiveStep ?? activeStep,
+            steps: questionnaire.document.steps.map((_step, index) => ({
+                // Use the passed-in object first, falling back to the state variable
+                is_valid: (currentValidatedSteps ?? validatedSteps)[index] ?? null,
+                answers: answers[index] ?? {},
+            })),
+        };
+        // console.log("document:", document)
+        await _doSaveAnswers(app.key, document, showSnackbar);
 
         // Reset the form state with the saved answers - not dirty anymore
         formMethods.reset(answers);
     };
 
-    const handleBack = async () => {
-        await saveAnswers()
-        // Previous step
-        setActiveStep((prevStep) => prevStep - 1);
-    };
+    /**
+     * 
+     * @param nextStep The step this form should go after successful validation.
+     * @returns The callable function for triggering validation.
+     * @example Go to next step on successful validation: `onSubmit={handleSubmit((prev) => prev + 1)}`
+     */
+    const handleSubmit = (nextStep: React.SetStateAction<number>,): AsyncVoidAction => {
+        const onValid: SubmitHandler<IFormAnswers> = async (_: IFormAnswers) => {
+            // Calculate the next state for validated steps
+            const newValidatedSteps = { ...validatedSteps };
+            // Watch out for the review step, which is outside the range of steps array
+            if (activeStep < questionnaire.document.steps.length)
+                newValidatedSteps[activeStep] = true;
+            // Set the new state (for next render)
+            setValidSteps(newValidatedSteps);
 
-    const handleContinue: SubmitHandler<IAnswers> = async (_: IAnswers) => {
-        // Assuming the validated data `_` param is same as formMethods.getValues()
-        await saveAnswers()
+            // Determine the next step index
+            const nextStepInt = nextStep instanceof Function ? nextStep(activeStep) : nextStep;
 
-        // Next step (or the review page)
-        setActiveStep((prevStep) => prevStep + 1);
-    };
+            // Save answers via API
+            await saveAnswers(nextStepInt, newValidatedSteps);
+            // Set the new active step
+            setActiveStep(nextStep);
+        }
+
+        const onInvalid: SubmitErrorHandler<IFormAnswers> = async (errors: FieldErrors<IFormAnswers>) => {
+            // Set the current step as failed
+            setValidSteps((completed) => ({
+                ...completed,
+                [activeStep]: false,
+            }));
+
+            // Do custom scroll and focus because ...
+            // MUI wraps input elements in many layers and default behaviour is buggy
+
+            // We know the errors there, fetch their keys with assertive approach
+            const stepKey = _.first(_.keys(errors)) as string;
+            const stepErrors = (errors as any)[stepKey]!;      // assert exists
+            const fieldKey = _.first(_.keys(stepErrors)) as string;
+            const firstErrorField = `${stepKey}.${fieldKey}`;
+            // console.log('fieldKey:', fieldKey)
+
+            // Try to find a container with the id
+            const errorElement = document.getElementById(`q-${firstErrorField}`) as HTMLElement;
+
+            if (errorElement) {
+                errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+                // Only focus if tabIndex is not -1 
+                // (skip components that are not meant to be focused)
+                if (typeof errorElement.focus === "function" && errorElement.tabIndex !== -1)
+                    errorElement.focus();
+            }
+        }
+
+        return formMethods.handleSubmit(onValid, onInvalid);
+    }
 
     // Account menu state and handlers
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
 
     // Change page title
     React.useEffect(() => {
@@ -125,7 +178,7 @@ export const FormLayout = () => {
     }, [app.questionnaire_name]);
 
     // Scroll to top when step changes
-    React.useEffect(() => scrollToTop(), [stepIndex]);
+    React.useEffect(() => scrollToTop(), [activeStep]);
 
     // Warn users trying to close or reload with unsaved changes
     React.useEffect(() => {
@@ -161,28 +214,31 @@ export const FormLayout = () => {
                         {app.questionnaire_name}
                     </Typography>
                     <AccountMenu
-                        anchorEl={anchorEl}
-                        setAnchorEl={setAnchorEl}
+                        anchorEl={menuAnchorEl}
+                        setAnchorEl={setMenuAnchorEl}
                         isDirty={isDirty}
                         saveAnswers={saveAnswers}
                     />
                 </Toolbar>
             </AppBar>
             <FormSidebar
-                steps={questionnaire.document.steps}
-                activeStep={stepIndex}
-                saveAnswers={saveAnswers}
-                setActiveStep={setActiveStep}
+                userCanEdit={userCanEdit}
                 drawerOpen={drawerOpen}
                 setDrawerOpen={setDrawerOpen}
+                steps={questionnaire.document.steps}
+                activeStep={activeStep}
+                handleSubmit={handleSubmit}
+                validatedSteps={validatedSteps}
             />
             <Box component="main" sx={{ marginTop: "64px", p: 2 }}>
                 <FormProvider {...formMethods}>
                     <FormLayoutContent
-                        handleBack={handleBack}
-                        handleContinue={handleContinue}
+                        userCanEdit={userCanEdit}
+                        setUserCanEdit={setUserCanEdit}
+                        handleSubmit={handleSubmit}
                         questionnaire={questionnaire.document}
-                        stepIndex={stepIndex}
+                        activeStep={activeStep}
+                        applicationKey={app.key}
                     />
                 </FormProvider>
             </Box>
@@ -232,7 +288,6 @@ const AccountMenu = ({
 }) => {
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
-    // const navigate: NavigateFunction = useNavigate();
 
     return (
         <Box sx={{ marginLeft: 'auto' }}>
@@ -293,32 +348,79 @@ const AccountMenu = ({
 
 
 const FormLayoutContent = ({
-    handleBack,
-    handleContinue,
-    questionnaire, stepIndex,
+    userCanEdit,
+    setUserCanEdit,
+    handleSubmit,
+    questionnaire,
+    activeStep,
+    applicationKey,
 }: {
-    handleBack: () => void;
-    handleContinue: SubmitHandler<FieldValues>;
+    userCanEdit: boolean;
+    setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
+    handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction,
     questionnaire: IQuestionnaire;
-    stepIndex: number;
+    activeStep: number;
+    applicationKey: string;
 }) => {
 
     // We are on the review page
-    if (stepIndex === questionnaire.steps.length) {
+    if (activeStep === questionnaire.steps.length) {
         return (
             <FormReviewPage
+                userCanEdit={userCanEdit}
+                setUserCanEdit={setUserCanEdit}
                 questionnaire={questionnaire}
-                onBack={handleBack}
+                handleSubmit={handleSubmit}
+                applicationKey={applicationKey}
             />
         );
     }
 
     return (
         <FormActiveStep
-            handleBack={handleBack}
-            handleContinue={handleContinue}
-            currentStep={questionnaire.steps[stepIndex]}
-            stepIndex={stepIndex}
+            handleSubmit={handleSubmit}
+            currentStep={questionnaire.steps[activeStep]}
+            activeStep={activeStep}
         />
     );
 }
+
+
+const _doSaveAnswers = async (
+    key: string,
+    document: IFormDocument,
+    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
+) => {
+    // Check if we have internet connection
+    if (window.navigator.onLine) {
+        const response = await ApiManager.updateApplication(key, document)
+            // Successfully save to API    
+            .then((resp) => {
+                // TODO: Clear the local storage
+                // console.log("Saved answers to API:", resp)
+                showSnackbar("Application saved", "success");
+                return resp;
+            })
+            // Display the error message to user and log to console
+            .catch((error: AxiosError) => {
+                const message = (error.response?.data as any)?.document?.[0] ?? error.message;
+                showSnackbar(`Failed to save: ${message}`, "error");
+                handleApiError(error);
+                return null;
+            });
+
+        // Something went wrong with the API call, save to local storage
+        if (!response) {
+            console.warn("Failed to save form state to API, saving to local storage");
+            LocalStorage.setFormState(key, document);
+        }
+    }
+    // We are offline
+    else {
+        // Save answers to local storage
+        console.log("Offline... saving answers to local storage");
+        LocalStorage.setFormState(key, document);
+    }
+}
+
+

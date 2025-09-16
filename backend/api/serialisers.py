@@ -15,13 +15,20 @@ class JsonSchemaSerialiserMixin(serializers.Serializer):
         """
         Validate the answers field against its schema.
         """
+        # Check if the schema version is same as the value's schema version
+        expected_version = schema["properties"]["schema_version"]["default"]
+        if value["schema_version"] != expected_version:
+            raise serializers.ValidationError(
+                f"Schema version mismatch: expected {expected_version}, got {value['schema_version']}"
+            )
+
         # Perform validation
         try:
             validate(value, schema)
         except ValidationError as e:
             # Get the exact coordinate from error path
             coor: str = ".".join(str(x) for x in e.absolute_path)
-            raise serializers.ValidationError(f"Invalid answers: {e.message} ({coor})")
+            raise serializers.ValidationError(f"Invalid document: {e.message} ({coor})")
 
         # Check the schema version matching with previous value
         if self.instance and self.instance.document:
@@ -31,7 +38,7 @@ class JsonSchemaSerialiserMixin(serializers.Serializer):
                 and previous_schema_version != value["schema_version"]
             ):
                 raise serializers.ValidationError(
-                    f"Schema version mismatch: expected {previous_schema_version}, got {value['schema_version']}"
+                    f"Schema version mismatch: previously {previous_schema_version}, got {value['schema_version']}"
                 )
 
         # Return the validated value

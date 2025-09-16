@@ -13,6 +13,7 @@ export function CheckboxInput({
 }) {
     return <Controller
         name={question.key}
+        defaultValue={false}
         rules={{
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}

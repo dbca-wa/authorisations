@@ -1,7 +1,5 @@
-from api.forms import JsonSchemaModelForm
-
-from .schema import get_answers_schema
+from django import forms
 
 
-class ApplicationForm(JsonSchemaModelForm):
-    _schema = get_answers_schema()
+class ApplicationForm(forms.ModelForm):
+    pass

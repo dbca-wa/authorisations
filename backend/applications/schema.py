@@ -20,31 +20,57 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
         "description": "JSON Schema definition for an application answers to a questionnaire.",
         "title": "Application Answers Schema",
         "type": "object",
+        "additionalProperties": False,
+        "required": ["schema_version", "active_step", "steps"],
         "properties": {
             "schema_version": {
                 "type": "string",
                 "title": "Schema version",
-                "default": "2025.07-1",  # Current version of the schema
+                "default": "2025.09-1",  # Current version of the schema
                 "readOnly": True,
                 "description": "The version of the application answers schema.",
             },
-            "answers": {
-                "title": "Answers",
+            "active_step": {
+                "type": "integer",
+                "title": "Active step",
+                "minimum": 0,
+            },
+            "steps": {
+                "title": "Step States",
+                "type": "array",
+                "items": {"$ref": "#/$defs/step_state"},
+                "minItems": 1,
+            },
+        },
+        # Additional definitions for complex types
+        "$defs": {
+            # The state for a step and its answers
+            "step_state": {
                 "type": "object",
+                "title": "Step State",
+                "additionalProperties": False,
+                "required": ["is_valid", "answers"],
+                "properties": {
+                    "is_valid": {"type": ["boolean", "null"], "default": None},
+                    "answers": {"$ref": "#/$defs/answers"},
+                },
+            },
+            # Answers for the whole step (all sections)
+            "answers": {
+                "type": "object",
+                "title": "Answers",
+                "additionalProperties": False,
                 "properties": {},
                 "patternProperties": {
                     # The regex matches the answer key format
-                    # e.g. [step]-[section]-[question]
-                    "^\d+\-\d+\-\d+$": {
+                    # e.g. [section]-[question]
+                    r"^\d+\-\d+$": {
                         # Primitive type or a grid question answer
                         "oneOf": _PRIMITIVE_TYPES + [{"$ref": "#/$defs/grid_answer"}],
                     },
                 },
             },
-        },
-        "required": ["schema_version", "answers"],
-        "additionalProperties": False,
-        "$defs": {
+            # An answer to a grid question is an array of objects
             "grid_answer": {
                 "type": "array",
                 "items": {
@@ -64,7 +90,7 @@ def get_answers_schema() -> dict:
     TODO: Implement schema versioning in the future.
     """
     schema: dict = deepcopy(dict(_SCHEMA_ANSWERS))
-    # schema["properties"]["schema_version"]["default"] = "2025.07-1"
+    # schema["properties"]["schema_version"]["default"] = "2025.09-1"
     return schema
 
 

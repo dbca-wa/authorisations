@@ -11,3 +11,6 @@ export interface IRoute {
     loader?: (params: LoaderFunctionArgs) => Promise<any>;
 }
 
+export type AsyncVoidAction = () => Promise<void>;
+
+export type NumberedBooleanObj = { [key: number]: boolean };

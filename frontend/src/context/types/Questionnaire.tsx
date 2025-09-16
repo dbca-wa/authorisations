@@ -83,7 +83,7 @@ export class Question {
     }
 
     get key(): string {
-        return `${this.indices.step}-${this.indices.section}-${this.indices.question}`;
+        return `${this.indices.step}.${this.indices.section}-${this.indices.question}`;
     }
 
     // Return formmatted label for display

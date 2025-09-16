@@ -7,7 +7,7 @@ export function assert(condition: boolean, message: string): void {
     }
 }
 
-export const getResponse = (status: number, statusText: string, message: string) => {
+const getResponse = (status: number, statusText: string, message: string) => {
     return Response.json(
         { message: message },
         { status: status, statusText: statusText }
@@ -16,7 +16,7 @@ export const getResponse = (status: number, statusText: string, message: string)
 
 export const handleApiError = (error: AxiosError) => {
     if (import.meta.env.DEV) {
-        console.error('Error while fetching applications:', error);
+        console.error('API Error:', error);
     }
 
     throw getResponse(
@@ -35,7 +35,7 @@ export const scrollToQuestion = ({
     sectionIndex?: number;
     questionIndex?: number;
 }) => {
-    const elementId = `q-${stepIndex}-${sectionIndex}-${questionIndex}`;
+    const elementId = `q-${stepIndex}.${sectionIndex}-${questionIndex}`;
     const element = document.getElementById(elementId) as HTMLElement;
 
     if (element) {
@@ -43,13 +43,13 @@ export const scrollToQuestion = ({
     }
 }
 
-export const openExternalWindow = (url: string, name: string = "_blank") => {
-    window.open(
-        url, // link
-        `auth_${name}`, // window name
-        "toolbar=no, menubar=no, location=no, status=no, resizable=yes, scrollbars=yes"
-    );
+export const openNewTab = (url: string, name: string = "_blank") => {
+    const newWindow = window.open(url, name, 'noopener');
+    if (newWindow) {
+        newWindow.opener = null;  // extra safety
+        newWindow.focus();
+    }
 }
 
-export const sleep = (ms: number) => new Promise( resolve => setTimeout(resolve, ms) );
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 

@@ -8,7 +8,7 @@ import { ApiManager } from '../../../context/ApiManager';
 import DialogProvider, { useDialog, type DialogOptions } from '../../../context/Dialogs';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IQuestionnaireData } from "../../../context/types/Questionnaire";
-import { openExternalWindow } from '../../../context/Utils';
+import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
 
 
@@ -108,7 +108,7 @@ const createNewApplication = async (
     }
 
     // // console.log("Created new application:", newApplication)
-    openExternalWindow(`/a/${newApplication.key}`, newApplication.key);
+    openNewTab(`/a/${newApplication.key}`, newApplication.key);
 
     navigate('/my-applications', { viewTransition: true });
 }

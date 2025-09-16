@@ -1,0 +1,206 @@
+{
+    "$id": "https://example.com/arrays.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "description": "JSON Schema definition for a questionnaire with steps, sections, and questions.",
+    "title": "Questionnaire Schema",
+    "type": "object",
+    "properties": {
+        "schema_version": {
+            "type": "string",
+            "title": "Schema version",
+            "default": "2025.07-1",
+            "readOnly": true,
+            "description": "The version of the questionnaire schema."
+        },
+        "steps": {
+            "title": "Steps",
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/step"
+            },
+            "minItems": 1
+        }
+    },
+    "required": [
+        "schema_version",
+        "steps"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+        "step": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "title": "Title"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "title": "Description"
+                },
+                "sections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/section"
+                    },
+                    "minItems": 1,
+                    "title": "Sections"
+                }
+            },
+            "required": [
+                "title",
+                "sections"
+            ]
+        },
+        "section": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "title": "Title"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 3000,
+                    "title": "Description"
+                },
+                "questions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/question"
+                    },
+                    "minItems": 1,
+                    "title": "Questions"
+                }
+            },
+            "required": [
+                "title",
+                "questions"
+            ]
+        },
+        "question": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "title": "Label"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "text",
+                        "textarea",
+                        "number",
+                        "checkbox",
+                        "select",
+                        "date",
+                        "grid"
+                    ],
+                    "enumNames": [
+                        "Text",
+                        "Textarea Multi-line",
+                        "Numeric",
+                        "Checkbox",
+                        "Multiple Choice Select",
+                        "Date",
+                        "Grid (Matrix of options)"
+                    ],
+                    "title": "Type"
+                },
+                "is_required": {
+                    "type": "boolean",
+                    "title": "Is required"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "title": "Description"
+                },
+                "select_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1
+                    },
+                    "maxItems": 50,
+                    "title": "Select options"
+                },
+                "grid_columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "type": "string",
+                                "maxLength": 255,
+                                "minLength": 1,
+                                "title": "Label"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "text",
+                                    "textarea",
+                                    "number",
+                                    "checkbox",
+                                    "select",
+                                    "date"
+                                ],
+                                "enumNames": [
+                                    "Text",
+                                    "Textarea Multi-line",
+                                    "Numeric",
+                                    "Checkbox",
+                                    "Multiple Choice Select",
+                                    "Date"
+                                ],
+                                "title": "Type"
+                            },
+                            "description": {
+                                "type": "string",
+                                "maxLength": 255,
+                                "title": "Description"
+                            },
+                            "select_options": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                "maxItems": 50,
+                                "title": "Select options"
+                            }
+                        },
+                        "required": [
+                            "label",
+                            "type"
+                        ]
+                    },
+                    "maxItems": 10,
+                    "title": "Grid columns"
+                },
+                "grid_max_rows": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1,
+                    "maximum": 20,
+                    "title": "Grid max rows"
+                }
+            },
+            "required": [
+                "label",
+                "type"
+            ]
+        }
+    }
+}
