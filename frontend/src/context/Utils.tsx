@@ -1,3 +1,4 @@
+import { styled } from "@mui/material/styles";
 import type { AxiosError } from "axios";
 
 // Simple browser-safe assert
@@ -53,3 +54,15 @@ export const openNewTab = (url: string, name: string = "_blank") => {
 
 export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+
+export const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+});

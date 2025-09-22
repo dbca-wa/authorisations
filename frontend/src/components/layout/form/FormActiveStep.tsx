@@ -14,6 +14,7 @@ import { DateInput } from "../../inputs/date";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
+import { FileInput } from '../../inputs/file';
 
 
 export const FormActiveStep = ({
@@ -130,6 +131,9 @@ const Section = ({
                             break;
                         case "grid":
                             inputComponent = <GridInput question={question} />;
+                            break;
+                        case "file":
+                            inputComponent = <FileInput question={question} />;
                             break;
                         default:
                             throw new Error(`Unknown question type: ${question.o.type}`);

@@ -54,9 +54,9 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                 <BootstrapDialog
                     onClose={hideDialog}
                     open={!!options}
-                    aria-labelledby="customized-dialog-title"
+                    aria-labelledby="customised-dialog-title"
                 >
-                    <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
+                    <DialogTitle sx={{ m: 0, p: 2 }} id="customised-dialog-title">
                         {options.title}
                         <IconButton
                             aria-label="close"

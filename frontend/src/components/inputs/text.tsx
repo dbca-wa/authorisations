@@ -22,6 +22,7 @@ export function TextInput({
 
     return <Controller
         name={question.key}
+        // React controlled vs uncontrolled warning fix:
         // This registers the field with an empty string if no
         // value is provided in the form's defaultValues. This ensures the
         // submitted data contains an empty string instead of undefined.
