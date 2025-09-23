@@ -54,6 +54,8 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                 <BootstrapDialog
                     onClose={hideDialog}
                     open={!!options}
+                    fullWidth 
+                    maxWidth="lg"
                     aria-labelledby="customised-dialog-title"
                 >
                     <DialogTitle sx={{ m: 0, p: 2 }} id="customised-dialog-title">
@@ -70,7 +72,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                         {options.content}
                     </DialogContent>
                     {options.actions && (
-                        <DialogActions>
+                        <DialogActions style={{ justifyContent: "space-between" }}>
                             {options.actions}
                         </DialogActions>
                     )}

@@ -44,7 +44,7 @@ export default function SnackbarProvider({ children }: { children: ReactNode }) 
             {message &&
                 <Snackbar
                     open={!!message}
-                    autoHideDuration={5000}
+                    autoHideDuration={severity === 'error' ? 15000 : 6000}
                     onClose={handleClose}
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                 >

@@ -14,7 +14,7 @@ import { DateInput } from "../../inputs/date";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import { FileInput } from '../../inputs/file';
+import { FileInput } from "../../inputs/file";
 
 
 export const FormActiveStep = ({

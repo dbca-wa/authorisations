@@ -50,7 +50,8 @@ export interface IGridAnswerRow {
 export type IAnswer = PrimitiveType | IGridAnswerRow[];
 
 /**
- * The form state for each step, keyed by step index
+ * The form state for each step, keyed by step index.
+ * `document.steps` is converted into this structure for easer access.
  */
 export interface IFormAnswers {
     [stepIndex: number]: {
