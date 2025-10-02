@@ -1,10 +1,10 @@
 from applications.models import Application
-from applications.serialisers import ApplicationSerialiser
-from rest_framework import mixins, viewsets, filters
-from rest_framework.response import Response
-
+from applications.serialisers import ApplicationSerialiser, FileAttachmentSerialiser
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
+from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
+from rest_framework.response import Response
 
 
 class ApplicationViewSet(
@@ -29,6 +29,43 @@ class ApplicationViewSet(
         """
         # Ensure users can only see their own applications
         return super().get_queryset().filter(owner=self.request.user)
+
+    @action(
+        detail=True,
+        methods=["post", "get", "delete"],
+        serializer_class=FileAttachmentSerialiser,
+    )
+    def files(self, request, key=None):
+        """
+        Custom endpoint to manage files for a specific application.
+        - GET: List existing files for this application.
+        - POST: Upload a new file for this application.
+        - DELETE: Remove an existing file from this application.
+        """
+
+        # This gets the parent Application instance
+        # application = self.get_object()
+
+        # Handle file upload
+        if request.method == "POST":
+            return self._upload_file(request)
+
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def _upload_file(self, request):
+        # Handle File Upload
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        uploaded_file = serializer.validated_data["file"]
+
+        # --- FILE HANDLING LOGIC HERE ---
+        # TODO: Save the file to cloud storage
+        print(f"File '{uploaded_file.name}' uploaded for application.")
+
+        return Response(
+            {"status": "file uploaded", "filename": uploaded_file.name},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class VersionFilterBackend(filters.BaseFilterBackend):

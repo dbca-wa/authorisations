@@ -12,6 +12,7 @@ export interface DialogOptions {
     title: ReactNode;
     content: ReactNode;
     actions?: ReactNode;
+    onClose?: () => void;
 }
 
 interface DialogContextType {
@@ -41,6 +42,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
     };
 
     const hideDialog = () => {
+        options?.onClose?.();
         setOptions(null);
     };
 
@@ -62,6 +64,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                         {options.title}
                         <IconButton
                             aria-label="close"
+                            disabled={false}
                             onClick={hideDialog}
                             sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
                         >

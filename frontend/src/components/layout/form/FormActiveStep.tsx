@@ -19,10 +19,12 @@ import { FileInput } from "../../inputs/file";
 
 export const FormActiveStep = ({
     handleSubmit,
+    applicationKey,
     currentStep,
     activeStep,
 }: {
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
+    applicationKey: string;
     currentStep: IFormStep;
     activeStep: number;
 }) => {
@@ -32,6 +34,7 @@ export const FormActiveStep = ({
             <form onSubmit={handleSubmit((prev) => prev + 1)} onKeyDown={onKeyDown}>
                 {currentStep.sections.map((section, sectionIndex) => {
                     return <Section
+                        applicationKey={applicationKey}
                         key={activeStep + "." + sectionIndex}
                         stepIndex={activeStep}
                         section={section}
@@ -74,8 +77,10 @@ const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
 }
 
 const Section = ({
+    applicationKey,
     stepIndex, section, sectionIndex,
 }: {
+    applicationKey: string,
     stepIndex: number,
     section: IFormSection,
     sectionIndex: number,
@@ -133,7 +138,7 @@ const Section = ({
                             inputComponent = <GridInput question={question} />;
                             break;
                         case "file":
-                            inputComponent = <FileInput question={question} />;
+                            inputComponent = <FileInput question={question} applicationKey={applicationKey} />;
                             break;
                         default:
                             throw new Error(`Unknown question type: ${question.o.type}`);

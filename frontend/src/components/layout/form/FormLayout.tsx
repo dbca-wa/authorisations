@@ -26,7 +26,7 @@ import { useSnackbar } from '../../../context/Snackbar';
 import type { IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
 import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
-import { handleApiError, scrollToTop } from '../../../context/Utils';
+import { scrollToTop } from '../../../context/Utils';
 import { FormActiveStep } from './FormActiveStep';
 import { FormReviewPage } from './FormReviewPage';
 import { FormSidebar } from './FormSidebar';
@@ -379,6 +379,7 @@ const FormLayoutContent = ({
     return (
         <FormActiveStep
             handleSubmit={handleSubmit}
+            applicationKey={applicationKey}
             currentStep={questionnaire.steps[activeStep]}
             activeStep={activeStep}
         />
@@ -403,9 +404,9 @@ const _doSaveAnswers = async (
             })
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
+                console.error('API Error:', error);
                 const message = (error.response?.data as any)?.document?.[0] ?? error.message;
                 showSnackbar(`Failed to save: ${message}`, "error");
-                handleApiError(error);
                 return null;
             });
 

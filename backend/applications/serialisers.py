@@ -1,6 +1,8 @@
 from api.serialisers import JsonSchemaSerialiserMixin
+from django.conf import settings
+from django.template.defaultfilters import filesizeformat
 from questionnaires.models import Questionnaire
-from rest_framework import serializers
+from rest_framework import serializers, exceptions, status
 
 from .models import Application, ApplicationStatus
 from .schema import get_answers_schema
@@ -71,7 +73,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Status field is required only when updating via PATCH
         fields["status"].required = isPatch
         fields["status"].read_only = not isPatch
-        
+
         return fields
 
     def validate_status(self, value):
@@ -85,14 +87,15 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         ):
             return value
 
-        raise serializers.ValidationError(
+        raise exceptions.ValidationError(
             f"Invalid status transition from {self.instance.status} to {value}"
         )
 
     def validate_document(self, value):
         if self.instance.status != ApplicationStatus.DRAFT:
-            raise serializers.ValidationError(
-                f"Cannot modify document with status '{self.instance.status}'")
+            raise exceptions.ValidationError(
+                f"Cannot modify document with status '{self.instance.status}'"
+            )
 
         # Validate and return with the JSON schema
         schema = get_answers_schema()
@@ -113,7 +116,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         try:
             questionnaire = Questionnaire.objects.filter(slug=value).latest("version")
         except Questionnaire.DoesNotExist:
-            raise serializers.ValidationError(
+            raise exceptions.ValidationError(
                 f"Questionnaire with slug '{value}' does not exist."
             )
 
@@ -134,7 +137,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         try:
             validated_data["questionnaire"] = self.context["questionnaire"]
         except KeyError:
-            raise serializers.ValidationError("'questionnaire_slug' is required")
+            raise exceptions.ValidationError("'questionnaire_slug' is required")
 
         # Create a fresh document with questionnaire schema version
         validated_data["document"] = {
@@ -153,3 +156,36 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Validate and return with the JSON schema
         self._validate_document(validated_data["document"], schema)
         return super().create(validated_data)
+
+
+class FileTooLargeError(exceptions.APIException):
+    """
+    Custom exception for payloads that are too large.
+    """
+    status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    default_detail = 'The file is too large.'
+    default_code = 'file_too_large'
+
+
+class FileAttachmentSerialiser(serializers.Serializer):
+    """
+    Serializer for validating file uploads.
+    The file itself is handled via request.FILES, this just validates metadata.
+    """
+
+    file = serializers.FileField(
+        required=True,
+        read_only=False,
+    )
+    field = serializers.CharField(
+        required=True,
+        read_only=False,
+    )
+
+    def validate_file(self, value):
+        if value.size > settings.UPLOAD_MAX_SIZE:
+            raise FileTooLargeError(
+                f"File size exceeds the limit of {filesizeformat(settings.UPLOAD_MAX_SIZE)}. "
+                f"Current size: {filesizeformat(value.size)}",
+            )
+        return value

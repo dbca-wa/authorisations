@@ -59,7 +59,7 @@ if ALLOWED_HOST_PROD:
 CSRF_USE_SESSIONS = True
 
 # Set custom the CSRF header name that Django will look on the request headers
-# for token validation when authenticating via AJAX etc. 
+# for token validation when authenticating via AJAX etc.
 CSRF_HEADER_NAME = env("CSRF_HEADER_NAME", default="HTTP_X_CSRFTOKEN")
 CSRF_HEADER_CLIENT = env("CSRF_HEADER_CLIENT", default="X-CsrfToken")
 
@@ -82,9 +82,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = SECURE_ONLY
     SESSION_COOKIE_SECURE = SECURE_ONLY
     SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_ONLY
-    
-    # Do not redirect 'https://' because the proxy server (nginx) connection 
-    # may be unsecure that will cause infinite redirection loop 
+
+    # Do not redirect 'https://' because the proxy server (nginx) connection
+    # may be unsecure that will cause infinite redirection loop
     # (if the `SECURE_PROXY_SSL_HEADER` was not set correctly)
     # SECURE_SSL_REDIRECT = SECURE_ONLY
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -92,10 +92,10 @@ if not DEBUG:
 
 # Application definition
 INSTALLED_APPS = [
-    'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
+    "admin_tools",
+    "admin_tools.theming",
+    "admin_tools.menu",
+    "admin_tools.dashboard",
     "django_vite",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -232,8 +232,8 @@ DJANGO_VITE = {
 }
 
 # Admin dashboard configuration
-ADMIN_TOOLS_INDEX_DASHBOARD = 'config.dashboard.CustomIndexDashboard'
-ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'config.dashboard.CustomAppIndexDashboard'
+ADMIN_TOOLS_INDEX_DASHBOARD = "config.dashboard.CustomIndexDashboard"
+ADMIN_TOOLS_APP_INDEX_DASHBOARD = "config.dashboard.CustomAppIndexDashboard"
 
 # Explicitly set the model backend
 AUTHENTICATION_BACKENDS = [
@@ -246,10 +246,20 @@ ALLOWED_EMAIL_SUFFIXES = []
 
 # Django Rest Framework settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ]
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
+
+# Maximum allowed file size for uploads: 10MB
+UPLOAD_MAX_SIZE = 10 * 1024 * 1024
+
+# Allowed mime types for uploaded files
+UPLOAD_MIME_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+]

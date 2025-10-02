@@ -1,14 +1,19 @@
+import _ from "underscore";
+
 export interface IConfig {
     api_base: string;
     csrf_header: string;
     csrf_token: string;
+    upload_max_size: number; // in bytes
+    // list of allowed mime types for uploaded files
+    upload_mime_types: string[];
 }
 
 export class ConfigManager {
     private static _config: IConfig | null = null;
 
     public static get(): IConfig {
-        if (this._config !== null) return this._config;
+        if (this._config !== null) return _.clone(this._config);
 
         const dataElement = document.getElementById('config');
 
@@ -25,7 +30,7 @@ export class ConfigManager {
             throw new TypeError("Config data is not an object.");
         }
 
-        // console.log("Config parsed:", this._config)
-        return this._config;
+        console.log("Config parsed:", this._config)
+        return _.clone(this._config);
     }
 }
