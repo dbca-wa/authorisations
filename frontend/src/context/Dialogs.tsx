@@ -12,6 +12,7 @@ export interface DialogOptions {
     title: ReactNode;
     content: ReactNode;
     actions?: ReactNode;
+    onClose?: () => void;
 }
 
 interface DialogContextType {
@@ -41,6 +42,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
     };
 
     const hideDialog = () => {
+        options?.onClose?.();
         setOptions(null);
     };
 
@@ -54,12 +56,15 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                 <BootstrapDialog
                     onClose={hideDialog}
                     open={!!options}
-                    aria-labelledby="customized-dialog-title"
+                    fullWidth 
+                    maxWidth="lg"
+                    aria-labelledby="customised-dialog-title"
                 >
-                    <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
+                    <DialogTitle sx={{ m: 0, p: 2 }} id="customised-dialog-title">
                         {options.title}
                         <IconButton
                             aria-label="close"
+                            disabled={false}
                             onClick={hideDialog}
                             sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
                         >
@@ -70,7 +75,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                         {options.content}
                     </DialogContent>
                     {options.actions && (
-                        <DialogActions>
+                        <DialogActions style={{ justifyContent: "space-between" }}>
                             {options.actions}
                         </DialogActions>
                     )}

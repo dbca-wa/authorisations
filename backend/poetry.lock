@@ -594,6 +594,18 @@ files = [
 tests = ["pytest"]
 
 [[package]]
+name = "pyfsig"
+version = "1.1.1"
+description = "A library for identifying files form their magic byte signature."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "pyfsig-1.1.1-py3-none-any.whl", hash = "sha256:c2e09c8a92502995338b6574978eebd8a096e56c8ea99fc296e8b78c78b4f458"},
+    {file = "pyfsig-1.1.1.tar.gz", hash = "sha256:1f9eddf1b8142285d2192645dc0e768dd1276ba9a7ae4984e41cd32720381ce4"},
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -898,4 +910,4 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "2.1"
 python-versions = "<4,>=3.12"
-content-hash = "17e9cc1f8995887c37309d8cfd7c774e55a5088267e07d51f1f6349e353f66d6"
+content-hash = "703eab041f5d601438b96da85e1ce22c2f2358132660207533328ef2693edcac"

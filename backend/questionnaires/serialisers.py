@@ -36,6 +36,7 @@ QUESTION_TYPE_CHOICES = [
     ("checkbox", "Checkbox"),
     ("select", "Multiple Choice Select"),
     ("date", "Date"),
+    # ("file", "File Upload"),
     # ("grid", "Grid (Matrix of options)"),
 ]
 
@@ -44,7 +45,7 @@ QUESTION_TYPE_CHOICES = [
 class GridQuestionColumnSerialiser(serializers.Serializer):
     label = serializers.CharField(max_length=255, required=True)
     type = serializers.ChoiceField(
-        choices=QUESTION_TYPE_CHOICES,
+        choices=QUESTION_TYPE_CHOICES + [("file", "File Upload")],
         required=True,
     )
     description = serializers.CharField(

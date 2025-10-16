@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from jsonschema import ValidationError, validate
+from django.conf import settings
 
 from api.models import ClientConfig
 
@@ -53,6 +54,13 @@ class ClientConfigSerialiser(serializers.Serializer):
     api_base = serializers.CharField(default=ClientConfig.api_base)
     csrf_header = serializers.CharField(default=ClientConfig.csrf_header)
     csrf_token = serializers.CharField(required=False, allow_blank=True)
+    upload_max_size = serializers.IntegerField(default=ClientConfig.upload_max_size)
+    # Provide a fresh copy of the configured mime types as the default so the
+    # serializer doesn't reference dataclass Field objects or share a mutable
+    # list between instances.
+    upload_mime_types = serializers.ListField(
+        child=serializers.CharField(), default=list(settings.UPLOAD_MIME_TYPES)
+    )
 
     def create(self, validated_data):
         return ClientConfig(**validated_data)

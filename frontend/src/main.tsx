@@ -14,6 +14,7 @@ import { RouterProvider } from 'react-router';
 import SnackbarProvider from './context/Snackbar';
 import './index.css';
 import { router } from './router';
+import DialogProvider from './context/Dialogs';
 
 
 const theme = createTheme({
@@ -32,9 +33,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-au">
-        <SnackbarProvider>
-          <RouterProvider router={router} />
-        </SnackbarProvider>
+        <DialogProvider>
+          <SnackbarProvider>
+            <RouterProvider router={router} />
+          </SnackbarProvider>
+        </DialogProvider>
       </LocalizationProvider>
     </ThemeProvider>
   </StrictMode>

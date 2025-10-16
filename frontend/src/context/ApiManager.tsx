@@ -1,4 +1,4 @@
-import type { AxiosRequestConfig } from "axios";
+import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import axios from "axios";
 import { ConfigManager } from "./ConfigManager";
 import type { IApplicationData, IFormDocument } from "./types/Application";
@@ -20,7 +20,9 @@ export class ApiManager {
             headers: {
                 'Content-Type': 'application/json',
                 // Allow dynamic string keys for headers
-            } as { [key: string]: string }
+            } as { [key: string]: string },
+            // Avoid buffering the entire stream for large files
+            maxRedirects: 0,
         }
 
         // Set the CSRF token header
@@ -64,6 +66,38 @@ export class ApiManager {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.patch<IApplicationData>(
             `/applications/${key}`, { status: "SUBMITTED" }, requestConfig);
+
+        return response.data;
+    }
+
+    public static async uploadAttachment({
+        key, field, file, signal, callback,
+    }: {
+        key: string;
+        field: string;
+        file: File;
+        signal?: AbortSignal;
+        callback?: (event: AxiosProgressEvent) => void;
+    }): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+
+        // We need to send multipart/form-data
+        requestConfig.headers!['Content-Type'] = 'multipart/form-data';
+
+        // Attach the abort signal to allow cancelling upload
+        requestConfig.signal = signal;
+
+        //  Attach to upload progress 
+        requestConfig.onUploadProgress = callback;
+
+        // Create form data
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("field", field);
+
+        // Start the upload
+        const response = await axios.post<IApplicationData>(
+            `/applications/${key}/files`, formData, requestConfig);
 
         return response.data;
     }

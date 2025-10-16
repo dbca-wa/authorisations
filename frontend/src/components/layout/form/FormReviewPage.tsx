@@ -26,7 +26,6 @@ import { useSnackbar } from '../../../context/Snackbar';
 import type { IAnswer, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
-import { handleApiError } from '../../../context/Utils';
 
 
 export function FormReviewPage({
@@ -61,9 +60,9 @@ export function FormReviewPage({
             })
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
+                console.error('API Error:', error);
                 const message = (error.response?.data as any)?.status?.[0] ?? error.message;
                 showSnackbar(`Failed to submit: ${message}`, "error");
-                handleApiError(error);
                 return null;
             });
 
