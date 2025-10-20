@@ -61,7 +61,7 @@ class ApplicationViewSet(
         # --- FILE HANDLING LOGIC HERE ---
         # TODO: Save the file to cloud storage
         print(f"File '{uploaded_file.name}' uploaded for application.")
-
+        
         return Response(
             {"status": "file uploaded", "filename": uploaded_file.name},
             status=status.HTTP_201_CREATED,

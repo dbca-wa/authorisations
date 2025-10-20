@@ -1,8 +1,12 @@
+from mimetypes import guess_file_type
+from os import path
+
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.conf import settings
 from django.template.defaultfilters import filesizeformat
+from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
-from rest_framework import serializers, exceptions, status
+from rest_framework import exceptions, serializers, status
 
 from .models import Application, ApplicationStatus
 from .schema import get_answers_schema
@@ -162,9 +166,10 @@ class FileTooLargeError(exceptions.APIException):
     """
     Custom exception for payloads that are too large.
     """
+
     status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
-    default_detail = 'The file is too large.'
-    default_code = 'file_too_large'
+    default_detail = "The file is too large."
+    default_code = "file_too_large"
 
 
 class FileAttachmentSerialiser(serializers.Serializer):
@@ -183,9 +188,27 @@ class FileAttachmentSerialiser(serializers.Serializer):
     )
 
     def validate_file(self, value):
+        # Validate the file size first
         if value.size > settings.UPLOAD_MAX_SIZE:
             raise FileTooLargeError(
                 f"File size exceeds the limit of {filesizeformat(settings.UPLOAD_MAX_SIZE)}. "
                 f"Current size: {filesizeformat(value.size)}",
             )
-        return value
+
+        # Get the file extension
+        _, extension = path.splitext(value.name)
+        extension = extension.lstrip(".").lower()
+
+        # Get the possible mime types based on the "magic bytes"
+        matches = find_matches_for_file_header(file_header=value.read(32))
+        for match in matches:
+            match_mimetype, _ = guess_file_type(f"file.{match.file_extension}")
+            # File extension must match and mime type must be allowed
+            if (
+                match.file_extension == extension
+                and match_mimetype in settings.UPLOAD_MIME_TYPES
+            ):
+                return value
+
+        # Decline by default
+        raise exceptions.ValidationError("Unsupported file type.")
