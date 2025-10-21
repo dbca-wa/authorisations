@@ -98,6 +98,21 @@
             }
           ],
           "description": "a) The Code:  \n\t• I have read, understood and agree to abide by the Australian Code for the Care and Use of Animals for Scientific Purposes 8th Edition; including Chapter 2.4: Responsibilities of investigators.\nb) Project personnel responsibilities:  \n\t• I will ensure that all project personnel are aware of and understand the techniques, methodology and any conditions approved for this project and any relevant Department Standard Operating Procedures.\n\t• Personnel identified as competent animal handlers have the qualifications, experience and training required for all procedures and species identified for the project, and have the competency to deal with adverse events should they occur.  \n\t• Supervised training by a competent and trained person will be provided for all personnel that do not have the required level of skill and experience.  \nc) Project resources (funding & personnel):\n\t• Adequate resources will be available to ensure that the project is conducted according to the project approval and conditions and animal welfare is not compromised.\nd) Adverse events:\n\t• I agree to notify the AEC of any significant issues relating to this project and to submit an Adverse Event form for any unexpected deaths or injuries at the earliest possible opportunity.\ne) Documentation and reporting:\n\t• I will keep records of the qualifications and / or experience of all listed personnel. \n\t• I agree to submit annual reports by the due date and to the standard required by the AEC.\n\t• I agree to maintain all documentation associated with this project as required under the Code and the Departmental policy on record-keeping.\n\nI acknowledge that all the information contained in the application form is a true and accurate record.\n\nAs per Section 2.4.5 of the Code:"
+        },
+        {
+          "title": "Competency Documents",
+          "questions": [
+            {
+              "type": "file",
+              "label": "CI Identification",
+              "description": "Upload a photo or DBCA identification document.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "select_options": []
+            }
+          ],
+          "description": "Provide supporting documents."
         }
       ],
       "description": "Provide your competencies and declarations."
@@ -226,7 +241,6 @@
                   "description": "Role in the project",
                   "is_required": true,
                   "select_options": [
-                    "Chief Investigator",
                     "Animal Handler",
                     "Supervised Animal Handler",
                     "Observer",

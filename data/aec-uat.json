@@ -1,6 +1,4 @@
 {
-  "name": "Care and Use of Animals for Scientific Purposes",
-  "description": "The application process for using animals for scientific or educational purposes in Western Australia, integrating the Animal Welfare Act 2002, the Biodiversity Conservation Act 2016, and the Australian Code for the Care and Use of Animals for Scientific Purposes. It is designed to guide applicants, investigators, Animal Ethics Committee (AEC) members, and other stakeholders through the process.",
   "steps": [
     {
       "title": "Scientific Review",
@@ -228,11 +226,9 @@
                   "description": "Role in the project",
                   "is_required": true,
                   "select_options": [
-                    "Chief Investigator",
-                    "Researcher",
-                    "Field Assistant",
-                    "Lab Technician",
-                    "Veterinarian",
+                    "Animal Handler",
+                    "Supervised Animal Handler",
+                    "Observer",
                     "Other"
                   ]
                 },
@@ -353,7 +349,7 @@
               "select_options": []
             }
           ],
-          "description": "... additional description about project resources and / or more explanation ..."
+          "description": "Sufficient resources must be available to complete the project within the specified timeframe."
         },
         {
           "title": "Project Location",
@@ -571,7 +567,7 @@
             },
             {
               "type": "textarea",
-              "label": "Why the available methods are not suitable?",
+              "label": "Explain why the available methods are not suitable.",
               "description": "Less invasive/lower impact methods are available - please identify the techniques and explain why they are not suitable for the project.",
               "is_required": false,
               "grid_columns": [],
@@ -1132,5 +1128,5 @@
       "description": "Post fieldwork & other info"
     }
   ],
-  "schema_version": "2025.06-1"
+  "schema_version": "2025.07-1"
 }
