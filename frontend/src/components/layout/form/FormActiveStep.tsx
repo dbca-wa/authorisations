@@ -71,9 +71,27 @@ export const FormActiveStep = ({
 
 // Prevent default form submission on Enter key
 const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
-    if (event.key === "Enter") {
-        event.preventDefault();
+    if (event.key !== "Enter") return;
+
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    // Allow Enter when:
+    //  - real <textarea>
+    //  - elements marked with data-allow-enter (on the element or an ancestor)
+    //  - contentEditable elements
+    const tag = (target.tagName || "").toLowerCase();
+    const isTextArea = tag === "textarea";
+    const isContentEditable = (target as HTMLElement).isContentEditable;
+    const hasAllowAttr = Boolean(target.closest && target.closest("[data-allow-enter]"));
+
+    if (isTextArea || isContentEditable || hasAllowAttr) {
+        // allow newline / default behavior
+        return;
     }
+
+    // otherwise prevent form submit
+    event.preventDefault();
 }
 
 const Section = ({
