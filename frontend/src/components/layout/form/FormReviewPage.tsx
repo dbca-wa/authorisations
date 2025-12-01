@@ -164,9 +164,7 @@ export function FormReviewPage({
 
 
 const humaniseBoolean = (val: IAnswer): string => {
-    if (val === true) return "Yes";
-    if (val === false) return "No";
-    return "N/A";
+    return val === true ? "Yes" : "No";
 }
 
 const isEmptyAnswer = (answer: any) => {
