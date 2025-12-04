@@ -17,7 +17,7 @@ export function TextInput({
     const textAreaProps = question.o.type === "textarea" ? {
         multiline: true,
         minRows: 3,
-        maxRows: 6,
+        maxRows: 20,
     } : {};
 
     return <Controller

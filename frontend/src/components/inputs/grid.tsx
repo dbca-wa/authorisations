@@ -47,6 +47,12 @@ declare module '@mui/x-data-grid' {
 
 // Helper to convert date strings to Date objects for DataGrid
 const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
+    // Check if value is an array
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    
+    // Map over each row and convert date strings to Date objects
     return value.map((row) => {
         const newRow: Record<string, any> = { _id: uuidv6(), _isNew: false, ...row, };
         question.o.grid_columns?.forEach((column) => {

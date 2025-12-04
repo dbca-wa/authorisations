@@ -1,0 +1,212 @@
+{
+  "steps": [
+    {
+      "answers": {
+        "0-0": true,
+        "1-0": [
+          {
+            "Full name": "John Brown",
+            "Email address": "john.brown@dbca.wa.gov.au",
+            "Role / Position": "Regional Conservation Leader"
+          },
+          {
+            "Full name": "Susan Bailey",
+            "Email address": "susan.bailey@dbca.wa.gov.au",
+            "Role / Position": "District Manager"
+          },
+          {
+            "Full name": "Jan Murdock",
+            "Email address": "jan.murdock@dbca.wa.gov.au",
+            "Role / Position": "Consulting / Reviewing Scientist / Biometrician"
+          }
+        ]
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": true,
+        "1-0": true,
+        "2-0": true
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": true,
+        "0-1": true
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": "Eradication of invasive rodents on islands in Western Australia",
+        "0-1": "DBCA, BCS, Animal Science Program",
+        "0-2": "Russell Palmer",
+        "0-3": "Senior Project Officer",
+        "0-4": "Submitted to Wildlife Licensing but waiting for approval",
+        "0-5": "Operational project - not required",
+        "0-6": "Not required as no threatened fauna species involved",
+        "0-7": "here",
+        "1-0": [
+          {
+            "Name": "Steve Moore",
+            "Role": "Animal Handler",
+            "Training": "",
+            "Experience": "Extensive experience in using camera  traps, small mammal trapping and  handling, surveys and monitoring of native fauna on islands. "
+          },
+          {
+            "Name": "Carl Aston",
+            "Role": "Animal Handler",
+            "Training": false,
+            "Experience": "Experience in using camera traps,  small mammal trapping and handling,  surveys and monitoring of native fauna on islands."
+          },
+          {
+            "Name": "Yamatji Sea Rangers (Geraldton)",
+            "Role": "Supervised Animal Handler",
+            "Training": true,
+            "Experience": "Some experience in using baited  camera traps and undertaking surveys  and monitoring of native fauna on islands. Please note that Ranger names will not always be known until the day they participate in supervised animal handler activities. The CI will maintain a list of names each day."
+          }
+        ],
+        "2-0": false,
+        "2-1": "",
+        "2-2": "",
+        "2-3": "There are no interinstitutional agreements in place but please note that staff from other organisations are involved in the project and will do so as DBCA volunteers and under DBCA AEC approval.",
+        "3-0": "2025-10-01",
+        "3-1": "3 years",
+        "4-0": true,
+        "4-1": "",
+        "4-2": "This project is funded under the High Pathogenicity Avian Influenza (HPAI) H5N1 Protected Species and Places Preparedness Program by the Commonwealth Department of Climate Change, Energy, the Environment and Water. Funding at this stage is only to 30 June 2026. It is hoped that more eradication projects will be funded beyond that timeframe (see below).",
+        "5-0": [
+          {
+            "District": "Merredin"
+          },
+          {
+            "District": "Esperance"
+          },
+          {
+            "District": "Perth Hills"
+          }
+        ],
+        "5-1": "MAP",
+        "5-2": "Invasive rodents are known from more than 30 islands in Western Australia (Burbidge and Abbott 2017).\n\nIsland eradication program in the Houtman Abrolhos Islands National Park (see map in attachment)\n\n• Beacon Island (28°28.52′S 113°47.15′E) - a 3 hectare coral storm-ridge island in the Wallabi Group\n• Gun Island (28°53.17′S 113°51.58′E) - a 19 hectare low and flat, outcrop of limestone in the Pelsaert \nGroup. \nPreparedness and planning for the eradication of invasive rodents on islands in Western Australia \n• Shoalwater Islands Marine Park (Penguin, Seal, and Middle Shag islands) (Swan Region). \n• Carnac Island Nature Reserve and Rottnest Island (Swan Region).\n• Adele Island Nature Reserve (Kimberley Region).\n• North Island, Houtman Abrolhos (Mid-West Region).\n• ‘North Doole’ Island, Exmouth Gulf (Pilbara Region).\n\nMonitoring and surveillance of islands for undetected or new incursions of invasive rodents.\n\n• Pigeon and Little Pigeon islands Houtman Abrolhos and other islands in the Houtman Abrolhos Islands \nNational Park.\n• Other islands as required.",
+        "5-3": true,
+        "5-4": "",
+        "6-0": false,
+        "6-1": true,
+        "6-2": "A single voucher of each species of invasive rodent from each island will be lodged with the Museum (If the WAM will take introduced rodents). For example, there is no voucher specimen for house mice on Gun Island in the Houtman Abrolhos or any of the islands in the Shoalwater Islands Marine Park. See below Reptile Survey for potential vouchering of reptiles. DNA tissue samples will be collected from invasive rodents (n=20 per island) \nand selected reptiles (DBCA 2025). The WAM has done extensive reptile surveys, including vouchering and tissue collection in the Houtman Abrolhos (How et al. 2004; 2020).",
+        "7-0": "Natural environment",
+        "7-1": [
+          {
+            "Objective": " Eradicate house mice on Beacon and Gun Islands to eliminate predation pressures, thereby enabling the  recovery of island ecosystems and directly benefiting nesting seabirds and other native species."
+          },
+          {
+            "Objective": "To investigate the feasibility of eradicating invasive rodents on other islands by collecting essential information to support the development of eradication proposals, plans, and permit applications."
+          },
+          {
+            "Objective": "To conduct monitoring and surveillance of islands to detect invasive rodents, other pest animals, reptiles, and other native faun"
+          },
+          {
+            "Objective": "To investigate evidence of egg predation by introduced rodents and native predators on seabird nesting  islands."
+          }
+        ],
+        "7-2": "The eradication of invasive rodents from islands has been used for many years as a conservation strategy to restore natural island ecosystems and support the recovery of native plant and animal species affected by these predators (Howald et al. 2007). Globally, rodent eradication is considered one of the most successful long-term methods for restoring island habitats (Jones et al. 2016).\n\nGiven the high conservation values of many of Australia’s offshore islands and the negative impacts caused by invasive rodents, ‘Predation by exotic rats on Australian offshore islands of less than 1000 km2 (100,000 ha)’ is listed as a Key Threatening Processes under the Environment Protection and Biodiversity Conservation Act 1999 (DEWHA 2009). Accordingly, invasive rodents, black rats (Rattus rattus) and house mice (Mus musculus), have been successfully eradicated from more than 60 islands in Australia over the past 40 years, mostly in Western Australia (WA) (DEWHA 2009). \nDespite these efforts, invasive rodents remain on at least 35 islands in WA. The most recent successful eradication project occurred in 2018, when mice were removed from three islands in the Houtman Abrolhos (Dunlop and Gray 2019). Although the total number of islands known to harbour invasive rodents may have increased due to new incursions and new detections via camera traps of previously unknown,but established rat/mouse populations, many of these islands are significant seabird breeding sites (Commonwealth of Australia 2020). The most spectacular and ongoing recovery of a seabird breeding community following the removal of invasive predators witnessed in Australia to date is on Rat Island, Houtman \nAbrolhos (Dunlop et al. 2015). \n\nSeabird populations across Australia’s island ecosystems are increasingly vulnerable to a combination of anthropogenic pressures, including invasive species, habitat degradation, climate change and emerging infectious diseases (Commonwealth of Australia 2020). The recent global emergence and rapid spread of highly pathogenic avian influenza, particularly the H5N1 clade 2.3.4.4b lineage (H5 avian influenza), presents a novel \nand potentially severe threat to seabird colonies. Although Australia has not yet recorded incursions of this strain in bird populations, the risk remains high, particularly through migratory flyways connecting Australia to regions where the virus is endemic. In anticipation of possible outbreaks, the Australian Government has adopted a precautionary, multi-faceted response strategy aimed at enhancing the ecological resilience of at-risk species and habitats. A central component of this approach is the removal of invasive rodents from priority seabird breeding islands. The rationale is that by reducing non-disease threats, such as predation by introduced rodents, seabird populations will be healthier and better able to survive or rebound if and when H5 avian influenza arrives (birdflu.gov.au). This project is funded as part of this initiative, with the aim of eradicating invasive rodents on several seabird breeding islands in WA.\n\nWhile grounded in well-established, science-based best practice guidelines, this invasive rodent eradication project is operational in nature. The techniques used are based on decades of global evidence and proven methodologies designed to achieve effective, lasting conservation outcomes. The objective is to implement a strategic, one-off baiting intervention using a second-generation anticoagulant rodenticide (SGAR), brodifacoum, \nto eliminate invasive rodents and facilitate ecosystem recovery (Howald et al. 2007; Broome et al. 2019). Research will accompany the project to support monitoring and adaptive management.\n\nA key characteristic of SGARs, such as brodifacoum, is their capacity to deliver a lethal dose in a single feeding. Like warfarin, a first-generation anticoagulant (FGAR), brodifacoum inhibits the production of vitamin K, thereby impairing the blood's ability to clot. Its palatability and efficacy at low dosages, including effectiveness against rodents resistant to FGARs, have led to its widespread use as a highly effective rodenticide. However, significant concerns exist regarding the secondary poisoning of owls and other predators/scavengers of rodents due to the chronic and inappropriate use of second-generation anticoagulants on the Australian mainland. \n\nA detailed description of the proposed eradication operation is provided in the attached ‘Environmental Assessment for a Minor-use Permit application to eradicate House Mouse from islands in the Houtman Abrolhos Islands National Park using the unregistered rodent bait Pestoff 20R’, which was submitted to the Australian Pesticides and Veterinary Medicines Authority (APVMA) as part of the permit application process (see below).\nThis application also lists the seabird species most likely to benefit from the eradication of house mice on Beacon and Gun Islands and those species that were identified as facing potential primary and/or secondary risk from the planned baiting operation.\nIn line with the best-practice guidelines for the eradication of house mice from islands, the specifically formulated bait product (Pestoff 20R) with a lower concentration of brodifacoum at 0.02 g/kg will be used. Brodifacoum is highly toxic to mammals and birds, and has implications for animal welfare, its use in this context is justified, provided it is implemented under strict regulatory controls and according to the best-practice guidelines (Broome et al. 2017; Broome et al. 2019). Checks and balances include:\n\n• In December 2024, DBCA applied to the APVMA, which is the Australian Government regulator of agricultural and veterinary chemical products, for a Minor Use Permit to use an unregistered New Zealand made product, Pestoff Rodent Bait 20R, which contains the active ingredient brodifacoum, to eradicate house mice on Beacon and Gun Islands. This application includes an environmental assessment and the planned mitigation actions to be applied to minimise potential environmental and non-target species impacts (see attached). There will be a rigour assessment of this application by the APVMA, with a permit due to be issued in December 2025. This permit will have strict conditions, including mitigation, monitoring and reporting actions that must be followed (this permit will be submitted to the DBCA AEC on issue). \n• This project will require internal approval by various DBCA Executive Directors to use brodifacoum in an off label situation on conservation estate (submitted once the permit is granted by the APVMA).\n• Various levels of oversight – reporting to DBCA AEC, APVMA and the funding agency DCCEEW."
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": "Objective 1: Eradicate house mice on Beacon and Gun Islands\nIsland baiting operations — hand broadcasting Pestoff 20R rodent bait\nFull details of the proposed baiting operation for Beacon and Gun Islands are provided in the attachment. This document describes the islands, the threats and biosecurity risks posed by house mice and a brief history of previous invasive mammal eradication operations in the Houtman Abrolhos. The second section outlines the eradication strategy, including the bait type, application method and rates, timing and post-eradication monitoring. The final section provides a risk assessment of potential non-target species and the mitigation strategies to be used to minimise these risks.\n\nIn brief, this proposed operation will involve a one-off use consisting of two applications of Pestoff 20R pellet rodenticide bait covering Beacon Island (3 ha) and Gun Island (19 ha). Each bait application will have a coverage of 15 kg/ha (aggregate coverage of 30 kg/ha) and be separated by 10—21 days. Pestoff 20R is a cereal-based pellet bait containing 0.02 g/kg (20 ppm) of brodifacoum, manufactured by Orillion in New Zealand for the \nintended eradication of invasive rodents from specified areas (Orillion 2021). It is specifically formulated with denatured grain and is approved in New Zealand for the eradication of rodents on offshore islands through aerial and hand broadcasting of bait. As per above, a permit from the APVMA is required to use this product for the purpose outlined as it is not registered in Australia.\n\nThe baiting operations are scheduled to take place between April and June 2026. Commencement is likely to occur after the Easter school holidays when tourist numbers decline in the Abrolhos. In a Mediterranean climate, the islands will likely be at their driest, resulting in expected food scarcity for mice, leading to lower population densities and an increased desirability for bait. Migratory seabirds will have departed and there is a gap in \nbreeding activity by the two species of burrow nesting seabirds at this time on the islands (i.e. no risk of trampling hatchlings in burrows).\nHand broadcasting of bait will be the primary baiting method used, and each baiting operation will be completed within a single day (Beacon) or two days (Gun). The Pestoff bait will be hand-broadcast at a density of up to 15 kg/ha for each application. As each bait pellet weighs ~2 grams, this approximates one bait every 1.3 m2. A marked 20 m x 20 m grid will be established across each island using GPS technology in advance of the planned baiting operation (~78 grid points Beacon, ~503 Gun). At each marked grid point (numbered pin flag), trained personnel will apply bait at the specified rate. Bait will be hand-spread up to ten meters from each grid point following standard operating procedures (Oyston 2023). Briefly, a fifth of the bait is thrown in each quarter from the grid point—North, East, South and West—and the last around the baiter’s feet (Figure 1). Calibrated bait \nscoops will be used to ensure accurate measurement. The only exceptions to this procedure will be grid points located on the coast or at the edge of the baiting grid (i.e., thrown inland only). Bait will only be applied above the high tide mark. The baiting team will be housed on a live aboard vessel stationed next to each island for each operation.\n\nFigure 1 Baiting technique at baiting points (Oyston 2023)\nBaited house mice are expected to die in burrows, beneath thick vegetation or under rock slabs. For instance, only three freshly dead mice were found during the baiting and observer periods on Rat Island in 2018 (Dunlop and Gray 2019). Island wide inspections will commence 3-5 days after the baiting operation to remove any dead and dying target or non-target species, thereby mitigating the risks of secondary poisoning. These inspections will continue at intervals of 2 to 4 days until 10 days after the second bait application or until no further mice are detected. Camera traps will be installed across each island in the lead-up to the baiting operation and will remain in place for up to six months to monitor mice and potential terrestrial non-target species. The eradication will be considered a success if no mice are detected in two years of monitoring post-operation as per \nbest practice requirements. See the attachment for the environmental risk assessment for this proposed baiting operation. The only non-target species considered at high risk were the resident silver gulls (~15 breeding pairs) on Gun Island. They are potentially at risk of secondary exposure to brodifacoum via scavenging of dead or dying (moribund) mice (see below additional trials). This species is not resident on Beacon Island. There is no risk to the silver gull population in the Houtman Abrolhos as they are a common resident on many other islands. \n\nProminent signage will be installed to inform any visitors of the baiting operation and the presence of poison. These will remain in place for no less than 12 months following the final application of bait.\n\nResearch and monitoring components accompanying invasive rodent eradication operations and planning (Objectives 1 & 2).\nMonitoring, trapping and sampling of invasive rodents on islands (mostly house mice)\nLess invasive camera trapping will be used for detection and monitoring of invasive rodents on islands in most cases (see below). Trapping will be required for a range of purposes depending on the island and the stage of the eradication operation (planning, pre-eradication or post-eradication). Section 17 below provides an explanation as to why lethal snap traps will be used on some islands in preference to live capture using Elliot traps.\nSingle (small islands) or two (larger islands) trap grids (covered snap traps) of 49 traps (5m x 5m) each will be set for one or two nights on islands to measure the abundance of house mice (nightly captures per unit area) prior to proposed eradication operations. All trapped mice will be necropsied to allow for collection of demographic data and body condition indices, and tissue samples for DNA. Additionally, mice (n=10) per island will be used for the scavenging experiment (below).\n\nElliot traps set in linear transects will used for the same purpose on islands where there are potential non-target \nreptiles, such as Egernia skinks. Elliot traps will be set in line transects so they can be placed under cover (SOP SC24-02 Aluminium box traps for capture of terrestrial vertebrates; DBCA 2024b). All mice captured in live traps will be euthanised using blunt trauma techniques in accordance with SOP SC24-11 Euthanasia of animals under field conditions (DBCA 2024d).\n\nSmaller numbers of Elliot traps will be used to capture mice or rats on islands where there is a new population detected via camera traps. The purposing being to confirm the species present and voucher any invasive species. In the extremely unlikely event a native rodent is captured, it will be tissue sampled and released (DBCA 2025).",
+        "0-1": [
+          {
+            "File": "",
+            "Description": "Project draft"
+          },
+          {
+            "File": "",
+            "Description": "Personnel list"
+          }
+        ],
+        "0-2": []
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": true,
+        "0-1": true,
+        "0-2": "",
+        "1-0": "",
+        "2-0": [],
+        "2-1": "",
+        "2-2": [],
+        "2-3": "",
+        "2-4": "",
+        "2-5": "",
+        "2-6": [
+          {
+            "Method": "Leg band",
+            "Welfare risks and mitigation measures": "",
+            "Species and number of animals to be marked": 5
+          }
+        ],
+        "2-7": "",
+        "2-8": "",
+        "2-9": "",
+        "2-10": "",
+        "2-11": ""
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": "",
+        "0-1": "",
+        "0-2": "",
+        "1-0": [
+          {
+            "Method": "Captive bolt device",
+            "Preference": "Preferred primary method"
+          }
+        ],
+        "1-1": "",
+        "1-2": "",
+        "2-0": ""
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": [
+          {
+            "Route": "Inhalation",
+            "Action": "Sedation",
+            "Name of Substance": "Itraconazole",
+            "Active ingredient(s)": "",
+            "Name (if not in list)": ""
+          }
+        ],
+        "1-0": [
+          {
+            "Permit holder": "",
+            "Drug dose (mg/kg) = A": "",
+            "Poison Permit expiry date": "2025-11-29",
+            "Drug dose (mL/kg) = A ÷ B": "",
+            "Dept. Health Poison Permit No.": "",
+            "Drug concentration (mg/mL) = B": ""
+          }
+        ]
+      },
+      "is_valid": true
+    },
+    {
+      "answers": {
+        "0-0": [],
+        "1-0": ""
+      },
+      "is_valid": true
+    }
+  ],
+  "active_step": 9,
+  "schema_version": "2025.09-1"
+}
