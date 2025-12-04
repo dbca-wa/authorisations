@@ -1,7 +1,30 @@
 from django.contrib import admin
 
 from questionnaires.forms import QuestionnaireForm
-from questionnaires.models import Questionnaire
+from questionnaires.models import (
+    Questionnaire,
+    QuestionnaireMembership,
+    QuestionnairePermission,
+)
+
+
+@admin.register(QuestionnairePermission)
+class QuestionnairePermissionAdmin(admin.ModelAdmin):
+    list_display = ("codename", "name", "created_at")
+    search_fields = ("codename", "name", "description")
+    ordering = ("codename",)
+
+
+@admin.register(QuestionnaireMembership)
+class QuestionnaireMembershipAdmin(admin.ModelAdmin):
+    list_display = ("user", "questionnaire", "created_at")
+    search_fields = (
+        "user__email",
+        "user__username",
+        "questionnaire__name",
+        "questionnaire__slug",
+    )
+    filter_horizontal = ("permissions",)
 
 
 @admin.register(Questionnaire)
@@ -107,3 +130,5 @@ class QuestionnaireAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).distinct("slug")
+
+

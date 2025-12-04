@@ -73,13 +73,6 @@ class Application(models.Model):
     def __str__(self):
         return f"Application #{self.id} by {self.owner.username} for {self.questionnaire.name}"
 
-    # @staticmethod
-    # def has_access(user, key: str) -> bool:
-    #     return Application.objects.filter(
-    #         key=key,
-    #         owner=user,
-    #     ).exists()
-
 
 # def certificate_path(instance, filename):
 #     """Define the upload path for the certificate file."""

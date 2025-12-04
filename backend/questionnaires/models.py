@@ -38,6 +38,14 @@ class Questionnaire(models.Model):
         on_delete=models.PROTECT,
         editable=False,
     )
+    members = models.ManyToManyField(
+        "users.User",
+        through="QuestionnaireMembership",
+        related_name="+",
+        blank=True,
+        null=True,
+        help_text="Users who participate in managing (or reporting) this questionnaire.",
+    )
 
     class Meta:
         constraints = [
@@ -51,6 +59,76 @@ class Questionnaire(models.Model):
 
     def __str__(self):
         return f'Questionnaire "{self.name}" (v{self.version})'
+
+
+class QuestionnairePermission(models.Model):
+    """
+    Declarative permissions for questionnaire membership.
+
+    - codename: stable machine-readable identifier (used in code checks)
+    - name: human-friendly label shown in the Django admin
+    - description: free text explaining what this permission allows
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    codename = models.SlugField(
+        max_length=100,
+        unique=True,
+        help_text="Machine-readable permission identifier, e.g. 'view_applications'.",
+    )
+    name = models.CharField(max_length=255, help_text="Human readable permission name.")
+    description = models.TextField(
+        blank=True, default="", help_text="Optional description/help text."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("codename",)
+        verbose_name = "Questionnaire permission"
+        verbose_name_plural = "Questionnaire permissions"
+
+    def __str__(self):
+        return f"{self.name} ({self.codename})"
+
+
+class QuestionnaireMembership(models.Model):
+    """
+    Through model for Questionnaire.members -> users.User.
+
+    Stores role permissions and other metadata about the member relationship.
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    questionnaire = models.ForeignKey(
+        Questionnaire,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+    permissions = models.ManyToManyField(
+        QuestionnairePermission,
+        blank=False,
+        null=False,
+        related_name="+",
+        help_text="Permissions assigned to this user for this questionnaire.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # ensure a user has at most one membership row per questionnaire
+        unique_together = ("questionnaire", "user")
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        # avoid referring to a non-existing role field; show a concise summary
+        return f"{self.user} member for {self.questionnaire}"
 
 
 class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializer):
