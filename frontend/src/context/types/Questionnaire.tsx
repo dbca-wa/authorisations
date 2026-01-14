@@ -50,16 +50,6 @@ export interface IGridQuestionColumn {
 }
 
 
-export interface IQuestion {
-    label: string;
-    type: string;
-    is_required: boolean;
-    description?: string;
-    select_options?: string[] | null; // For select types
-    grid_max_rows?: number | null; // For grid types, indicates the maximum number of rows
-    grid_columns?: IGridQuestionColumn[] | null;
-}
-
 /**
  * Step, section and question indices (used for form validation and display)
  */
