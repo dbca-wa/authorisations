@@ -7,14 +7,16 @@ import ListItem from "@mui/material/ListItem";
 import Stack from "@mui/material/Stack";
 import React from "react";
 
+import { useWatch } from 'react-hook-form';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
+import { FileInput } from "../../inputs/file";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import { FileInput } from "../../inputs/file";
+import { computeFollowupMap } from "./visibility";
 
 
 export const FormActiveStep = ({
@@ -105,6 +107,37 @@ const Section = ({
 }) => {
     // Convert index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
+    // const { control } = useFormContext();
+
+    // Define follow-up rules once (temporary, to be moved into data model)
+    const followupObj: { [key: string]: number } = {
+        "3.2-1": 1,
+        "3.2-2": 1,
+        "3.2-3": 2,
+    };
+
+    // Build followup map
+    const followupMap = React.useMemo(
+        () => computeFollowupMap(section.questions, stepIndex, sectionIndex, followupObj),
+        [section.questions, stepIndex, sectionIndex]
+    );
+
+    // Helper to get a question's parent value using useWatch
+    const getParentValue = (parentKey: string) => {
+        // If no parent, always visible
+        if (!parentKey) return true;
+        // useWatch expects a field name, which is the key
+        return useWatch({ name: parentKey });
+    };
+
+    // Helper to recursively check visibility for a question
+    const isQuestionVisible = React.useCallback((questionKey: string): boolean => {
+        const followupInfo = followupMap[questionKey];
+        if (!followupInfo) return true;
+        const parentValue = getParentValue(followupInfo.parentKey);
+        const parentIsVisible = isQuestionVisible(followupInfo.parentKey);
+        return Boolean(parentValue) && parentIsVisible;
+    }, [followupMap]);
 
     return (
         <Stack
@@ -129,12 +162,16 @@ const Section = ({
 
             <List>
                 {section.questions.map((questionObj, qIndex) => {
-                    // For internal tracking, form validation and label formatting
                     const question = new Question(questionObj, {
                         step: stepIndex,
                         section: sectionIndex,
                         question: qIndex,
-                    })
+                    });
+
+                    // Check visibility using useWatch and recursive logic
+                    if (!isQuestionVisible(question.key)) {
+                        return null;
+                    }
 
                     let inputComponent = null;
                     switch (question.o.type) {
