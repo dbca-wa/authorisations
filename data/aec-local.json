@@ -558,6 +558,41 @@
             },
             {
               "type": "grid",
+              "label": "Species and number of individuals that will be handled or observed",
+              "values": [],
+              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the intrenet or requested from the AEC EO.",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Scientific name",
+                  "description": "Please use current taxonomy from the NOMOS - taxonomic names management system.",
+                  "select_options": []
+                },
+                {
+                  "type": "text",
+                  "label": "Common name",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "number",
+                  "label": "Observed",
+                  "description": "Total number of animals to be observed only and NOT handled during the project time frame.",
+                  "select_options": []
+                },
+                {
+                  "type": "number",
+                  "label": "Handled",
+                  "description": "Total number of animals to be handled during the project time frame.",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
+              "type": "grid",
               "label": "Additional attachments",
               "description": "",
               "is_required": false,
@@ -573,59 +608,6 @@
                   "label": "Description",
                   "description": "",
                   "select_options": []
-                }
-              ],
-              "grid_max_rows": null,
-              "select_options": []
-            },
-            {
-              "type": "grid",
-              "label": "Species and number of individuals that will be handled or observed",
-              "values": [],
-              "description": "Please use current taxonomy from the NOMOS - taxonomic names management system.",
-              "is_required": false,
-              "grid_columns": [
-                {
-                  "type": "text",
-                  "label": "Scientific name",
-                  "description": "Include subspecies",
-                  "select_options": []
-                },
-                {
-                  "type": "text",
-                  "label": "Common name",
-                  "description": "",
-                  "select_options": []
-                },
-                {
-                  "type": "number",
-                  "label": "Total animals",
-                  "description": "Total number of animals to be handled (or observed) during the project time frame as indicated in Q7.",
-                  "select_options": []
-                },
-                {
-                  "type": "select",
-                  "label": "Marking method",
-                  "description": "",
-                  "select_options": [
-                    "Ear punch or notch",
-                    "Ear tag",
-                    "Pit tag / microchip",
-                    "Temporary marking",
-                    "Tail tip",
-                    "Scale clip",
-                    "Leg band",
-                    "Blood sample",
-                    "Toe clip",
-                    "Flipper tag",
-                    "Biopsy pole / harpoon",
-                    "Skin off / scraping",
-                    "Flipper biopsy",
-                    "Cloacal swab",
-                    "Scute notch",
-                    "Feather / down removal",
-                    "Other"
-                  ]
                 }
               ],
               "grid_max_rows": null,
@@ -806,9 +788,8 @@
             {
               "type": "grid",
               "label": "Method of marking / sampling",
-              "values": [],
-              "description": "",
-              "is_required": false,
+              "description": "Detail the welfare risks and mitigation measures associated with each method of marking / sampling.",
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "select",
@@ -836,12 +817,6 @@
                   ]
                 },
                 {
-                  "type": "number",
-                  "label": "Species and number of animals to be marked",
-                  "description": "You can refer to the Species Table if all the information is contained in the Table.",
-                  "select_options": []
-                },
-                {
                   "type": "text",
                   "label": "Welfare risks and mitigation measures",
                   "description": "",
@@ -852,9 +827,60 @@
               "select_options": []
             },
             {
+              "type": "grid",
+              "label": "Number of animals to be marked",
+              "values": [],
+              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the intrenet or requested from the AEC EO.",
+              "is_required": true,
+              "grid_columns": [
+                {
+                  "type": "select",
+                  "label": "Method",
+                  "description": "",
+                  "select_options": [
+                    "Temporary marking",
+                    "Pit tag / microchip",
+                    "Ear tag",
+                    "Ear notch (marking + tissue)",
+                    "Ear notch (tissue only)",
+                    "Tail tip",
+                    "Scale clip",
+                    "Leg band",
+                    "Blood sample",
+                    "Toe clip",
+                    "Flipper tag",
+                    "Biopsy pole / harpoon",
+                    "Skin off / scraping",
+                    "Flipper biopsy",
+                    "Cloacal swab",
+                    "Scute notch",
+                    "Feather / down removal",
+                    "Other"
+                  ]
+                },
+                {
+                  "type": "text",
+                  "label": "Species",
+                  "description": "Refer to the species' common name.",
+                  "is_required": true,
+                  "grid_columns": [],
+                  "select_options": [],
+                  "grid_max_columns": null
+                },
+                {
+                  "type": "number",
+                  "label": "Number of animals to be marked",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "select_options": []
+            },
+            {
               "type": "textarea",
               "label": "Detail surgical invasive procedures to be carried out on animals (if applicable)",
-              "description": "",
+              "description": "Please detail which personnel will undertake invasive procedures unsupervised.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
