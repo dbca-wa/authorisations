@@ -36,9 +36,13 @@ export interface IQuestion {
     type: string;
     is_required: boolean;
     description?: string;
-    select_options?: string[] | null; // For select types
-    grid_max_rows?: number | null; // For grid types, indicates the maximum number of rows
+    // For select types
+    select_options?: string[] | null;
+    // Grid columns definitions
     grid_columns?: IGridQuestionColumn[] | null;
+    // Indicates the maximum number of rows for grid types
+    grid_max_rows?: number | null;
+    dependent_step?: number | null;
 }
 
 

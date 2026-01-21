@@ -13,6 +13,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -40,6 +41,12 @@
                   "select_options": []
                 },
                 {
+                  "type": "checkbox",
+                  "label": "Reviewing Scientist",
+                  "description": "Tick if advice has been sought from a consulting / reviewing scientists / biometrician.",
+                  "select_options": []
+                },
+                {
                   "type": "text",
                   "label": "Email address",
                   "description": "",
@@ -47,6 +54,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -68,6 +76,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -83,6 +92,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -98,6 +108,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -119,6 +130,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -128,6 +140,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -149,6 +162,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -158,6 +172,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -167,6 +182,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -176,6 +192,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -185,6 +202,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -194,6 +212,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -203,6 +222,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -212,6 +232,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -223,7 +244,6 @@
             {
               "type": "grid",
               "label": "List of project personnel",
-              "maxRows": 10,
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -231,14 +251,12 @@
                   "type": "text",
                   "label": "Name",
                   "description": "",
-                  "is_required": true,
                   "select_options": []
                 },
                 {
                   "type": "select",
                   "label": "Role",
                   "description": "Role in the project",
-                  "is_required": true,
                   "select_options": [
                     "Animal Handler",
                     "Supervised Animal Handler",
@@ -251,7 +269,6 @@
                   "type": "textarea",
                   "label": "Experience",
                   "description": "Describe experience with designated fauna and techniques",
-                  "is_required": true,
                   "select_options": []
                 },
                 {
@@ -262,6 +279,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -272,20 +290,22 @@
           "questions": [
             {
               "type": "checkbox",
-              "label": "Are any other institutions or their staff involved in aspects of this project?",
+              "label": "Other institutions or their staff involved in aspects of this project.",
               "description": "If yes, please provide details below and attach copies of any approved applications or agreements.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "text",
               "label": "Name of institution",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             },
             {
@@ -295,15 +315,17 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             },
             {
               "type": "textarea",
               "label": "Detail other institutions involvement in the project",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 2,
               "select_options": []
             }
           ],
@@ -319,6 +341,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -328,6 +351,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": [
                 "1 year",
                 "2 years",
@@ -347,6 +371,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -356,6 +381,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -365,6 +391,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -408,6 +435,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -417,6 +445,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -426,24 +455,27 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "checkbox",
               "label": "Animals will be held for more than 24 hours",
               "description": "If animals are held in this location more than 24 hours, a temporary holding facility form must be completed.",
-              "is_required": true,
+              "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "textarea",
               "label": "Please provide further information",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             }
           ],
@@ -454,33 +486,36 @@
           "questions": [
             {
               "type": "checkbox",
-              "label": "This project is not collecting voucher specimens or monitoring in poorly represented areas.",
+              "label": "This project is collecting voucher specimens or monitoring in poorly represented areas.",
               "description": "",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "checkbox",
-              "label": "WA Museum / Biogeography Program / Fauna Geneticist been consulted?",
+              "label": "WA Museum / Biogeography Program / Fauna Geneticist have been consulted.",
               "description": "",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             },
             {
               "type": "textarea",
               "label": "Please provide further information.",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 2,
               "select_options": []
             }
           ],
-          "description": "If this project is collecting voucher specimens or monitoring in poorly represented areas."
+          "description": ""
         },
         {
           "title": "Benefits of Project",
@@ -492,6 +527,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": [
                 "Animal management",
                 "Animal production",
@@ -504,15 +540,6 @@
             {
               "type": "grid",
               "label": "Key aims / objectives",
-              "values": [
-                [
-                  "Undestand seasonal migration"
-                ],
-                [
-                  "Support threatened species"
-                ]
-              ],
-              "maxRows": 5,
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -524,6 +551,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -533,6 +561,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -554,13 +583,13 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "grid",
               "label": "Species and number of individuals that will be handled or observed",
-              "values": [],
-              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the intrenet or requested from the AEC EO.",
+              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the DBCA AEC website or requested from the Executive Officer.",
               "is_required": false,
               "grid_columns": [
                 {
@@ -589,6 +618,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -611,6 +641,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -628,28 +659,21 @@
             {
               "type": "checkbox",
               "label": "Alternative LESS INVASIVE OR LOWER IMPACT TECHNIQUES, that would provide comparable data to answer the objectives of this project, ARE AVAILABLE.",
-              "description": "",
+              "description": "The handling or observation of animals in their natural environment is necessary to achieve the objective(s) of this project.  I have investigated and considered alternative options in relation to methods, techniques and equipment that minimise the risk to animal welfare (including disease and direct and indirect disturbance to the habitat).  I have identified that there are no suitable or more appropriate alternatives to achieve the objectives of this project.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
-              "select_options": []
-            },
-            {
-              "type": "checkbox",
-              "label": "The handling or observation of animals in their natural environment is necessary to achieve the objective(s) of this project.  I have investigated and considered alternative options in relation to methods, techniques and equipment that minimise the risk to animal welfare (including disease and direct and indirect disturbance to the habitat).  I have identified that there are no suitable or more appropriate alternatives to achieve the objectives of this project.",
-              "description": "",
-              "is_required": false,
-              "grid_columns": [],
-              "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "textarea",
               "label": "Explain why the available methods are not suitable.",
               "description": "Less invasive/lower impact methods are available - please identify the techniques and explain why they are not suitable for the project.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             }
           ],
@@ -665,6 +689,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -676,7 +701,6 @@
             {
               "type": "grid",
               "label": "Method of capture / observation",
-              "values": [],
               "description": "Selecting methods that are appropriate to the species & circumstances; avoiding or minimising harm to target and non-target species.",
               "is_required": false,
               "grid_columns": [
@@ -720,6 +744,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -729,12 +754,12 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "grid",
               "label": "Other methods",
-              "values": [],
               "description": "Including VHF/GPS/Satellite collars or tags; Vouchering",
               "is_required": false,
               "grid_columns": [
@@ -756,6 +781,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -765,6 +791,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -774,6 +801,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -783,6 +811,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -824,14 +853,14 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "grid",
               "label": "Number of animals to be marked",
-              "values": [],
-              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the intrenet or requested from the AEC EO.",
-              "is_required": true,
+              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the DBCA AEC website or requested from the Executive Officer.",
+              "is_required": false,
               "grid_columns": [
                 {
                   "type": "select",
@@ -862,10 +891,7 @@
                   "type": "text",
                   "label": "Species",
                   "description": "Refer to the species' common name.",
-                  "is_required": true,
-                  "grid_columns": [],
-                  "select_options": [],
-                  "grid_max_columns": null
+                  "select_options": []
                 },
                 {
                   "type": "number",
@@ -875,6 +901,17 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            },
+            {
+              "type": "text",
+              "label": "Spreadsheet attachment for the number of animals to be marked.",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -884,6 +921,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -893,6 +931,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -902,6 +941,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -911,6 +951,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -920,6 +961,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -941,6 +983,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -950,6 +993,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -959,6 +1003,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -970,7 +1015,6 @@
             {
               "type": "grid",
               "label": "Methods for euthanasia",
-              "values": [],
               "description": "Identify method(s) in table below. If the method is species specific, please use the last (blank) column to identify the species, group of species etc to which this method will be applied.",
               "is_required": false,
               "grid_columns": [
@@ -1004,6 +1048,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -1013,6 +1058,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -1022,6 +1068,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1037,6 +1084,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1054,7 +1102,6 @@
             {
               "type": "grid",
               "label": "List ANY administered substances, including sedatives, vitamin injections and substances to be used",
-              "values": [],
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -1128,6 +1175,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1139,7 +1187,6 @@
             {
               "type": "grid",
               "label": "Please complete all calculations for all injectables",
-              "values": [],
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -1181,6 +1228,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1198,7 +1246,6 @@
             {
               "type": "grid",
               "label": "List of provisions",
-              "values": [],
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -1226,6 +1273,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1241,6 +1289,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],

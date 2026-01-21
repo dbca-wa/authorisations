@@ -16,7 +16,6 @@ import { FileInput } from "../../inputs/file";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import { computeFollowupMap } from "./visibility";
 
 
 export const FormActiveStep = ({
@@ -107,18 +106,10 @@ const Section = ({
 }) => {
     // Convert index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
-    // const { control } = useFormContext();
-
-    // Define follow-up rules once (temporary, to be moved into data model)
-    const followupObj: { [key: string]: number } = {
-        "3.2-1": 1,
-        "3.2-2": 1,
-        "3.2-3": 2,
-    };
 
     // Build followup map
     const followupMap = React.useMemo(
-        () => computeFollowupMap(section.questions, stepIndex, sectionIndex, followupObj),
+        () => computeFollowupMap(section.questions, stepIndex, sectionIndex),
         [section.questions, stepIndex, sectionIndex]
     );
 
@@ -208,4 +199,48 @@ const Section = ({
             </List>
         </Stack>
     )
+}
+
+/**
+ * Utility for follow-up question visibility logic.
+ * Simple: a follow-up is visible if its parent is visible and has a truthy value.
+ * 
+ * Build a map of follow-up question key -> parent question key
+ * @param questions Section questions array
+ * @param stepIndex Step index
+ * @param sectionIndex Section index
+ * @param followupObj Mapping of question key to walkback offset
+ */
+const computeFollowupMap = (
+    questions: any[],
+    stepIndex: number,
+    sectionIndex: number,
+    // followupObj: Record<string, number>
+) => {
+    const map: Record<string, { parentKey: string }> = {};
+    questions.forEach((qObj, qIndex) => {
+        const question = new Question(qObj, {
+            step: stepIndex,
+            section: sectionIndex,
+            question: qIndex,
+        });
+
+        const walkback = question.o.dependent_step;
+        if (walkback && qIndex - walkback >= 0) {
+            const parentQuestion = new Question(
+                questions[qIndex - walkback],
+                {
+                    step: stepIndex,
+                    section: sectionIndex,
+                    question: qIndex - walkback,
+                }
+            );
+            map[question.key] = { parentKey: parentQuestion.key };
+        }
+    });
+
+    // if (Object.keys(map).length > 0)
+    //     console.debug("Computed followup map for section", sectionIndex, ":", map);
+
+    return map;
 }
