@@ -104,7 +104,7 @@ const Section = ({
     section: IFormSection,
     sectionIndex: number,
 }) => {
-    // Convert index to letter (A, B, C, ...)
+    // Convert section index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
 
     // Build followup map
@@ -113,22 +113,44 @@ const Section = ({
         [section.questions, stepIndex, sectionIndex]
     );
 
-    // Helper to get a question's parent value using useWatch
-    const getParentValue = (parentKey: string) => {
-        // If no parent, always visible
-        if (!parentKey) return true;
-        // useWatch expects a field name, which is the key
-        return useWatch({ name: parentKey });
-    };
+    // collect unique parent keys in a stable order
+    const parentKeys: readonly string[] = React.useMemo(
+        () => Array.from(new Set(Object.values(followupMap).map(v => v.parentKey).filter(Boolean))).sort(),
+        [followupMap]
+    );
 
-    // Helper to recursively check visibility for a question
+    // single useWatch call (top-level) for all parents
+    const parentValuesArray = useWatch({ name: parentKeys });
+
+    // map array -> keyed object
+    const parentValues = React.useMemo(() => {
+        const m: Record<string, any> = {};
+        parentKeys.forEach((k, i) => { m[k] = parentValuesArray?.[i]; });
+        return m;
+    }, [parentKeys, parentValuesArray]);
+
+    // compute visibility once per render
+    const visibilityMap = React.useMemo(() => {
+        const cache: Record<string, boolean> = {};
+
+        const compute = (qKey: string): boolean => {
+            if (cache.hasOwnProperty(qKey)) return cache[qKey];
+            const info = followupMap[qKey];
+            if (!info) return (cache[qKey] = true);
+            const parentVal = parentValues[info.parentKey];
+            const parentVisible = compute(info.parentKey);
+            return (cache[qKey] = Boolean(parentVal) && parentVisible);
+        };
+
+        // ensure we compute visibility for all questions (so lookups are O(1) later)
+        Object.keys(followupMap).forEach(k => compute(k));
+        return cache;
+    }, [followupMap, parentValues]);
+
+    // small wrapper used by render code
     const isQuestionVisible = React.useCallback((questionKey: string): boolean => {
-        const followupInfo = followupMap[questionKey];
-        if (!followupInfo) return true;
-        const parentValue = getParentValue(followupInfo.parentKey);
-        const parentIsVisible = isQuestionVisible(followupInfo.parentKey);
-        return Boolean(parentValue) && parentIsVisible;
-    }, [followupMap]);
+        return visibilityMap[questionKey] ?? true;
+    }, [visibilityMap]);
 
     return (
         <Stack
