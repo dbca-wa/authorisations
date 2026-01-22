@@ -125,7 +125,11 @@ const Section = ({
     // map array -> keyed object
     const parentValues = React.useMemo(() => {
         const m: Record<string, any> = {};
-        parentKeys.forEach((k, i) => { m[k] = parentValuesArray?.[i]; });
+        if (Array.isArray(parentValuesArray)) {
+            parentKeys.forEach((k, i) => { m[k] = parentValuesArray?.[i]; });
+        } else if (parentValuesArray && typeof parentValuesArray === 'object') {
+            parentKeys.forEach((k) => { m[k] = (parentValuesArray as Record<string, any>)[k]; });
+        }
         return m;
     }, [parentKeys, parentValuesArray]);
 
