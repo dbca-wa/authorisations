@@ -1,25 +1,8 @@
 {
-  "name": "Care and Use of Animals for Scientific Purposes",
-  "description": "The application process for using animals for scientific or educational purposes in Western Australia, integrating the Animal Welfare Act 2002, the Biodiversity Conservation Act 2016, and the Australian Code for the Care and Use of Animals for Scientific Purposes. It is designed to guide applicants, investigators, Animal Ethics Committee (AEC) members, and other stakeholders through the process.",
   "steps": [
     {
       "title": "Scientific Review",
       "sections": [
-        {
-          "title": "Endorsement",
-          "questions": [
-            {
-              "type": "checkbox",
-              "label": "I endorse this application and confirm the scientific merit of the project.",
-              "description": "",
-              "is_required": true,
-              "grid_columns": [],
-              "grid_max_rows": null,
-              "select_options": []
-            }
-          ],
-          "description": "I have reviewed this application and assessed the scientific merit of the project. I confirm that proposed aims, design, methodology, and analyses are scientifically rigorous and will adequately inform the research question being posed. Advice has been sought from a consulting/reviewing scientist where necessary."
-        },
         {
           "title": "Scientific Integrity",
           "questions": [
@@ -30,10 +13,52 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
           "description": "Respect for animals must underpin all decisions and actions involving the care and use of animals for scientific purposes. Applying high standards of scientific integrity is one of the governing principles outlined in the Australian Code for the Care and Use of Animals for Scientific Purposes - 8th Edition (the Code). Each person involved in the care and use of animals for scientific purposes must consider the governing principles when applying the Code to their specific circumstance.\n\nThe below clauses from the Code contribute to the ethical framework that guides decisions and actions of all people involved in the care and use of animals for scientific purposes.\n\n1.15 Regardless of the potential benefits of a project, the methods used must be scientifically valid, feasible, well designed and carefully conducted so that there is a reasonable expectation that the aims of the project will be achieved. Projects that are not scientifically valid must not be performed, no matter how mild the impact on the wellbeing of the animals.\n\n1.16 Investigators must use methods that accord with current best practice that:\n\ti. take into consideration relevant aspects of species-specific biology, physiology and behaviour\n\tii. are based on the best available scientific evidence, which includes the potential adverse impact of conditions and procedures on the wellbeing of the animals\n\tiii. include strategies to minimise adverse impacts.\n\n1.17 Animals used must be suited to the purpose of the project or activity, taking into account their biological characteristics, including morphology, physiology, behaviour, genetic makeup, temperament and behavioural conditioning, microbiological and nutritional status, and general state of health.\n\nChief Investigators are encouraged to engage with a relevant scientist or biometrician during the project planning phase to ensure projects are scientifically valid, feasible, and well designed. For information on where to obtain scientific advice/assistance to aid in the review process, visit the Animal Ethics Committee intranet or contact the Executive Officer."
+        },
+        {
+          "title": "Endorsement",
+          "questions": [
+            {
+              "type": "grid",
+              "label": "List of people to endorse this application",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "Full name",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "text",
+                  "label": "Role / Position",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "checkbox",
+                  "label": "Reviewing Scientist",
+                  "description": "Tick if advice has been sought from a consulting / reviewing scientists / biometrician.",
+                  "select_options": []
+                },
+                {
+                  "type": "text",
+                  "label": "Email address",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            }
+          ],
+          "description": "Please enter the names, roles and email addresses of people who will endorse this application. They will need to review this application and assess the scientific merit of the project. They will also need to confirm that proposed aims, design, methodology, and analyses are scientifically rigorous and will adequately inform the research question being posed. Any advice might be sought from a consulting/reviewing scientist where necessary."
         }
       ],
       "description": "Submit your project for scientific review."
@@ -51,6 +76,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -66,10 +92,27 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
           "description": "If your project involves death of an animal as a deliberate measure used for evaluating biological or chemical processes, responses or effects please contact the AEC Executive Officer. You will be required to fill out a different form."
+        },
+        {
+          "title": "Observation only",
+          "questions": [
+            {
+              "type": "checkbox",
+              "label": "This project is NOT observation only.",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            }
+          ],
+          "description": "If your project is observation only and no animals will be handled or trapped, please contact the AEC Executive Officer. You will be required to fill out a different form."
         }
       ],
       "description": "Read and accept the terms of service."
@@ -87,6 +130,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -96,6 +140,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -117,6 +162,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -126,6 +172,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -135,6 +182,7 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -144,42 +192,47 @@
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "text",
               "label": "Current Reg 25 Licence (BC Act) Number",
-              "description": "",
+              "description": "If unavailable or not applicable, please provide details.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "text",
               "label": "Current Science Project Plan (SPP) Approval Number",
-              "description": "",
+              "description": "If unavailable or not applicable, please provide details.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "text",
               "label": "Current Section 40 Authorisation (BC Act) Number",
-              "description": "",
+              "description": "If unavailable or not applicable, please provide details.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
-              "type": "checkbox",
-              "label": "Current CI competency form is attached or provided < 12 months ago",
-              "description": "",
-              "is_required": false,
+              "type": "text",
+              "label": "Attach your current CI competency form",
+              "description": "The competency form must be less than 12 months old.",
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -191,27 +244,6 @@
             {
               "type": "grid",
               "label": "List of project personnel",
-              "values": [
-                [
-                  "John Brown",
-                  "Researcher",
-                  "5 years in field studies",
-                  false
-                ],
-                [
-                  "Susan Assist",
-                  "Field Assistant",
-                  "2 years in field studies",
-                  true
-                ],
-                [
-                  "Bob Johnson",
-                  "Technician",
-                  "3 years in lab work",
-                  false
-                ]
-              ],
-              "maxRows": 10,
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -219,28 +251,24 @@
                   "type": "text",
                   "label": "Name",
                   "description": "",
-                  "is_required": true,
                   "select_options": []
                 },
                 {
                   "type": "select",
                   "label": "Role",
                   "description": "Role in the project",
-                  "is_required": true,
                   "select_options": [
-                    "Chief Investigator",
-                    "Researcher",
-                    "Field Assistant",
-                    "Lab Technician",
+                    "Animal Handler",
+                    "Supervised Animal Handler",
+                    "Observer",
                     "Veterinarian",
                     "Other"
                   ]
                 },
                 {
-                  "type": "text",
+                  "type": "textarea",
                   "label": "Experience",
                   "description": "Describe experience with designated fauna and techniques",
-                  "is_required": true,
                   "select_options": []
                 },
                 {
@@ -251,6 +279,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -261,20 +290,22 @@
           "questions": [
             {
               "type": "checkbox",
-              "label": "Are any other institutions or their staff involved in aspects of this project?",
-              "description": "",
+              "label": "Other institutions or their staff involved in aspects of this project.",
+              "description": "If yes, please provide details below and attach copies of any approved applications or agreements.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "text",
               "label": "Name of institution",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             },
             {
@@ -284,15 +315,17 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             },
             {
               "type": "textarea",
               "label": "Detail other institutions involvement in the project",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 2,
               "select_options": []
             }
           ],
@@ -308,16 +341,22 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
-              "type": "date",
-              "label": "End date",
-              "description": "",
-              "is_required": false,
+              "type": "select",
+              "label": "Duration",
+              "description": "Desired duration of the approval for this project.",
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
-              "select_options": []
+              "dependent_step": null,
+              "select_options": [
+                "1 year",
+                "2 years",
+                "3 years"
+              ]
             }
           ],
           "description": ""
@@ -332,6 +371,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -341,6 +381,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -350,39 +391,91 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
-          "description": "... additional description about project resources and / or more explanation ..."
+          "description": "Sufficient resources must be available to complete the project within the specified timeframe."
         },
         {
           "title": "Project Location",
           "questions": [
             {
-              "type": "text",
-              "label": "Location of fieldwork",
+              "type": "grid",
+              "label": "Please select the DBCA districts that applies to the project location(s). ",
               "description": "",
-              "is_required": false,
-              "grid_columns": [],
+              "is_required": true,
+              "grid_columns": [
+                {
+                  "type": "select",
+                  "label": "District",
+                  "description": "",
+                  "select_options": [
+                    "Swan Coastal",
+                    "Perth Hills",
+                    "Murchison",
+                    "Turquoise Coast",
+                    "Gascoyne",
+                    "Narrogin",
+                    "Katanning",
+                    "Merredin",
+                    "Blackwood",
+                    "Wellington",
+                    "Donnelly",
+                    "Frankland",
+                    "Albany",
+                    "Esperance",
+                    "Kalgoorlie",
+                    "Karratha",
+                    "Exmouth",
+                    "East Kimberley",
+                    "West Kimberley",
+                    "Cocos (Keeling)"
+                  ]
+                }
+              ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "text",
-              "label": "Source of animals",
-              "description": "",
-              "is_required": false,
+              "label": "Please attach location map of the fieldwork",
+              "description": "Preferred file types for maps are pdf or jpeg.",
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
-              "type": "text",
-              "label": "Location(s) where the animals will be held",
+              "type": "textarea",
+              "label": "Location of fieldwork | Source of animals | Location(s) where animals will be held",
               "description": "",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            },
+            {
+              "type": "checkbox",
+              "label": "Animals will be held for more than 24 hours",
+              "description": "If animals are held in this location more than 24 hours, a temporary holding facility form must be completed.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Please provide further information",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             }
           ],
@@ -393,24 +486,36 @@
           "questions": [
             {
               "type": "checkbox",
-              "label": "This project is not collecting voucher specimens or monitoring in poorly represented areas.",
+              "label": "This project is collecting voucher specimens or monitoring in poorly represented areas.",
               "description": "",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "checkbox",
-              "label": "WA Museum / Biogeography Program / Fauna Geneticist been consulted?",
+              "label": "WA Museum / Biogeography Program / Fauna Geneticist have been consulted.",
               "description": "",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
+              "select_options": []
+            },
+            {
+              "type": "textarea",
+              "label": "Please provide further information.",
+              "description": "",
+              "is_required": true,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "dependent_step": 2,
               "select_options": []
             }
           ],
-          "description": "If this project is collecting voucher specimens or monitoring in poorly represented areas."
+          "description": ""
         },
         {
           "title": "Benefits of Project",
@@ -422,6 +527,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": [
                 "Animal management",
                 "Animal production",
@@ -434,15 +540,6 @@
             {
               "type": "grid",
               "label": "Key aims / objectives",
-              "values": [
-                [
-                  "Undestand seasonal migration"
-                ],
-                [
-                  "Support threatened species"
-                ]
-              ],
-              "maxRows": 5,
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -454,6 +551,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -463,6 +561,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -484,19 +583,19 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "grid",
               "label": "Species and number of individuals that will be handled or observed",
-              "values": [],
-              "description": "Please use current taxonomy from the NOMOS - taxonomic names management system.",
+              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the DBCA AEC website or requested from the Executive Officer.",
               "is_required": false,
               "grid_columns": [
                 {
                   "type": "text",
                   "label": "Scientific name",
-                  "description": "Include subspecies",
+                  "description": "Please use current taxonomy from the NOMOS - taxonomic names management system.",
                   "select_options": []
                 },
                 {
@@ -507,40 +606,46 @@
                 },
                 {
                   "type": "number",
-                  "label": "Total animals",
-                  "description": "Total number of animals to be handled (or observed) during the project time frame as indicated in Q7.",
+                  "label": "Observed",
+                  "description": "Total number of animals to be observed only and NOT handled during the project time frame.",
                   "select_options": []
                 },
                 {
-                  "type": "select",
-                  "label": "Marking method",
-                  "description": "",
-                  "select_options": [
-                    "Ear punch or notch",
-                    "Ear tag",
-                    "Pit tag / microchip",
-                    "Temporary marking",
-                    "Tail tip",
-                    "Scale clip",
-                    "Leg band",
-                    "Blood sample",
-                    "Toe clip",
-                    "Flipper tag",
-                    "Biopsy pole / harpoon",
-                    "Skin off / scraping",
-                    "Flipper biopsy",
-                    "Cloacal swab",
-                    "Scute notch",
-                    "Feather / down removal",
-                    "Other"
-                  ]
+                  "type": "number",
+                  "label": "Handled",
+                  "description": "Total number of animals to be handled during the project time frame.",
+                  "select_options": []
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            },
+            {
+              "type": "grid",
+              "label": "Additional attachments",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [
+                {
+                  "type": "text",
+                  "label": "File",
+                  "description": "",
+                  "select_options": []
+                },
+                {
+                  "type": "text",
+                  "label": "Description",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
-          "description": "Please provide a description of the overall project design, methodology and sampling times.\n\nExample: \n•\tThis project will use a 20km transect of 50 small baited cage traps, at 200m intervals, to target medium-sized mammals. \n•\tThe project will also use a grid of 16 pitfall traps, 8 funnel traps, and 8 Elliott traps to target small mammals, reptiles and amphibians. The grid will have four lines of four pitfall buckets with two funnel traps per line, and one Elliott trap at each end of the four pitfall lines.  \n•\tThe project involves trapping at three sites, which will be monitored once per year for each site, and traps will be run for four consecutive nights.\n•\tIt is anticipated that it will take project personnel approximately xx hours to complete trap checking and processing of captures.\n"
+          "description": "Please provide a description of the overall project design, methodology and sampling times including photos, diagrams and references.\n\nExample: \n•\tThis project will use a 20km transect of 50 small baited cage traps, at 200m intervals, to target medium-sized mammals. \n•\tThe project will also use a grid of 16 pitfall traps, 8 funnel traps, and 8 Elliott traps to target small mammals, reptiles and amphibians. The grid will have four lines of four pitfall buckets with two funnel traps per line, and one Elliott trap at each end of the four pitfall lines.  \n•\tThe project involves trapping at three sites, which will be monitored once per year for each site, and traps will be run for four consecutive nights.\n•\tIt is anticipated that it will take project personnel approximately xx hours to complete trap checking and processing of captures.\n"
         }
       ],
       "description": "Project design, methodology and sampling times."
@@ -554,28 +659,21 @@
             {
               "type": "checkbox",
               "label": "Alternative LESS INVASIVE OR LOWER IMPACT TECHNIQUES, that would provide comparable data to answer the objectives of this project, ARE AVAILABLE.",
-              "description": "",
+              "description": "The handling or observation of animals in their natural environment is necessary to achieve the objective(s) of this project.  I have investigated and considered alternative options in relation to methods, techniques and equipment that minimise the risk to animal welfare (including disease and direct and indirect disturbance to the habitat).  I have identified that there are no suitable or more appropriate alternatives to achieve the objectives of this project.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
-              "select_options": []
-            },
-            {
-              "type": "checkbox",
-              "label": "The handling or observation of animals in their natural environment is necessary to achieve the objective(s) of this project.  I have investigated and considered alternative options in relation to methods, techniques and equipment that minimise the risk to animal welfare (including disease and direct and indirect disturbance to the habitat).  I have identified that there are no suitable or more appropriate alternatives to achieve the objectives of this project.",
-              "description": "",
-              "is_required": false,
-              "grid_columns": [],
-              "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "textarea",
-              "label": "Why the available methods are not suitable?",
+              "label": "Explain why the available methods are not suitable.",
               "description": "Less invasive/lower impact methods are available - please identify the techniques and explain why they are not suitable for the project.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": 1,
               "select_options": []
             }
           ],
@@ -591,6 +689,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -602,7 +701,6 @@
             {
               "type": "grid",
               "label": "Method of capture / observation",
-              "values": [],
               "description": "Selecting methods that are appropriate to the species & circumstances; avoiding or minimising harm to target and non-target species.",
               "is_required": false,
               "grid_columns": [
@@ -646,6 +744,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -655,12 +754,12 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "grid",
               "label": "Other methods",
-              "values": [],
               "description": "Including VHF/GPS/Satellite collars or tags; Vouchering",
               "is_required": false,
               "grid_columns": [
@@ -682,6 +781,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -691,6 +791,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -700,6 +801,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -709,13 +811,55 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "grid",
               "label": "Method of marking / sampling",
-              "values": [],
-              "description": "",
+              "description": "Detail the welfare risks and mitigation measures associated with each method of marking / sampling.",
+              "is_required": true,
+              "grid_columns": [
+                {
+                  "type": "select",
+                  "label": "Method",
+                  "description": "",
+                  "select_options": [
+                    "Temporary marking",
+                    "Pit tag / microchip",
+                    "Ear tag",
+                    "Ear notch (marking + tissue)",
+                    "Ear notch (tissue only)",
+                    "Tail tip",
+                    "Scale clip",
+                    "Leg band",
+                    "Blood sample",
+                    "Toe clip",
+                    "Flipper tag",
+                    "Biopsy pole / harpoon",
+                    "Skin off / scraping",
+                    "Flipper biopsy",
+                    "Cloacal swab",
+                    "Scute notch",
+                    "Feather / down removal",
+                    "Other"
+                  ]
+                },
+                {
+                  "type": "text",
+                  "label": "Welfare risks and mitigation measures",
+                  "description": "",
+                  "select_options": []
+                }
+              ],
+              "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            },
+            {
+              "type": "grid",
+              "label": "Number of animals to be marked",
+              "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the DBCA AEC website or requested from the Executive Officer.",
               "is_required": false,
               "grid_columns": [
                 {
@@ -744,28 +888,40 @@
                   ]
                 },
                 {
-                  "type": "number",
-                  "label": "Species and number of animals to be marked",
-                  "description": "You can refer to the Species Table if all the information is contained in the Table.",
+                  "type": "text",
+                  "label": "Species",
+                  "description": "Refer to the species' common name.",
                   "select_options": []
                 },
                 {
-                  "type": "text",
-                  "label": "Welfare risks and mitigation measures",
+                  "type": "number",
+                  "label": "Number of animals to be marked",
                   "description": "",
                   "select_options": []
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": []
+            },
+            {
+              "type": "text",
+              "label": "Spreadsheet attachment for the number of animals to be marked.",
+              "description": "",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "textarea",
               "label": "Detail surgical invasive procedures to be carried out on animals (if applicable)",
-              "description": "",
+              "description": "Please detail which personnel will undertake invasive procedures unsupervised.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -775,6 +931,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -784,6 +941,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -793,6 +951,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -802,6 +961,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -823,15 +983,17 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
               "type": "textarea",
               "label": "Pest species",
-              "description": "If pest species (e.g. wild dog, fox, cat, rabbit, black rat, house house) are target or potential non-target species, please identify how you intend to manage these species (eg release at point of capture, euthanase).",
+              "description": "If pest species (e.g. wild dog, fox, cat, rabbit, black rat, house house) are target or potential non-target species, please identify how you intend to manage these species (eg release at point of capture, euthanase). If pest species will be released at the point of capture, justification must be provided.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -841,6 +1003,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -852,7 +1015,6 @@
             {
               "type": "grid",
               "label": "Methods for euthanasia",
-              "values": [],
               "description": "Identify method(s) in table below. If the method is species specific, please use the last (blank) column to identify the species, group of species etc to which this method will be applied.",
               "is_required": false,
               "grid_columns": [
@@ -886,6 +1048,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -895,6 +1058,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             },
             {
@@ -904,6 +1068,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -919,6 +1084,7 @@
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -936,7 +1102,6 @@
             {
               "type": "grid",
               "label": "List ANY administered substances, including sedatives, vitamin injections and substances to be used",
-              "values": [],
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -1010,6 +1175,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1021,7 +1187,6 @@
             {
               "type": "grid",
               "label": "Please complete all calculations for all injectables",
-              "values": [],
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -1063,6 +1228,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1080,7 +1246,6 @@
             {
               "type": "grid",
               "label": "List of provisions",
-              "values": [],
               "description": "",
               "is_required": false,
               "grid_columns": [
@@ -1108,6 +1273,7 @@
                 }
               ],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1119,10 +1285,11 @@
             {
               "type": "textarea",
               "label": "References/sources used to prepare this application",
-              "description": "",
+              "description": "Please include standard operating procedures referred to in this application.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
+              "dependent_step": null,
               "select_options": []
             }
           ],
@@ -1132,5 +1299,5 @@
       "description": "Post fieldwork & other info"
     }
   ],
-  "schema_version": "2025.06-1"
+  "schema_version": "2025.07-1"
 }

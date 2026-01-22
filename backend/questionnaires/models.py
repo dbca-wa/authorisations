@@ -1,10 +1,9 @@
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.db import models
-from django_jsonform.models.fields import JSONField
 from rest_framework import serializers
 
 from .schema import get_questionnaire_schema
-
+from .bugfix import DocumentJSONField
 
 class Questionnaire(models.Model):
     """Model to represent a questionnaire with steps, sections, and questions."""
@@ -25,7 +24,7 @@ class Questionnaire(models.Model):
     description = models.TextField(
         max_length=500, blank=False, null=False, editable=True
     )
-    document = JSONField(
+    document = DocumentJSONField(
         schema=get_questionnaire_schema(),
         blank=False,
         null=False,

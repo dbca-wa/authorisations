@@ -18,7 +18,6 @@ import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import React from "react";
 
-import { grey } from "@mui/material/colors";
 import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
@@ -123,7 +122,7 @@ export function FormReviewPage({
 
                                             return (
                                                 <Box key={questionIdx} sx={{ mb: 1 }}>
-                                                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                                         {question.label}
                                                     </Typography>
                                                     {displayAnswer}
@@ -164,9 +163,7 @@ export function FormReviewPage({
 
 
 const humaniseBoolean = (val: IAnswer): string => {
-    if (val === true) return "Yes";
-    if (val === false) return "No";
-    return "N/A";
+    return val === true ? "Yes" : "No";
 }
 
 const isEmptyAnswer = (answer: any) => {
@@ -179,17 +176,17 @@ const isEmptyAnswer = (answer: any) => {
 }
 
 const displayCheckbox = (answer: IAnswer) => (
-    <Typography sx={{ fontWeight: "bold" }}>
+    <Typography sx={{ fontWeight: 500 }}>
         {humaniseBoolean(answer)}
     </Typography>
 );
 
 const displayGrid = (question: IQuestion, answer: IAnswer) => {
     if (!Array.isArray(answer)) {
-        return <Typography sx={{ color: grey[500] }}>N/A</Typography>;
+        return <Typography color="text.disabled">N/A</Typography>;
     }
     if (answer.length === 0) {
-        return <Typography sx={{ color: grey[500] }}>(unanswered)</Typography>;
+        return <Typography color="text.disabled">(unanswered)</Typography>;
     }
     return (
         <TableContainer component={Paper} variant="outlined" sx={{ maxWidth: "100%", mb: 1 }}>
@@ -213,12 +210,12 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
                                 } else if (col.type === "date") {
                                     displayValue = displayDate(cellValue);
                                 } else if (cellValue === null || cellValue === undefined || (typeof cellValue === "string" && cellValue.trim() === "")) {
-                                    displayValue = <Typography sx={{ color: grey[500] }}>(unanswered)</Typography>;
+                                    displayValue = <Typography color="text.disabled">(unanswered)</Typography>;
                                 } else {
                                     displayValue = String(cellValue);
                                 }
 
-                                return <TableCell key={colIdx} sx={{ fontWeight: "bold" }}>{displayValue}</TableCell>;
+                                return <TableCell key={colIdx}>{displayValue}</TableCell>;
                             })}
                         </TableRow>
                     ))}
@@ -230,12 +227,12 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
 
 const displayDate = (answer: IAnswer) => {
     return isEmptyAnswer(answer)
-        ? <Typography sx={{ color: grey[500] }}>(unanswered)</Typography>
-        : <Typography sx={{ fontWeight: "bold" }}>{dayjs(answer as string).format('DD/MM/YYYY')}</Typography>;
+        ? <Typography color="text.disabled">(unanswered)</Typography>
+        : <Typography>{dayjs(answer as string).format('DD/MM/YYYY')}</Typography>;
 };
 
 const displayString = (answer: IAnswer) => {
     return isEmptyAnswer(answer)
-        ? <Typography sx={{ color: grey[500] }}>(unanswered)</Typography>
-        : <Typography sx={{ fontWeight: "bold" }}>{String(answer)}</Typography>;
+        ? <Typography color="text.disabled">(unanswered)</Typography>
+        : <Typography whiteSpace="pre-wrap">{String(answer)}</Typography>;
 };

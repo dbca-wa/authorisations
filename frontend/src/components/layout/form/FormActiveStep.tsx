@@ -7,14 +7,15 @@ import ListItem from "@mui/material/ListItem";
 import Stack from "@mui/material/Stack";
 import React from "react";
 
+import { useWatch } from 'react-hook-form';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
+import { FileInput } from "../../inputs/file";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import { FileInput } from "../../inputs/file";
 
 
 export const FormActiveStep = ({
@@ -71,9 +72,27 @@ export const FormActiveStep = ({
 
 // Prevent default form submission on Enter key
 const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
-    if (event.key === "Enter") {
-        event.preventDefault();
+    if (event.key !== "Enter") return;
+
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    // Allow Enter when:
+    //  - real <textarea>
+    //  - elements marked with data-allow-enter (on the element or an ancestor)
+    //  - contentEditable elements
+    const tag = (target.tagName || "").toLowerCase();
+    const isTextArea = tag === "textarea";
+    const isContentEditable = (target as HTMLElement).isContentEditable;
+    const hasAllowAttr = Boolean(target.closest && target.closest("[data-allow-enter]"));
+
+    if (isTextArea || isContentEditable || hasAllowAttr) {
+        // allow newline / default behavior
+        return;
     }
+
+    // otherwise prevent form submit
+    event.preventDefault();
 }
 
 const Section = ({
@@ -87,6 +106,29 @@ const Section = ({
 }) => {
     // Convert index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
+
+    // Build followup map
+    const followupMap = React.useMemo(
+        () => computeFollowupMap(section.questions, stepIndex, sectionIndex),
+        [section.questions, stepIndex, sectionIndex]
+    );
+
+    // Helper to get a question's parent value using useWatch
+    const getParentValue = (parentKey: string) => {
+        // If no parent, always visible
+        if (!parentKey) return true;
+        // useWatch expects a field name, which is the key
+        return useWatch({ name: parentKey });
+    };
+
+    // Helper to recursively check visibility for a question
+    const isQuestionVisible = React.useCallback((questionKey: string): boolean => {
+        const followupInfo = followupMap[questionKey];
+        if (!followupInfo) return true;
+        const parentValue = getParentValue(followupInfo.parentKey);
+        const parentIsVisible = isQuestionVisible(followupInfo.parentKey);
+        return Boolean(parentValue) && parentIsVisible;
+    }, [followupMap]);
 
     return (
         <Stack
@@ -111,12 +153,16 @@ const Section = ({
 
             <List>
                 {section.questions.map((questionObj, qIndex) => {
-                    // For internal tracking, form validation and label formatting
                     const question = new Question(questionObj, {
                         step: stepIndex,
                         section: sectionIndex,
                         question: qIndex,
-                    })
+                    });
+
+                    // Check visibility using useWatch and recursive logic
+                    if (!isQuestionVisible(question.key)) {
+                        return null;
+                    }
 
                     let inputComponent = null;
                     switch (question.o.type) {
@@ -153,4 +199,48 @@ const Section = ({
             </List>
         </Stack>
     )
+}
+
+/**
+ * Utility for follow-up question visibility logic.
+ * Simple: a follow-up is visible if its parent is visible and has a truthy value.
+ * 
+ * Build a map of follow-up question key -> parent question key
+ * @param questions Section questions array
+ * @param stepIndex Step index
+ * @param sectionIndex Section index
+ * @param followupObj Mapping of question key to walkback offset
+ */
+const computeFollowupMap = (
+    questions: any[],
+    stepIndex: number,
+    sectionIndex: number,
+    // followupObj: Record<string, number>
+) => {
+    const map: Record<string, { parentKey: string }> = {};
+    questions.forEach((qObj, qIndex) => {
+        const question = new Question(qObj, {
+            step: stepIndex,
+            section: sectionIndex,
+            question: qIndex,
+        });
+
+        const walkback = question.o.dependent_step;
+        if (walkback && qIndex - walkback >= 0) {
+            const parentQuestion = new Question(
+                questions[qIndex - walkback],
+                {
+                    step: stepIndex,
+                    section: sectionIndex,
+                    question: qIndex - walkback,
+                }
+            );
+            map[question.key] = { parentKey: parentQuestion.key };
+        }
+    });
+
+    // if (Object.keys(map).length > 0)
+    //     console.debug("Computed followup map for section", sectionIndex, ":", map);
+
+    return map;
 }
