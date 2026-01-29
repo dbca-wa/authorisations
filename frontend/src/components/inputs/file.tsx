@@ -149,7 +149,10 @@ const DropzoneDialogContent = ({
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
-                const message = (error.response?.data as any)?.document?.[0] ?? error.message;
+                const responseData = error.response?.data as any;
+                const message = responseData.document?.[0]
+                    ?? responseData?.file?.[0]
+                    ?? error.message;
                 showSnackbar(`Failed to upload: ${message}`, "error");
                 return null;
             });
@@ -232,8 +235,8 @@ const DropzoneDialogContent = ({
                         (or click to select from computer)
                     </Typography><br />
                     <Typography color={styling.textColour} fontStyle="italic">
-                        (Only images and PDF files are accepted. <br />
-                        Maximum file size limit is 10MB.)
+                        Only images and PDF files are accepted. <br />
+                        Maximum file size limit is 10MB.
                     </Typography>
                 </>
             )}

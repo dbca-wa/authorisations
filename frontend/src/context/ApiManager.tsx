@@ -97,7 +97,7 @@ export class ApiManager {
 
         // Start the upload
         const response = await axios.post<IApplicationData>(
-            `/applications/${key}/files`, formData, requestConfig);
+            `/applications/${key}/attachments`, formData, requestConfig);
 
         return response.data;
     }

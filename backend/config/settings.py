@@ -254,6 +254,10 @@ REST_FRAMEWORK = {
     ],
 }
 
+# --- Private Media Storage for Secure File Uploads ---
+# This directory should be mounted in AKS and not served by any web server.
+PRIVATE_MEDIA_ROOT = env("PRIVATE_MEDIA_ROOT")
+
 # Maximum allowed file size for uploads: 10MB
 UPLOAD_MAX_SIZE = 10 * 1024 * 1024
 

@@ -172,7 +172,7 @@ class FileTooLargeError(exceptions.APIException):
     default_code = "file_too_large"
 
 
-class FileAttachmentSerialiser(serializers.Serializer):
+class AttachmentSerialiser(serializers.Serializer):
     """
     Serializer for validating file uploads.
     The file itself is handled via request.FILES, this just validates metadata.
@@ -186,8 +186,12 @@ class FileAttachmentSerialiser(serializers.Serializer):
         required=True,
         read_only=False,
     )
+    
+    def validate_field(self, value: serializers.CharField) -> serializers.CharField:
+        raise NotImplementedError("Field validation not implemented yet.")
+        # raise exceptions.ValidationError("Invalid field value")
 
-    def validate_file(self, value):
+    def validate_file(self, value: serializers.FileField) -> serializers.FileField:
         # Validate the file size first
         if value.size > settings.UPLOAD_MAX_SIZE:
             raise FileTooLargeError(
@@ -212,3 +216,4 @@ class FileAttachmentSerialiser(serializers.Serializer):
 
         # Decline by default
         raise exceptions.ValidationError("Unsupported file type.")
+    

@@ -1,5 +1,9 @@
+import os
+
 from applications.models import Application
-from applications.serialisers import ApplicationSerialiser, FileAttachmentSerialiser
+from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
@@ -32,38 +36,57 @@ class ApplicationViewSet(
 
     @action(
         detail=True,
-        methods=["post", "get", "delete"],
-        serializer_class=FileAttachmentSerialiser,
+        methods=["get", "post", "delete"],
+        serializer_class=AttachmentSerialiser,
     )
-    def files(self, request, key=None):
+    def attachments(self, request, key=None):
         """
         Custom endpoint to manage files for a specific application.
-        - GET: List existing files for this application.
-        - POST: Upload a new file for this application.
-        - DELETE: Remove an existing file from this application.
+        
+        - `GET /applications/{key}/attachments/`: List all attachments for the application.
+        - `GET /applications/{key}/attachments/{uuid}/`: Download a specific file.
+        - `DELETE /applications/{key}/attachments/{uuid}/`: Delete a specific file.
+        - `POST /applications/{key}/attachments/`: Upload a new file (with question index reference).
         """
 
         # This gets the parent Application instance
-        # application = self.get_object()
-
+        application = self.get_object()
+        
         # Handle file upload
         if request.method == "POST":
-            return self._upload_file(request)
+            return self._upload_file(request, application)
 
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def _upload_file(self, request):
-        # Handle File Upload
+    def _upload_file(self, request, application: Application) -> Response:
+        # Validate file upload first
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         uploaded_file = serializer.validated_data["file"]
 
-        # --- FILE HANDLING LOGIC HERE ---
-        # TODO: Save the file to cloud storage
-        print(f"File '{uploaded_file.name}' uploaded for application.")
-        
+        # Use a private media directory (should be set in Django settings)
+        private_media_root = getattr(settings, "PRIVATE_MEDIA_ROOT", None)
+        if not private_media_root or not os.path.exists(private_media_root):
+            return Response(
+                {"error": "PRIVATE_MEDIA_ROOT is not configured."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # Organize files by application key
+        app_folder = os.path.join(private_media_root, str(application.key))
+        os.makedirs(app_folder, exist_ok=True)
+
+        # Save the file using FileSystemStorage
+        fs = FileSystemStorage(location=app_folder)
+        filename = fs.save(uploaded_file.name, uploaded_file)
+        file_url = os.path.join(
+            "/private-media", str(application.key), filename
+        )  # Not public, just for reference
+
+        # Optionally: store file metadata in DB here
+
         return Response(
-            {"status": "file uploaded", "filename": uploaded_file.name},
+            {"status": "file uploaded", "filename": filename, "path": file_url},
             status=status.HTTP_201_CREATED,
         )
 

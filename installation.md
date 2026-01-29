@@ -37,7 +37,7 @@ Get the source code from repository:
 > git clone git@github.com:dbca-wa/authorisations.git
 
 ### Setup the backend
-Create your own copy of the `.env` file and set the environment variables, including the database connection string with your newly created database and user.
+Create your own copy of the `.env` file and set the environment variables, including the database connection string with your newly created database and user. You will also need to set the full path for your local `PRIVATE_MEDIA_ROOT`.
 > cd authorisations/backend \
 > cp .env.template .env
 
