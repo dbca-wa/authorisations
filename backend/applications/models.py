@@ -100,3 +100,35 @@ class Application(models.Model):
 
 #     def __str__(self):
 #         return f"Certificate for the application #{self.application.id} issued at {self.issued_at}"
+
+from django.utils import timezone
+
+def attachment_upload_path(instance, filename):
+    """Define the upload path for the attachment file."""
+    return f"attachments/{instance.application.id}/{instance.key}/{filename}"
+
+class ApplicationAttachment(models.Model):
+    """Model to represent a file attached to an application."""
+    id = models.BigAutoField(primary_key=True)
+    key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name="attachments",
+        db_index=True,
+        editable=False,
+    )
+    file = models.FileField(upload_to=attachment_upload_path, blank=False, null=False)
+    field = models.CharField(max_length=100, blank=False, null=False)
+    deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    deleted_at = models.DateTimeField(blank=True, null=True, editable=False)
+
+    def soft_delete(self):
+        self.deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return f"Attachment {self.key} for Application {self.application.id}"
+
