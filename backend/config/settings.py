@@ -252,6 +252,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "UPLOADED_FILES_USE_URL": False,
 }
 
 # --- Private Media Storage for Secure File Uploads ---

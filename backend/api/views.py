@@ -1,13 +1,11 @@
-import os
+import uuid
 
-from applications.models import Application
+from applications.models import Application, ApplicationAttachment
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 
 
@@ -34,61 +32,152 @@ class ApplicationViewSet(
         # Ensure users can only see their own applications
         return super().get_queryset().filter(owner=self.request.user)
 
-    @action(
-        detail=True,
-        methods=["get", "post", "delete"],
-        serializer_class=AttachmentSerialiser,
-    )
-    def attachments(self, request, key=None):
+    # @action(
+    #     detail=True,
+    #     methods=["get", "post", "delete"],
+    #     serializer_class=AttachmentSerialiser,
+    # )
+    # def attachments(self, request, key=None, uuid=None):
+    #     """
+    #     Custom endpoint to manage files for a specific application.
+
+    #     - `GET /applications/{key}/attachments/`: List all attachments for the application.
+    #     - `GET /applications/{key}/attachments/{uuid}/`: Download a specific file.
+    #     - `DELETE /applications/{key}/attachments/{uuid}/`: Delete a specific file.
+    #     - `POST /applications/{key}/attachments/`: Upload a new file (with question index reference).
+    #     """
+
+    #     application = self.get_object()
+
+    #     if request.method == "GET":
+    #         if uuid:
+    #             # Download a specific file
+    #             try:
+    #                 attachment = application.attachments.get(key=uuid, deleted=False)
+    #             except ApplicationAttachment.DoesNotExist:
+    #                 return Response(
+    #                     {"error": "Attachment not found."},
+    #                     status=status.HTTP_404_NOT_FOUND,
+    #                 )
+    #             response = Response(
+    #                 attachment.file.read(),
+    #                 content_type=attachment.file.file.content_type,
+    #             )
+    #             response["Content-Disposition"] = (
+    #                 f'attachment; filename="{attachment.name}"'
+    #             )
+    #             return response
+    #         else:
+    #             # List all attachments
+    #             attachments = application.attachments.filter(deleted=False)
+    #             data = [
+    #                 {
+    #                     "key": str(a.key),
+    #                     "name": a.name,
+    #                     "answer": a.answer,
+    #                     "created_at": a.created_at,
+    #                 }
+    #                 for a in attachments
+    #             ]
+    #             return Response(data)
+
+    #     if request.method == "DELETE" and uuid:
+    #         try:
+    #             attachment = application.attachments.get(key=uuid, deleted=False)
+    #         except ApplicationAttachment.DoesNotExist:
+    #             return Response(
+    #                 {"error": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND
+    #             )
+    #         attachment.soft_delete()
+    #         return Response({"status": "deleted"})
+
+    #     if request.method == "POST":
+    #         return self._upload_file(request, application)
+
+    #     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    # def _upload_file(self, request, application: Application) -> Response:
+    #     # Validate file upload first
+    #     serializer = self.get_serializer(
+    #         data=request.data, context={"application": application}
+    #     )
+
+    #     serializer.is_valid(raise_exception=True)
+
+    #     uploaded_file = serializer.validated_data["file"]
+    #     answer = serializer.validated_data["answer"]
+
+    #     # Create the attachment record
+    #     attachment = ApplicationAttachment.objects.create(
+    #         application=application,
+    #         file=uploaded_file,
+    #         name=uploaded_file.name,
+    #         answer=answer,
+    #     )
+
+    #     return Response(
+    #         {
+    #             "status": "file uploaded",
+    #             "key": str(attachment.key),
+    #             "name": attachment.name,
+    #             "answer": attachment.answer,
+    #             "created_at": attachment.created_at,
+    #         },
+    #         status=status.HTTP_201_CREATED,
+    #     )
+
+
+class ApplicationFilterBackend(filters.BaseFilterBackend):
+    """
+    Filter that displays only attachments belonging to given application key.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        application_key = request.query_params.get("application_key")
+        if application_key:
+            # Catch invalid UUIDs
+            try:
+                app_key_uuid = uuid.UUID(application_key)
+            except ValueError as error:
+                raise ValidationError(str(error))
+            else:
+                return queryset.filter(application__key=app_key_uuid)
+
+        return queryset
+
+
+class AttachmentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing attachments for a specific application.
+    """
+
+    queryset = ApplicationAttachment.objects.all()
+    serializer_class = AttachmentSerialiser
+    lookup_field = "key"
+    filter_backends = [ApplicationFilterBackend]
+
+    def get_queryset(self):
         """
-        Custom endpoint to manage files for a specific application.
-        
-        - `GET /applications/{key}/attachments/`: List all attachments for the application.
-        - `GET /applications/{key}/attachments/{uuid}/`: Download a specific file.
-        - `DELETE /applications/{key}/attachments/{uuid}/`: Delete a specific file.
-        - `POST /applications/{key}/attachments/`: Upload a new file (with question index reference).
+        Only allow access to attachments of applications:
+            * owned by the user
+            * not deleted
         """
-
-        # This gets the parent Application instance
-        application = self.get_object()
-        
-        # Handle file upload
-        if request.method == "POST":
-            return self._upload_file(request, application)
-
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def _upload_file(self, request, application: Application) -> Response:
-        # Validate file upload first
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        uploaded_file = serializer.validated_data["file"]
-
-        # Use a private media directory (should be set in Django settings)
-        private_media_root = getattr(settings, "PRIVATE_MEDIA_ROOT", None)
-        if not private_media_root or not os.path.exists(private_media_root):
-            return Response(
-                {"error": "PRIVATE_MEDIA_ROOT is not configured."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        # Organize files by application key
-        app_folder = os.path.join(private_media_root, str(application.key))
-        os.makedirs(app_folder, exist_ok=True)
-
-        # Save the file using FileSystemStorage
-        fs = FileSystemStorage(location=app_folder)
-        filename = fs.save(uploaded_file.name, uploaded_file)
-        file_url = os.path.join(
-            "/private-media", str(application.key), filename
-        )  # Not public, just for reference
-
-        # Optionally: store file metadata in DB here
-
-        return Response(
-            {"status": "file uploaded", "filename": filename, "path": file_url},
-            status=status.HTTP_201_CREATED,
+        return ApplicationAttachment.objects.filter(
+            application__owner=self.request.user,
+            is_deleted=False,
         )
+
+    # def perform_create(self, serializer):
+    #     application_key = self.kwargs.get("application")
+    #     try:
+    #         application = Application.objects.get(
+    #             key=application_key, owner=self.request.user
+    #         )
+    #     except Application.DoesNotExist:
+    #         raise NotFound("Application not found.")
+    #     serializer.save(
+    #         application=application, name=serializer.validated_data["file"].name
+    #     )
 
 
 class VersionFilterBackend(filters.BaseFilterBackend):

@@ -8,7 +8,7 @@ from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
 from rest_framework import exceptions, serializers, status
 
-from .models import Application, ApplicationStatus
+from .models import Application, ApplicationStatus, ApplicationAttachment
 from .schema import get_answers_schema
 
 
@@ -172,24 +172,67 @@ class FileTooLargeError(exceptions.APIException):
     default_code = "file_too_large"
 
 
-class AttachmentSerialiser(serializers.Serializer):
+class AttachmentSerialiser(serializers.ModelSerializer):
     """
-    Serializer for validating file uploads.
-    The file itself is handled via request.FILES, this just validates metadata.
+    Serializer for ApplicationAttachment model.
     """
-
-    file = serializers.FileField(
-        required=True,
-        read_only=False,
-    )
-    field = serializers.CharField(
+    
+    application_key = serializers.UUIDField(
+        source="application.key",
         required=True,
         read_only=False,
     )
     
-    def validate_field(self, value: serializers.CharField) -> serializers.CharField:
-        raise NotImplementedError("Field validation not implemented yet.")
-        # raise exceptions.ValidationError("Invalid field value")
+    # download_url = serializers.SerializerMethodField
+
+    class Meta:
+        model = ApplicationAttachment
+        fields = (
+            "key",
+            "application_key",
+            "answer",
+            "name",
+            "created_at",
+        )
+        read_only_fields = (
+            "key",
+            "application_key",
+            "answer",
+            "created_at",
+        )
+
+    def get_fields(self, *args, **kwargs):
+        fields = super().get_fields(*args, **kwargs)
+        request = self.context.get("request", None)
+        isPost = request.method == "POST"
+        # isPut = request.method == "PUT"
+        # isPatch = request.method == "PATCH"
+
+        # `application` field is required only when first creating
+        fields["application_key"].required = isPost
+        fields["application_key"].read_only = not isPost
+
+        # `answer` field is required only when first creating
+        fields["answer"].required = isPost
+        fields["answer"].read_only = not isPost
+
+        return fields
+
+    # def validate(self, data):
+    #     """Make sure only one attachment per answer exists."""
+    #     application = self.context.get("application")
+    #     answer = data.get("answer")
+    #     if application and answer:
+    #         exists = ApplicationAttachment.objects.filter(
+    #             application=application,
+    #             answer=answer,
+    #             deleted=False,
+    #         ).exists()
+    #         if exists:
+    #             raise serializers.ValidationError(
+    #                 {"answer": "An attachment for this answer already exists."}
+    #             )
+    #     return data
 
     def validate_file(self, value: serializers.FileField) -> serializers.FileField:
         # Validate the file size first
@@ -216,4 +259,3 @@ class AttachmentSerialiser(serializers.Serializer):
 
         # Decline by default
         raise exceptions.ValidationError("Unsupported file type.")
-    
