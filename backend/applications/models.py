@@ -2,10 +2,11 @@ import os
 import uuid
 
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
 from django_jsonform.models.fields import JSONField
-from django.core.files.storage import FileSystemStorage
+from users.models import User
 
 from .schema import get_answers_schema
 
@@ -77,12 +78,20 @@ class Application(models.Model):
     def __str__(self):
         return f"Application #{self.id} by {self.owner.username} for {self.questionnaire.name}"
 
-    # @staticmethod
-    # def has_access(user, key: str) -> bool:
-    #     return Application.objects.filter(
-    #         key=key,
-    #         owner=user,
-    #     ).exists()
+    def has_access(self, user: User) -> bool:
+        """
+        Returns True if the user has access to this application.
+        - Owners always have access.
+        - TODO: Extend this logic for Technical Officers or other roles in the future.
+        """
+        if not user.is_authenticated:
+            return False
+
+        if self.owner == user:
+            return True
+
+        # TODO: Add logic for Technical Officers or other roles
+        return False
 
 
 # def certificate_path(instance, filename):
@@ -161,10 +170,14 @@ class ApplicationAttachment(models.Model):
             )
         ]
 
+    def __str__(self):
+        return f"Attachment {self.key} for Application {self.application.id}"
+
     def soft_delete(self):
         self.is_deleted = True
         self.deleted_at = timezone.now()
         self.save()
 
-    def __str__(self):
-        return f"Attachment {self.key} for Application {self.application.id}"
+    def get_download_url(self, request):
+        """Generate a download URL for this attachment."""
+        return request.build_absolute_uri(f"/d/{self.application.key}/{self.key}")

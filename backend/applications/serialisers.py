@@ -8,7 +8,7 @@ from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
 from rest_framework import exceptions, serializers, status
 
-from .models import Application, ApplicationStatus, ApplicationAttachment
+from .models import Application, ApplicationAttachment, ApplicationStatus
 from .schema import get_answers_schema
 
 
@@ -176,14 +176,18 @@ class AttachmentSerialiser(serializers.ModelSerializer):
     """
     Serializer for ApplicationAttachment model.
     """
-    
+
     application_key = serializers.UUIDField(
         source="application.key",
         required=True,
         read_only=False,
     )
-    
-    # download_url = serializers.SerializerMethodField
+
+    download_url = serializers.SerializerMethodField(
+        required=False,
+        read_only=True,
+        method_name="get_download_url",
+    )
 
     class Meta:
         model = ApplicationAttachment
@@ -193,13 +197,22 @@ class AttachmentSerialiser(serializers.ModelSerializer):
             "answer",
             "name",
             "created_at",
+            "download_url",
         )
         read_only_fields = (
             "key",
             "application_key",
             "answer",
             "created_at",
+            "download_url",
         )
+
+    def get_download_url(self, obj: ApplicationAttachment) -> str | None:
+        request = self.context.get("request")
+        if request is None:
+            return None
+
+        return obj.get_download_url(request)
 
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
