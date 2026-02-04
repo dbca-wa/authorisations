@@ -22,7 +22,7 @@ import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
 import { useSnackbar } from '../../../context/Snackbar';
-import type { IAnswer, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
+import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
 
@@ -31,12 +31,14 @@ export function FormReviewPage({
     userCanEdit,
     setUserCanEdit,
     questionnaire,
+    attachments,
     applicationKey,
     handleSubmit,
 }: {
     userCanEdit: boolean,
     setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     questionnaire: IQuestionnaire;
+    attachments: { [questionkey: string]: IApplicationAttachment };
     applicationKey: string;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
 }) {
@@ -109,6 +111,10 @@ export function FormReviewPage({
                                                     break;
                                                 case "date":
                                                     displayAnswer = displayDate(answer);
+                                                    break;
+                                                case "file":
+                                                    // displayAnswer = displayFile(attachments[question.key]);
+                                                    displayAnswer = displayFile(null);
                                                     break;
                                                 case "select":
                                                 case "number":
@@ -235,4 +241,14 @@ const displayString = (answer: IAnswer) => {
     return isEmptyAnswer(answer)
         ? <Typography color="text.disabled">(unanswered)</Typography>
         : <Typography whiteSpace="pre-wrap">{String(answer)}</Typography>;
+};
+
+const displayFile = (attachment: IApplicationAttachment | null) => {
+    return attachment === null
+        ? <Typography color="text.disabled">(no file uploaded)</Typography>
+        : (
+            <a href={attachment.download_url} target="_blank" rel="noopener noreferrer">
+                {attachment.name}
+            </a>
+        );
 };

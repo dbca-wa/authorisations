@@ -16,17 +16,20 @@ import { FileInput } from "../../inputs/file";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
+import type { IApplicationAttachment } from '../../../context/types/Application';
 
 
 export const FormActiveStep = ({
     handleSubmit,
     applicationKey,
     currentStep,
+    attachments,
     activeStep,
 }: {
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
     applicationKey: string;
     currentStep: IFormStep;
+    attachments: { [questionkey: string]: IApplicationAttachment };
     activeStep: number;
 }) => {
 
@@ -40,6 +43,7 @@ export const FormActiveStep = ({
                         stepIndex={activeStep}
                         section={section}
                         sectionIndex={sectionIndex}
+                        attachments={attachments}
                     />
                 })}
 
@@ -98,11 +102,13 @@ const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
 const Section = ({
     applicationKey,
     stepIndex, section, sectionIndex,
+    attachments,
 }: {
     applicationKey: string,
     stepIndex: number,
     section: IFormSection,
     sectionIndex: number,
+    attachments: { [questionkey: string]: IApplicationAttachment };
 }) => {
     // Convert section index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
@@ -206,11 +212,14 @@ const Section = ({
                         case "date":
                             inputComponent = <DateInput question={question} />;
                             break;
+                        case "file":
+                            inputComponent = <FileInput question={question}
+                                attachment={attachments[question.key] ?? null}
+                                applicationKey={applicationKey}
+                            />;
+                            break;
                         case "grid":
                             inputComponent = <GridInput question={question} />;
-                            break;
-                        case "file":
-                            inputComponent = <FileInput question={question} applicationKey={applicationKey} />;
                             break;
                         default:
                             throw new Error(`Unknown question type: ${question.o.type}`);

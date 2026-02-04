@@ -23,7 +23,7 @@ import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { LocalStorage } from '../../../context/LocalStorage';
 import { useSnackbar } from '../../../context/Snackbar';
-import type { IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
+import type { IApplicationAttachment, IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
 import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
 import { scrollToTop } from '../../../context/Utils';
@@ -34,14 +34,18 @@ import { FormSidebar } from './FormSidebar';
 
 export const FormLayout = () => {
     // Fetch application and questionnaire from API
-    const { app, questionnaire } =
-        useLoaderData<{ app: IApplicationData, questionnaire: IQuestionnaireData }>();
+    const { app, questionnaire, attachments } =
+        useLoaderData<{
+            app: IApplicationData,
+            questionnaire: IQuestionnaireData,
+            attachments: IApplicationAttachment[]
+        }>();
 
     // Load stored answers from local storage
     // const storedAnswers = React.useMemo<IFormAnswers>(
     //     () => LocalStorage.getFormState(app.key), []
     // );
-
+    ``
     // console.log("Stored answers:", storedAnswers);
 
     // Drawer open/close state
@@ -237,6 +241,7 @@ export const FormLayout = () => {
                         setUserCanEdit={setUserCanEdit}
                         handleSubmit={handleSubmit}
                         questionnaire={questionnaire.document}
+                        attachments={attachments}
                         activeStep={activeStep}
                         applicationKey={app.key}
                     />
@@ -352,6 +357,7 @@ const FormLayoutContent = ({
     setUserCanEdit,
     handleSubmit,
     questionnaire,
+    attachments,
     activeStep,
     applicationKey,
 }: {
@@ -359,9 +365,15 @@ const FormLayoutContent = ({
     setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction,
     questionnaire: IQuestionnaire;
+    attachments: IApplicationAttachment[];
     activeStep: number;
     applicationKey: string;
 }) => {
+    // Reorder attachments by answer index for easier access
+    const attachmentsByAnswer: { [questionkey: string]: IApplicationAttachment } = {};
+    attachments.forEach((attachment) => attachmentsByAnswer[attachment.answer] = attachment);
+
+    // console.log("Attachments by answer:", attachmentsByAnswer);
 
     // We are on the review page
     if (activeStep === questionnaire.steps.length) {
@@ -370,6 +382,7 @@ const FormLayoutContent = ({
                 userCanEdit={userCanEdit}
                 setUserCanEdit={setUserCanEdit}
                 questionnaire={questionnaire}
+                attachments={attachmentsByAnswer}
                 handleSubmit={handleSubmit}
                 applicationKey={applicationKey}
             />
@@ -381,6 +394,7 @@ const FormLayoutContent = ({
             handleSubmit={handleSubmit}
             applicationKey={applicationKey}
             currentStep={questionnaire.steps[activeStep]}
+            attachments={attachmentsByAnswer}
             activeStep={activeStep}
         />
     );

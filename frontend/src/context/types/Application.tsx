@@ -78,3 +78,16 @@ export interface IFormDocument {
     active_step: number;
     steps: IStepState[];
 }
+
+
+/**
+ * Interface for application attachment metadata
+ */
+export interface IApplicationAttachment {
+    key: string;
+    application_key: string;
+    answer: string;
+    name: string;
+    created_at: string;
+    download_url: string;
+}

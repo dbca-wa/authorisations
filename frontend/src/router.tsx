@@ -58,8 +58,12 @@ const formLayoutLoader = async ({ params }: LoaderFunctionArgs) => {
 	const questionnaire = await ApiManager
 		.getQuestionnaire(app.questionnaire_slug, app.questionnaire_version)
 		.catch(handleApiError);
+	
+	const attachments = await ApiManager
+		.getApplicationAttachments(params.key!)
+		.catch(handleApiError);
 
-	return { app, questionnaire };
+	return { app, questionnaire, attachments };
 }
 
 export const router = createBrowserRouter(

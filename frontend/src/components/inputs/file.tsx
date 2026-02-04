@@ -19,13 +19,16 @@ import { useDialog } from '../../context/Dialogs';
 import { useSnackbar } from '../../context/Snackbar';
 import type { Question } from "../../context/types/Questionnaire";
 import { VisuallyHiddenInput } from '../../context/Utils';
+import type { IApplicationAttachment } from '../../context/types/Application';
 
 
 export const FileInput = ({
     question,
+    attachment,
     applicationKey,
 }: {
     question: Readonly<Question>;
+    attachment: IApplicationAttachment | null;
     applicationKey: string;
 }) => {
     // Abort controlller to allow cancelling
@@ -58,39 +61,55 @@ export const FileInput = ({
                     <Typography variant="subtitle1">
                         {question.o.description}
                     </Typography>
-                    <Button
-                        component="label"
-                        role={undefined}
-                        variant="contained"
-                        tabIndex={-1}
-                        startIcon={<CloudUploadIcon />}
-                        onClick={() => {
-                            showDialog({
-                                title: "Upload a file",
-                                content: <DropzoneDialogContent
-                                    applicationKey={applicationKey}
-                                    field={field}
-                                    signal={controller.signal}
-                                    showSnackbar={showSnackbar}
-                                />,
-                                actions: (
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<CancelOutlinedIcon />}
-                                        onClick={() => {
-                                            controller.abort();
-                                            hideDialog();
-                                        }}
-                                    >
-                                        Cancel
-                                    </Button>
-                                ),
-                                onClose: () => controller.abort(),
-                            });
-                        }}
-                    >
-                        Upload
-                    </Button>
+                    {attachment ? (
+                        <Box className="my-2 p-2 border border-gray-300 rounded-md bg-gray-50">
+                            <Typography>
+                                Current file: &nbsp;
+                                <a
+                                    href={attachment.download_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 underline"
+                                >
+                                    {attachment.name}
+                                </a>
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Button
+                            component="label"
+                            role={undefined}
+                            variant="contained"
+                            tabIndex={-1}
+                            startIcon={<CloudUploadIcon />}
+                            onClick={() => {
+                                showDialog({
+                                    title: "Upload a file",
+                                    content: <DropzoneDialogContent
+                                        applicationKey={applicationKey}
+                                        field={field}
+                                        signal={controller.signal}
+                                        showSnackbar={showSnackbar}
+                                    />,
+                                    actions: (
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<CancelOutlinedIcon />}
+                                            onClick={() => {
+                                                controller.abort();
+                                                hideDialog();
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    ),
+                                    onClose: () => controller.abort(),
+                                });
+                            }}
+                        >
+                            Upload
+                        </Button>
+                    )}
                     {fieldState.invalid &&
                         <FormHelperText error>
                             {fieldState.error?.message}
@@ -131,8 +150,9 @@ const DropzoneDialogContent = ({
 
         // Start uploading the file via API
         const response = await ApiManager.uploadAttachment({
-            key: applicationKey,
-            field: field.name,
+            appKey: applicationKey,
+            name: file.name,
+            answer: field.name,
             file: file,
             signal: signal,
             callback: (event: AxiosProgressEvent) => {
