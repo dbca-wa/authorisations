@@ -24,7 +24,8 @@ import { ApiManager } from '../../../context/ApiManager';
 import { useSnackbar } from '../../../context/Snackbar';
 import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
-import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
+import { Question, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
+import { FileAttachmentList } from '../../Common';
 
 
 export function FormReviewPage({
@@ -98,23 +99,29 @@ export function FormReviewPage({
                                         {section.title}
                                     </Typography>
                                     <Stack spacing={2}>
-                                        {section.questions.map((question: IQuestion, questionIdx: number) => {
+                                        {section.questions.map((qObj: IQuestion, questionIdx: number) => {
+                                            const question = new Question(qObj, {
+                                                step: stepIdx,
+                                                section: sectionIdx,
+                                                question: questionIdx,
+                                            });
                                             const answer = answers[stepIdx][`${sectionIdx}-${questionIdx}`];
                                             let displayAnswer: React.ReactNode = null;
 
-                                            switch (question.type) {
+                                            switch (qObj.type) {
                                                 case "checkbox":
                                                     displayAnswer = displayCheckbox(answer);
                                                     break;
                                                 case "grid":
-                                                    displayAnswer = displayGrid(question, answer);
+                                                    displayAnswer = displayGrid(qObj, answer);
                                                     break;
                                                 case "date":
                                                     displayAnswer = displayDate(answer);
                                                     break;
                                                 case "file":
-                                                    // displayAnswer = displayFile(attachments[question.key]);
-                                                    displayAnswer = displayFile(null);
+                                                    displayAnswer = displayFile(attachments[question.key]);
+
+                                                    // displayAnswer = displayFile(null);
                                                     break;
                                                 case "select":
                                                 case "number":
@@ -123,13 +130,13 @@ export function FormReviewPage({
                                                     displayAnswer = displayString(answer);
                                                     break;
                                                 default:
-                                                    throw new Error(`Unsupported question type: ${question.type}`);
+                                                    throw new Error(`Unsupported question type: ${qObj.type}`);
                                             }
 
                                             return (
                                                 <Box key={questionIdx} sx={{ mb: 1 }}>
                                                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                                        {question.label}
+                                                        {qObj.label}
                                                     </Typography>
                                                     {displayAnswer}
                                                 </Box>
@@ -244,11 +251,7 @@ const displayString = (answer: IAnswer) => {
 };
 
 const displayFile = (attachment: IApplicationAttachment | null) => {
-    return attachment === null
-        ? <Typography color="text.disabled">(no file uploaded)</Typography>
-        : (
-            <a href={attachment.download_url} target="_blank" rel="noopener noreferrer">
-                {attachment.name}
-            </a>
-        );
+    return attachment ?
+        FileAttachmentList({ attachments: [attachment], canDelete: false }) :
+        <Typography color="text.disabled">(no file uploaded)</Typography>;
 };

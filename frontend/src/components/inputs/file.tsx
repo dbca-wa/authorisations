@@ -17,9 +17,10 @@ import { ConfigManager } from '../../context/ConfigManager';
 import { ERROR_MSG } from "../../context/Constants";
 import { useDialog } from '../../context/Dialogs';
 import { useSnackbar } from '../../context/Snackbar';
+import type { IApplicationAttachment } from '../../context/types/Application';
 import type { Question } from "../../context/types/Questionnaire";
 import { VisuallyHiddenInput } from '../../context/Utils';
-import type { IApplicationAttachment } from '../../context/types/Application';
+import { FileAttachmentList } from '../Common';
 
 
 export const FileInput = ({
@@ -61,22 +62,11 @@ export const FileInput = ({
                     <Typography variant="subtitle1">
                         {question.o.description}
                     </Typography>
-                    {attachment ? (
-                        <Box className="my-2 p-2 border border-gray-300 rounded-md bg-gray-50">
-                            <Typography>
-                                Current file: &nbsp;
-                                <a
-                                    href={attachment.download_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 underline"
-                                >
-                                    {attachment.name}
-                                </a>
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <Button
+                    {attachment ? FileAttachmentList({
+                        attachments: [attachment, attachment, attachment], 
+                        canDelete: true,
+                    }) :
+                        (<Button
                             component="label"
                             role={undefined}
                             variant="contained"
@@ -108,8 +98,8 @@ export const FileInput = ({
                             }}
                         >
                             Upload
-                        </Button>
-                    )}
+                        </Button>)
+                    }
                     {fieldState.invalid &&
                         <FormHelperText error>
                             {fieldState.error?.message}

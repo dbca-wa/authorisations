@@ -1,5 +1,6 @@
 import { styled } from "@mui/material/styles";
 import type { AxiosError } from "axios";
+import type { ReactElement } from "react";
 
 // Simple browser-safe assert
 export function assert(condition: boolean, message: string): void {
@@ -70,34 +71,28 @@ export const VisuallyHiddenInput = styled('input')({
 
 
 /**
- * Helper to get mime type from file name extension. 
- * 
- * We do not assume on this function when uploading files, 
- * as the backend will determine the actual mime type from the "magic bytes".
- * This is just for display purposes and file icon on UI.
+ * Helper to get file icon based on its extension. 
  * 
  * @param fileName 
- * @returns mime type string
+ * @returns icon name for the file type or a default icon if the type is not recognized
  */
-export const getMimeTypeFromFileName = (fileName: string): string => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+export const getIconFromFilename = (filename: string): ReactElement => {
+    const extension = filename.split('.').pop()?.toLowerCase();
     switch (extension) {
         case 'pdf':
-            return 'application/pdf';
+            return <span className="iconify-color vscode-icons--file-type-pdf2"></span>;
         case 'doc':
-            return 'application/msword';
         case 'docx':
-            return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            return <span className="iconify-color vscode-icons--file-type-word"></span>;
         case 'xls':
-            return 'application/vnd.ms-excel';
         case 'xlsx':
-            return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            return <span className="iconify-color vscode-icons--file-type-excel"></span>;
         case 'png':
-            return 'image/png';
         case 'jpg':
         case 'jpeg':
-            return 'image/jpeg';
+            return <span className="iconify-color flat-color-icons--image-file"></span>;
+        // Default file icon for unrecognized types
         default:
-            return 'application/octet-stream'; // Default binary type
+            return <span className="iconify-color flat-color-icons--file"></span>;
     }
 }
