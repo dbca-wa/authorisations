@@ -86,7 +86,7 @@ export interface IFormDocument {
 export interface IApplicationAttachment {
     key: string;
     application_key: string;
-    answer: string;
+    question: string;
     name: string;
     created_at: string;
     download_url: string;

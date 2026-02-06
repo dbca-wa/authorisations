@@ -149,7 +149,7 @@ class ApplicationAttachment(models.Model):
         db_index=True,
         editable=False,
     )
-    answer = models.CharField(max_length=100, blank=False, null=False)
+    question = models.CharField(max_length=100, blank=False, null=False)
     name = models.CharField(max_length=255, blank=False, null=False)
     file = models.FileField(
         storage=PrivateMediaStorage(),
@@ -164,8 +164,8 @@ class ApplicationAttachment(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["application", "answer", "deleted"],
-                condition=models.Q(deleted=False),
+                fields=["application", "question", "is_deleted"],
+                condition=models.Q(is_deleted=False),
                 name="unique_active_attachment_per_field",
             )
         ]

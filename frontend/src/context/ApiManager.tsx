@@ -79,11 +79,11 @@ export class ApiManager {
     }
 
     public static async uploadAttachment({
-        appKey, name, answer, file, signal, callback,
+        appKey, name, question, file, signal, callback,
     }: {
         appKey: string;
         name: string;
-        answer: string;
+        question: string;
         file: File;
         signal?: AbortSignal;
         callback?: (event: AxiosProgressEvent) => void;
@@ -101,9 +101,9 @@ export class ApiManager {
 
         // Create form data
         const formData = new FormData();
-        formData.append("application", appKey);
+        formData.append("application_key", appKey);
         formData.append("name", name);
-        formData.append("answer", answer);
+        formData.append("question", question);
         formData.append("file", file);
 
         // Start the upload

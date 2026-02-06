@@ -120,7 +120,7 @@ const DropzoneDialogContent = ({
         const response = await ApiManager.uploadAttachment({
             appKey: applicationKey,
             name: file.name,
-            answer: field.name,
+            question: field.name,
             file: file,
             signal: signal,
             callback: (event: AxiosProgressEvent) => {
@@ -138,8 +138,7 @@ const DropzoneDialogContent = ({
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
                 const responseData = error.response?.data as any;
-                const message = responseData.document?.[0]
-                    ?? responseData?.file?.[0]
+                const message = responseData?.file?.[0]
                     ?? error.message;
                 showSnackbar(`Failed to upload: ${message}`, "error");
                 return null;

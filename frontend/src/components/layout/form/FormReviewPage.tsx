@@ -119,7 +119,7 @@ export function FormReviewPage({
                                                     displayAnswer = displayDate(answer);
                                                     break;
                                                 case "file":
-                                                    displayAnswer = displayFiles(attachments.filter(atch => atch.answer === question.key));
+                                                    displayAnswer = displayFiles(attachments.filter(atch => atch.question === question.key));
                                                     break;
                                                 case "select":
                                                 case "number":

@@ -11,7 +11,7 @@ class ApplicationAttachmentInline(admin.TabularInline):
     extra = 0
     readonly_fields = (
         "key",
-        "answer",
+        "question",
         "created_at",
         "deleted_at",
     )

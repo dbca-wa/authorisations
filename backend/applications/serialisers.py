@@ -194,7 +194,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         fields = (
             "key",
             "application_key",
-            "answer",
+            "question",
             "name",
             "created_at",
             "download_url",
@@ -202,7 +202,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         read_only_fields = (
             "key",
             "application_key",
-            "answer",
+            "question",
             "created_at",
             "download_url",
         )
@@ -225,27 +225,11 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         fields["application_key"].required = isPost
         fields["application_key"].read_only = not isPost
 
-        # `answer` field is required only when first creating
-        fields["answer"].required = isPost
-        fields["answer"].read_only = not isPost
+        # `question` field is required only when first creating
+        fields["question"].required = isPost
+        fields["question"].read_only = not isPost
 
         return fields
-
-    # def validate(self, data):
-    #     """Make sure only one attachment per answer exists."""
-    #     application = self.context.get("application")
-    #     answer = data.get("answer")
-    #     if application and answer:
-    #         exists = ApplicationAttachment.objects.filter(
-    #             application=application,
-    #             answer=answer,
-    #             deleted=False,
-    #         ).exists()
-    #         if exists:
-    #             raise serializers.ValidationError(
-    #                 {"answer": "An attachment for this answer already exists."}
-    #             )
-    #     return data
 
     def validate_file(self, value: serializers.FileField) -> serializers.FileField:
         # Validate the file size first
