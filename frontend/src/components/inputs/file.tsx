@@ -1,6 +1,8 @@
 import BlockIcon from '@mui/icons-material/Block';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import ComputerIcon from '@mui/icons-material/Computer';
+import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import FormHelperText from "@mui/material/FormHelperText";
@@ -22,21 +24,24 @@ import type { Question } from "../../context/types/Questionnaire";
 import { VisuallyHiddenInput } from '../../context/Utils';
 import { FileAttachmentList } from '../Common';
 
+// Initially we start with allowing only 1 file per question to keep things simple.
+// But later on, we may extend this functionality to allow multiple files with minor UI changes.
+const MAX_FILES_PER_QUESTION = 3;
 
 export const FileInput = ({
     question,
-    attachment,
+    attachments,
     applicationKey,
 }: {
     question: Readonly<Question>;
-    attachment: IApplicationAttachment | null;
+    attachments: IApplicationAttachment[];
     applicationKey: string;
 }) => {
     // Abort controlller to allow cancelling
     const controller = new AbortController();
 
     // Dropzone dialog for drag n drop
-    const { showDialog, hideDialog } = useDialog();
+    // const { showDialog, hideDialog } = useDialog();
 
     // Snackbar for notifications
     const { showSnackbar } = useSnackbar();
@@ -62,43 +67,16 @@ export const FileInput = ({
                     <Typography variant="subtitle1">
                         {question.o.description}
                     </Typography>
-                    {attachment ? FileAttachmentList({
-                        attachments: [attachment, attachment, attachment], 
-                        canDelete: true,
-                    }) :
-                        (<Button
-                            component="label"
-                            role={undefined}
-                            variant="contained"
-                            tabIndex={-1}
-                            startIcon={<CloudUploadIcon />}
-                            onClick={() => {
-                                showDialog({
-                                    title: "Upload a file",
-                                    content: <DropzoneDialogContent
-                                        applicationKey={applicationKey}
-                                        field={field}
-                                        signal={controller.signal}
-                                        showSnackbar={showSnackbar}
-                                    />,
-                                    actions: (
-                                        <Button
-                                            variant="outlined"
-                                            startIcon={<CancelOutlinedIcon />}
-                                            onClick={() => {
-                                                controller.abort();
-                                                hideDialog();
-                                            }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    ),
-                                    onClose: () => controller.abort(),
-                                });
-                            }}
-                        >
-                            Upload
-                        </Button>)
+                    {/* Display the tiled attachment list if there are attachments */}
+                    {attachments.length > 0 && FileAttachmentList({ attachments: attachments, canDelete: true })}
+                    {/* Show the dropzone if we have less than the max allowed files for this question */}
+                    {attachments.length < MAX_FILES_PER_QUESTION &&
+                        <DropzoneDialogContent
+                            applicationKey={applicationKey}
+                            field={field}
+                            signal={controller.signal}
+                            showSnackbar={showSnackbar}
+                        />
                     }
                     {fieldState.invalid &&
                         <FormHelperText error>
@@ -200,6 +178,9 @@ const DropzoneDialogContent = ({
         accept: acceptedTypes,
     });
 
+    // Reference to the hidden input so we can trigger the file selector from a button
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+
     const styling: IDragStateStyling = React.useMemo(
         () => getStyling(isDragActive, isFocused, isDragAccept, isDragReject),
         [isDragActive, isFocused, isDragAccept, isDragReject],
@@ -208,7 +189,7 @@ const DropzoneDialogContent = ({
     // Dropzone and file input props
     const inputProps = getInputProps();
     const rootProps = getRootProps({
-        className: `dropzone w-full py-32 px-30 border-2 border-dashed rounded-lg text-center ${styling.borderColour}`,
+        className: `dropzone w-full mt-4 py-8 px-8 border-2 border-dashed rounded-md text-center ${styling.borderColour}`,
     }) as React.HTMLAttributes<HTMLDivElement>;
 
     // console.log("inputProps:", inputProps)
@@ -230,9 +211,9 @@ const DropzoneDialogContent = ({
 
     return (
         <Box {...rootProps}>
-            <VisuallyHiddenInput {...inputProps} />
+            <VisuallyHiddenInput {...inputProps} ref={inputRef} />
             {styling.icon}
-            <br /><br />
+            <br />
 
             {filename ? (
                 <Typography color="textSecondary" variant="h6">
@@ -241,8 +222,15 @@ const DropzoneDialogContent = ({
             ) : (
                 <>
                     <Typography color="textSecondary" variant="h6">
-                        Drag and drop your file here <br />
-                        (or click to select from computer)
+                        Drag and drop your file here or <br />
+                        {/* Explicit upload button to open file selector */}
+                        <Button
+                            variant="outlined"
+                            startIcon={<DriveFolderUploadIcon />}
+                            onClick={() => inputRef.current?.click()}
+                        >
+                            Select from computer
+                        </Button>
                     </Typography><br />
                     <Typography color={styling.textColour} fontStyle="italic">
                         Only images and PDF files are accepted. <br />

@@ -29,7 +29,7 @@ export const FormActiveStep = ({
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
     applicationKey: string;
     currentStep: IFormStep;
-    attachments: { [questionkey: string]: IApplicationAttachment };
+    attachments: IApplicationAttachment[];
     activeStep: number;
 }) => {
 
@@ -108,7 +108,7 @@ const Section = ({
     stepIndex: number,
     section: IFormSection,
     sectionIndex: number,
-    attachments: { [questionkey: string]: IApplicationAttachment };
+    attachments: IApplicationAttachment[];
 }) => {
     // Convert section index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
@@ -214,7 +214,8 @@ const Section = ({
                             break;
                         case "file":
                             inputComponent = <FileInput question={question}
-                                attachment={attachments[question.key] ?? null}
+                                // attachments={attachments.filter(atch => atch.answer === question.key)}
+                                attachments={attachments}
                                 applicationKey={applicationKey}
                             />;
                             break;

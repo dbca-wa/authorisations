@@ -1,5 +1,6 @@
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -7,6 +8,8 @@ import Typography from "@mui/material/Typography";
 import { getIconFromFilename } from "../context/Utils";
 import type { IApplicationAttachment } from "../context/types/Application";
 import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
+import { Button, ButtonGroup, Icon } from '@mui/material';
 
 
 function dummyDeleteAttachment(attachment: IApplicationAttachment) {
@@ -24,51 +27,38 @@ export const FileAttachmentList = ({
 }) => {
     return (
         // <CancelOutlinedIcon style={{ cursor: 'pointer', fontSize: 18 }} onClick={e => { e.preventDefault(); dummyDeleteAttachment(attachment); }} />
-        <Stack direction="row" spacing={4} marginTop={2}>
-            {attachments.map((attachment, aIdx) => (
-                <Box key={attachment.key + aIdx} className="relative p-4 border border-gray-300 rounded-md bg-gray-50 flex flex-col items-center justify-center" style={{ minWidth: 100, minHeight: 120 }}>
-                    <a
-                        href={attachment.download_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}
-                    >
-                        {/* File type icon with delete badge if allowed */}
-                        <span style={{ position: 'relative', display: 'inline-block' }}>
-                            {canDelete ? (
-                                <Badge
+        <Box className="p-4 border border-gray-300 rounded-md">
+            <Stack direction="row" spacing={4} marginTop={2} justifyContent={"center"} alignItems={"center"} >
+                {attachments.map((attachment) => (
+                    <Box className="relative border border-gray-300 rounded-lg p-4 flex flex-col items-center min-w-[120px]">
+                        {canDelete && (
+                            <Box className="absolute top-0 right-0">
+                                <IconButton
                                     color="error"
-                                    overlap="circular"
-                                    badgeContent={(
-                                        <Box>
-                                            {/* <IconButton
-                                                size="small"
-                                                color="inherit"
-                                                onClick={e => { e.preventDefault(); dummyDeleteAttachment(attachment); }}
-                                                aria-label={`Delete ${attachment.name}`}
-                                                style={{ padding: 0 }}
-                                            >
-                                                Delete
-                                                <CancelOutlinedIcon style={{ cursor: 'pointer', fontSize: 18 }} />
-                                            </IconButton> */}
-                                            <CancelOutlinedIcon style={{ cursor: 'pointer', fontSize: 18 }} onClick={e => { e.preventDefault(); dummyDeleteAttachment(attachment); }} />
-                                        </Box>
-                                    )}
-                                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                    size="small"
+                                    title={`Delete: ${attachment.name}`}
+                                    onClick={() => dummyDeleteAttachment(attachment)}
                                 >
-                                    {getIconFromFilename(attachment.name)}
-                                </Badge>
-                            ) : (
-                                getIconFromFilename(attachment.name)
-                            )}
-                        </span>
-                        {/* File name below icon */}
-                        <Typography className="mt-2 text-blue-600 underline" variant="body2" style={{ wordBreak: 'break-all', textAlign: 'center', maxWidth: 200 }}>
-                            {attachment.name}
-                        </Typography>
-                    </a>
-                </Box>
-            ))}
-        </Stack>
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        )}
+                        <Link
+                            href={attachment.download_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            underline="none"
+                            color="textPrimary"
+                            className="flex flex-col items-center gap-2"
+                        >
+                            {getIconFromFilename(attachment.name)}
+                            <Typography variant="body2" style={{ wordBreak: 'break-word', textAlign: 'center', maxWidth: 120 }}>
+                                {attachment.name}
+                            </Typography>
+                        </Link>
+                    </Box>
+                ))}
+            </Stack>
+        </Box>
     );
 };

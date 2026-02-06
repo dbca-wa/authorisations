@@ -39,7 +39,7 @@ export function FormReviewPage({
     userCanEdit: boolean,
     setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     questionnaire: IQuestionnaire;
-    attachments: { [questionkey: string]: IApplicationAttachment };
+    attachments: IApplicationAttachment[];
     applicationKey: string;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
 }) {
@@ -119,9 +119,7 @@ export function FormReviewPage({
                                                     displayAnswer = displayDate(answer);
                                                     break;
                                                 case "file":
-                                                    displayAnswer = displayFile(attachments[question.key]);
-
-                                                    // displayAnswer = displayFile(null);
+                                                    displayAnswer = displayFiles(attachments.filter(atch => atch.answer === question.key));
                                                     break;
                                                 case "select":
                                                 case "number":
@@ -250,8 +248,8 @@ const displayString = (answer: IAnswer) => {
         : <Typography whiteSpace="pre-wrap">{String(answer)}</Typography>;
 };
 
-const displayFile = (attachment: IApplicationAttachment | null) => {
-    return attachment ?
-        FileAttachmentList({ attachments: [attachment], canDelete: false }) :
+const displayFiles = (attachments: IApplicationAttachment[]) => {
+    return attachments ?
+        FileAttachmentList({ attachments: attachments, canDelete: false }) :
         <Typography color="text.disabled">(no file uploaded)</Typography>;
 };

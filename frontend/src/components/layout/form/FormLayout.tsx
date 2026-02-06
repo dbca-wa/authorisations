@@ -369,12 +369,6 @@ const FormLayoutContent = ({
     activeStep: number;
     applicationKey: string;
 }) => {
-    // Reorder attachments by answer index for easier access
-    const attachmentsByAnswer: { [questionkey: string]: IApplicationAttachment } = {};
-    attachments.forEach((attachment) => attachmentsByAnswer[attachment.answer] = attachment);
-
-    // console.log("Attachments by answer:", attachmentsByAnswer);
-
     // We are on the review page
     if (activeStep === questionnaire.steps.length) {
         return (
@@ -382,7 +376,7 @@ const FormLayoutContent = ({
                 userCanEdit={userCanEdit}
                 setUserCanEdit={setUserCanEdit}
                 questionnaire={questionnaire}
-                attachments={attachmentsByAnswer}
+                attachments={attachments}
                 handleSubmit={handleSubmit}
                 applicationKey={applicationKey}
             />
@@ -394,7 +388,7 @@ const FormLayoutContent = ({
             handleSubmit={handleSubmit}
             applicationKey={applicationKey}
             currentStep={questionnaire.steps[activeStep]}
-            attachments={attachmentsByAnswer}
+            attachments={attachments}
             activeStep={activeStep}
         />
     );
