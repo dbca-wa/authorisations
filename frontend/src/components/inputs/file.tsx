@@ -26,7 +26,7 @@ import { FileAttachmentList } from '../Common';
 
 // Initially we start with allowing only 1 file per question to keep things simple.
 // But later on, we may extend this functionality to allow multiple files with minor UI changes.
-const MAX_FILES_PER_QUESTION = 3;
+const MAX_FILES_PER_QUESTION = 1;
 
 export const FileInput = ({
     question,
@@ -68,7 +68,9 @@ export const FileInput = ({
                         {question.o.description}
                     </Typography>
                     {/* Display the tiled attachment list if there are attachments */}
-                    {attachments.length > 0 && FileAttachmentList({ attachments: attachments, canDelete: true })}
+                    {attachments.length > 0 &&
+                        FileAttachmentList({ attachments: attachments, canDelete: true })
+                    }
                     {/* Show the dropzone if we have less than the max allowed files for this question */}
                     {attachments.length < MAX_FILES_PER_QUESTION &&
                         <DropzoneDialogContent
@@ -106,11 +108,34 @@ const DropzoneDialogContent = ({
     // Uploading progress state (0-100) or null (not uploading yet)
     const [progress, setProgress] = React.useState<number | null>(null);
 
-    // All the file drag state and logic is INSIDE the component
-    // that will be rendered within the dialog.
+    /**
+     * Resets the dropzone state to allow user to try uploading again.
+     */
+    const Reset = React.useCallback((delay: number = 3) => {
+        // Delay the reset for visual feedback
+        if (delay > 0) {
+            setTimeout(() => Reset(0), delay * 1000);
+            return;
+        }
+
+        // clear UI state
+        setFilename(null);
+        setProgress(null);
+    }, [field]);
+
+    /**
+     * Handles the file drop event, uploads the file via API, and updates the form state.
+     */
     const onDrop = React.useCallback(async (acceptedFiles: File[], fileRejections: any[]) => {
-        // We want exactly one file
-        if (acceptedFiles.length !== 1 || fileRejections.length !== 0) return;
+        // Dropped file(s) has been rejected - we want exactly 1 accepted file.
+        if (acceptedFiles.length !== 1 || fileRejections.length !== 0) {
+            // console.debug("File drop rejected", { acceptedFiles, fileRejections });
+            const message = fileRejections[0]?.errors?.[0]?.message ??
+                "File is rejected. Please ensure it meets the requirements.";
+            showSnackbar(message, "error");
+            Reset(3);
+            return;
+        }
 
         const file = acceptedFiles[0];
         setFilename(file.name);
@@ -129,7 +154,7 @@ const DropzoneDialogContent = ({
                 if (event.progress) setProgress(event.progress * 100);
             },
         })
-            // Successfully uploaded via API    
+            // Successfully uploaded via API
             .then((resp) => {
                 showSnackbar("File has been uploaded", "success");
                 return resp;
@@ -142,12 +167,19 @@ const DropzoneDialogContent = ({
                     ?? error.message;
                 showSnackbar(`Failed to upload: ${message}`, "error");
                 return null;
+            })
+            // Reset the state so user can try uploading again (up to the max limit).
+            .finally(() => {
+                Reset(3);
             });
 
-        // Something went wrong with the upload
+        // Something went terribly wrong with the upload, i.e. network error.
         if (!response) return;
 
-        // Update react-hook-form with the file metadata received from API
+        // We may update react-hook-form with the file metadata received from API
+        // *****
+        // NB: We have nothing to write to the answers as the attachments 
+        // are in a separate model with different API endpoints.
         // field.onChange(file);
     }, [field]);
 
@@ -166,53 +198,56 @@ const DropzoneDialogContent = ({
     const {
         getInputProps,
         getRootProps,
-        isDragActive,
-        isFocused,
+        open: openFileDialog,
         isDragAccept,
         isDragReject,
     } = useDropzone({
-        onDrop,
-        multiple: false,
         validator: fileSizeValidator,
+        onDrop,
+        onDragLeave: () => Reset(0),
+        onDropRejected: () => Reset(3),
         accept: acceptedTypes,
+        multiple: false,
+        noClick: true,
+        noKeyboard: true,
+        noDragEventsBubbling: true,
     });
 
-    // Reference to the hidden input so we can trigger the file selector from a button
-    const inputRef = React.useRef<HTMLInputElement | null>(null);
-
     const styling: IDragStateStyling = React.useMemo(
-        () => getStyling(isDragActive, isFocused, isDragAccept, isDragReject),
-        [isDragActive, isFocused, isDragAccept, isDragReject],
+        () => getStyling(isDragAccept, isDragReject),
+        [isDragAccept, isDragReject],
     );
+
+    // Disable all drag n drop and click events while uploading 
+    // to prevent user from interrupting the upload process
+    const disabledHandlers = progress !== null ? {
+        onClick: (e: any) => e.preventDefault(),
+        onKeyDown: (e: any) => e.preventDefault(),
+        onDrop: (e: any) => e.preventDefault(),
+        onDragEnter: (e: any) => e.preventDefault(),
+        onDragLeave: (e: any) => e.preventDefault(),
+        onDragOver: (e: any) => e.preventDefault(),
+    } : {};
 
     // Dropzone and file input props
     const inputProps = getInputProps();
     const rootProps = getRootProps({
-        className: `dropzone w-full mt-4 py-8 px-8 border-2 border-dashed rounded-md text-center ${styling.borderColour}`,
+        className: 'dropzone w-full flex flex-col gap-6 py-4 px-8 mt-4 ' +
+            'items-center text-center border-2 border-dashed rounded-md ' +
+            styling.borderColour,
+        ...disabledHandlers,
     }) as React.HTMLAttributes<HTMLDivElement>;
 
     // console.log("inputProps:", inputProps)
     // console.log("rootProps:", rootProps)
 
-    // Upload has started
-    if (progress !== null) {
-        // Progress bar
-        styling.icon = <LinearProgress variant="determinate" value={progress} color="success" />
-
-        // Disable drag n drop and click events while uploading
-        rootProps.onClick = (e) => e.preventDefault();
-        rootProps.onKeyDown = (e) => e.preventDefault();
-        rootProps.onDrop = (e) => e.preventDefault();
-        rootProps.onDragEnter = (e) => e.preventDefault();
-        rootProps.onDragLeave = (e) => e.preventDefault();
-        rootProps.onDragOver = (e) => e.preventDefault();
-    }
-
     return (
         <Box {...rootProps}>
-            <VisuallyHiddenInput {...inputProps} ref={inputRef} />
-            {styling.icon}
-            <br />
+            <VisuallyHiddenInput {...inputProps} />
+            {progress === null ?
+                styling.icon :
+                <LinearProgress variant="determinate" value={progress} color="success" />
+            }
 
             {filename ? (
                 <Typography color="textSecondary" variant="h6">
@@ -226,11 +261,11 @@ const DropzoneDialogContent = ({
                         <Button
                             variant="outlined"
                             startIcon={<DriveFolderUploadIcon />}
-                            onClick={() => inputRef.current?.click()}
+                            onClick={openFileDialog}
                         >
                             Select from computer
                         </Button>
-                    </Typography><br />
+                    </Typography>
                     <Typography color={styling.textColour} fontStyle="italic">
                         Only images and PDF files are accepted. <br />
                         Maximum file size limit is 10MB.
@@ -269,31 +304,10 @@ interface IDragStateStyling {
 /**
  * Decides what styling to apply based on the dropzone state.
  * 
- * @param isDragActive The dropzone is being dragged over
- * @param isFocused The dropzone is focused via tab or mouse down
- * @param isDragAccept Dragged file is accepted
- * @param isDragReject Dragged file is rejected
+ * @param isDragAccept Active drag over file will be accepted
+ * @param isDragReject Dragged file (whether drag over or dropped) is rejected
  */
-const getStyling = (
-    isDragActive: boolean, isFocused: boolean,
-    isDragAccept: boolean, isDragReject: boolean,
-): IDragStateStyling => {
-    const defaultStyling = {
-        textColour: "textSecondary",
-        borderColour: "border-gray-400",
-        icon: <CloudUploadIcon style={{ fontSize: 128 }} color="action" />
-    }
-
-    if (isFocused && !isDragActive) {
-        return {
-            textColour: "textSecondary",
-            borderColour: "border-blue-400",
-            icon: <CloudUploadIcon style={{ fontSize: 128 }} color="info" />
-        }
-    }
-
-    // if (!isDragActive) return defaultStyling;
-
+const getStyling = (isDragAccept: boolean, isDragReject: boolean): IDragStateStyling => {
     if (isDragAccept) {
         return {
             textColour: "success",
@@ -310,7 +324,10 @@ const getStyling = (
         }
     }
 
-    // Shouldn't get here but just in case
-    // throw new Error("Unexpected state in getStyling");
-    return defaultStyling;
+    // The default state
+    return {
+        textColour: "textSecondary",
+        borderColour: "border-gray-400",
+        icon: <CloudUploadIcon style={{ fontSize: 128 }} color="action" />
+    };
 }
