@@ -214,8 +214,7 @@ const Section = ({
                             break;
                         case "file":
                             inputComponent = <FileInput question={question}
-                                // attachments={attachments.filter(atch => atch.answer === question.key)}
-                                attachments={attachments}
+                                attachments={attachments.filter(atch => atch.question === question.key)}
                                 applicationKey={applicationKey}
                             />;
                             break;

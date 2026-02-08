@@ -87,7 +87,7 @@ export class ApiManager {
         file: File;
         signal?: AbortSignal;
         callback?: (event: AxiosProgressEvent) => void;
-    }): Promise<IApplicationData> {
+    }): Promise<IApplicationAttachment> {
         const requestConfig = ApiManager.getRequestConfig();
 
         // We need to send multipart/form-data
@@ -107,7 +107,7 @@ export class ApiManager {
         formData.append("file", file);
 
         // Start the upload
-        const response = await axios.post<IApplicationData>(
+        const response = await axios.post<IApplicationAttachment>(
             `/attachments`, formData, requestConfig);
 
         return response.data;

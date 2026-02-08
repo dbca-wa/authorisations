@@ -1,17 +1,15 @@
 import BlockIcon from '@mui/icons-material/Block';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import ComputerIcon from '@mui/icons-material/Computer';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import FormHelperText from "@mui/material/FormHelperText";
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
-import type { AxiosError, AxiosProgressEvent } from 'axios';
 import React from 'react';
 
 import type { AlertColor } from '@mui/material/Alert';
+import type { AxiosError, AxiosProgressEvent } from 'axios';
 import { useDropzone } from 'react-dropzone';
 import { Controller, type ControllerRenderProps, type FieldValues } from "react-hook-form";
 import { ApiManager } from '../../context/ApiManager';
@@ -30,15 +28,26 @@ const MAX_FILES_PER_QUESTION = 1;
 
 export const FileInput = ({
     question,
-    attachments,
+    attachments: initialAttachments,
     applicationKey,
 }: {
     question: Readonly<Question>;
     attachments: IApplicationAttachment[];
     applicationKey: string;
 }) => {
+    // Local state to manage attachments (add/remove without parent coordination)
+    const [attachments, setAttachments] = React.useState<IApplicationAttachment[]>(initialAttachments);
+
     // Abort controlller to allow cancelling
     const controller = new AbortController();
+
+    const onAttachmentAdded = (newAttachment: IApplicationAttachment) => {
+        setAttachments(prev => [...prev, newAttachment]);
+    };
+
+    const onAttachmentDeleted = (attachmentKey: string) => {
+        setAttachments(prev => prev.filter(att => att.key !== attachmentKey));
+    };
 
     // Dropzone dialog for drag n drop
     // const { showDialog, hideDialog } = useDialog();
@@ -69,7 +78,10 @@ export const FileInput = ({
                     </Typography>
                     {/* Display the tiled attachment list if there are attachments */}
                     {attachments.length > 0 &&
-                        FileAttachmentList({ attachments: attachments, canDelete: true })
+                        FileAttachmentList({
+                            attachments: attachments, canDelete: true,
+                            onAttachmentDeleted: onAttachmentDeleted,
+                        })
                     }
                     {/* Show the dropzone if we have less than the max allowed files for this question */}
                     {attachments.length < MAX_FILES_PER_QUESTION &&
@@ -78,6 +90,7 @@ export const FileInput = ({
                             field={field}
                             signal={controller.signal}
                             showSnackbar={showSnackbar}
+                            onAttachmentAdded={onAttachmentAdded}
                         />
                     }
                     {fieldState.invalid &&
@@ -97,11 +110,13 @@ const DropzoneDialogContent = ({
     field,
     signal,
     showSnackbar,
+    onAttachmentAdded,
 }: {
     applicationKey: string;
     field: ControllerRenderProps<FieldValues, string>;
     signal: AbortSignal;
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void;
+    onAttachmentAdded: (newAttachment: IApplicationAttachment) => void;
 }) => {
     // The name of the file being uploaded
     const [filename, setFilename] = React.useState<string | null>(null);
@@ -157,6 +172,7 @@ const DropzoneDialogContent = ({
             // Successfully uploaded via API
             .then((resp) => {
                 showSnackbar("File has been uploaded", "success");
+                onAttachmentAdded(resp);
                 return resp;
             })
             // Display the error message to user and log to console
@@ -169,9 +185,7 @@ const DropzoneDialogContent = ({
                 return null;
             })
             // Reset the state so user can try uploading again (up to the max limit).
-            .finally(() => {
-                Reset(3);
-            });
+            .finally(() => Reset(3));
 
         // Something went terribly wrong with the upload, i.e. network error.
         if (!response) return;
@@ -246,7 +260,7 @@ const DropzoneDialogContent = ({
             <VisuallyHiddenInput {...inputProps} />
             {progress === null ?
                 styling.icon :
-                <LinearProgress variant="determinate" value={progress} color="success" />
+                <LinearProgress variant="determinate" value={progress} color="success" className="w-full mt-8" />
             }
 
             {filename ? (
@@ -267,7 +281,7 @@ const DropzoneDialogContent = ({
                         </Button>
                     </Typography>
                     <Typography color={styling.textColour} fontStyle="italic">
-                        Only images and PDF files are accepted. <br />
+                        Only images and PDF files are accepted.<br />
                         Maximum file size limit is 10MB.
                     </Typography>
                 </>

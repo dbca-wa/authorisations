@@ -26,16 +26,17 @@ function dummyRenameAttachment(attachment: IApplicationAttachment) {
 export const FileAttachmentList = ({
     attachments,
     canDelete = false,
+    onAttachmentDeleted,
 }: {
     attachments: IApplicationAttachment[];
     canDelete?: boolean;
+    onAttachmentDeleted?: (attachmentKey: string) => void;
 }) => {
     return (
-        // <CancelOutlinedIcon style={{ cursor: 'pointer', fontSize: 18 }} onClick={e => { e.preventDefault(); dummyDeleteAttachment(attachment); }} />
         <Box className="p-4 border border-gray-300 rounded-md">
             <Stack direction="row" spacing={4} marginTop={2} justifyContent={"center"} alignItems={"center"} >
                 {attachments.map((attachment) => (
-                    <Box className="relative border border-gray-300 rounded-lg px-4 pb-8 flex flex-col items-center min-w-[120px]">
+                    <Box key={attachment.key} className="relative border border-gray-300 rounded-lg px-4 pb-8 flex flex-col items-center min-w-[120px]">
                         {canDelete && (
                             <Box className="absolute bottom-0 center-x-0 flex gap-1">
                                 <IconButton
