@@ -1,8 +1,10 @@
+import re
 from mimetypes import guess_file_type
 from os import path
 
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.conf import settings
+from django.db import transaction
 from django.template.defaultfilters import filesizeformat
 from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
@@ -172,6 +174,12 @@ class FileTooLargeError(exceptions.APIException):
     default_code = "file_too_large"
 
 
+# Compile the question index pattern (zero-indexed); examples:
+# 0.1-1 : step 0, section 1, question 1
+# 2.3-4 : step 2, section 3, question 4
+QUESTION_IDX_PATTERN = re.compile(r"^\d+\.\d+\-\d+$")
+
+
 class AttachmentSerialiser(serializers.ModelSerializer):
     """
     Serializer for ApplicationAttachment model.
@@ -179,8 +187,8 @@ class AttachmentSerialiser(serializers.ModelSerializer):
 
     application_key = serializers.UUIDField(
         source="application.key",
-        required=True,
-        read_only=False,
+        required=False,
+        read_only=True,
     )
 
     download_url = serializers.SerializerMethodField(
@@ -196,6 +204,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
             "application_key",
             "question",
             "name",
+            "file",
             "created_at",
             "download_url",
         )
@@ -206,6 +215,10 @@ class AttachmentSerialiser(serializers.ModelSerializer):
             "created_at",
             "download_url",
         )
+        # `file` field is write-only and required only when creating a new attachment.
+        extra_kwargs = {
+            "file": {"write_only": True},
+        }
 
     def get_download_url(self, obj: ApplicationAttachment) -> str | None:
         request = self.context.get("request")
@@ -232,6 +245,9 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         return fields
 
     def validate_file(self, value: serializers.FileField) -> serializers.FileField:
+        """
+        Validate the uploaded file for size and type, using both the file header and extension.
+        """
         # Validate the file size first
         if value.size > settings.UPLOAD_MAX_SIZE:
             raise FileTooLargeError(
@@ -255,4 +271,73 @@ class AttachmentSerialiser(serializers.ModelSerializer):
                 return value
 
         # Decline by default
-        raise exceptions.ValidationError("Unsupported file type.")
+        raise exceptions.ValidationError(
+            "File type cannot be determined or is not allowed."
+        )
+
+    def validate_application_key(self, value):
+        """
+        Validate the application key to ensure it exists and belongs to the user.
+        Also, cache the application instance in the context for later use in create().
+        """
+        request = self.context.get("request")
+        try:
+            application = Application.objects.get(key=value, owner=request.user)
+        except Application.DoesNotExist:
+            raise serializers.ValidationError(
+                {"application_key": "Application not found."}
+            )
+
+        # Cache for later to avoid re-query in create()
+        self.context["application"] = application
+        return value
+
+    def validate_question(self, value):
+        """
+        Validate the question index to ensure it follows the expected format.
+
+        Looking up the actual question type being a "file" in the questionnaire
+        is possible, however is an overkill for the time being.
+        """
+        question_idx = value.strip()
+        if not question_idx:
+            raise serializers.ValidationError(
+                {"question": "Question index cannot be empty."}
+            )
+
+        # Perform a regex check to ensure the format
+        if not re.match(QUESTION_IDX_PATTERN, question_idx):
+            raise serializers.ValidationError(
+                {"question": "Question index does not match the expected format. "}
+            )
+
+        return question_idx
+
+    def create(self, validated_data):
+        # Pull cached instance instead of querying again
+        application = self.context.pop("application", None)
+
+        # Explcitly raise an error if we don't have the application instance in the context
+        if application is None:
+            raise exceptions.ValidationError(
+                {
+                    "application_key": "Application not found in context, validation did not run."
+                }
+            )
+
+        # Prepare the attachment instance data
+        try:
+            data = {
+                "application": application,
+                "question": validated_data["question"],
+                "name": validated_data["name"],
+                "file": validated_data["file"],
+            }
+        except KeyError as e:
+            raise serializers.ValidationError("Missing required field: " + str(e))
+
+        # Create the attachment record in an atomic transaction to ensure data integrity
+        with transaction.atomic():
+            attachment = ApplicationAttachment.objects.create(**data)
+
+        return attachment

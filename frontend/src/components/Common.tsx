@@ -1,5 +1,6 @@
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import DownloadIcon from '@mui/icons-material/Download';
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
@@ -17,6 +18,10 @@ function dummyDeleteAttachment(attachment: IApplicationAttachment) {
     alert(`Delete attachment: ${attachment.name}`);
 }
 
+function dummyRenameAttachment(attachment: IApplicationAttachment) {
+    alert(`Rename attachment: ${attachment.name}`);
+}
+
 
 export const FileAttachmentList = ({
     attachments,
@@ -30,9 +35,9 @@ export const FileAttachmentList = ({
         <Box className="p-4 border border-gray-300 rounded-md">
             <Stack direction="row" spacing={4} marginTop={2} justifyContent={"center"} alignItems={"center"} >
                 {attachments.map((attachment) => (
-                    <Box className="relative border border-gray-300 rounded-lg p-4 flex flex-col items-center min-w-[120px]">
+                    <Box className="relative border border-gray-300 rounded-lg px-4 pb-8 flex flex-col items-center min-w-[120px]">
                         {canDelete && (
-                            <Box className="absolute top-0 right-0">
+                            <Box className="absolute bottom-0 center-x-0 flex gap-1">
                                 <IconButton
                                     color="error"
                                     size="small"
@@ -40,6 +45,14 @@ export const FileAttachmentList = ({
                                     onClick={() => dummyDeleteAttachment(attachment)}
                                 >
                                     <DeleteIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                    color="primary"
+                                    size="small"
+                                    title={`Rename: ${attachment.name}`}
+                                    onClick={() => dummyRenameAttachment(attachment)}
+                                >
+                                    <EditIcon fontSize="small" />
                                 </IconButton>
                             </Box>
                         )}
