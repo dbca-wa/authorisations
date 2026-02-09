@@ -48,6 +48,12 @@ export const FileInput = ({
         setAttachments(prev => prev.filter(att => att.key !== attachmentKey));
     };
 
+    const onAttachmentRenamed = (updatedAttachment: IApplicationAttachment) => {
+        setAttachments(prev =>
+            prev.map(att => att.key === updatedAttachment.key ? updatedAttachment : att)
+        );
+    };
+
     // Snackbar for notifications
     const { showSnackbar } = useSnackbar();
 
@@ -75,8 +81,9 @@ export const FileInput = ({
                     {/* Display the tiled attachment list if there are attachments */}
                     {attachments.length > 0 &&
                         FileAttachmentList({
-                            attachments: attachments, canDelete: true,
+                            attachments: attachments, canEdit: true,
                             onAttachmentDeleted: onAttachmentDeleted,
+                            onAttachmentRenamed: onAttachmentRenamed,
                         })
                     }
                     {/* Show the dropzone if we have less than the max allowed files for this question */}

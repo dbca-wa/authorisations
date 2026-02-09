@@ -23,6 +23,14 @@ class ApplicationViewSet(
     queryset = Application.objects.all()
     serializer_class = ApplicationSerialiser
     lookup_field = "key"
+    http_method_names = [
+        "get",
+        "post",
+        "put",
+        "patch",
+        "options",
+        "head",
+    ]
 
     def get_queryset(self):
         """
@@ -155,6 +163,14 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     serializer_class = AttachmentSerialiser
     lookup_field = "key"
     filter_backends = [ApplicationFilterBackend]
+    http_method_names = [
+        "get",
+        "post",
+        "delete",
+        "patch",
+        "options",
+        "head",
+    ]
 
     def get_queryset(self):
         """
@@ -190,14 +206,18 @@ class VersionFilterBackend(filters.BaseFilterBackend):
 
 class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    A simple ViewSet for listing or retrieving applications.
+    A simple ViewSet for listing or retrieving questionnaires.
     """
 
     queryset = Questionnaire.objects.all()
     serializer_class = QuestionnaireSerialiser
-
     lookup_field = "slug"
     filter_backends = [VersionFilterBackend]
+    http_method_names = [
+        "get",
+        "options",
+        "head",
+    ]
 
     def get_request_version(self) -> int | None:
         try:

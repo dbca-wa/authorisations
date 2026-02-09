@@ -232,7 +232,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         request = self.context.get("request", None)
         isPost = request.method == "POST"
         # isPut = request.method == "PUT"
-        # isPatch = request.method == "PATCH"
+        isPatch = request.method == "PATCH"
 
         # `application` field is required only when first creating
         fields["application_key"].required = isPost
@@ -241,6 +241,14 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         # `question` field is required only when first creating
         fields["question"].required = isPost
         fields["question"].read_only = not isPost
+
+        # `file` field is writable / required only when first creating the instance
+        fields["file"].required = isPost
+        fields["file"].read_only = not isPost
+
+        # `name` field is writable only on first create or PATCH updates, but not on PUT updates
+        fields["name"].required = isPost or isPatch
+        fields["name"].read_only = not (isPost or isPatch)
 
         return fields
 
@@ -341,3 +349,19 @@ class AttachmentSerialiser(serializers.ModelSerializer):
             attachment = ApplicationAttachment.objects.create(**data)
 
         return attachment
+
+    def update(self, instance, validated_data):
+        # Disallow changing the file via update endpoints
+        if "file" in validated_data:
+            raise serializers.ValidationError({"file": "File cannot be updated."})
+
+        # Only allow renaming
+        try:
+            name = validated_data["name"]
+        except KeyError:
+            raise serializers.ValidationError({"name": "Name is required for update."})
+
+        # Do update the name and save
+        instance.name = name
+        instance.save(update_fields=["name"])
+        return instance

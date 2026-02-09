@@ -250,6 +250,6 @@ const displayString = (answer: IAnswer) => {
 
 const displayFiles = (attachments: IApplicationAttachment[]) => {
     return attachments ?
-        FileAttachmentList({ attachments: attachments, canDelete: false }) :
+        FileAttachmentList({ attachments: attachments, canEdit: false }) :
         <Typography color="text.disabled">(no file uploaded)</Typography>;
 };

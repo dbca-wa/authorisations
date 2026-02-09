@@ -74,7 +74,7 @@ export class ApiManager {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.get<IApplicationAttachment[]>(
             `/attachments?application_key=${appKey}`, requestConfig);
-        
+
         return response.data;
     }
 
@@ -116,6 +116,14 @@ export class ApiManager {
     public static async deleteAttachment(attachmentKey: string): Promise<void> {
         const requestConfig = ApiManager.getRequestConfig();
         await axios.delete(`/attachments/${attachmentKey}`, requestConfig);
+    }
+
+    public static async renameAttachment(attachmentKey: string, newName: string): Promise<IApplicationAttachment> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationAttachment>(
+            `/attachments/${attachmentKey}`, { name: newName }, requestConfig);
+
+        return response.data;
     }
 
     public static async getQuestionnaire(slug: string, version: number): Promise<IQuestionnaireData> {
