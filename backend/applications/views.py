@@ -34,7 +34,9 @@ def download_attachment(request, appKey, attachmentKey):
     """Download an attachment based on the application and attachment key provided in the URL."""
     # Fetch the attachment object
     try:
-        attachment = ApplicationAttachment.objects.select_related("application").get(
+        attachment = ApplicationAttachment.objects.select_related(
+            "application", "application__owner"
+        ).get(
             application__key=appKey,
             key=attachmentKey,
             is_deleted=False,

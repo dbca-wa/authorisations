@@ -15,7 +15,6 @@ import { Controller, type ControllerRenderProps, type FieldValues } from "react-
 import { ApiManager } from '../../context/ApiManager';
 import { ConfigManager } from '../../context/ConfigManager';
 import { ERROR_MSG } from "../../context/Constants";
-import { useDialog } from '../../context/Dialogs';
 import { useSnackbar } from '../../context/Snackbar';
 import type { IApplicationAttachment } from '../../context/types/Application';
 import type { Question } from "../../context/types/Questionnaire";
@@ -48,9 +47,6 @@ export const FileInput = ({
     const onAttachmentDeleted = (attachmentKey: string) => {
         setAttachments(prev => prev.filter(att => att.key !== attachmentKey));
     };
-
-    // Dropzone dialog for drag n drop
-    // const { showDialog, hideDialog } = useDialog();
 
     // Snackbar for notifications
     const { showSnackbar } = useSnackbar();

@@ -174,10 +174,13 @@ class ApplicationAttachment(models.Model):
         return f"Attachment {self.key} for Application {self.application.id}"
 
     def soft_delete(self):
+        """
+        Mark the attachment as deleted and record when.
+        """
         self.is_deleted = True
         self.deleted_at = timezone.now()
-        self.save()
-
+        self.save(update_fields=["is_deleted", "deleted_at"])
+        
     def get_download_url(self, request):
         """Generate a download URL for this attachment."""
         return request.build_absolute_uri(f"/d/{self.application.key}/{self.key}")

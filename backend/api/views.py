@@ -167,17 +167,11 @@ class AttachmentViewSet(viewsets.ModelViewSet):
             is_deleted=False,
         )
 
-    # def perform_create(self, serializer):
-    #     application_key = self.kwargs.get("application")
-    #     try:
-    #         application = Application.objects.get(
-    #             key=application_key, owner=self.request.user
-    #         )
-    #     except Application.DoesNotExist:
-    #         raise NotFound("Application not found.")
-    #     serializer.save(
-    #         application=application, name=serializer.validated_data["file"].name
-    #     )
+    def perform_destroy(self, instance: ApplicationAttachment):
+        # defensive check
+        if instance.application.owner != self.request.user:
+            raise NotFound("Attachment not found.")
+        instance.soft_delete()
 
 
 class VersionFilterBackend(filters.BaseFilterBackend):

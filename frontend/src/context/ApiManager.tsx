@@ -113,6 +113,11 @@ export class ApiManager {
         return response.data;
     }
 
+    public static async deleteAttachment(attachmentKey: string): Promise<void> {
+        const requestConfig = ApiManager.getRequestConfig();
+        await axios.delete(`/attachments/${attachmentKey}`, requestConfig);
+    }
+
     public static async getQuestionnaire(slug: string, version: number): Promise<IQuestionnaireData> {
         const requestConfig = ApiManager.getRequestConfig();
         const url = `/questionnaires/${slug}` + (version ? `?version=${version}` : '');
