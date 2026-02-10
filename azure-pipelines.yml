@@ -4,6 +4,7 @@
 
 trigger:
 - main
+- uploads-backend
 
 resources:
 - repo: self
