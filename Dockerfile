@@ -26,6 +26,7 @@ RUN apt-get install --no-install-recommends --fix-missing -y \
 
 RUN apt remove -y libnode-dev
 RUN apt remove -y libnode72
+RUN apt remove -y python3.12
 RUN update-ca-certificates
 
 # Update timezone
