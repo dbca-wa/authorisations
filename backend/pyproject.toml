@@ -6,7 +6,7 @@ authors = [
     {name = "Ecoinformatics, BCS", email = "ecoinformatics.admin@dbca.wa.gov.au"}
 ]
 readme = "README.md"
-requires-python = "<4,>=3.13"
+requires-python = "<4,>=3.12"
 dependencies = [
     "Django (>=5.2,<5.3)",
     "psycopg (>=3.2.6,<4.0.0)",
