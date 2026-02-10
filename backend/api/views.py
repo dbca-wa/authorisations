@@ -3,8 +3,7 @@ import uuid
 from applications.models import Application, ApplicationAttachment
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
-from rest_framework import filters, mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework import filters, mixins, viewsets
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 
@@ -39,100 +38,6 @@ class ApplicationViewSet(
         """
         # Ensure users can only see their own applications
         return super().get_queryset().filter(owner=self.request.user)
-
-    # @action(
-    #     detail=True,
-    #     methods=["get", "post", "delete"],
-    #     serializer_class=AttachmentSerialiser,
-    # )
-    # def attachments(self, request, key=None, uuid=None):
-    #     """
-    #     Custom endpoint to manage files for a specific application.
-
-    #     - `GET /applications/{key}/attachments/`: List all attachments for the application.
-    #     - `GET /applications/{key}/attachments/{uuid}/`: Download a specific file.
-    #     - `DELETE /applications/{key}/attachments/{uuid}/`: Delete a specific file.
-    #     - `POST /applications/{key}/attachments/`: Upload a new file (with question index reference).
-    #     """
-
-    #     application = self.get_object()
-
-    #     if request.method == "GET":
-    #         if uuid:
-    #             # Download a specific file
-    #             try:
-    #                 attachment = application.attachments.get(key=uuid, deleted=False)
-    #             except ApplicationAttachment.DoesNotExist:
-    #                 return Response(
-    #                     {"error": "Attachment not found."},
-    #                     status=status.HTTP_404_NOT_FOUND,
-    #                 )
-    #             response = Response(
-    #                 attachment.file.read(),
-    #                 content_type=attachment.file.file.content_type,
-    #             )
-    #             response["Content-Disposition"] = (
-    #                 f'attachment; filename="{attachment.name}"'
-    #             )
-    #             return response
-    #         else:
-    #             # List all attachments
-    #             attachments = application.attachments.filter(deleted=False)
-    #             data = [
-    #                 {
-    #                     "key": str(a.key),
-    #                     "name": a.name,
-    #                     "answer": a.answer,
-    #                     "created_at": a.created_at,
-    #                 }
-    #                 for a in attachments
-    #             ]
-    #             return Response(data)
-
-    #     if request.method == "DELETE" and uuid:
-    #         try:
-    #             attachment = application.attachments.get(key=uuid, deleted=False)
-    #         except ApplicationAttachment.DoesNotExist:
-    #             return Response(
-    #                 {"error": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND
-    #             )
-    #         attachment.soft_delete()
-    #         return Response({"status": "deleted"})
-
-    #     if request.method == "POST":
-    #         return self._upload_file(request, application)
-
-    #     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    # def _upload_file(self, request, application: Application) -> Response:
-    #     # Validate file upload first
-    #     serializer = self.get_serializer(
-    #         data=request.data, context={"application": application}
-    #     )
-
-    #     serializer.is_valid(raise_exception=True)
-
-    #     uploaded_file = serializer.validated_data["file"]
-    #     answer = serializer.validated_data["answer"]
-
-    #     # Create the attachment record
-    #     attachment = ApplicationAttachment.objects.create(
-    #         application=application,
-    #         file=uploaded_file,
-    #         name=uploaded_file.name,
-    #         answer=answer,
-    #     )
-
-    #     return Response(
-    #         {
-    #             "status": "file uploaded",
-    #             "key": str(attachment.key),
-    #             "name": attachment.name,
-    #             "answer": attachment.answer,
-    #             "created_at": attachment.created_at,
-    #         },
-    #         status=status.HTTP_201_CREATED,
-    #     )
 
 
 class ApplicationFilterBackend(filters.BaseFilterBackend):

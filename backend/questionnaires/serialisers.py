@@ -36,7 +36,7 @@ QUESTION_TYPE_CHOICES = [
     ("checkbox", "Checkbox"),
     ("select", "Multiple Choice Select"),
     ("date", "Date"),
-    # ("file", "File Upload"),
+    ("file", "File Upload"),
     # ("grid", "Grid (Matrix of options)"),
 ]
 

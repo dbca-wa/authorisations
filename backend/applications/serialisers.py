@@ -269,6 +269,10 @@ class AttachmentSerialiser(serializers.ModelSerializer):
 
         # Get the possible mime types based on the "magic bytes"
         matches = find_matches_for_file_header(file_header=value.read(32))
+
+        # Reset the file pointer to the beginning after reading the header
+        value.seek(0)
+
         for match in matches:
             match_mimetype, _ = guess_file_type(f"file.{match.file_extension}")
             # File extension must match and mime type must be allowed
