@@ -226,7 +226,7 @@
               "select_options": []
             },
             {
-              "type": "text",
+              "type": "file",
               "label": "Attach your current CI competency form",
               "description": "The competency form must be less than 12 months old.",
               "is_required": true,
@@ -439,7 +439,7 @@
               "select_options": []
             },
             {
-              "type": "text",
+              "type": "file",
               "label": "Please attach location map of the fieldwork",
               "description": "Preferred file types for maps are pdf or jpeg.",
               "is_required": true,
