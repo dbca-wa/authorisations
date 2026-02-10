@@ -10,6 +10,10 @@ RUN apt-get clean
 RUN apt-get update
 RUN apt-get upgrade -y
 
+# Add deadsnakes repo for newer python versions
+RUN apt install --no-install-recommends --fix-missing -y software-properties-common
+RUN add-apt-repository ppa:deadsnakes/ppa
+
 # Install with single comment and let apt-get to solve the dependencies.
 RUN apt-get install --no-install-recommends --fix-missing -y \
     # command-line tools
@@ -18,7 +22,7 @@ RUN apt-get install --no-install-recommends --fix-missing -y \
     tzdata libmagic-dev gcc binutils libproj-dev gdal-bin \
     bzip2 unzip libpq-dev patch pkg-config ca-certificates \
     # python-psql
-    python3 python3-setuptools python3-dev postgresql-client
+    python3.13-full python3.13-dev postgresql-client
 
 RUN apt remove -y libnode-dev
 RUN apt remove -y libnode72
@@ -36,7 +40,7 @@ RUN apt-get install --no-install-recommends -y nodejs
 
 ## BACKEND
 # Install Poetry
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 -
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3.13 -
 ENV PATH="${PATH}:/etc/poetry/bin"
 
 # DBCA default Scripts
