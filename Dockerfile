@@ -18,7 +18,7 @@ RUN apt-get install --no-install-recommends --fix-missing -y \
     tzdata libmagic-dev gcc binutils libproj-dev gdal-bin \
     bzip2 unzip libpq-dev patch pkg-config ca-certificates \
     # python-psql
-    python3.13 python3.13-setuptools python3.13-dev postgresql-client
+    python3 python3-setuptools python3-dev postgresql-client
 
 RUN apt remove -y libnode-dev
 RUN apt remove -y libnode72
@@ -36,7 +36,7 @@ RUN apt-get install --no-install-recommends -y nodejs
 
 ## BACKEND
 # Install Poetry
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3.13 -
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 -
 ENV PATH="${PATH}:/etc/poetry/bin"
 
 # DBCA default Scripts
