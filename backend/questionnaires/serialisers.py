@@ -29,6 +29,8 @@ class ReferenceFieldConverter:
         return {"$ref": f"#/$defs/{field.definition}"}
 
 
+# TODO: This is incorrectly defining both the main question types
+# and the grid question column types. Split them into explicit choices.
 QUESTION_TYPE_CHOICES = [
     ("text", "Text"),
     ("textarea", "Textarea Multi-line"),
@@ -36,7 +38,7 @@ QUESTION_TYPE_CHOICES = [
     ("checkbox", "Checkbox"),
     ("select", "Multiple Choice Select"),
     ("date", "Date"),
-    ("file", "File Upload"),
+    # ("file", "File Upload"),
     # ("grid", "Grid (Matrix of options)"),
 ]
 
