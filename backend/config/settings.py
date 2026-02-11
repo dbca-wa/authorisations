@@ -227,10 +227,12 @@ elif os.path.exists(BASE_DIR / "assets" / "manifest.json"):
 DJANGO_VITE = {
     "default": {
         "manifest_path": MANIFEST_PATH,
-        "dev_mode": DEBUG,
+        "dev_mode": env("DEBUG_FRONTEND", default=False),
         # If UAT host is set, we need to use it for the dev server URL instead of localhost
         "dev_server_protocol": "https" if ALLOWED_HOST_UAT else "http",
         "dev_server_host": ALLOWED_HOST_UAT if ALLOWED_HOST_UAT else "localhost",
+        # The plugin doesn't support stripping the port.
+        # `None` will actually add string "None" and will not work
         "dev_server_port": None if ALLOWED_HOST_UAT else 5173,
     }
 }
