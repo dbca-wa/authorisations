@@ -71,9 +71,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
         request = self.context.get("request", None)
-        isPost = request.method == "POST"
-        isPut = request.method == "PUT"
-        isPatch = request.method == "PATCH"
+        
+        # Default to False when request is not present (e.g., during schema generation)
+        isPost = request.method == "POST" if request else False
+        isPut = request.method == "PUT" if request else False
+        isPatch = request.method == "PATCH" if request else False
 
         # Questionnaire slug is required when first creating
         fields["questionnaire_slug"].required = isPost
@@ -237,9 +239,10 @@ class AttachmentSerialiser(serializers.ModelSerializer):
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
         request = self.context.get("request", None)
-        isPost = request.method == "POST"
-        # isPut = request.method == "PUT"
-        isPatch = request.method == "PATCH"
+        
+        # Default to False when request is not present (e.g., during schema generation)
+        isPost = request.method == "POST" if request else False
+        isPatch = request.method == "PATCH" if request else False
 
         # `application` field is required only when first creating
         fields["application_key"].required = isPost
