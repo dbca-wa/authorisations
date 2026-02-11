@@ -37,8 +37,16 @@ export const FileInput = ({
     // Local state to manage attachments (add/remove without parent coordination)
     const [attachments, setAttachments] = React.useState<IApplicationAttachment[]>(initialAttachments);
 
-    // Abort controlller to allow cancelling
-    const controller = new AbortController();
+    // Abort controller ref to persist across re-renders
+    const controllerRef = React.useRef<AbortController>(new AbortController());
+
+    // Initialize controller on mount and abort on unmount
+    React.useEffect(() => {
+        return () => {
+            // Abort any pending requests when component unmounts
+            controllerRef.current.abort();
+        };
+    }, []);
 
     const onAttachmentAdded = (newAttachment: IApplicationAttachment) => {
         setAttachments(prev => [...prev, newAttachment]);
@@ -91,7 +99,7 @@ export const FileInput = ({
                         <DropzoneDialogContent
                             applicationKey={applicationKey}
                             field={field}
-                            signal={controller.signal}
+                            signal={controllerRef.current.signal}
                             showSnackbar={showSnackbar}
                             onAttachmentAdded={onAttachmentAdded}
                         />
