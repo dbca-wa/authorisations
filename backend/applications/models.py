@@ -131,9 +131,9 @@ class PrivateMediaStorage(FileSystemStorage):
         # Save it to the PRIVATE_MEDIA_ROOT - not MEDIA_ROOT
         kwargs["location"] = settings.PRIVATE_MEDIA_ROOT
 
-        # Don't try to set file permissions, mounted storage is owned by root and writable.
-        # Leaving this to default will cause `PermissionError` on each saving attempt.
-        kwargs["FILE_UPLOAD_PERMISSIONS"] = None
+        # This setting is explicitly `None` as the Azure File Storage filesystem
+        # belongs to `root` user, otherwise will throw `PermissionError` on file uploads
+        kwargs["file_permissions_mode"] = None
 
         super().__init__(*args, **kwargs)
 

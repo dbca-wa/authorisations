@@ -265,6 +265,10 @@ REST_FRAMEWORK = {
 # This directory should be mounted in AKS and not served by any web server.
 PRIVATE_MEDIA_ROOT = env("PRIVATE_MEDIA_ROOT")
 
+# This setting is explicitly `None` as the Azure File Storage filesystem
+# belongs to `root` user, otherwise will throw `PermissionError` on file uploads
+FILE_UPLOAD_PERMISSIONS = None
+
 # Maximum allowed file size for uploads: 10MB
 UPLOAD_MAX_SIZE = 10 * 1024 * 1024
 
