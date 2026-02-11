@@ -226,8 +226,12 @@ elif os.path.exists(BASE_DIR / "assets" / "manifest.json"):
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": DEBUG,
         "manifest_path": MANIFEST_PATH,
+        "dev_mode": DEBUG,
+        # If UAT host is set, we need to use it for the dev server URL instead of localhost
+        "dev_server_protocol": "https" if ALLOWED_HOST_UAT else "http",
+        "dev_server_host": ALLOWED_HOST_UAT if ALLOWED_HOST_UAT else "localhost",
+        "dev_server_port": 80 if ALLOWED_HOST_UAT else 5173,
     }
 }
 
