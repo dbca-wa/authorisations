@@ -125,6 +125,8 @@ const DropzoneDialogContent = ({
     const [filename, setFilename] = React.useState<string | null>(null);
     // Uploading progress state (0-100) or null (not uploading yet)
     const [progress, setProgress] = React.useState<number | null>(null);
+    // Ref to hold pending reset timer id so we can clear it on unmount
+    const resetTimerRef = React.useRef<number | null>(null);
 
     /**
      * Resets the dropzone state to allow user to try uploading again.
@@ -132,14 +134,30 @@ const DropzoneDialogContent = ({
     const Reset = React.useCallback((delay: number = 3) => {
         // Delay the reset for visual feedback
         if (delay > 0) {
-            setTimeout(() => Reset(0), delay * 1000);
+            // clear any existing timer first
+            if (resetTimerRef.current) {
+                clearTimeout(resetTimerRef.current);
+            }
+            // schedule a new timer and store id so we can cancel on unmount
+            resetTimerRef.current = window.setTimeout(() => Reset(0), delay * 1000) as unknown as number;
             return;
         }
 
         // clear UI state
         setFilename(null);
         setProgress(null);
-    }, [field]);
+    }, []);
+
+    // Clear any pending timeout when the component unmounts to avoid updating
+    // state after unmount (prevents React warnings / potential leaks).
+    React.useEffect(() => {
+        return () => {
+            if (resetTimerRef.current) {
+                clearTimeout(resetTimerRef.current);
+                resetTimerRef.current = null;
+            }
+        };
+    }, []);
 
     /**
      * Handles the file drop event, uploads the file via API, and updates the form state.
