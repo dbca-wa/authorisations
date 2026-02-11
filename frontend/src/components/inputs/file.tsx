@@ -37,17 +37,6 @@ export const FileInput = ({
     // Local state to manage attachments (add/remove without parent coordination)
     const [attachments, setAttachments] = React.useState<IApplicationAttachment[]>(initialAttachments);
 
-    // Abort controller ref to persist across re-renders
-    const controllerRef = React.useRef<AbortController>(new AbortController());
-
-    // Initialize controller on mount and abort on unmount
-    React.useEffect(() => {
-        return () => {
-            // Abort any pending requests when component unmounts
-            controllerRef.current.abort();
-        };
-    }, []);
-
     const onAttachmentAdded = (newAttachment: IApplicationAttachment) => {
         setAttachments(prev => [...prev, newAttachment]);
     };
@@ -56,7 +45,7 @@ export const FileInput = ({
         setAttachments(prev => prev.filter(att => att.key !== attachmentKey));
     };
 
-    const onAttachmentRenamed = (updatedAttachment: IApplicationAttachment) => {
+    const onAttachmentUpdated = (updatedAttachment: IApplicationAttachment) => {
         setAttachments(prev =>
             prev.map(att => att.key === updatedAttachment.key ? updatedAttachment : att)
         );
@@ -88,18 +77,18 @@ export const FileInput = ({
                     </Typography>
                     {/* Display the tiled attachment list if there are attachments */}
                     {attachments.length > 0 &&
-                        FileAttachmentList({
-                            attachments: attachments, canEdit: true,
-                            onAttachmentDeleted: onAttachmentDeleted,
-                            onAttachmentRenamed: onAttachmentRenamed,
-                        })
+                        <FileAttachmentList
+                            attachments={attachments}
+                            canEdit={true}
+                            onAttachmentDeleted={onAttachmentDeleted}
+                            onAttachmentUpdated={onAttachmentUpdated}
+                        />
                     }
                     {/* Show the dropzone if we have less than the max allowed files for this question */}
                     {attachments.length < MAX_FILES_PER_QUESTION &&
                         <DropzoneDialogContent
                             applicationKey={applicationKey}
                             field={field}
-                            signal={controllerRef.current.signal}
                             showSnackbar={showSnackbar}
                             onAttachmentAdded={onAttachmentAdded}
                         />
@@ -119,13 +108,11 @@ export const FileInput = ({
 const DropzoneDialogContent = ({
     applicationKey,
     field,
-    signal,
     showSnackbar,
     onAttachmentAdded,
 }: {
     applicationKey: string;
     field: ControllerRenderProps<FieldValues, string>;
-    signal: AbortSignal;
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void;
     onAttachmentAdded: (newAttachment: IApplicationAttachment) => void;
 }) => {
@@ -191,7 +178,6 @@ const DropzoneDialogContent = ({
             name: file.name,
             question: field.name,
             file: file,
-            signal: signal,
             callback: (event: AxiosProgressEvent) => {
                 // console.log("Upload progress:", event)
                 // Update the progress percentage

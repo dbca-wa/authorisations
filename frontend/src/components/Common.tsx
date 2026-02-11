@@ -20,18 +20,21 @@ export const FileAttachmentList = ({
     attachments,
     canEdit = false,
     onAttachmentDeleted,
-    onAttachmentRenamed,
+    onAttachmentUpdated,
 }: {
     attachments: IApplicationAttachment[];
     canEdit?: boolean;
     onAttachmentDeleted?: (attachmentKey: string) => void;
-    onAttachmentRenamed?: (updatedAttachment: IApplicationAttachment) => void;
+    onAttachmentUpdated?: (updatedAttachment: IApplicationAttachment) => void;
 }) => {
     // Confirm dialog for delete action
     const { showDialog, hideDialog } = useDialog();
 
     // Snackbar for notifications
     const { showSnackbar } = useSnackbar();
+
+    // Ref for the rename input (single ref works since only one dialog open at a time)
+    const renameInputRef = React.useRef<HTMLInputElement>(null);
 
     const deleteAttachment = (attachment: IApplicationAttachment) => {
         showDialog({
@@ -72,7 +75,7 @@ export const FileAttachmentList = ({
         });
     };
 
-    const renameAttachment = (attachment: IApplicationAttachment, inputRef: React.RefObject<HTMLInputElement | null>) => {
+    const renameAttachment = (attachment: IApplicationAttachment) => {
         // Split filename and extension
         const lastDotIndex = attachment.name.lastIndexOf('.');
         const baseName = lastDotIndex === -1 ? attachment.name : attachment.name.substring(0, lastDotIndex);
@@ -84,7 +87,7 @@ export const FileAttachmentList = ({
                 <Box className="w-md items-center justify-center flex flex-col gap-2">
                     <Box display="flex" alignItems="flex-end" gap={1} width="100%">
                         <TextField
-                            inputRef={inputRef}
+                            inputRef={renameInputRef}
                             defaultValue={baseName}
                             label="File name"
                             variant="standard"
@@ -103,14 +106,14 @@ export const FileAttachmentList = ({
                     color="primary"
                     startIcon={<EditIcon />}
                     onClick={() => {
-                        const newBaseName = inputRef.current?.value || baseName;
+                        const newBaseName = renameInputRef.current?.value || baseName;
                         const newFullName = newBaseName + extension;
 
                         // Call the API to rename the attachment
                         ApiManager.renameAttachment(attachment.key, newFullName)
                             .then((updatedAttachment) => {
                                 // Notify parent with updated attachment
-                                onAttachmentRenamed?.(updatedAttachment);
+                                onAttachmentUpdated?.(updatedAttachment);
                                 showSnackbar("File has been renamed", "success");
                             })
                             .catch((error) => {
@@ -127,57 +130,45 @@ export const FileAttachmentList = ({
         });
     }
 
-    // Store refs for rename inputs to access their values when needed
-    const renameInputRefs = React.useRef<Record<string, React.RefObject<HTMLInputElement | null>>>({});
-
     return (
         <Box className="p-4 border border-gray-300 rounded-md">
             <Stack direction="row" spacing={4} marginTop={2} justifyContent={"center"} alignItems={"center"} >
-                {attachments.map((attachment) => {
-                    // Create a ref for this attachment if it doesn't exist
-                    if (!renameInputRefs.current[attachment.key]) {
-                        renameInputRefs.current[attachment.key] = React.createRef<HTMLInputElement>();
-                    }
-                    // Get the ref for this attachment's rename input
-                    const inputRef = renameInputRefs.current[attachment.key];
-
-                    return (
-                        <Box key={attachment.key} className="relative border border-gray-300 rounded-lg px-4 pb-8 flex flex-col items-center min-w-[120px]">
-                            {canEdit && (
-                                <Box className="absolute bottom-0 center-x-0 flex gap-1">
-                                    <IconButton
-                                        color="error"
-                                        size="small"
-                                        title={`Delete: ${attachment.name}`}
-                                        onClick={() => deleteAttachment(attachment)}
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                        color="primary"
-                                        size="small"
-                                        title={`Rename: ${attachment.name}`}
-                                        onClick={() => renameAttachment(attachment, inputRef)}
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
-                                </Box>
-                            )}
-                            <Link
-                                href={attachment.download_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                underline="none"
-                                className="flex flex-col items-center gap-2"
-                            >
-                                {getIconFromFilename(attachment.name)}
-                                <Typography variant="body2" style={{ wordBreak: 'break-word', textAlign: 'center', maxWidth: 120 }}>
-                                    {attachment.name}
-                                </Typography>
-                            </Link>
-                        </Box>
-                    );
-                })}
+                {attachments.map((attachment) => (
+                    <Box key={attachment.key} className="relative border border-gray-300 rounded-lg px-4 pb-8 flex flex-col items-center min-w-[120px]">
+                        {canEdit && (
+                            <Box className="absolute bottom-0 center-x-0 flex gap-1">
+                                <IconButton
+                                    color="error"
+                                    size="small"
+                                    title={`Delete: ${attachment.name}`}
+                                    onClick={() => deleteAttachment(attachment)}
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                    color="primary"
+                                    size="small"
+                                    title={`Rename: ${attachment.name}`}
+                                    onClick={() => renameAttachment(attachment)}
+                                >
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        )}
+                        <Link
+                            href={attachment.download_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            underline="none"
+                            className="flex flex-col items-center gap-2"
+                        >
+                            {getIconFromFilename(attachment.name)}
+                            <Typography variant="body2" style={{ wordBreak: 'break-word', textAlign: 'center', maxWidth: 120 }}>
+                                {attachment.name}
+                            </Typography>
+                        </Link>
+                    </Box>
+                ))}
             </Stack>
         </Box>
     );
