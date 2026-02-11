@@ -54,6 +54,9 @@ RUN echo 'alias ls="ls -lah --color=auto"' >> /home/appuser/.bash_aliases
 RUN mkdir /app
 RUN chown -R appuser:appuser /app
 
+# Make sure the "private-media" mounted storage is owned by appuser
+RUN chown -R appuser:appuser /app/private-media
+
 # =================== RUNTIME ===================
 FROM builder_base
 
