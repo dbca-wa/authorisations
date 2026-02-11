@@ -130,11 +130,11 @@ class PrivateMediaStorage(FileSystemStorage):
 
         # Save it to the PRIVATE_MEDIA_ROOT - not MEDIA_ROOT
         kwargs["location"] = settings.PRIVATE_MEDIA_ROOT
-        
+
         # Don't try to set file permissions, mounted storage is owned by root and writable.
         # Leaving this to default will cause `PermissionError` on each saving attempt.
         kwargs["FILE_UPLOAD_PERMISSIONS"] = None
-        
+
         super().__init__(*args, **kwargs)
 
 
@@ -186,7 +186,7 @@ class ApplicationAttachment(models.Model):
         self.is_deleted = True
         self.deleted_at = timezone.now()
         self.save(update_fields=["is_deleted", "deleted_at"])
-        
+
     def get_download_url(self, request):
         """Generate a download URL for this attachment."""
         return request.build_absolute_uri(f"/d/{self.application.key}/{self.key}")

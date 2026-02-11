@@ -11,7 +11,7 @@ except ImportError:
 
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.template.defaultfilters import filesizeformat
 from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
@@ -357,7 +357,12 @@ class AttachmentSerialiser(serializers.ModelSerializer):
 
         # Create the attachment record in an atomic transaction to ensure data integrity
         with transaction.atomic():
-            attachment = ApplicationAttachment.objects.create(**data)
+            try:
+                attachment = ApplicationAttachment.objects.create(**data)
+            except IntegrityError as e:
+                raise serializers.ValidationError(
+                    "An attachment for this question already exists. " + str(e)
+                )
 
         return attachment
 
