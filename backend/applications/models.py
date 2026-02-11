@@ -128,7 +128,13 @@ class PrivateMediaStorage(FileSystemStorage):
                 f"The PRIVATE_MEDIA_ROOT path '{settings.PRIVATE_MEDIA_ROOT}' does not exist."
             )
 
+        # Save it to the PRIVATE_MEDIA_ROOT - not MEDIA_ROOT
         kwargs["location"] = settings.PRIVATE_MEDIA_ROOT
+        
+        # Don't try to set file permissions, mounted storage is owned by root and writable.
+        # Leaving this to default will cause `PermissionError` on each saving attempt.
+        kwargs["FILE_UPLOAD_PERMISSIONS"] = None
+        
         super().__init__(*args, **kwargs)
 
 

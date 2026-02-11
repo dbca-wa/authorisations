@@ -54,9 +54,6 @@ RUN echo 'alias ls="ls -lah --color=auto"' >> /home/appuser/.bash_aliases
 RUN mkdir /app
 RUN chown -R appuser:appuser /app
 
-# Make sure the "attachments" mounted storage is owned by appuser
-RUN chown -R appuser:appuser /app/private-media/attachments
-
 # =================== RUNTIME ===================
 FROM builder_base
 
