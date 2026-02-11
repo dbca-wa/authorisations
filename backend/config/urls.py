@@ -8,8 +8,8 @@ urlpatterns = [
     path("", home_page),
     path("my-applications", generic_template, name="my-applications"),
     path("new-application", generic_template, name="new-application"),
-    path("a/<slug:key>", resume_application, name="resume-application"),
-    path("d/<slug:appKey>/<slug:attachmentKey>", download_attachment, name="download-attachment"),
+    path("a/<uuid:key>", resume_application, name="resume-application"),
+    path("d/<uuid:appKey>/<uuid:attachmentKey>", download_attachment, name="download-attachment"),
     
     # Api
     path("api/", include("api.urls")),
