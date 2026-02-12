@@ -83,7 +83,9 @@ class AttachmentViewSet(viewsets.ModelViewSet):
             * owned by the user
             * not deleted
         """
-        return ApplicationAttachment.objects.filter(
+        return ApplicationAttachment.objects.select_related(
+            "application", "application__owner"
+        ).filter(
             application__owner=self.request.user,
             is_deleted=False,
         )
