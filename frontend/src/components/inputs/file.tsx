@@ -27,30 +27,19 @@ const MAX_FILES_PER_QUESTION = 1;
 
 export const FileInput = ({
     question,
-    attachments: initialAttachments,
     applicationKey,
+    attachments,
+    onAttachmentAdded,
+    onAttachmentDeleted,
+    onAttachmentUpdated,
 }: {
     question: Readonly<Question>;
-    attachments: IApplicationAttachment[];
     applicationKey: string;
+    attachments: IApplicationAttachment[];
+    onAttachmentAdded: (newAttachment: IApplicationAttachment, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentDeleted: (attachmentKey: string, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentUpdated: (updatedAttachment: IApplicationAttachment) => void;
 }) => {
-    // Local state to manage attachments (add/remove without parent coordination)
-    const [attachments, setAttachments] = React.useState<IApplicationAttachment[]>(initialAttachments);
-
-    const onAttachmentAdded = (newAttachment: IApplicationAttachment) => {
-        setAttachments(prev => [...prev, newAttachment]);
-    };
-
-    const onAttachmentDeleted = (attachmentKey: string) => {
-        setAttachments(prev => prev.filter(att => att.key !== attachmentKey));
-    };
-
-    const onAttachmentUpdated = (updatedAttachment: IApplicationAttachment) => {
-        setAttachments(prev =>
-            prev.map(att => att.key === updatedAttachment.key ? updatedAttachment : att)
-        );
-    };
-
     // Snackbar for notifications
     const { showSnackbar } = useSnackbar();
 
@@ -65,7 +54,18 @@ export const FileInput = ({
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}
         render={({ field, fieldState }) => {
-            // console.log("field:", field);
+            // Warn if the current field value doesn't match the given attachment keys
+            // or when there are attachments but the field value is null/empty
+            const attachmentKeys = attachments.map(atch => atch.key);
+            if (
+                (field.value && !attachmentKeys.includes(field.value)) ||
+                (attachments.length > 0 && !field.value)
+            ) {
+                console.warn(`Field value "${field.value}" does not match any attachment keys for question "${question.key}".`, {
+                    fieldValue: field.value,
+                    attachmentKeys,
+                });
+            }
 
             return (
                 <Box className="w-full">
@@ -80,7 +80,7 @@ export const FileInput = ({
                         <FileAttachmentList
                             attachments={attachments}
                             canEdit={true}
-                            onAttachmentDeleted={onAttachmentDeleted}
+                            onAttachmentDeleted={(key) => onAttachmentDeleted(key, field)}
                             onAttachmentUpdated={onAttachmentUpdated}
                         />
                     }
@@ -90,7 +90,7 @@ export const FileInput = ({
                             applicationKey={applicationKey}
                             field={field}
                             showSnackbar={showSnackbar}
-                            onAttachmentAdded={onAttachmentAdded}
+                            onAttachmentAdded={(newAttachment) => onAttachmentAdded(newAttachment, field)}
                         />
                     }
                     {fieldState.invalid &&
@@ -134,7 +134,7 @@ const DropzoneDialogContent = ({
                 clearTimeout(resetTimerRef.current);
             }
             // schedule a new timer and store id so we can cancel on unmount
-            resetTimerRef.current = window.setTimeout(() => Reset(0), delay * 1000) as unknown as number;
+            resetTimerRef.current = window.setTimeout(() => Reset(0), delay * 1000) as number;
             return;
         }
 
@@ -185,10 +185,14 @@ const DropzoneDialogContent = ({
             },
         })
             // Successfully uploaded via API
-            .then((resp) => {
+            .then((newAttachment) => {
+                // Display success message
                 showSnackbar("File has been uploaded", "success");
-                onAttachmentAdded(resp);
-                return resp;
+
+                // Invoke the callback to notify for the new attachment
+                onAttachmentAdded(newAttachment);
+
+                return newAttachment;
             })
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
@@ -204,12 +208,6 @@ const DropzoneDialogContent = ({
 
         // Something went terribly wrong with the upload, i.e. network error.
         if (!response) return;
-
-        // We may update react-hook-form with the file metadata received from API
-        // *****
-        // NB: We have nothing to write to the answers as the attachments 
-        // are in a separate model with different API endpoints.
-        // field.onChange(file);
     }, [field]);
 
     // Build the accept map expected by react-dropzone from the configured

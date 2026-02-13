@@ -16,7 +16,7 @@ import type { AlertColor } from '@mui/material/Alert';
 import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled } from '@mui/material/styles';
 import type { AxiosError } from 'axios';
-import type { FieldErrors, SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
+import type { ControllerRenderProps, FieldErrors, FieldValues, SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
 import { ApiManager } from '../../../context/ApiManager';
@@ -34,7 +34,7 @@ import { FormSidebar } from './FormSidebar';
 
 export const FormLayout = () => {
     // Fetch application and questionnaire from API
-    const { app, questionnaire, attachments } =
+    const { app, questionnaire, attachments: initialAttachments } =
         useLoaderData<{
             app: IApplicationData,
             questionnaire: IQuestionnaireData,
@@ -45,7 +45,7 @@ export const FormLayout = () => {
     // const storedAnswers = React.useMemo<IFormAnswers>(
     //     () => LocalStorage.getFormState(app.key), []
     // );
-    ``
+
     // console.log("Stored answers:", storedAnswers);
 
     // Drawer open/close state
@@ -82,10 +82,8 @@ export const FormLayout = () => {
         shouldFocusError: false,
     } as UseFormProps<IFormAnswers>);
 
-    // Form state (subscribed version)
-    const {
-        isDirty,
-    } = useFormState({ control: formMethods.control });
+    // Form dirty state (subscribed version)
+    const { isDirty } = useFormState({ control: formMethods.control });
 
     /**
      * Saves the current form answers to the API,
@@ -114,6 +112,38 @@ export const FormLayout = () => {
         // Reset the form state with the saved answers - not dirty anymore
         formMethods.reset(answers);
     };
+
+    // Attachments state
+    const [attachments, setAttachments] = React.useState<IApplicationAttachment[]>(initialAttachments);
+
+    const onAttachmentAdded = (newAttachment: IApplicationAttachment, field: ControllerRenderProps<FieldValues, string>) => {
+        // Update local attachments state to include the new attachment
+        setAttachments(prev => [...prev, newAttachment]);
+
+        // Update the form field value with the new attachment key
+        field.onChange(newAttachment.key);
+
+        // Save the answers
+        saveAnswers();
+    };
+
+    const onAttachmentDeleted = (key: string, field: ControllerRenderProps<FieldValues, string>) => {
+        // Update local attachments state to remove the deleted attachment
+        setAttachments(prev => prev.filter(atch => atch.key !== key));
+
+        // Clear the field value so that validation can catch the missing required file
+        field.onChange(null);
+
+        // Save the answers
+        saveAnswers();
+    };
+
+    const onAttachmentUpdated = (updatedAttachment: IApplicationAttachment) => {
+        setAttachments(prev =>
+            prev.map(att => att.key === updatedAttachment.key ? updatedAttachment : att)
+        );
+    };
+    
 
     /**
      * 
@@ -240,6 +270,9 @@ export const FormLayout = () => {
                         userCanEdit={userCanEdit}
                         setUserCanEdit={setUserCanEdit}
                         handleSubmit={handleSubmit}
+                        onAttachmentAdded={onAttachmentAdded}
+                        onAttachmentDeleted={onAttachmentDeleted}
+                        onAttachmentUpdated={onAttachmentUpdated}
                         questionnaire={questionnaire.document}
                         attachments={attachments}
                         activeStep={activeStep}
@@ -356,6 +389,9 @@ const FormLayoutContent = ({
     userCanEdit,
     setUserCanEdit,
     handleSubmit,
+    onAttachmentAdded,
+    onAttachmentDeleted,
+    onAttachmentUpdated,
     questionnaire,
     attachments,
     activeStep,
@@ -364,6 +400,9 @@ const FormLayoutContent = ({
     userCanEdit: boolean;
     setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction,
+    onAttachmentAdded: (newAttachment: IApplicationAttachment, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentDeleted: (attachmentKey: string, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentUpdated: (updatedAttachment: IApplicationAttachment) => void;
     questionnaire: IQuestionnaire;
     attachments: IApplicationAttachment[];
     activeStep: number;
@@ -386,6 +425,9 @@ const FormLayoutContent = ({
     return (
         <FormActiveStep
             handleSubmit={handleSubmit}
+            onAttachmentAdded={onAttachmentAdded}
+            onAttachmentDeleted={onAttachmentDeleted}
+            onAttachmentUpdated={onAttachmentUpdated}
             applicationKey={applicationKey}
             currentStep={questionnaire.steps[activeStep]}
             attachments={attachments}

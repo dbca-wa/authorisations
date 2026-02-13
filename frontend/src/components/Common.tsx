@@ -57,8 +57,9 @@ export const FileAttachmentList = ({
                             // Call the API to delete the attachment
                             ApiManager.deleteAttachment(attachment.key)
                                 .then(() => {
-                                    showSnackbar("File has been deleted", "success");
+                                    // Notify parent about deletion
                                     onAttachmentDeleted?.(attachment.key);
+                                    showSnackbar("File has been deleted", "success");
                                 })
                                 .catch((error) => {
                                     console.error("Error deleting attachment:", error);
