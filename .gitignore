@@ -176,3 +176,5 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Private media: uploaded documents
+private-media/

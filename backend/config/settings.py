@@ -226,8 +226,14 @@ elif os.path.exists(BASE_DIR / "assets" / "manifest.json"):
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": DEBUG,
         "manifest_path": MANIFEST_PATH,
+        "dev_mode": env("DEBUG_FRONTEND", cast=bool, default=False),
+        # If UAT host is set, we need to use it for the dev server URL instead of localhost
+        "dev_server_protocol": "https" if ALLOWED_HOST_UAT else "http",
+        "dev_server_host": ALLOWED_HOST_UAT if ALLOWED_HOST_UAT else "localhost",
+        # The plugin doesn't support stripping the port.
+        # `None` will actually add string "None" and will not work
+        "dev_server_port": None if ALLOWED_HOST_UAT else 5173,
     }
 }
 
@@ -252,7 +258,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "UPLOADED_FILES_USE_URL": False,
 }
+
+# --- Private Media Storage for Secure File Uploads ---
+# This directory should be mounted in AKS and not served by any web server.
+PRIVATE_MEDIA_ROOT = env("PRIVATE_MEDIA_ROOT")
+
+# This setting is explicitly `None` as the Azure File Storage filesystem
+# belongs to `root` user, otherwise will throw `PermissionError` on file uploads
+FILE_UPLOAD_PERMISSIONS = None
 
 # Maximum allowed file size for uploads: 10MB
 UPLOAD_MAX_SIZE = 10 * 1024 * 1024

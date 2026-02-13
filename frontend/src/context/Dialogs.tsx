@@ -56,7 +56,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                 <BootstrapDialog
                     onClose={hideDialog}
                     open={!!options}
-                    fullWidth 
+                    // fullWidth
                     maxWidth="lg"
                     aria-labelledby="customised-dialog-title"
                 >

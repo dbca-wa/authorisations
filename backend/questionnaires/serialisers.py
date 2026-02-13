@@ -29,6 +29,8 @@ class ReferenceFieldConverter:
         return {"$ref": f"#/$defs/{field.definition}"}
 
 
+# TODO: This is incorrectly defining both the main question types
+# and the grid question column types. Split them into explicit choices.
 QUESTION_TYPE_CHOICES = [
     ("text", "Text"),
     ("textarea", "Textarea Multi-line"),
@@ -45,7 +47,7 @@ QUESTION_TYPE_CHOICES = [
 class GridQuestionColumnSerialiser(serializers.Serializer):
     label = serializers.CharField(max_length=255, required=True)
     type = serializers.ChoiceField(
-        choices=QUESTION_TYPE_CHOICES + [("file", "File Upload")],
+        choices=QUESTION_TYPE_CHOICES,
         required=True,
     )
     description = serializers.CharField(
@@ -93,7 +95,8 @@ class GridQuestionColumnSerialiser(serializers.Serializer):
 class QuestionSerialiser(serializers.Serializer):
     label = serializers.CharField(max_length=500, required=True)
     type = serializers.ChoiceField(
-        choices=QUESTION_TYPE_CHOICES + [("grid", "Grid (Matrix of options)")],
+        choices=QUESTION_TYPE_CHOICES
+        + [("file", "File Upload"), ("grid", "Grid (Matrix of options)")],
         required=True,
     )
     # Getting validation error; "None is not of type 'boolean'"

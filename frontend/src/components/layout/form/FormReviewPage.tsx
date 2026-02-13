@@ -22,21 +22,24 @@ import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
 import { useSnackbar } from '../../../context/Snackbar';
-import type { IAnswer, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
+import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
-import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
+import { Question, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
+import { FileAttachmentList } from '../../Common';
 
 
 export function FormReviewPage({
     userCanEdit,
     setUserCanEdit,
     questionnaire,
+    attachments,
     applicationKey,
     handleSubmit,
 }: {
     userCanEdit: boolean,
     setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     questionnaire: IQuestionnaire;
+    attachments: IApplicationAttachment[];
     applicationKey: string;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
 }) {
@@ -96,19 +99,27 @@ export function FormReviewPage({
                                         {section.title}
                                     </Typography>
                                     <Stack spacing={2}>
-                                        {section.questions.map((question: IQuestion, questionIdx: number) => {
+                                        {section.questions.map((qObj: IQuestion, questionIdx: number) => {
+                                            const question = new Question(qObj, {
+                                                step: stepIdx,
+                                                section: sectionIdx,
+                                                question: questionIdx,
+                                            });
                                             const answer = answers[stepIdx][`${sectionIdx}-${questionIdx}`];
                                             let displayAnswer: React.ReactNode = null;
 
-                                            switch (question.type) {
+                                            switch (qObj.type) {
                                                 case "checkbox":
                                                     displayAnswer = displayCheckbox(answer);
                                                     break;
                                                 case "grid":
-                                                    displayAnswer = displayGrid(question, answer);
+                                                    displayAnswer = displayGrid(qObj, answer);
                                                     break;
                                                 case "date":
                                                     displayAnswer = displayDate(answer);
+                                                    break;
+                                                case "file":
+                                                    displayAnswer = displayFiles(attachments.filter(atch => atch.question === question.key));
                                                     break;
                                                 case "select":
                                                 case "number":
@@ -117,13 +128,13 @@ export function FormReviewPage({
                                                     displayAnswer = displayString(answer);
                                                     break;
                                                 default:
-                                                    throw new Error(`Unsupported question type: ${question.type}`);
+                                                    throw new Error(`Unsupported question type: ${qObj.type}`);
                                             }
 
                                             return (
                                                 <Box key={questionIdx} sx={{ mb: 1 }}>
                                                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                                        {question.label}
+                                                        {qObj.label}
                                                     </Typography>
                                                     {displayAnswer}
                                                 </Box>
@@ -235,4 +246,10 @@ const displayString = (answer: IAnswer) => {
     return isEmptyAnswer(answer)
         ? <Typography color="text.disabled">(unanswered)</Typography>
         : <Typography whiteSpace="pre-wrap">{String(answer)}</Typography>;
+};
+
+const displayFiles = (attachments: IApplicationAttachment[]) => {
+    return attachments ?
+        FileAttachmentList({ attachments: attachments, canEdit: false }) :
+        <Typography color="text.disabled">(no file uploaded)</Typography>;
 };

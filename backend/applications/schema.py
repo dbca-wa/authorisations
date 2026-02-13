@@ -62,7 +62,7 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                 "additionalProperties": False,
                 "properties": {},
                 "patternProperties": {
-                    # The regex matches the answer key format
+                    # The regex matches the question key format
                     # e.g. [section]-[question]
                     r"^\d+\-\d+$": {
                         # Primitive type or a grid question answer

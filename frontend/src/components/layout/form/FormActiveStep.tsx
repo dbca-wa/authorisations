@@ -7,7 +7,7 @@ import ListItem from "@mui/material/ListItem";
 import Stack from "@mui/material/Stack";
 import React from "react";
 
-import { useWatch } from 'react-hook-form';
+import { useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
@@ -16,17 +16,26 @@ import { FileInput } from "../../inputs/file";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
+import type { IApplicationAttachment } from '../../../context/types/Application';
 
 
 export const FormActiveStep = ({
     handleSubmit,
+    onAttachmentAdded,
+    onAttachmentDeleted,
+    onAttachmentUpdated,
     applicationKey,
     currentStep,
+    attachments,
     activeStep,
 }: {
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
+    onAttachmentAdded: (newAttachment: IApplicationAttachment, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentDeleted: (attachmentKey: string, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentUpdated: (updatedAttachment: IApplicationAttachment) => void;
     applicationKey: string;
     currentStep: IFormStep;
+    attachments: IApplicationAttachment[];
     activeStep: number;
 }) => {
 
@@ -35,11 +44,15 @@ export const FormActiveStep = ({
             <form onSubmit={handleSubmit((prev) => prev + 1)} onKeyDown={onKeyDown}>
                 {currentStep.sections.map((section, sectionIndex) => {
                     return <Section
-                        applicationKey={applicationKey}
                         key={activeStep + "." + sectionIndex}
+                        applicationKey={applicationKey}
                         stepIndex={activeStep}
                         section={section}
                         sectionIndex={sectionIndex}
+                        attachments={attachments}
+                        onAttachmentAdded={onAttachmentAdded}
+                        onAttachmentDeleted={onAttachmentDeleted}
+                        onAttachmentUpdated={onAttachmentUpdated}
                     />
                 })}
 
@@ -95,14 +108,26 @@ const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
     event.preventDefault();
 }
 
+/**
+ * The component that groups questions and responsible for handling 
+ * the follow-up questions visibility logic.
+ */
 const Section = ({
     applicationKey,
     stepIndex, section, sectionIndex,
+    attachments,
+    onAttachmentAdded,
+    onAttachmentDeleted,
+    onAttachmentUpdated,
 }: {
     applicationKey: string,
     stepIndex: number,
     section: IFormSection,
     sectionIndex: number,
+    attachments: IApplicationAttachment[];
+    onAttachmentAdded: (newAttachment: IApplicationAttachment, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentDeleted: (attachmentKey: string, field: ControllerRenderProps<FieldValues, string>) => void;
+    onAttachmentUpdated: (updatedAttachment: IApplicationAttachment) => void;
 }) => {
     // Convert section index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
@@ -206,11 +231,17 @@ const Section = ({
                         case "date":
                             inputComponent = <DateInput question={question} />;
                             break;
+                        case "file":
+                            inputComponent = <FileInput question={question}
+                                applicationKey={applicationKey}
+                                attachments={attachments.filter(atch => atch.question === question.key)}
+                                onAttachmentAdded={onAttachmentAdded}
+                                onAttachmentDeleted={onAttachmentDeleted}
+                                onAttachmentUpdated={onAttachmentUpdated}
+                            />;
+                            break;
                         case "grid":
                             inputComponent = <GridInput question={question} />;
-                            break;
-                        case "file":
-                            inputComponent = <FileInput question={question} applicationKey={applicationKey} />;
                             break;
                         default:
                             throw new Error(`Unknown question type: ${question.o.type}`);
