@@ -43,6 +43,9 @@ export const FileInput = ({
     // Snackbar for notifications
     const { showSnackbar } = useSnackbar();
 
+    // Extract the attachment keys for easy lookup
+    const attachmentKeys = attachments.map(atch => atch.key);
+
     return <Controller
         name={question.key}
         // React controlled vs uncontrolled warning fix:
@@ -54,18 +57,21 @@ export const FileInput = ({
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}
         render={({ field, fieldState }) => {
-            // Warn if the current field value doesn't match the given attachment keys
-            // or when there are attachments but the field value is null/empty
-            const attachmentKeys = attachments.map(atch => atch.key);
-            if (
-                (field.value && !attachmentKeys.includes(field.value)) ||
-                (attachments.length > 0 && !field.value)
-            ) {
-                console.warn(`Field value "${field.value}" does not match any attachment keys for question "${question.key}".`, {
-                    fieldValue: field.value,
-                    attachmentKeys,
-                });
-            }
+            // Auto-sync if the field value doesn't match any attachment keys 
+            // or if there are attachments but no field value
+            React.useEffect(() => {
+                if (
+                    (field.value && !attachmentKeys.includes(field.value)) ||
+                    (attachments.length > 0 && !field.value)
+                ) {
+                    console.warn(`Field value does not match the given attachments "${question.key}", re-assigning...`, {
+                        value: field.value,
+                        attachments: attachmentKeys,
+                    });
+                    // Update the form field value to match the current attachments (or clear it if no attachments)
+                    field.onChange(attachmentKeys);
+                }
+            }, [question.key, attachmentKeys]);
 
             return (
                 <Box className="w-full">
