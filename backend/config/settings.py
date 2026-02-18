@@ -277,4 +277,6 @@ UPLOAD_MIME_TYPES = [
     "image/jpeg",
     "image/png",
     "application/pdf",
+    # "application/msword",
+    # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]

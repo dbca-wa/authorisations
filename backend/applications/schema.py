@@ -66,7 +66,14 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                     # e.g. [section]-[question]
                     r"^\d+\-\d+$": {
                         # Primitive type or a grid question answer
-                        "oneOf": _PRIMITIVE_TYPES + [{"$ref": "#/$defs/grid_answer"}],
+                        "oneOf": [
+                            # Unpack primitive types for regular questions
+                            *_PRIMITIVE_TYPES,
+                            # A grid question answer
+                            {"$ref": "#/$defs/grid_answer"},
+                            # File attachments
+                            {"$ref": "#/$defs/file_attachments"},
+                        ],
                     },
                 },
             },
@@ -77,6 +84,13 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                     "type": "object",
                     "additionalProperties": {"oneOf": _PRIMITIVE_TYPES},
                 },
+            },
+            # List of UUIDs for file attachments
+            "file_attachments": {
+                "type": "array",
+                "items": {"type": "string", "format": "uuid"},
+                "minItems": 1,
+                "maxItems": 10,
             },
         },
     }

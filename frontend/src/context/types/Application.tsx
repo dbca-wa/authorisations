@@ -45,9 +45,12 @@ export interface IGridAnswerRow {
 }
 
 /**
- * Interface for an answer, which can be either a primitive type or an array of grid answer rows
+ * Interface for an answer, which can be either:
+ *  - A primitive type (string, number, boolean or null)
+ *  - An array of grid answer rows
+ *  - List of UUIDs for file attachments
  */
-export type IAnswer = PrimitiveType | IGridAnswerRow[];
+export type IAnswer = PrimitiveType | IGridAnswerRow[] | string[];
 
 /**
  * The form state for each step, keyed by step index.

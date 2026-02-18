@@ -168,12 +168,11 @@ class ApplicationAttachment(models.Model):
     deleted_at = models.DateTimeField(blank=True, null=True, editable=False)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["application", "question", "is_deleted"],
-                condition=models.Q(is_deleted=False),
-                name="unique_active_attachment_per_field",
-            )
+        indexes = [
+            models.Index(
+                fields=["application", "is_deleted"],
+                name="attachments_app_deleted_idx",
+            ),
         ]
 
     def __str__(self):

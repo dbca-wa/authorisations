@@ -446,7 +446,8 @@
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
-              "select_options": []
+              "select_options": [],
+              "file_max_attachments": 3
             },
             {
               "type": "textarea",

@@ -120,8 +120,9 @@ export const FormLayout = () => {
         // Update local attachments state to include the new attachment
         setAttachments(prev => [...prev, newAttachment]);
 
-        // Update the form field value with the new attachment key
-        field.onChange(newAttachment.key);
+        // Add the new attachment to the existing array of attachment keys
+        const currentKeys: string[] = field.value || []; // start a new array if none
+        field.onChange([...currentKeys, newAttachment.key]);
 
         // Save the answers
         saveAnswers();
@@ -132,7 +133,9 @@ export const FormLayout = () => {
         setAttachments(prev => prev.filter(atch => atch.key !== key));
 
         // Clear the field value so that validation can catch the missing required file
-        field.onChange(null);
+        // Remove the deleted attachment key from the field value array
+        const currentKeys: string[] = field.value || [];
+        field.onChange(currentKeys.filter((k: string) => k !== key));
 
         // Save the answers
         saveAnswers();
@@ -140,7 +143,7 @@ export const FormLayout = () => {
 
     const onAttachmentUpdated = (updatedAttachment: IApplicationAttachment) => {
         setAttachments(prev =>
-            prev.map(att => att.key === updatedAttachment.key ? updatedAttachment : att)
+            prev.map(atch => atch.key === updatedAttachment.key ? updatedAttachment : atch)
         );
     };
     

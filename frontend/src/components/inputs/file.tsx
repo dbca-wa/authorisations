@@ -11,7 +11,7 @@ import React from 'react';
 import type { AlertColor } from '@mui/material/Alert';
 import type { AxiosError, AxiosProgressEvent } from 'axios';
 import { useDropzone } from 'react-dropzone';
-import { Controller, type ControllerRenderProps, type FieldValues } from "react-hook-form";
+import { useController, type ControllerRenderProps, type FieldValues } from "react-hook-form";
 import { ApiManager } from '../../context/ApiManager';
 import { ConfigManager } from '../../context/ConfigManager';
 import { ERROR_MSG } from "../../context/Constants";
@@ -21,9 +21,6 @@ import type { Question } from "../../context/types/Questionnaire";
 import { VisuallyHiddenInput } from '../../context/Utils';
 import { FileAttachmentList } from '../Common';
 
-// Initially we start with allowing only 1 file per question to keep things simple.
-// But later on, we may extend this functionality to allow multiple files with minor UI changes.
-const MAX_FILES_PER_QUESTION = 1;
 
 export const FileInput = ({
     question,
@@ -46,81 +43,88 @@ export const FileInput = ({
     // Extract the attachment keys for easy lookup
     const attachmentKeys = attachments.map(atch => atch.key);
 
-    return <Controller
-        name={question.key}
-        // React controlled vs uncontrolled warning fix:
-        // This registers the field with an empty string if no
-        // value is provided in the form's defaultValues. This ensures the
-        // submitted data contains an empty string instead of undefined.
-        defaultValue={""}
-        rules={{
-            required: question.o.is_required ? ERROR_MSG.required : false,
-        }}
-        render={({ field, fieldState }) => {
-            // Auto-sync if the field value doesn't match any attachment keys 
-            // or if there are attachments but no field value
-            React.useEffect(() => {
-                if (
-                    (field.value && !attachmentKeys.includes(field.value)) ||
-                    (attachments.length > 0 && !field.value)
-                ) {
-                    console.warn(`Field value does not match the given attachments "${question.key}", re-assigning...`, {
-                        value: field.value,
-                        attachments: attachmentKeys,
-                    });
-                    // Update the form field value to match the current attachments (or clear it if no attachments)
-                    field.onChange(attachmentKeys);
-                }
-            }, [question.key, attachmentKeys]);
+    // Maximum attachments allowed for this question
+    // Defaults to 1 (if not specified or zero) with the hard limit 10
+    const maxAttachments = Math.min(question.o.file_max_attachments || 1, 10);
 
-            return (
-                <Box className="w-full">
-                    <Typography variant="h6">
-                        {question.labelText}
-                    </Typography>
-                    <Typography variant="subtitle1">
-                        {question.o.description}
-                    </Typography>
-                    {/* Display the tiled attachment list if there are attachments */}
-                    {attachments.length > 0 &&
-                        <FileAttachmentList
-                            attachments={attachments}
-                            canEdit={true}
-                            onAttachmentDeleted={(key) => onAttachmentDeleted(key, field)}
-                            onAttachmentUpdated={onAttachmentUpdated}
-                        />
-                    }
-                    {/* Show the dropzone if we have less than the max allowed files for this question */}
-                    {attachments.length < MAX_FILES_PER_QUESTION &&
-                        <DropzoneDialogContent
-                            applicationKey={applicationKey}
-                            field={field}
-                            showSnackbar={showSnackbar}
-                            onAttachmentAdded={(newAttachment) => onAttachmentAdded(newAttachment, field)}
-                        />
-                    }
-                    {fieldState.invalid &&
-                        <FormHelperText error>
-                            {fieldState.error?.message}
-                        </FormHelperText>
-                    }
-                </Box>
-            );
-        }}
-    />
+    // Use controller hook to manage field state
+    const { field, fieldState } = useController({
+        name: question.key,
+        defaultValue: [],
+        rules: {
+            required: question.o.is_required ? ERROR_MSG.required : false,
+        },
+    });
+
+    // Auto-sync if the field value doesn't match any attachment keys 
+    // or if there are attachments but no field value
+    React.useEffect(() => {
+        if (
+            // If field value is not an array
+            !Array.isArray(field.value) ||
+            // Or has keys that don't match the current attachments explicitly
+            field.value.some((key: string) => !attachmentKeys.includes(key)) ||
+            // Or if there are attachments but the field value is empty (e.g. after deletion)
+            (attachments.length > 0 && field.value.length === 0)
+        ) {
+            console.warn(`Field value does not match the given attachments "${question.key}", re-assigning...`, {
+                value: field.value,
+                attachments: attachmentKeys,
+            });
+            // Update the form field value to match the current attachments (or clear it if no attachments)
+            field.onChange(attachmentKeys);
+        }
+    }, [question.key, attachmentKeys, field]);
+
+    return (
+        <Box className="w-full">
+            <Typography variant="h6">
+                {question.labelText}
+            </Typography>
+            <Typography variant="subtitle1">
+                {question.o.description}
+            </Typography>
+            {/* Display the tiled attachment list if there are attachments */}
+            {attachments.length > 0 &&
+                <FileAttachmentList
+                    attachments={attachments}
+                    canEdit={true}
+                    onAttachmentDeleted={(key) => onAttachmentDeleted(key, field)}
+                    onAttachmentUpdated={onAttachmentUpdated}
+                />
+            }
+            {/* Show the dropzone if we have less than the max allowed files for this question */}
+            {attachments.length < maxAttachments &&
+                <DropzoneDialogContent
+                    applicationKey={applicationKey}
+                    field={field}
+                    maxAttachments={maxAttachments}
+                    showSnackbar={showSnackbar}
+                    onAttachmentAdded={onAttachmentAdded}
+                />
+            }
+            {fieldState.invalid &&
+                <FormHelperText error>
+                    {fieldState.error?.message}
+                </FormHelperText>
+            }
+        </Box>
+    );
 }
 
 
 const DropzoneDialogContent = ({
     applicationKey,
     field,
+    maxAttachments,
     showSnackbar,
     onAttachmentAdded,
 }: {
     applicationKey: string;
     field: ControllerRenderProps<FieldValues, string>;
+    maxAttachments: number;
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void;
-    onAttachmentAdded: (newAttachment: IApplicationAttachment) => void;
+    onAttachmentAdded: (newAttachment: IApplicationAttachment, field: ControllerRenderProps<FieldValues, string>) => void;
 }) => {
     // The name of the file being uploaded
     const [filename, setFilename] = React.useState<string | null>(null);
@@ -167,9 +171,9 @@ const DropzoneDialogContent = ({
         // Dropped file(s) has been rejected - we want exactly 1 accepted file.
         if (acceptedFiles.length !== 1 || fileRejections.length !== 0) {
             // console.debug("File drop rejected", { acceptedFiles, fileRejections });
-            const message = fileRejections[0]?.errors?.[0]?.message ??
-                "File is rejected. Please ensure it meets the requirements.";
-            showSnackbar(message, "error");
+            // const message = fileRejections[0]?.errors?.[0]?.message ??
+            //     "Invalid file type, please ensure it meets the requirements.";
+            showSnackbar("Invalid file type, please ensure it meets the requirements.", "error");
             Reset(3);
             return;
         }
@@ -196,7 +200,7 @@ const DropzoneDialogContent = ({
                 showSnackbar("File has been uploaded", "success");
 
                 // Invoke the callback to notify for the new attachment
-                onAttachmentAdded(newAttachment);
+                onAttachmentAdded(newAttachment, field);
 
                 return newAttachment;
             })
@@ -274,6 +278,9 @@ const DropzoneDialogContent = ({
     // console.log("inputProps:", inputProps)
     // console.log("rootProps:", rootProps)
 
+    // Calculate the maximum file size in MB for human readable display
+    const maxFilesizeMB = Math.round(clientConfig.upload_max_size / (1024 * 1024));
+
     return (
         <Box {...rootProps}>
             <VisuallyHiddenInput {...inputProps} />
@@ -301,7 +308,8 @@ const DropzoneDialogContent = ({
                     </Typography>
                     <Typography color={styling.textColour} fontStyle="italic">
                         Only images and PDF files are accepted.<br />
-                        Maximum file size limit is 10MB.
+                        Maximum file size limit is <strong>{maxFilesizeMB} MB</strong>.<br />
+                        Up to <strong>{maxAttachments} file{maxAttachments > 1 ? "s" : ""}</strong> can be uploaded for this question.
                     </Typography>
                 </>
             )}

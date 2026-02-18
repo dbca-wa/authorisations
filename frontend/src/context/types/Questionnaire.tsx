@@ -36,13 +36,16 @@ export interface IQuestion {
     type: string;
     is_required: boolean;
     description?: string;
-    // For select types
+    // For select type questions, the list of options to choose from
     select_options?: string[] | null;
     // Grid columns definitions
     grid_columns?: IGridQuestionColumn[] | null;
     // Indicates the maximum number of rows for grid types
     grid_max_rows?: number | null;
+    // For conditional questions, indicates the walk-back step index this question depends on
     dependent_step?: number | null;
+    // File upload maximum attachment limit
+    file_max_attachments?: number | null;
 }
 
 
@@ -50,7 +53,8 @@ export interface IGridQuestionColumn {
     label: string;
     type: string;
     description?: string;
-    select_options?: string[]; // For select types
+    // For select type columns, the list of options to choose from
+    select_options?: string[];
 }
 
 
