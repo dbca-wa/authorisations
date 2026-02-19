@@ -82,6 +82,26 @@ export const FileAttachmentList = ({
         const baseName = lastDotIndex === -1 ? attachment.name : attachment.name.substring(0, lastDotIndex);
         const extension = lastDotIndex === -1 ? '' : attachment.name.substring(lastDotIndex);
 
+        // Helper function to perform the rename action
+        const performRename = () => {
+            const newBaseName = renameInputRef.current?.value || baseName;
+            const newFullName = newBaseName + extension;
+
+            // Call the API to rename the attachment
+            ApiManager.renameAttachment(attachment.key, newFullName)
+                .then((updatedAttachment) => {
+                    // Notify parent with updated attachment
+                    onAttachmentUpdated?.(updatedAttachment);
+                    showSnackbar("File has been renamed", "success");
+                })
+                .catch((error) => {
+                    console.error("Error renaming attachment:", error);
+                });
+
+            // Close the dialog after action
+            hideDialog();
+        };
+
         showDialog({
             title: "Rename Attachment",
             content:
@@ -93,6 +113,13 @@ export const FileAttachmentList = ({
                             label="File name"
                             variant="standard"
                             fullWidth
+                            onKeyDown={(e) => {
+                                // Trigger rename on Enter key
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    performRename();
+                                }
+                            }}
                         />
                         {extension && (
                             <Typography variant="body1" style={{ whiteSpace: 'nowrap', paddingBottom: 8 }}>
@@ -106,28 +133,14 @@ export const FileAttachmentList = ({
                     variant="contained"
                     color="primary"
                     startIcon={<EditIcon />}
-                    onClick={() => {
-                        const newBaseName = renameInputRef.current?.value || baseName;
-                        const newFullName = newBaseName + extension;
-
-                        // Call the API to rename the attachment
-                        ApiManager.renameAttachment(attachment.key, newFullName)
-                            .then((updatedAttachment) => {
-                                // Notify parent with updated attachment
-                                onAttachmentUpdated?.(updatedAttachment);
-                                showSnackbar("File has been renamed", "success");
-                            })
-                            .catch((error) => {
-                                console.error("Error renaming attachment:", error);
-                            });
-
-                        // Close the dialog after action
-                        hideDialog();
-                    }}
+                    onClick={performRename}
                 >
                     Rename
                 </Button>
             ),
+            onOpen: () => {
+                renameInputRef.current?.focus();
+            }
         });
     }
 
@@ -135,9 +148,21 @@ export const FileAttachmentList = ({
         <Box className="p-4 border border-gray-300 rounded-md">
             <Stack direction="row" spacing={4} marginTop={2} justifyContent={"center"} alignItems={"center"} >
                 {attachments.map((attachment) => (
-                    <Box key={attachment.key} className="relative border border-gray-300 rounded-lg px-4 pb-8 flex flex-col items-center min-w-[120px]">
+                    <Box key={attachment.key} className="border border-gray-300 rounded-lg h-56 px-4 py-4 flex flex-col items-center">
+                        <Link
+                            href={attachment.download_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            underline="none"
+                            className="flex flex-col items-center gap-2 h-full"
+                        >
+                            {getIconFromFilename(attachment.name)}
+                            <Typography variant="body2" className="text-center w-28 line-clamp-3">
+                                {attachment.name}
+                            </Typography>
+                        </Link>
                         {canEdit && (
-                            <Box className="absolute bottom-0 center-x-0 flex gap-1">
+                            <Box className="flex gap-2">
                                 <IconButton
                                     color="error"
                                     size="small"
@@ -156,18 +181,6 @@ export const FileAttachmentList = ({
                                 </IconButton>
                             </Box>
                         )}
-                        <Link
-                            href={attachment.download_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            underline="none"
-                            className="flex flex-col items-center gap-2"
-                        >
-                            {getIconFromFilename(attachment.name)}
-                            <Typography variant="body2" style={{ wordBreak: 'break-word', textAlign: 'center', maxWidth: 120 }}>
-                                {attachment.name}
-                            </Typography>
-                        </Link>
                     </Box>
                 ))}
             </Stack>

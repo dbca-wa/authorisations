@@ -115,11 +115,11 @@ export function FormReviewPage({
                                                 case "grid":
                                                     displayAnswer = displayGrid(qObj, answer);
                                                     break;
-                                                case "date":
-                                                    displayAnswer = displayDate(answer);
-                                                    break;
                                                 case "file":
                                                     displayAnswer = displayFiles(attachments.filter(atch => atch.question === question.key));
+                                                    break;
+                                                case "date":
+                                                    displayAnswer = displayDate(answer);
                                                     break;
                                                 case "select":
                                                 case "number":
@@ -128,7 +128,8 @@ export function FormReviewPage({
                                                     displayAnswer = displayString(answer);
                                                     break;
                                                 default:
-                                                    throw new Error(`Unsupported question type: ${qObj.type}`);
+                                                    console.warn(`Unsupported question type: ${qObj.type}`);
+                                                    displayAnswer = <Typography color="text.disabled">N/A - unsupported type</Typography>;
                                             }
 
                                             return (
@@ -186,19 +187,40 @@ const isEmptyAnswer = (answer: any) => {
     );
 }
 
-const displayCheckbox = (answer: IAnswer) => (
-    <Typography sx={{ fontWeight: 500 }}>
-        {humaniseBoolean(answer)}
-    </Typography>
-);
+// Type guards to ensure answer is the correct type for each display function
+const isCheckboxAnswer = (answer: IAnswer): answer is boolean => {
+    return typeof answer === 'boolean';
+};
+
+const isGridAnswer = (answer: IAnswer): answer is IGridAnswerRow[] => {
+    return Array.isArray(answer);
+};
+
+const isStringAnswer = (answer: IAnswer): answer is string => {
+    return typeof answer === 'string';
+};
+
+const displayCheckbox = (answer: IAnswer) => {
+    if (!isCheckboxAnswer(answer)) {
+        console.warn(`Expected checkbox answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
+    }
+    return (
+        <Typography sx={{ fontWeight: 500 }}>
+            {humaniseBoolean(answer)}
+        </Typography>
+    );
+};
 
 const displayGrid = (question: IQuestion, answer: IAnswer) => {
-    if (!Array.isArray(answer)) {
-        return <Typography color="text.disabled">N/A</Typography>;
+    if (!isGridAnswer(answer)) {
+        console.warn(`Expected grid answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
     }
     if (answer.length === 0) {
         return <Typography color="text.disabled">(unanswered)</Typography>;
     }
+
     return (
         <TableContainer component={Paper} variant="outlined" sx={{ maxWidth: "100%", mb: 1 }}>
             <Table size="small">
@@ -237,12 +259,20 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
 };
 
 const displayDate = (answer: IAnswer) => {
+    if (!isStringAnswer(answer)) {
+        console.warn(`Expected date answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
+    }
     return isEmptyAnswer(answer)
         ? <Typography color="text.disabled">(unanswered)</Typography>
-        : <Typography>{dayjs(answer as string).format('DD/MM/YYYY')}</Typography>;
+        : <Typography>{dayjs(answer).format('DD/MM/YYYY')}</Typography>;
 };
 
 const displayString = (answer: IAnswer) => {
+    if (!isStringAnswer(answer)) {
+        console.warn(`Expected string answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
+    }
     return isEmptyAnswer(answer)
         ? <Typography color="text.disabled">(unanswered)</Typography>
         : <Typography whiteSpace="pre-wrap">{String(answer)}</Typography>;
