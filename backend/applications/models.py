@@ -1,8 +1,5 @@
-import os
 import uuid
 
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
 from django_jsonform.models.fields import JSONField
@@ -28,7 +25,7 @@ class Application(models.Model):
     """Model to represent an application."""
 
     id = models.BigAutoField(primary_key=True)
-    key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    key = models.UUIDField(default=uuid.uuid6, unique=True, editable=False)
     owner = models.ForeignKey(
         "users.User",
         on_delete=models.PROTECT,
@@ -115,39 +112,17 @@ class Application(models.Model):
 #         return f"Certificate for the application #{self.application.id} issued at {self.issued_at}"
 
 
-class PrivateMediaStorage(FileSystemStorage):
-    """
-    Custom storage class for handling uploaded files.
-    Files stored using this storage backend are not publicly accessible.
-    """
-
-    def __init__(self, *args, **kwargs):
-        # Check the PRIVATE_MEDIA_ROOT exists
-        if not os.path.exists(settings.PRIVATE_MEDIA_ROOT):
-            raise LookupError(
-                f"The PRIVATE_MEDIA_ROOT path '{settings.PRIVATE_MEDIA_ROOT}' does not exist."
-            )
-
-        # Save it to the PRIVATE_MEDIA_ROOT - not MEDIA_ROOT
-        kwargs["location"] = settings.PRIVATE_MEDIA_ROOT
-
-        # This setting is explicitly `None` as the Azure File Storage filesystem
-        # belongs to `root` user, otherwise will throw `PermissionError` on file uploads
-        kwargs["file_permissions_mode"] = None
-
-        super().__init__(*args, **kwargs)
-
-
 def attachment_upload_path(instance, filename):
     """Define the upload path for the attachment file."""
-    return f"attachments/{instance.application.key}/{instance.key}"
+    created_month = instance.application.created_at.strftime("%Y-%m")
+    return f"attachments/{created_month}/{instance.application.key}/{instance.key}"
 
 
 class ApplicationAttachment(models.Model):
     """Model to represent a file attached to an application."""
 
     id = models.BigAutoField(primary_key=True)
-    key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    key = models.UUIDField(default=uuid.uuid6, unique=True, editable=False)
     application = models.ForeignKey(
         Application,
         on_delete=models.CASCADE,
@@ -158,7 +133,6 @@ class ApplicationAttachment(models.Model):
     question = models.CharField(max_length=100, blank=False, null=False)
     name = models.CharField(max_length=255, blank=False, null=False)
     file = models.FileField(
-        storage=PrivateMediaStorage(),
         upload_to=attachment_upload_path,
         blank=False,
         null=False,

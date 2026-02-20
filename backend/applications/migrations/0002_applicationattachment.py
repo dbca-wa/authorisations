@@ -17,10 +17,10 @@ class Migration(migrations.Migration):
             name='ApplicationAttachment',
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('key', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
+                ('key', models.UUIDField(default=uuid.uuid6, editable=False, unique=True)),
                 ('question', models.CharField(max_length=100)),
                 ('name', models.CharField(max_length=255)),
-                ('file', models.FileField(storage=applications.models.PrivateMediaStorage(), upload_to=applications.models.attachment_upload_path)),
+                ('file', models.FileField(upload_to=applications.models.attachment_upload_path)),
                 ('is_deleted', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('deleted_at', models.DateTimeField(blank=True, editable=False, null=True)),
