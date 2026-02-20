@@ -44,23 +44,28 @@ This document outlines the design and implementation plan for supporting file at
 
 All endpoints use `{key}` (the application's UUID) for lookups:
 
-- `GET /applications/{key}/attachments/`  
+- `GET /attachments/?application_key={key}`
   List all non-deleted attachments for the application.
 
-- `GET /applications/{key}/attachments/{uuid}/`  
+- `GET /attachments/{uuid}/`
+  Retrieve metadata for a specific attachment (no file content, just info).
+
+- `GET /d/{key}/{uuid}`
   Download a specific file (no filename or extension in URL/response).
 
-- `DELETE /applications/{key}/attachments/{uuid}/`  
+- `DELETE /attachments/{uuid}`
   Soft-delete: sets `is_deleted=True` and removes the reference from the JSON answer document.
 
-- `POST /applications/{key}/attachments/`  
-  Upload a new file (with question key, enforcing per-question constraints).
+- `PATCH /attachments/{uuid}`
+  Rename an attachment filename (that defines the download filename, not the storage path).
 
 ---
 
 ## File Storage
 
-- Files are stored as `attachments/{application.key}/{uuid}` (no extension).
+- Files are stored as `attachments/{year}/{month}/{application.key}/{uuid}` (no extension), 
+  where the `year` and `month` are based on the application creation date; 
+  e.g. `attachments/2026/02/{application.key}/{uuid}`.
 - The original filename is preserved in the model for auditing or download headers if needed.
 - Filenames and extensions are never exposed in URLs or API responses.
 
