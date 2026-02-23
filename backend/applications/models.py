@@ -25,7 +25,7 @@ class Application(models.Model):
     """Model to represent an application."""
 
     id = models.BigAutoField(primary_key=True)
-    key = models.UUIDField(default=uuid.uuid6, unique=True, editable=False)
+    key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     owner = models.ForeignKey(
         "users.User",
         on_delete=models.PROTECT,
@@ -122,7 +122,7 @@ class ApplicationAttachment(models.Model):
     """Model to represent a file attached to an application."""
 
     id = models.BigAutoField(primary_key=True)
-    key = models.UUIDField(default=uuid.uuid6, unique=True, editable=False)
+    key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     application = models.ForeignKey(
         Application,
         on_delete=models.CASCADE,

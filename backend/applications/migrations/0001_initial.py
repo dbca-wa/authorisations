@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             name='Application',
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('key', models.UUIDField(default=uuid.uuid6, editable=False, unique=True)),
+                ('key', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
                 ('status', models.CharField(choices=[('DRAFT', 'Draft'), ('DISCARDED', 'Discarded'), ('SUBMITTED', 'Submitted'), ('UNDER_REVIEW', 'Under Review'), ('ACTION_REQUIRED', 'Action Required'), ('PROCESSING', 'Processing'), ('APPROVED', 'Approved'), ('REJECTED', 'Rejected')], default='DRAFT', editable=False, max_length=20)),
                 ('document', django_jsonform.models.fields.JSONField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
