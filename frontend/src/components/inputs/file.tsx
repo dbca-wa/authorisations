@@ -40,8 +40,12 @@ export const FileInput = ({
     // Snackbar for notifications
     const { showSnackbar } = useSnackbar();
 
-    // Extract the attachment keys for easy lookup
-    const attachmentKeys = attachments.map(atch => atch.key);
+    // Memoize attachment keys and serialized string to avoid unnecessary useEffect triggers
+    // Both are computed together since they depend only on attachments
+    const [attachmentKeys, attachmentKeysString] = React.useMemo(() => {
+        const keys = attachments.map(atch => atch.key);
+        return [keys, keys.join(',')];
+    }, [attachments]);
 
     // Maximum attachments allowed for this question
     // Defaults to 1 (if not specified or zero) with the hard limit 10
@@ -74,7 +78,7 @@ export const FileInput = ({
             // Update the form field value to match the current attachments (or clear it if no attachments)
             field.onChange(attachmentKeys);
         }
-    }, [question.key, attachmentKeys, field]);
+    }, [question.key, attachmentKeysString, field]);
 
     return (
         <Box className="w-full">
