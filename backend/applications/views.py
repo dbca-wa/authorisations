@@ -57,4 +57,4 @@ def download_attachment(request, appKey, attachmentKey):
         )
 
     # Serve the file
-    return FileResponse(attachment.file, as_attachment=True, filename=attachment.name)
+    return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
