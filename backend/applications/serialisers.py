@@ -308,9 +308,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
                 key=value, owner=request.user
             )
         except Application.DoesNotExist:
-            raise serializers.ValidationError(
-                {"application_key": "Application not found."}
-            )
+            raise serializers.ValidationError("Application not found.")
 
         # Cache for later to avoid re-query in create()
         self.context["application"] = application
