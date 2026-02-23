@@ -396,27 +396,33 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         except KeyError as e:
             raise serializers.ValidationError("Missing required field: " + str(e))
 
-        # Validate file_max_attachments limit
+        # Validate file_max_attachments limit and create in atomic transaction
+        # Use select_for_update() to serialize concurrent requests for the same application
+        # and prevent race conditions where multiple requests bypass the attachment limit check
         question_idx = validated_data["question"]
         max_attachments = min(question_def.get("file_max_attachments") or 1, 10)
 
-        # Count existing non-deleted attachments for this question
-        existing_count = ApplicationAttachment.objects.filter(
-            application=application,
-            question=question_idx,
-            is_deleted=False,
-        ).count()
-
-        # Validate the limit
-        if existing_count >= max_attachments:
-            raise serializers.ValidationError(
-                {
-                    "file": f"Maximum {max_attachments} attachment(s) allowed for this question, current: {existing_count}"
-                }
-            )
-
-        # Create the attachment record in an atomic transaction to ensure data integrity
         with transaction.atomic():
+            # Lock the application row to prevent concurrent attachment creation
+            Application.objects.select_for_update().get(pk=application.pk)
+
+            # Count existing non-deleted attachments within the transaction
+            # This ensures we're counting after acquiring the lock
+            existing_count = ApplicationAttachment.objects.filter(
+                application=application,
+                question=question_idx,
+                is_deleted=False,
+            ).count()
+
+            # Validate the limit under the lock
+            if existing_count >= max_attachments:
+                raise serializers.ValidationError(
+                    {
+                        "file": f"Maximum {max_attachments} attachment(s) allowed for this question, current: {existing_count}"
+                    }
+                )
+
+            # Create the attachment record (still within atomic + locked transaction)
             try:
                 attachment = ApplicationAttachment.objects.create(**data)
             except IntegrityError as e:
