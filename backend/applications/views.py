@@ -4,7 +4,18 @@ from django.http import FileResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import render
 
-from applications.models import ApplicationAttachment
+from .models import Application, ApplicationAttachment
+
+# Prepare a standard 404 response
+RESPONSE_404 = render(
+    None,
+    "error.html",
+    status=404,
+    context={
+        "message": "404 - Not found",
+        "details": "The requested resource was not found on this server.",
+    },
+)
 
 
 def generic_template(request):
@@ -23,9 +34,15 @@ def generic_template(request):
 
 def resume_application(request, key):
     """Resume an application based on the key provided in the URL."""
-    # Verify application key access - return proper 404
-    # if not Application.has_access(request.user, key):
-    #     return render(request, "error.html", status=404)
+    # Fetch the application object
+    try:
+        application = Application.objects.get(key=key)
+    except Application.DoesNotExist:
+        return RESPONSE_404
+
+    # Verify application key access
+    if application.has_access(request.user) is False:
+        return RESPONSE_404
 
     return generic_template(request)
 
@@ -42,19 +59,11 @@ def download_attachment(request, appKey, attachmentKey):
             is_deleted=False,
         )
     except ApplicationAttachment.DoesNotExist:
-        return render(request, "error.html", status=404)
+        return RESPONSE_404
 
     # Verify that the user has access to this application
     if attachment.application.has_access(request.user) is False:
-        return render(
-            request,
-            "error.html",
-            status=404,
-            context={
-                "message": "404 - Not found",
-                "details": "The attachment file you are looking for does not exist.",
-            },
-        )
+        return RESPONSE_404
 
     # Serve the file
     return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
