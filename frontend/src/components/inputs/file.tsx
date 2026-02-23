@@ -208,8 +208,7 @@ const DropzoneDialogContent = ({
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
                 const responseData = error.response?.data as any;
-                const message = responseData?.file?.[0]
-                    ?? error.message;
+                const message = responseData?.file ?? error.message;
                 showSnackbar(`Failed to upload: ${message}`, "error");
                 return null;
             })

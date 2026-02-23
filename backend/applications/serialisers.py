@@ -71,7 +71,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
         request = self.context.get("request", None)
-        
+
         # Default to False when request is not present (e.g., during schema generation)
         isPost = request.method == "POST" if request else False
         isPut = request.method == "PUT" if request else False
@@ -239,7 +239,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
         request = self.context.get("request", None)
-        
+
         # Default to False when request is not present (e.g., during schema generation)
         isPost = request.method == "POST" if request else False
         isPatch = request.method == "PATCH" if request else False
@@ -304,7 +304,9 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         """
         request = self.context.get("request")
         try:
-            application = Application.objects.get(key=value, owner=request.user)
+            application = Application.objects.select_related("questionnaire").get(
+                key=value, owner=request.user
+            )
         except Application.DoesNotExist:
             raise serializers.ValidationError(
                 {"application_key": "Application not found."}
@@ -316,34 +318,72 @@ class AttachmentSerialiser(serializers.ModelSerializer):
 
     def validate_question(self, value):
         """
-        Validate the question index to ensure it follows the expected format.
-
-        Looking up the actual question type being a "file" in the questionnaire
-        is possible, however is an overkill for the time being.
+        Validate the question index format (does not parse definition here).
+        Definition parsing is deferred to object-level validate() for guaranteed ordering.
         """
         question_idx = value.strip()
         if not question_idx:
-            raise serializers.ValidationError(
-                {"question": "Question index cannot be empty."}
-            )
+            raise serializers.ValidationError("Question index cannot be empty.")
 
-        # Perform a regex check to ensure the format
+        # Regex validates format: ensures all digits and correct structure
         if not re.match(QUESTION_IDX_PATTERN, question_idx):
             raise serializers.ValidationError(
-                {"question": "Question index does not match the expected format. "}
+                "Question index must follow format: step.section-question (e.g., 0.1-2)"
             )
 
         return question_idx
 
-    def create(self, validated_data):
-        # Pull cached instance instead of querying again
-        application = self.context.pop("application", None)
+    def validate(self, data):
+        """
+        Object-level validation: Parse question definition and validate against file_max_attachments.
+        This runs after all field validators, guaranteeing access to cached application.
+        """
+        # Get the cached application from field validator
+        application = self.context.get("application")
+        if application is None:
+            raise serializers.ValidationError(
+                "Application not found in context. Ensure application_key validation ran first."
+            )
 
-        # Explcitly raise an error if we don't have the application instance in the context
+        # Parse question index: "step.section-question" format
+        # Regex already validated format in validate_question(), so this won't fail
+        question_idx = data.get("question", "")
+        parts = question_idx.split("-")
+        step_section, question_num = parts[0].split("."), int(parts[1])
+        step_idx, section_idx = int(step_section[0]), int(step_section[1])
+
+        # Look up the question in questionnaire document
+        try:
+            question_def = application.questionnaire.document["steps"][step_idx][
+                "sections"
+            ][section_idx]["questions"][question_num]
+        except (KeyError, IndexError, TypeError):
+            raise serializers.ValidationError(
+                {"question": "Question not found in questionnaire definition."}
+            )
+
+        # Cache the question definition for use in create()
+        self.context["question_def"] = question_def
+
+        return data
+
+    def create(self, validated_data):
+        # Pull cached instances
+        application = self.context.pop("application", None)
+        question_def = self.context.pop("question_def", None)
+
+        # Explicitly raise errors if we don't have the required cached values
         if application is None:
             raise exceptions.ValidationError(
                 {
                     "application_key": "Application not found in context, validation did not run."
+                }
+            )
+
+        if question_def is None:
+            raise exceptions.ValidationError(
+                {
+                    "question": "Question definition not found in context, validation did not run."
                 }
             )
 
@@ -357,6 +397,25 @@ class AttachmentSerialiser(serializers.ModelSerializer):
             }
         except KeyError as e:
             raise serializers.ValidationError("Missing required field: " + str(e))
+
+        # Validate file_max_attachments limit
+        question_idx = validated_data["question"]
+        max_attachments = min(question_def.get("file_max_attachments") or 1, 10)
+
+        # Count existing non-deleted attachments for this question
+        existing_count = ApplicationAttachment.objects.filter(
+            application=application,
+            question=question_idx,
+            is_deleted=False,
+        ).count()
+
+        # Validate the limit
+        if existing_count >= max_attachments:
+            raise serializers.ValidationError(
+                {
+                    "file": f"Maximum {max_attachments} attachment(s) allowed for this question, current: {existing_count}"
+                }
+            )
 
         # Create the attachment record in an atomic transaction to ensure data integrity
         with transaction.atomic():

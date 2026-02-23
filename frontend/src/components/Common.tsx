@@ -63,7 +63,9 @@ export const FileAttachmentList = ({
                                 })
                                 .catch((error) => {
                                     console.error("Error deleting attachment:", error);
-                                    showSnackbar("Failed to delete file, contact support", "error");
+                                    const responseData = error.response?.data as any;
+                                    const message = responseData?.detail ?? error.message;
+                                    showSnackbar(`Failed to delete file: ${message}`, "error");
                                 });
 
                             // Close the dialog after action
