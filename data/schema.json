@@ -8,7 +8,7 @@
         "schema_version": {
             "type": "string",
             "title": "Schema version",
-            "default": "2025.06-1",
+            "default": "2025.07-1",
             "readOnly": true,
             "description": "The version of the questionnaire schema."
         },
@@ -21,6 +21,11 @@
             "minItems": 1
         }
     },
+    "required": [
+        "schema_version",
+        "steps"
+    ],
+    "additionalProperties": false,
     "$defs": {
         "step": {
             "type": "object",
@@ -83,7 +88,7 @@
             "properties": {
                 "label": {
                     "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 500,
                     "minLength": 1,
                     "title": "Label"
                 },
@@ -118,15 +123,15 @@
                     "maxLength": 1000,
                     "title": "Description"
                 },
-                "options": {
+                "select_options": {
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "maxLength": 50,
+                        "maxLength": 100,
                         "minLength": 1
                     },
                     "maxItems": 50,
-                    "title": "Options"
+                    "title": "Select options"
                 },
                 "grid_columns": {
                     "type": "array",
@@ -147,7 +152,8 @@
                                     "number",
                                     "checkbox",
                                     "select",
-                                    "date"
+                                    "date",
+                                    "file"
                                 ],
                                 "enumNames": [
                                     "Text",
@@ -155,7 +161,8 @@
                                     "Numeric",
                                     "Checkbox",
                                     "Multiple Choice Select",
-                                    "Date"
+                                    "Date",
+                                    "File Upload"
                                 ],
                                 "title": "Type"
                             },
@@ -164,14 +171,14 @@
                                 "maxLength": 255,
                                 "title": "Description"
                             },
-                            "options": {
+                            "select_options": {
                                 "type": "array",
                                 "items": {
                                     "type": "string",
                                     "maxLength": 50
                                 },
                                 "maxItems": 50,
-                                "title": "Options"
+                                "title": "Select options"
                             }
                         },
                         "required": [
@@ -182,14 +189,23 @@
                     "maxItems": 10,
                     "title": "Grid columns"
                 },
-                "max_rows": {
+                "grid_max_rows": {
                     "type": [
                         "integer",
                         "null"
                     ],
                     "minimum": 1,
                     "maximum": 20,
-                    "title": "Max rows"
+                    "title": "Grid max rows"
+                },
+                "dependent_step": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1,
+                    "maximum": 10,
+                    "title": "Dependent step"
                 }
             },
             "required": [

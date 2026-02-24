@@ -60,6 +60,36 @@ class GridQuestionColumnSerialiser(serializers.Serializer):
     )
 
 
+# class QuestionExtraAttrs(serializers.Serializer):
+#     select_options = serializers.ListField(
+#         child=serializers.CharField(max_length=100),
+#         max_length=50,
+#         required=False,
+#         allow_null=True,
+#         allow_empty=False,
+#     )
+#     grid_columns = serializers.ListField(
+#         child=SerializerJSONField(GridQuestionColumnSerialiser),
+#         max_length=10,
+#         required=False,
+#         allow_null=True,
+#         allow_empty=False,
+#     )
+#     grid_max_rows = serializers.IntegerField(
+#         min_value=1,
+#         max_value=20,
+#         # default=10,
+#         required=False,
+#         allow_null=True,
+#     )
+#     dependent_step = serializers.IntegerField(
+#         min_value=1,
+#         max_value=10,
+#         required=False,
+#         allow_null=True,
+#     )
+
+
 class QuestionSerialiser(serializers.Serializer):
     label = serializers.CharField(max_length=500, required=True)
     type = serializers.ChoiceField(
@@ -74,6 +104,12 @@ class QuestionSerialiser(serializers.Serializer):
     description = serializers.CharField(
         max_length=1000, required=False, allow_null=False, allow_blank=True
     )
+    # TODO: Replace all other extra attributes with this when schema migration is ready
+    # extra_attributes = QuestionExtraAttrs(
+    #     required=False,
+    #     allow_null=False,
+    #     default=dict(),
+    # )
     select_options = serializers.ListField(
         child=serializers.CharField(max_length=100),
         max_length=50,
@@ -94,7 +130,12 @@ class QuestionSerialiser(serializers.Serializer):
         # default=10,
         required=False,
         allow_null=True,
-        # allow_empty=True,
+    )
+    dependent_step = serializers.IntegerField(
+        min_value=1,
+        max_value=10,
+        required=False,
+        allow_null=True,
     )
 
 
@@ -104,7 +145,6 @@ class SectionSerialiser(serializers.Serializer):
         max_length=3000, required=False, allow_blank=True
     )
     questions = serializers.ListField(
-        # child=SerializerJSONField(QuestionSerialiser),
         child=ReferenceField("question"),
         required=True,
         allow_empty=False,
@@ -118,7 +158,6 @@ class StepSerialiser(serializers.Serializer):
         max_length=100, required=False, allow_blank=True
     )
     sections = serializers.ListField(
-        # child=SerializerJSONField(SectionSerialiser),
         child=ReferenceField("section"),
         required=True,
         allow_empty=False,

@@ -14,7 +14,9 @@ class JsonSchemaModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["document"].widget.validate_on_submit = True
+        # Turn this back on when the nullable integer issue is fixed
+        # https://github.com/bhch/django-jsonform/issues/192
+        # self.fields["document"].widget.validate_on_submit = True
         self.fields["document"].validators = [self.document_validator]
 
     def document_validator(self, value):
