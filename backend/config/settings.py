@@ -60,13 +60,13 @@ if ALLOWED_HOST_PROD:
 # Use sessions for CSRF protection without disclosing CSRF token in cookies
 CSRF_USE_SESSIONS = True
 
-# Let the application know it's behind a proxy 
+# Let the application know it's behind a proxy
 # and to use the X-Forwarded-* headers for host and protocol information
 USE_X_FORWARDED_HOST = True
 
-# Recognise secure connections coming through the proxy (nginx) 
+# Recognise secure connections coming through the proxy (nginx)
 # by checking the X-Forwarded-Proto header
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Set custom the CSRF header name that Django will look on the request headers
 # for token validation when authenticating via AJAX etc.
@@ -315,7 +315,8 @@ UPLOAD_MIME_TYPES = [
     "image/jpeg",
     "image/png",
     "application/pdf",
-    # "application/msword",
+    # "application/msword", # don't accept old format
     # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    # "application/vnd.ms-excel", # don't accept old format
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]
-

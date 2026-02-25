@@ -310,7 +310,7 @@ const DropzoneDialogContent = ({
                         </Button>
                     </Typography>
                     <Typography color={styling.textColour} fontStyle="italic">
-                        Only images and PDF files are accepted.<br />
+                        Only PDF, Excel and image (jpeg, png) files are accepted.<br />
                         Maximum file size limit is <strong>{maxFilesizeMB} MB</strong>.<br />
                         Up to <strong>{maxAttachments} file{maxAttachments > 1 ? "s" : ""}</strong> can be uploaded for this question.
                     </Typography>
