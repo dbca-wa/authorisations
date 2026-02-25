@@ -2,9 +2,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import Box from "@mui/material/Box";
 import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import React from 'react';
 
@@ -149,44 +149,46 @@ export const FileAttachmentList = ({
 
     return (
         <Box className="p-4 border border-gray-300 rounded-md">
-            <Stack direction="row" spacing={4} marginTop={2} justifyContent={"center"} alignItems={"center"} >
+            <Grid container spacing={2}>
                 {attachments.map((attachment) => (
-                    <Box key={attachment.key} className="border border-gray-300 rounded-lg h-56 px-4 py-4 flex flex-col items-center">
-                        <Link
-                            href={attachment.download_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            underline="none"
-                            className="flex flex-col items-center gap-2 h-full"
-                        >
-                            {getIconFromFilename(attachment.name)}
-                            <Typography variant="body2" className="text-center w-28 line-clamp-3">
-                                {attachment.name}
-                            </Typography>
-                        </Link>
-                        {canEdit && (
-                            <Box className="flex gap-2">
-                                <IconButton
-                                    color="error"
-                                    size="small"
-                                    title={`Delete: ${attachment.name}`}
-                                    onClick={() => deleteAttachment(attachment)}
-                                >
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton
-                                    color="primary"
-                                    size="small"
-                                    title={`Rename: ${attachment.name}`}
-                                    onClick={() => renameAttachment(attachment)}
-                                >
-                                    <EditIcon fontSize="small" />
-                                </IconButton>
-                            </Box>
-                        )}
-                    </Box>
+                    <Grid key={attachment.key} size={{ md: 3, lg: 2.4, xl: 2 }}>
+                        <Box className="border border-gray-300 rounded-lg h-56 px-4 py-4 flex flex-col items-center">
+                            <Link
+                                href={attachment.download_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                underline="none"
+                                className="flex flex-col items-center gap-2 h-full"
+                            >
+                                {getIconFromFilename(attachment.name)}
+                                <Typography variant="body2" className="text-center w-28 line-clamp-3">
+                                    {attachment.name}
+                                </Typography>
+                            </Link>
+                            {canEdit && (
+                                <Box className="flex gap-2">
+                                    <IconButton
+                                        color="error"
+                                        size="small"
+                                        title={`Delete: ${attachment.name}`}
+                                        onClick={() => deleteAttachment(attachment)}
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                        color="primary"
+                                        size="small"
+                                        title={`Rename: ${attachment.name}`}
+                                        onClick={() => renameAttachment(attachment)}
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            )}
+                        </Box>
+                    </Grid>
                 ))}
-            </Stack>
+            </Grid>
         </Box>
     );
 };

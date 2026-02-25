@@ -90,7 +90,7 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                 "type": "array",
                 "items": {"type": "string", "format": "uuid"},
                 "minItems": 1,
-                "maxItems": 10,
+                "maxItems": 20,
             },
         },
     }

@@ -400,7 +400,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         # Use select_for_update() to serialize concurrent requests for the same application
         # and prevent race conditions where multiple requests bypass the attachment limit check
         question_idx = validated_data["question"]
-        max_attachments = min(question_def.get("file_max_attachments") or 1, 10)
+        max_attachments = min(question_def.get("file_max_attachments") or 1, 20)
 
         with transaction.atomic():
             # Lock the application row to prevent concurrent attachment creation

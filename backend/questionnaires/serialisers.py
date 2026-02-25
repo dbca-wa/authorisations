@@ -92,7 +92,7 @@ class GridQuestionColumnSerialiser(serializers.Serializer):
 #     )
 #     file_max_attachments = serializers.IntegerField(
 #         min_value=1,
-#         max_value=10,
+#         max_value=20,
 #         required=False,
 #         allow_null=True,
 #     )
@@ -148,7 +148,7 @@ class QuestionSerialiser(serializers.Serializer):
     )
     file_max_attachments = serializers.IntegerField(
         min_value=1,
-        max_value=10,
+        max_value=20,
         required=False,
         allow_null=True,
     )
