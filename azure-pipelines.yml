@@ -4,7 +4,6 @@
 
 trigger:
 - main
-- uploads-backend
 
 resources:
 - repo: self
@@ -17,7 +16,7 @@ variables:
 
 stages:
 - stage: Build
-  condition: and(succeeded(), eq(variables.isDev, 'true'))
+  condition: and(succeeded(), eq(variables.isMain, 'true'))
   displayName: Build image
   jobs:
   - job: Build
