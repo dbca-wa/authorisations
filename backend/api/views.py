@@ -1,9 +1,10 @@
-from applications.models import Application
-from applications.serialisers import ApplicationSerialiser, FileAttachmentSerialiser
+import uuid
+
+from applications.models import Application, ApplicationAttachment
+from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
-from rest_framework import filters, mixins, status, viewsets
-from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
+from rest_framework import filters, mixins, viewsets
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 
 
@@ -21,6 +22,14 @@ class ApplicationViewSet(
     queryset = Application.objects.all()
     serializer_class = ApplicationSerialiser
     lookup_field = "key"
+    http_method_names = [
+        "get",
+        "post",
+        "put",
+        "patch",
+        "options",
+        "head",
+    ]
 
     def get_queryset(self):
         """
@@ -30,42 +39,62 @@ class ApplicationViewSet(
         # Ensure users can only see their own applications
         return super().get_queryset().filter(owner=self.request.user)
 
-    @action(
-        detail=True,
-        methods=["post", "get", "delete"],
-        serializer_class=FileAttachmentSerialiser,
-    )
-    def files(self, request, key=None):
+
+class ApplicationFilterBackend(filters.BaseFilterBackend):
+    """
+    Filter that displays only attachments belonging to given application key.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        application_key = request.query_params.get("application_key")
+        if application_key:
+            # Catch invalid UUIDs
+            try:
+                app_key_uuid = uuid.UUID(application_key)
+            except ValueError as error:
+                raise ValidationError(str(error))
+            else:
+                return queryset.filter(application__key=app_key_uuid)
+
+        return queryset
+
+
+class AttachmentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing attachments for a specific application.
+    """
+
+    queryset = ApplicationAttachment.objects.all()
+    serializer_class = AttachmentSerialiser
+    lookup_field = "key"
+    filter_backends = [ApplicationFilterBackend]
+    http_method_names = [
+        "get",
+        "post",
+        "delete",
+        "patch",
+        "options",
+        "head",
+    ]
+
+    def get_queryset(self):
         """
-        Custom endpoint to manage files for a specific application.
-        - GET: List existing files for this application.
-        - POST: Upload a new file for this application.
-        - DELETE: Remove an existing file from this application.
+        Only allow access to attachments of applications:
+            * owned by the user
+            * not deleted
         """
-
-        # This gets the parent Application instance
-        # application = self.get_object()
-
-        # Handle file upload
-        if request.method == "POST":
-            return self._upload_file(request)
-
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def _upload_file(self, request):
-        # Handle File Upload
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        uploaded_file = serializer.validated_data["file"]
-
-        # --- FILE HANDLING LOGIC HERE ---
-        # TODO: Save the file to cloud storage
-        print(f"File '{uploaded_file.name}' uploaded for application.")
-
-        return Response(
-            {"status": "file uploaded", "filename": uploaded_file.name},
-            status=status.HTTP_201_CREATED,
+        return ApplicationAttachment.objects.select_related(
+            "application", "application__owner"
+        ).filter(
+            application__owner=self.request.user,
+            is_deleted=False,
         )
+
+    def perform_destroy(self, instance: ApplicationAttachment):
+        # defensive check
+        if instance.application.owner != self.request.user:
+            raise NotFound("Attachment not found.")
+        instance.soft_delete()
 
 
 class VersionFilterBackend(filters.BaseFilterBackend):
@@ -84,14 +113,18 @@ class VersionFilterBackend(filters.BaseFilterBackend):
 
 class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    A simple ViewSet for listing or retrieving applications.
+    A simple ViewSet for listing or retrieving questionnaires.
     """
 
     queryset = Questionnaire.objects.all()
     serializer_class = QuestionnaireSerialiser
-
     lookup_field = "slug"
     filter_backends = [VersionFilterBackend]
+    http_method_names = [
+        "get",
+        "options",
+        "head",
+    ]
 
     def get_request_version(self) -> int | None:
         try:

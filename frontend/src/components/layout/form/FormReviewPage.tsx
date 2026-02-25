@@ -22,21 +22,24 @@ import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
 import { useSnackbar } from '../../../context/Snackbar';
-import type { IAnswer, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
+import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
-import type { IGridQuestionColumn, IQuestion, IQuestionnaire } from "../../../context/types/Questionnaire";
+import { Question, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
+import { FileAttachmentList } from '../../Common';
 
 
 export function FormReviewPage({
     userCanEdit,
     setUserCanEdit,
     questionnaire,
+    attachments,
     applicationKey,
     handleSubmit,
 }: {
     userCanEdit: boolean,
     setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
     questionnaire: IQuestionnaire;
+    attachments: IApplicationAttachment[];
     applicationKey: string;
     handleSubmit: (nextStep: React.SetStateAction<number>) => AsyncVoidAction;
 }) {
@@ -96,16 +99,24 @@ export function FormReviewPage({
                                         {section.title}
                                     </Typography>
                                     <Stack spacing={2}>
-                                        {section.questions.map((question: IQuestion, questionIdx: number) => {
+                                        {section.questions.map((qObj: IQuestion, questionIdx: number) => {
+                                            const question = new Question(qObj, {
+                                                step: stepIdx,
+                                                section: sectionIdx,
+                                                question: questionIdx,
+                                            });
                                             const answer = answers[stepIdx][`${sectionIdx}-${questionIdx}`];
                                             let displayAnswer: React.ReactNode = null;
 
-                                            switch (question.type) {
+                                            switch (qObj.type) {
                                                 case "checkbox":
                                                     displayAnswer = displayCheckbox(answer);
                                                     break;
                                                 case "grid":
-                                                    displayAnswer = displayGrid(question, answer);
+                                                    displayAnswer = displayGrid(qObj, answer);
+                                                    break;
+                                                case "file":
+                                                    displayAnswer = displayFiles(attachments.filter(atch => atch.question === question.key));
                                                     break;
                                                 case "date":
                                                     displayAnswer = displayDate(answer);
@@ -117,13 +128,14 @@ export function FormReviewPage({
                                                     displayAnswer = displayString(answer);
                                                     break;
                                                 default:
-                                                    throw new Error(`Unsupported question type: ${question.type}`);
+                                                    console.warn(`Unsupported question type: ${qObj.type}`);
+                                                    displayAnswer = <Typography color="text.disabled">N/A - unsupported type</Typography>;
                                             }
 
                                             return (
                                                 <Box key={questionIdx} sx={{ mb: 1 }}>
                                                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                                        {question.label}
+                                                        {qObj.label}
                                                     </Typography>
                                                     {displayAnswer}
                                                 </Box>
@@ -175,19 +187,40 @@ const isEmptyAnswer = (answer: any) => {
     );
 }
 
-const displayCheckbox = (answer: IAnswer) => (
-    <Typography sx={{ fontWeight: 500 }}>
-        {humaniseBoolean(answer)}
-    </Typography>
-);
+// Type guards to ensure answer is the correct type for each display function
+const isCheckboxAnswer = (answer: IAnswer): answer is boolean => {
+    return typeof answer === 'boolean';
+};
+
+const isGridAnswer = (answer: IAnswer): answer is IGridAnswerRow[] => {
+    return Array.isArray(answer);
+};
+
+const isStringAnswer = (answer: IAnswer): answer is string => {
+    return typeof answer === 'string';
+};
+
+const displayCheckbox = (answer: IAnswer) => {
+    if (!isCheckboxAnswer(answer)) {
+        console.warn(`Expected checkbox answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
+    }
+    return (
+        <Typography sx={{ fontWeight: 500 }}>
+            {humaniseBoolean(answer)}
+        </Typography>
+    );
+};
 
 const displayGrid = (question: IQuestion, answer: IAnswer) => {
-    if (!Array.isArray(answer)) {
-        return <Typography color="text.disabled">N/A</Typography>;
+    if (!isGridAnswer(answer)) {
+        console.warn(`Expected grid answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
     }
     if (answer.length === 0) {
         return <Typography color="text.disabled">(unanswered)</Typography>;
     }
+
     return (
         <TableContainer component={Paper} variant="outlined" sx={{ maxWidth: "100%", mb: 1 }}>
             <Table size="small">
@@ -226,13 +259,27 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
 };
 
 const displayDate = (answer: IAnswer) => {
+    if (!isStringAnswer(answer)) {
+        console.warn(`Expected date answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
+    }
     return isEmptyAnswer(answer)
         ? <Typography color="text.disabled">(unanswered)</Typography>
-        : <Typography>{dayjs(answer as string).format('DD/MM/YYYY')}</Typography>;
+        : <Typography>{dayjs(answer).format('DD/MM/YYYY')}</Typography>;
 };
 
 const displayString = (answer: IAnswer) => {
+    if (!isStringAnswer(answer)) {
+        console.warn(`Expected string answer but got ${typeof answer}`, answer);
+        return <Typography color="text.disabled">N/A - invalid answer</Typography>;
+    }
     return isEmptyAnswer(answer)
         ? <Typography color="text.disabled">(unanswered)</Typography>
         : <Typography whiteSpace="pre-wrap">{String(answer)}</Typography>;
+};
+
+const displayFiles = (attachments: IApplicationAttachment[]) => {
+    return attachments ?
+        FileAttachmentList({ attachments: attachments, canEdit: false }) :
+        <Typography color="text.disabled">(no file uploaded)</Typography>;
 };

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@plugin "@iconify/tailwind4" {
+  prefixes: vscode-icons, flat-color-icons;
+  scale: 6;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

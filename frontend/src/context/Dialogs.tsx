@@ -5,13 +5,14 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
 import { styled } from '@mui/material/styles';
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 // 1. Define the shape of the data your context will provide.
 export interface DialogOptions {
     title: ReactNode;
     content: ReactNode;
     actions?: ReactNode;
+    onOpen?: () => void;
     onClose?: () => void;
 }
 
@@ -46,6 +47,16 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
         setOptions(null);
     };
 
+    // Call onOpen callback after the dialog has rendered
+    useEffect(() => {
+        if (options) {
+            // Use requestAnimationFrame to ensure focus happens after browser paint
+            requestAnimationFrame(() => {
+                options.onOpen?.();
+            });
+        }
+    }, [options]);
+
     const value = { showDialog, hideDialog };
 
     return (
@@ -56,7 +67,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                 <BootstrapDialog
                     onClose={hideDialog}
                     open={!!options}
-                    fullWidth 
+                    // fullWidth
                     maxWidth="lg"
                     aria-labelledby="customised-dialog-title"
                 >
