@@ -83,6 +83,9 @@ ENV PATH="/app/.venv/bin:${PATH}"
 ENV PYTHONPATH=/app
 WORKDIR /app
 
+# Collect static
+RUN python manage.py collectstatic --noinput
+
 # Expose django app on port 8080
 EXPOSE 8080
 
@@ -92,5 +95,5 @@ HEALTHCHECK --interval=1m --timeout=5s --start-period=10s --retries=3 CMD ["wget
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Uncomment if you want to pause at some step
-# (comment out until the pasue step)
+# (comment out until the pause step)
 # ENTRYPOINT ["sleep", "infinity"]

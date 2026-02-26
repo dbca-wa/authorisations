@@ -65,6 +65,9 @@ ENV PATH="/app/.venv/bin:${PATH}"
 ENV PYTHONPATH=/app
 WORKDIR /app
 
+# Collect static
+RUN python manage.py collectstatic --noinput
+
 # Expose django app on port 8080
 EXPOSE 8080
 
