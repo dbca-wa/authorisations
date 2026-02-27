@@ -57,15 +57,13 @@ RUN chown -R appuser:appuser /app
 # =================== RUNTIME ===================
 FROM builder_base
 
-# Accept build arguments
+# Accept non-sensitive build arguments
 ARG DATABASE_URL
-ARG SECRET_KEY
 ARG LOCAL_MEDIA_STORAGE
 ARG PRIVATE_MEDIA_ROOT
 
-# Make them available as environment variables during build
+# Make them available as environment variables
 ENV DATABASE_URL=${DATABASE_URL} \
-    SECRET_KEY=${SECRET_KEY} \
     LOCAL_MEDIA_STORAGE=${LOCAL_MEDIA_STORAGE} \
     PRIVATE_MEDIA_ROOT=${PRIVATE_MEDIA_ROOT}
 
@@ -95,8 +93,10 @@ ENV PATH="/app/.venv/bin:${PATH}"
 ENV PYTHONPATH=/app
 WORKDIR /app
 
-# Collect static
-RUN python manage.py collectstatic --noinput
+# Collect static with SECRET_KEY mounted as build secret
+RUN --mount=type=secret,id=SECRET_KEY \
+    SECRET_KEY=$(cat /run/secrets/SECRET_KEY) \
+    python manage.py collectstatic --noinput
 
 # Expose django app on port 8080
 EXPOSE 8080
