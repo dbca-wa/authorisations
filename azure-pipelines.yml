@@ -18,11 +18,9 @@ variables:
     value: '$(Build.BuildId)'
   - name: tagDate
     value: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}{0:ss}', pipeline.startTime) ]
-  - name: isMain
-    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
   
   # Production branch
-  - ${{ if variables.isMain }}:
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
     - name: imageTagPrefix
       value: production
   
