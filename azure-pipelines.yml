@@ -34,6 +34,8 @@ stages:
       inputs:
         command: build
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        repository: ghcr.io/dbca-wa/authorisations
+        imageName: ghcr.io/dbca-wa/authorisations
         tags: |
           latest
           $(tagDate)
