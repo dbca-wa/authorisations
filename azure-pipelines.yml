@@ -55,8 +55,6 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-          ${{ if variables.isMain }}:
-            latest
         arguments: |
           --build-arg DATABASE_URL=$(DATABASE_URL)
           --build-arg SECRET_KEY=$(SECRET_KEY)
@@ -74,5 +72,3 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-          ${{ if variables.isMain }}:
-            latest
