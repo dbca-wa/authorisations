@@ -9,24 +9,28 @@ resources:
 - repo: self
 
 variables:
-  group: docker-build
-  tag: '$(Build.BuildId)'
-  tagDate: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}{0:ss}', pipeline.startTime) ]
-  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
-  isDev: $[eq(variables['Build.SourceBranch'], 'refs/heads/uploads-backend')]
+  - group: docker-build-variables
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: tagDate
+    value: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}{0:ss}', pipeline.startTime) ]
+  - name: isMain
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  - name: isDev
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/uploads-backend')]
 
 stages:
 - stage: Build
   condition: and(succeeded(), eq(variables.isMain, 'true'))
-  displayName: Build image
+  displayName: Build Docker Image
   jobs:
-  - job: Build
-    displayName: Build
+  - job: BuildThenPush
+    displayName: Build then Push
     pool:
       vmImage: ubuntu-latest
     steps:
     - task: Docker@2
-      displayName: Build Docker image
+      displayName: Build Docker Image
       inputs:
         command: build
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
@@ -41,7 +45,7 @@ stages:
       env:
         DOCKER_BUILDKIT: 1
     - task: Docker@2
-      displayName: Push Docker image
+      displayName: Push Docker Image
       inputs:
         command: push
         repository: ghcr.io/dbca-wa/authorisations
@@ -49,15 +53,15 @@ stages:
         tags: |
               latest
               $(tagDate)
-    - task: Docker@2
-      displayName: Dev Build image and Push
-      inputs:
-        command: buildAndPush
-        dockerfile: '$(Build.SourcesDirectory)/dockerdev/Dockerfile'
-        tags: |
-              authorisations_dev_latest
-              authorisations_dev_$(tagDate)
-        containerRegistry: DockerGitHub
-        repository: ghcr.io/dbca-wa/docker_app_dev
-      env:
-        DOCKER_BUILDKIT: 1
+    # - task: Docker@2
+    #   displayName: Dev Build image and Push
+    #   inputs:
+    #     command: buildAndPush
+    #     dockerfile: '$(Build.SourcesDirectory)/dockerdev/Dockerfile'
+    #     tags: |
+    #           authorisations_dev_latest
+    #           authorisations_dev_$(tagDate)
+    #     containerRegistry: DockerGitHub
+    #     repository: ghcr.io/dbca-wa/docker_app_dev
+    #   env:
+    #     DOCKER_BUILDKIT: 1
