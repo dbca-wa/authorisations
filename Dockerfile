@@ -57,6 +57,16 @@ RUN chown -R appuser:appuser /app
 # =================== RUNTIME ===================
 FROM builder_base
 
+# Accept build arguments
+ARG SECRET_KEY
+ARG LOCAL_MEDIA_STORAGE
+ARG PRIVATE_MEDIA_ROOT
+
+# Make them available as environment variables during build
+ENV SECRET_KEY=${SECRET_KEY} \
+    LOCAL_MEDIA_STORAGE=${LOCAL_MEDIA_STORAGE} \
+    PRIVATE_MEDIA_ROOT=${PRIVATE_MEDIA_ROOT}
+
 # Switch to non-root user
 USER appuser
 WORKDIR /app
