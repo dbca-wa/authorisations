@@ -18,13 +18,13 @@ variables:
     value: '$(Build.BuildId)'
   - name: tagDate
     value: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}{0:ss}', pipeline.startTime) ]
+  - name: isMain
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
   
   # Production branch
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
     - name: imageTagPrefix
       value: production
-    - name: latestTag
-      value: latest
   
   # UAT branch
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/uat') }}:
@@ -55,7 +55,8 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-          $(latestTag)
+          ${{ if variables.isMain }}:
+            latest
         arguments: |
           --build-arg DATABASE_URL=$(DATABASE_URL)
           --build-arg SECRET_KEY=$(SECRET_KEY)
@@ -73,4 +74,5 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-          $(latestTag)
+          ${{ if variables.isMain }}:
+            latest
