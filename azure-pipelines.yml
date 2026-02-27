@@ -23,6 +23,8 @@ variables:
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
     - name: imageTagPrefix
       value: production
+    - name: latestTag
+      value: latest
   
   # UAT branch
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/uat') }}:
@@ -53,8 +55,7 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-          ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-            latest
+          $(latestTag)
         arguments: |
           --build-arg DATABASE_URL=$(DATABASE_URL)
           --build-arg SECRET_KEY=$(SECRET_KEY)
@@ -72,17 +73,4 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-          ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-            latest
-    # - task: Docker@2
-    #   displayName: Dev Build image and Push
-    #   inputs:
-    #     command: buildAndPush
-    #     dockerfile: '$(Build.SourcesDirectory)/dockerdev/Dockerfile'
-    #     tags: |
-    #           authorisations_dev_latest
-    #           authorisations_dev_$(tagDate)
-    #     containerRegistry: DockerGitHub
-    #     repository: ghcr.io/dbca-wa/docker_app_dev
-    #   env:
-    #     DOCKER_BUILDKIT: 1
+          $(latestTag)
