@@ -26,18 +26,29 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: Docker@2
-      displayName: Build an image and Push
+      displayName: Build Docker image
       inputs:
-        command: buildAndPush
+        command: build
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        tags: |
+          latest
+          $(tagDate)
+        arguments: |
+          --build-arg DATABASE_URL=$(DATABASE_URL)
+          --build-arg SECRET_KEY=$(SECRET_KEY)
+          --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
+          --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
+      env:
+        DOCKER_BUILDKIT: 1
+    - task: Docker@2
+      displayName: Push Docker image
+      inputs:
+        command: push
+        repository: ghcr.io/dbca-wa/authorisations
+        containerRegistry: DockerGitHub
         tags: |
               latest
               $(tagDate)
-        containerRegistry: DockerGitHub
-        repository: ghcr.io/dbca-wa/authorisations
-        arguments: '--build-arg SECRET_KEY=$(SECRET_KEY) --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE) --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)'
-      env:
-        DOCKER_BUILDKIT: 1
     - task: Docker@2
       displayName: Dev Build image and Push
       inputs:

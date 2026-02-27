@@ -58,12 +58,14 @@ RUN chown -R appuser:appuser /app
 FROM builder_base
 
 # Accept build arguments
+ARG DATABASE_URL
 ARG SECRET_KEY
 ARG LOCAL_MEDIA_STORAGE
 ARG PRIVATE_MEDIA_ROOT
 
 # Make them available as environment variables during build
-ENV SECRET_KEY=${SECRET_KEY} \
+ENV DATABASE_URL=${DATABASE_URL} \
+    SECRET_KEY=${SECRET_KEY} \
     LOCAL_MEDIA_STORAGE=${LOCAL_MEDIA_STORAGE} \
     PRIVATE_MEDIA_ROOT=${PRIVATE_MEDIA_ROOT}
 
