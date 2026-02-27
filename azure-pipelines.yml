@@ -3,48 +3,72 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
-- main
-- uploads-backend
+  branches:
+    include:
+    - main
+    - uat
+    - feature/*
 
 resources:
 - repo: self
 
 variables:
-  tag: '$(Build.BuildId)'
-  tagDate: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}{0:ss}', pipeline.startTime) ]
-  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  - group: docker-build-variables
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: tagDate
+    value: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}{0:ss}', pipeline.startTime) ]
+  - name: isMain
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  
+  # Production branch
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    - name: imageTagPrefix
+      value: production
+  
+  # UAT branch
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/uat') }}:
+    - name: imageTagPrefix
+      value: uat
+  
+  # Feature branches
+  - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/') }}:
+    - name: imageTagPrefix
+      value: $[concat('feature-', replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', ''), '/', '-'))]
 
 stages:
 - stage: Build
-  condition: and(succeeded(), eq(variables.isMain, 'true'))
-  displayName: Build image
+  displayName: Build and Push Docker Image
   jobs:
-  - job: Build
-    displayName: Build
+  - job: BuildThenPush
+    displayName: Build then Push
     pool:
       vmImage: ubuntu-latest
     steps:
     - task: Docker@2
-      displayName: Build an image and Push
+      displayName: Build Docker Image
       inputs:
-        command: buildAndPush
+        command: build
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        tags: |
-              latest
-              $(tagDate)
         containerRegistry: DockerGitHub
-        repository: ghcr.io/dbca-wa/authorisations
+        repository: dbca-wa/authorisations
+        tags: |
+          $(imageTagPrefix)
+          $(imageTagPrefix)-$(tagDate)
+        arguments: |
+          --build-arg DATABASE_URL=$(DATABASE_URL)
+          --build-arg SECRET_KEY=$(SECRET_KEY)
+          --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
+          --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
       env:
         DOCKER_BUILDKIT: 1
     - task: Docker@2
-      displayName: Dev Build image and Push
+      displayName: Push Docker Image
+      condition: succeeded()
       inputs:
-        command: buildAndPush
-        dockerfile: '$(Build.SourcesDirectory)/dockerdev/Dockerfile'
-        tags: |
-              authorisations_dev_latest
-              authorisations_dev_$(tagDate)
+        command: push
         containerRegistry: DockerGitHub
-        repository: ghcr.io/dbca-wa/docker_app_dev
-      env:
-        DOCKER_BUILDKIT: 1
+        repository: dbca-wa/authorisations
+        tags: |
+          $(imageTagPrefix)
+          $(imageTagPrefix)-$(tagDate)

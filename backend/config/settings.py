@@ -24,6 +24,8 @@ env = environ.Env(
     DEBUG=(bool, False),
     SECURE_HSTS_SECONDS=(int, 3600 * 24),
     SECURE_ONLY=(bool, False),
+    # File storage
+    LOCAL_MEDIA_STORAGE=(bool, False),
 )
 
 # Quick-start development settings - unsuitable for production
@@ -57,6 +59,14 @@ if ALLOWED_HOST_PROD:
 
 # Use sessions for CSRF protection without disclosing CSRF token in cookies
 CSRF_USE_SESSIONS = True
+
+# Let the application know it's behind a proxy
+# and to use the X-Forwarded-* headers for host and protocol information
+USE_X_FORWARDED_HOST = True
+
+# Recognise secure connections coming through the proxy (nginx)
+# by checking the X-Forwarded-Proto header
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Set custom the CSRF header name that Django will look on the request headers
 # for token validation when authenticating via AJAX etc.
@@ -211,6 +221,19 @@ STATICFILES_DIRS = [
     BASE_DIR / "assets",
 ]
 
+# Storage Backends
+STORAGES = {
+    # Avoid using the default FileSystemStorage and MEDIA_ROOT for uploaded files,
+    # as they are publicly accessible and not suitable for sensitive data.
+    "default": {
+        "BACKEND": "config.storage.PrivateMediaStorage",
+    },
+    # Use whitenoise to add compression and caching support for static files.
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # Original frontend build directory - doesn't exist in docker environment
 FRONTEND_DIST = Path(os.path.abspath(BASE_DIR / "../frontend/dist"))
 if FRONTEND_DIST.exists():
@@ -226,8 +249,14 @@ elif os.path.exists(BASE_DIR / "assets" / "manifest.json"):
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": DEBUG,
         "manifest_path": MANIFEST_PATH,
+        "dev_mode": env("DEBUG_FRONTEND", cast=bool, default=False),
+        # If UAT host is set, we need to use it for the dev server URL instead of localhost
+        "dev_server_protocol": "https" if ALLOWED_HOST_UAT else "http",
+        "dev_server_host": ALLOWED_HOST_UAT if ALLOWED_HOST_UAT else "localhost",
+        # The plugin doesn't support stripping the port.
+        # `None` will actually add string "None" and will not work
+        "dev_server_port": None if ALLOWED_HOST_UAT else 5173,
     }
 }
 
@@ -252,7 +281,31 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "UPLOADED_FILES_USE_URL": False,
 }
+
+# --- Private Media Storage for Secure File Uploads ---
+
+# This setting is explicitly `None` as the Azure File Storage filesystem
+# belongs to `root` user, otherwise will throw `PermissionError` on file uploads
+FILE_UPLOAD_PERMISSIONS = None
+
+# Assume Azure blob storage is used for media uploads, unless explicitly set as local storage.
+LOCAL_MEDIA_STORAGE = env("LOCAL_MEDIA_STORAGE")
+if LOCAL_MEDIA_STORAGE:
+    # This directory should be local or mounted storage in AKS and not served by any server
+    PRIVATE_MEDIA_ROOT = env("PRIVATE_MEDIA_ROOT")
+    # Ensure that the private media directory exists.
+    if not os.path.exists(PRIVATE_MEDIA_ROOT):
+        os.makedirs(PRIVATE_MEDIA_ROOT)
+else:
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.azure_storage.AzureStorage",
+    }
+    AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
+    AZURE_CONTAINER = env("AZURE_CONTAINER")
+    AZURE_SAS_TOKEN = env("AZURE_SAS_TOKEN")
+
 
 # Maximum allowed file size for uploads: 10MB
 UPLOAD_MAX_SIZE = 10 * 1024 * 1024
@@ -262,4 +315,8 @@ UPLOAD_MIME_TYPES = [
     "image/jpeg",
     "image/png",
     "application/pdf",
+    # "application/msword", # don't accept old format
+    # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    # "application/vnd.ms-excel", # don't accept old format
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]

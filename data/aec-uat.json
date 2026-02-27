@@ -226,7 +226,7 @@
               "select_options": []
             },
             {
-              "type": "text",
+              "type": "file",
               "label": "Attach your current CI competency form",
               "description": "The competency form must be less than 12 months old.",
               "is_required": true,
@@ -281,6 +281,17 @@
               "grid_max_rows": null,
               "dependent_step": null,
               "select_options": []
+            },
+            {
+              "type": "file",
+              "label": "Attach the competency forms of other project personnel",
+              "description": "The competency forms must be the most recent and less than 12 months old.",
+              "is_required": false,
+              "grid_columns": [],
+              "grid_max_rows": null,
+              "dependent_step": null,
+              "select_options": [],
+              "file_max_attachments": 20
             }
           ],
           "description": "Please provide the names and roles of all project personnel, including their experience."
@@ -439,14 +450,15 @@
               "select_options": []
             },
             {
-              "type": "text",
+              "type": "file",
               "label": "Please attach location map of the fieldwork",
               "description": "Preferred file types for maps are pdf or jpeg.",
               "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
-              "select_options": []
+              "select_options": [],
+              "file_max_attachments": 3
             },
             {
               "type": "textarea",

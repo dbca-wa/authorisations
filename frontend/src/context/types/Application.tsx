@@ -45,9 +45,12 @@ export interface IGridAnswerRow {
 }
 
 /**
- * Interface for an answer, which can be either a primitive type or an array of grid answer rows
+ * Interface for an answer, which can be either:
+ *  - A primitive type (string, number, boolean or null)
+ *  - An array of grid answer rows
+ *  - List of UUIDs for file attachments
  */
-export type IAnswer = PrimitiveType | IGridAnswerRow[];
+export type IAnswer = PrimitiveType | IGridAnswerRow[] | string[];
 
 /**
  * The form state for each step, keyed by step index.
@@ -77,4 +80,17 @@ export interface IFormDocument {
     schema_version: string;
     active_step: number;
     steps: IStepState[];
+}
+
+
+/**
+ * Interface for application attachment metadata
+ */
+export interface IApplicationAttachment {
+    key: string;
+    application_key: string;
+    question: string;
+    name: string;
+    created_at: string;
+    download_url: string;
 }

@@ -1,7 +1,7 @@
 import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import axios from "axios";
 import { ConfigManager } from "./ConfigManager";
-import type { IApplicationData, IFormDocument } from "./types/Application";
+import type { IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
 import type { IQuestionnaireData } from "./types/Questionnaire";
 
 
@@ -70,15 +70,24 @@ export class ApiManager {
         return response.data;
     }
 
+    public static async getApplicationAttachments(appKey: string): Promise<IApplicationAttachment[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IApplicationAttachment[]>(
+            `/attachments?application_key=${appKey}`, requestConfig);
+
+        return response.data;
+    }
+
     public static async uploadAttachment({
-        key, field, file, signal, callback,
+        appKey, name, question, file, signal, callback,
     }: {
-        key: string;
-        field: string;
+        appKey: string;
+        name: string;
+        question: string;
         file: File;
         signal?: AbortSignal;
         callback?: (event: AxiosProgressEvent) => void;
-    }): Promise<IApplicationData> {
+    }): Promise<IApplicationAttachment> {
         const requestConfig = ApiManager.getRequestConfig();
 
         // We need to send multipart/form-data
@@ -92,12 +101,27 @@ export class ApiManager {
 
         // Create form data
         const formData = new FormData();
+        formData.append("application_key", appKey);
+        formData.append("name", name);
+        formData.append("question", question);
         formData.append("file", file);
-        formData.append("field", field);
 
         // Start the upload
-        const response = await axios.post<IApplicationData>(
-            `/applications/${key}/files`, formData, requestConfig);
+        const response = await axios.post<IApplicationAttachment>(
+            `/attachments`, formData, requestConfig);
+
+        return response.data;
+    }
+
+    public static async deleteAttachment(attachmentKey: string): Promise<void> {
+        const requestConfig = ApiManager.getRequestConfig();
+        await axios.delete(`/attachments/${attachmentKey}`, requestConfig);
+    }
+
+    public static async renameAttachment(attachmentKey: string, newName: string): Promise<IApplicationAttachment> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationAttachment>(
+            `/attachments/${attachmentKey}`, { name: newName }, requestConfig);
 
         return response.data;
     }

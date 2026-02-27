@@ -1,5 +1,6 @@
 import { styled } from "@mui/material/styles";
 import type { AxiosError } from "axios";
+import type { ReactElement } from "react";
 
 // Simple browser-safe assert
 export function assert(condition: boolean, message: string): void {
@@ -67,3 +68,31 @@ export const VisuallyHiddenInput = styled('input')({
     width: 1,
     margin: '0!important',
 });
+
+
+/**
+ * Helper to get file icon based on its extension. 
+ * 
+ * @param fileName 
+ * @returns icon name for the file type or a default icon if the type is not recognized
+ */
+export const getIconFromFilename = (filename: string): ReactElement => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    switch (extension) {
+        case 'pdf':
+            return <span className="iconify-color vscode-icons--file-type-pdf2"></span>;
+        case 'doc':
+        case 'docx':
+            return <span className="iconify-color vscode-icons--file-type-word"></span>;
+        case 'xls':
+        case 'xlsx':
+            return <span className="iconify-color vscode-icons--file-type-excel"></span>;
+        case 'png':
+        case 'jpg':
+        case 'jpeg':
+            return <span className="iconify-color flat-color-icons--image-file"></span>;
+        // Default file icon for unrecognized types
+        default:
+            return <span className="iconify-color flat-color-icons--file"></span>;
+    }
+}
