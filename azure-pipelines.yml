@@ -53,6 +53,8 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
+          ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+            latest
         arguments: |
           --build-arg DATABASE_URL=$(DATABASE_URL)
           --build-arg SECRET_KEY=$(SECRET_KEY)
@@ -70,6 +72,8 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
+          ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+            latest
     # - task: Docker@2
     #   displayName: Dev Build image and Push
     #   inputs:
