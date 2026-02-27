@@ -22,7 +22,7 @@ variables:
     value: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
   
   # Production branch
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+  - ${{ if variables.isMain }}:
     - name: imageTagPrefix
       value: production
   
@@ -34,7 +34,7 @@ variables:
   # Feature branches
   - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/') }}:
     - name: imageTagPrefix
-      value: $[concat('feature-', replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', ''), '/', '-'))]
+      value: $[replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', 'feature-'), '/', '-')]
 
 stages:
 - stage: Build
