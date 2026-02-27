@@ -17,7 +17,7 @@ variables:
   - name: tag
     value: '$(Build.BuildId)'
   - name: tagDate
-    value: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}{0:ss}', pipeline.startTime) ]
+    value: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}.{0:ss}', pipeline.startTime) ]
   
   # Production branch
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
@@ -32,7 +32,7 @@ variables:
   # Feature branches
   - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/') }}:
     - name: imageTagPrefix
-      value: $[replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', 'feature-'), '/', '-')]
+      value: $[replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', ''), '/', '-')]
 
 stages:
 - stage: Build
