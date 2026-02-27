@@ -29,14 +29,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - task: Bash@3
-      displayName: Write secret to temporary files
-      inputs:
-        targetType: inline
-        script: |
-          mkdir -p /tmp/docker-secrets
-          echo -n '$(SECRET_KEY)' > /tmp/docker-secrets/SECRET_KEY
-          chmod 600 /tmp/docker-secrets/*
     - task: Docker@2
       displayName: Build Docker Image
       inputs:
@@ -48,19 +40,12 @@ stages:
           latest
           $(tagDate)
         arguments: |
-          --secret id=SECRET_KEY,src=/tmp/docker-secrets/SECRET_KEY
           --build-arg DATABASE_URL=$(DATABASE_URL)
+          --build-arg SECRET_KEY=$(SECRET_KEY)
           --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
           --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
       env:
         DOCKER_BUILDKIT: 1
-    - task: Bash@3
-      displayName: Clean up secret files
-      condition: always()
-      inputs:
-        targetType: inline
-        script: |
-          rm -rf /tmp/docker-secrets
     - task: Docker@2
       displayName: Push Docker Image
       inputs:
