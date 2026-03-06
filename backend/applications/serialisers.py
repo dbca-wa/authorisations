@@ -32,7 +32,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         read_only=True,
     )
     questionnaire_slug = serializers.SlugField(
-        source="questionnaire.slug",
+        source="questionnaire.process.slug",
         required=False,
         read_only=True,
     )
@@ -118,21 +118,28 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
     def validate_questionnaire_slug(self, value):
         """
-        Validate the questionnaire slug to ensure it exists in the database.
+        Validate the questionnaire process slug to ensure it exists in the database.
         """
         questionnaire: Questionnaire = self.context.get("questionnaire", None)
 
         # Check if we have been already called and validated the slug before
-        if isinstance(questionnaire, Questionnaire) and questionnaire.slug == value:
+        if (
+            isinstance(questionnaire, Questionnaire)
+            and questionnaire.process.slug == value
+        ):
             # Intentionally return the original value
             return value
 
         # Try to find with the user provided slug
         try:
-            questionnaire = Questionnaire.objects.filter(slug=value).latest("version")
+            questionnaire = (
+                Questionnaire.objects.select_related("process")
+                .filter(process__slug=value)
+                .latest("version")
+            )
         except Questionnaire.DoesNotExist:
             raise exceptions.ValidationError(
-                f"Questionnaire with slug '{value}' does not exist."
+                f"Questionnaire with process slug '{value}' does not exist."
             )
 
         # Add the questionnaire to the context for later use
@@ -304,9 +311,9 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         """
         request = self.context.get("request")
         try:
-            application = Application.objects.select_related("questionnaire").get(
-                key=value, owner=request.user
-            )
+            application = Application.objects.select_related(
+                "questionnaire", "questionnaire__process"
+            ).get(key=value, owner=request.user)
         except Application.DoesNotExist:
             raise serializers.ValidationError("Application not found.")
 

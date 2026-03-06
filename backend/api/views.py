@@ -37,7 +37,12 @@ class ApplicationViewSet(
         for the currently authenticated user.
         """
         # Ensure users can only see their own applications
-        return super().get_queryset().filter(owner=self.request.user)
+        return (
+            super()
+            .get_queryset()
+            .select_related("owner", "questionnaire", "questionnaire__process")
+            .filter(owner=self.request.user)
+        )
 
 
 class ApplicationFilterBackend(filters.BaseFilterBackend):
@@ -116,9 +121,10 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
     A simple ViewSet for listing or retrieving questionnaires.
     """
 
-    queryset = Questionnaire.objects.all()
+    queryset = Questionnaire.objects.select_related("process")
     serializer_class = QuestionnaireSerialiser
-    lookup_field = "slug"
+    lookup_field = "process__slug"
+    lookup_url_kwarg = "slug"
     filter_backends = [VersionFilterBackend]
     http_method_names = [
         "get",
@@ -137,7 +143,9 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
         Override to get the object based on the slug.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        filter_kwargs = {self.lookup_field: self.kwargs[self.lookup_field]}
+        filter_kwargs = {
+            self.lookup_field: self.kwargs[self.lookup_url_kwarg],
+        }
 
         # Check if the "version" filter was applied
         version = self.get_request_version()
@@ -157,7 +165,7 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
         """
         queryset = self.filter_queryset(self.get_queryset())
         # Group by slug and get the latest version
-        distinct_slugs = queryset.order_by("slug", "-version").distinct("slug")
+        distinct_slugs = queryset.order_by("process_id", "name", "-version").distinct("process_id", "name")
 
         serializer = self.get_serializer(distinct_slugs, many=True)
         return Response(serializer.data)

@@ -1,6 +1,7 @@
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import React from "react";
 
+import type { AlertColor } from '@mui/material/Alert';
 import { Box, Button, Card, List, ListItem, Typography } from "@mui/material";
 import { AxiosError } from 'axios';
 import { Link, useLoaderData, useNavigate, type NavigateFunction } from "react-router";
@@ -10,6 +11,7 @@ import { finalisedStatuses, type IApplicationData } from "../../../context/types
 import type { IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
+import { useSnackbar } from '../../../context/Snackbar';
 
 
 export const NewApplication = () => {
@@ -33,7 +35,7 @@ export const NewApplication = () => {
                     <List>
                         {questionnaires.map((q) =>
                             <Questionnaire
-                                key={q.slug}
+                                key={`${q.slug} - ${q.name}`}
                                 questionnaire={q}
                                 inProgress={inProgress}
                                 setInProgress={setInProgress}
@@ -56,6 +58,7 @@ const Questionnaire = ({
     const localDate = new Date(questionnaire.created_at).toLocaleDateString()
     const navigate: NavigateFunction = useNavigate();
     const { showDialog, hideDialog } = useDialog();
+    const { showSnackbar } = useSnackbar();
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -80,6 +83,7 @@ const Questionnaire = ({
                             setInProgress,
                             navigate,
                             showDialog, hideDialog,
+                            showSnackbar,
                         })}
                     >
                         Start Application
@@ -94,12 +98,16 @@ const Questionnaire = ({
 const createNewApplication = async (
     questionnaire_slug: string,
     navigate: NavigateFunction,
+    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
 ) => {
     // Do create a new application and redirect to it
     const newApplication: IApplicationData | null = await ApiManager.createApplication(questionnaire_slug)
         .catch((error: AxiosError) => {
+            showSnackbar(
+                "Failed to create an application, please try again later. If problem persists, contact support.",
+                "error",
+            );
             console.error('Error creating application:', error);
-            alert('[Warning dialog goes here] Failed to create an application. Please try again later.')
             return null;
         });
 
@@ -115,21 +123,25 @@ const createNewApplication = async (
 
 const startApplication = async ({
     questionnaire, setInProgress, navigate,
-    showDialog, hideDialog,
+    showDialog, hideDialog, showSnackbar,
 }: {
     questionnaire: IQuestionnaireData;
     setInProgress: React.Dispatch<React.SetStateAction<string>>;
     navigate: NavigateFunction;
     showDialog: (options: DialogOptions) => void;
     hideDialog: () => void;
+    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
 }) => {
     setInProgress(questionnaire.slug);
 
     // Check if there is already an application in progress for this questionnaire
     const existingApplications: IApplicationData[] | null = await ApiManager.fetchApplications()
         .catch((error: AxiosError) => {
+            showSnackbar(
+                "Failed to fetch existing applications, please try again later. If problem persists, contact support.",
+                "error",
+            );
             console.error('Error fetching applications:', error);
-            alert("[Warning dialog goes here] Failed to fetch existing applications. Please try again later.");
             return null;
         })
 
@@ -144,40 +156,44 @@ const startApplication = async ({
         app.questionnaire_slug === questionnaire.slug && !finalisedStatuses.includes(app.status)
     );
 
-    console.log("Existing applications:", existingApplications);
+    console.debug("Existing applications:", existingApplications);
 
     if (inProgressApplication) {
         // If there is an in-progress application, display the warning dialog
-        // console.log("inProgressApplication:", inProgressApplication);
-        console.warn("You already have an in-progress application for this questionnaire.");
-        // alert('[Warning dialog goes here] You already have an in-progress application..')
-
         showDialog({
-            title: "Create a new one?",
+            title: "Create a new application?",
             content: <>
                 <Typography>You already have <Link to="/my-applications">application(s)</Link> that
-                    are in-progress for this questionnaire. </Typography><br />
+                    are in-progress for this authorisation.</Typography><br />
                 <Typography>Are you sure you want to proceed and create a new one?</Typography>
             </>,
             actions: (
                 <>
-                    <Button onClick={() => {
-                        hideDialog();
-                        setInProgress("");
-                    }}>Cancel</Button>
-                    <Button onClick={async () => {
-                        console.log("Confirmed!");
-                        await createNewApplication(questionnaire.slug, navigate);
-                    }}>
-                        Confirm
-                    </Button>
+                    <Button
+                        variant="outlined"
+                        color="inherit"
+                        onClick={() => {
+                            hideDialog();
+                            setInProgress("");
+                        }}
+                    >Cancel</Button>
+                    <Button
+                        variant="contained"
+                        color="warning"
+                        onClick={async () => {
+                            await createNewApplication(questionnaire.slug, navigate, showSnackbar);
+                        }}
+                    >Confirm</Button>
                 </>
-            )
+            ),
+            onClose: () => {
+                setInProgress("");
+            },
         });
     }
     // No active application of this kind
     else {
-        await createNewApplication(questionnaire.slug, navigate);
+        await createNewApplication(questionnaire.slug, navigate, showSnackbar);
     }
 
     // setInProgress("");

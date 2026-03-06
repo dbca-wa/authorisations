@@ -1,26 +1,29 @@
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.db import models
+from processes.models import AuthorisationProcess
 from rest_framework import serializers
 
-from .schema import get_questionnaire_schema
 from .bugfix import DocumentJSONField
+from .schema import get_questionnaire_schema
+
 
 class Questionnaire(models.Model):
     """Model to represent a questionnaire with steps, sections, and questions."""
 
     id = models.BigAutoField(primary_key=True)
-    slug = models.SlugField(
-        max_length=20,
-        null=False,
-        blank=False,
-        unique=False,
-        db_index=False,
+    process = models.ForeignKey(
+        AuthorisationProcess,
+        related_name="questionnaires",
+        on_delete=models.PROTECT,
         editable=True,
     )
     version = models.PositiveSmallIntegerField(
         default=1, blank=False, null=False, editable=False
     )
-    name = models.CharField(max_length=100, blank=False, null=False, editable=True)
+    name = models.CharField(
+        max_length=100, blank=False, null=False, editable=True,
+        help_text='The unique name of the questionnaire within the process such as; "New application", "Renewal" etc.',
+    )
     description = models.TextField(
         max_length=500, blank=False, null=False, editable=True
     )
@@ -41,15 +44,15 @@ class Questionnaire(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                "slug",
+                "process",
+                "name",
                 models.F("version").desc(),
-                name="qnaire_unique_slug_version_desc",
-                include=["name"],
+                name="qnaire_unique_process_name_version_desc",
             )
         ]
 
     def __str__(self):
-        return f'Questionnaire "{self.name}" (v{self.version})'
+        return f'Questionnaire "{self.name}" (v{self.version}) for {self.process.slug}'
 
 
 class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializer):
@@ -58,9 +61,22 @@ class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerial
     because the schema.py imports serialisers.py.
     """
 
+    slug = serializers.SlugField(
+        source="process.slug",
+        required=False,
+        read_only=True,
+    )
+
     class Meta:
         model = Questionnaire
-        fields = ("slug", "version", "name", "description", "created_at", "document")
+        fields = (
+            "slug",
+            "name",
+            "version",
+            "description",
+            "created_at",
+            "document",
+        )
         # All fields are read-only by default (see `.get_fields()` method).
         read_only_fields = fields
 

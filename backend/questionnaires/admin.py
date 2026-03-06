@@ -7,13 +7,17 @@ from questionnaires.models import Questionnaire
 @admin.register(Questionnaire)
 class QuestionnaireAdmin(admin.ModelAdmin):
     form = QuestionnaireForm
-    list_display = ("name", "slug", "version")
+    # Don't show the "Show counts" on the filter facet
+    show_facets = admin.ShowFacets.NEVER
+    list_display = ("name", "process", "version")
+    list_filter = ("process",)
     ordering = (
-        "slug",
+        "process_id",
+        "name",
         "-version",
     )
-    readonly_fields = ("version", "created_at", "created_by", "slug")
-    editable_fields = ("name", "description", "document")
+    readonly_fields = ("process", "name", "version", "created_at", "created_by")
+    editable_fields = ("description", "document")
 
     save_as = False
     save_as_continue = False
@@ -63,19 +67,21 @@ class QuestionnaireAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(self.readonly_fields)
 
-        # Slug to be defined once; when creating a new record
+        # Process to be defined once; when creating a new record
         if obj is None:
-            readonly_fields.remove("slug")
+            readonly_fields.remove("process")
+            readonly_fields.remove("name")
 
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
-        # If "slug" is not readonly, add it to editable fields
+        # If "process" is not readonly, add it to editable fields
         readonly_fields = self.get_readonly_fields(request, obj)
         editable_fields = list(self.editable_fields)
 
-        if "slug" not in readonly_fields:
-            editable_fields.insert(0, "slug")
+        if "process" not in readonly_fields:
+            editable_fields.insert(0, "process")
+            editable_fields.insert(1, "name")
 
         return (
             (
@@ -106,4 +112,12 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         return super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).distinct("slug")
+        return super().get_queryset(request).distinct("process_id", "name")
+
+
+# APPLICATION_TYPES = {
+#     "NEW_APPLICATION": "Start a new application if your project; there WILL be animals to be handled or trapped and does NOT involve death of an animal as a deliberate measure",
+#     "RENEWAL": "Apply for a renewal if you already have an active authorisation and want to continue with the same project after the current authorisation expires.",
+#     "OBSERVATION_ONLY": "Apply for an observation-only authorisation if the project will NOT have any animals to be handled or trapped at all.",
+#     "DEATH_AS_AN_ENDPOINT": "Start with a death-as-an-endpoint application if you are applying for an authorisation to use animals that have died as an endpoint.",
+# }
