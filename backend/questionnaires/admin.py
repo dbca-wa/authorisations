@@ -113,11 +113,3 @@ class QuestionnaireAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).distinct("process_id", "name")
-
-
-# APPLICATION_TYPES = {
-#     "NEW_APPLICATION": "Start a new application if your project; there WILL be animals to be handled or trapped and does NOT involve death of an animal as a deliberate measure",
-#     "RENEWAL": "Apply for a renewal if you already have an active authorisation and want to continue with the same project after the current authorisation expires.",
-#     "OBSERVATION_ONLY": "Apply for an observation-only authorisation if the project will NOT have any animals to be handled or trapped at all.",
-#     "DEATH_AS_AN_ENDPOINT": "Start with a death-as-an-endpoint application if you are applying for an authorisation to use animals that have died as an endpoint.",
-# }
