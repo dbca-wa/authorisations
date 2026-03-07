@@ -1,17 +1,18 @@
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import React from "react";
+import DialogProvider from '../../../context/Dialogs';
 
-import type { AlertColor } from '@mui/material/Alert';
 import { Box, Button, Card, Stack, Tab, Tabs, Typography } from "@mui/material";
+import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
 import { Link, useLoaderData, useNavigate, type NavigateFunction } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
-import DialogProvider, { useDialog, type DialogOptions } from '../../../context/Dialogs';
+import { useDialog, type DialogOptions } from '../../../context/Dialogs';
+import { useSnackbar } from '../../../context/Snackbar';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
-import { useSnackbar } from '../../../context/Snackbar';
 
 interface IProcessGroup {
     process: IAuthorisationProcess;

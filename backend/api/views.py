@@ -2,6 +2,8 @@ import uuid
 
 from applications.models import Application, ApplicationAttachment
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
+from processes.models import AuthorisationProcess
+from processes.serialisers import AuthorisationProcessSerialiser
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
 from rest_framework import filters, mixins, viewsets
 from rest_framework.exceptions import NotFound, ValidationError
@@ -169,3 +171,18 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(distinct_slugs, many=True)
         return Response(serializer.data)
+
+
+class AuthorisationProcessViewSet(viewsets.ReadOnlyModelViewSet):
+    """A simple ViewSet for listing or retrieving authorisation processes."""
+
+    queryset = AuthorisationProcess.objects.all()
+    serializer_class = AuthorisationProcessSerialiser
+    lookup_field = "slug"
+    http_method_names = [
+        "get",
+        "options",
+        "head",
+    ]
+
+
