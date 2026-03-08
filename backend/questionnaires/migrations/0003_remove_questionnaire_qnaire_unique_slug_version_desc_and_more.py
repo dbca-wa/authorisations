@@ -37,4 +37,13 @@ class Migration(migrations.Migration):
             name='name',
             field=models.CharField(help_text='The unique name of the questionnaire within the process such as; "New application", "Renewal" etc.', max_length=100),
         ),
+        migrations.AlterModelOptions(
+            name='questionnaire',
+            options={'ordering': ('process_id', 'name', '-version')},
+        ),
+        migrations.AddField(
+            model_name='questionnaire',
+            name='sort_order',
+            field=models.PositiveIntegerField(db_index=True, default=0, help_text='Controls questionnaire order within an authorisation process.'),
+        ),
     ]

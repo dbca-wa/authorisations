@@ -1,23 +1,23 @@
+from adminsortable2.admin import SortableAdminMixin
 from django.contrib import admin
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
 
 from questionnaires.forms import QuestionnaireForm
 from questionnaires.models import Questionnaire
 
 
 @admin.register(Questionnaire)
-class QuestionnaireAdmin(admin.ModelAdmin):
+class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = QuestionnaireForm
     # Don't show the "Show counts" on the filter facet
     show_facets = admin.ShowFacets.NEVER
-    list_display = ("name", "process", "version")
+    list_display = ("sort_order", "name", "process", "version")
     list_filter = ("process",)
-    ordering = (
-        "process_id",
-        "name",
-        "-version",
-    )
     readonly_fields = ("process", "name", "version", "created_at", "created_by")
     editable_fields = ("description", "document")
+    # Keep sortable2 compatible: first field must be local/writable.
+    ordering = ("sort_order",)
 
     save_as = False
     save_as_continue = False
@@ -112,4 +112,39 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         return super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).distinct("process_id", "name")
+        """
+        Override to return the latest version of each questionnaire.
+         - Use Window function to rank versions per (process, name) group
+         - Filter to keep only the latest version (rank=1)
+         - Order by process sort_order, then questionnaire sort_order and name
+         This ensures the admin list shows only the latest version of each questionnaire,
+         ordered in a user-friendly way.
+         Note: This approach may not be fully compatible with adminsortable2's drag-and-drop sorting,
+         as it relies on database-level ordering. Adminsortable2 typically expects a simple ordering field.
+        """
+
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("process")
+            .annotate(
+                _latest_rank=Window(
+                    expression=RowNumber(),
+                    partition_by=[F("process_id"), F("name")],
+                    order_by=F("version").desc(),
+                )
+            )
+            .filter(_latest_rank=1)
+            .order_by("process__sort_order", "sort_order", "name")
+        )
+
+    @staticmethod
+    def get_extra_model_filters(request):
+        """
+        Scope drag-and-drop reorder updates to the selected process filter.
+        Without this, sortable operations may affect rows across all processes.
+        """
+        process_id = request.GET.get("process__id__exact")
+        if process_id and process_id.isdigit():
+            return {"process_id": int(process_id)}
+        return {}

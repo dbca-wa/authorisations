@@ -5,6 +5,10 @@
 - The platform is designed for versioned, process-driven forms where applicants submit applications that are backed by a questionnaire definition.
 - A single authorisation process can include multiple questionnaire types (for example: New Application, Renewal) and each questionnaire type can have multiple versions over time.
 
+## Writing Style
+- Use British English spelling in code comments, docs, command names, and developer guidance.
+- Prefer forms such as `normalise`, `normalisation`, and `authorisation`.
+
 ## Current Canonical Terminology
 - `AuthorisationProcess`:
   - Parent domain object that groups related questionnaires under a business process.
@@ -145,6 +149,19 @@
 - Library internals rely on writable field operations (`getattr/setattr/bulk_update`) against the default sortable field.
 - Relation traversals are not writable sortable fields.
 
+### Questionnaire Sort Order Normalisation Command
+- Command: `normalise_questionnaire_sort_order`
+- Purpose:
+  - Rebuild `Questionnaire.sort_order` values to contiguous positive integers per `process_id`.
+  - Recover from corrupted ordering states (for example many rows at `0`, gaps, duplicates, negative values).
+- Behavior:
+  - Operates per process, not globally.
+  - Orders existing rows deterministically by `sort_order`, `name`, `-version`, and `id` before reindexing.
+  - Updates only rows that need change.
+  - Safe and idempotent: repeated runs converge to the same result and make no further updates once normalised.
+- Operational note:
+  - Prefer this command over `manage.py reorder questionnaires.Questionnaire` for this model, because `reorder` uses `Meta.ordering[0]` and may target non-sort fields.
+
 ## Development Workflows
 
 ### Backend Commands
@@ -152,6 +169,9 @@
 - Run tests: `cd backend && poetry run python manage.py test`
 - Run migrations: `cd backend && poetry run python manage.py migrate`
 - Collect static: `cd backend && poetry run python manage.py collectstatic`
+- Normalise questionnaire sort order per process:
+  - `cd backend && poetry run python manage.py normalise_questionnaire_sort_order`
+  - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
 
 ### Frontend Commands
 - Run dev server: `cd frontend && npm run dev`

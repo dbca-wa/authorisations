@@ -36,6 +36,13 @@ class Questionnaire(models.Model):
         null=False,
         editable=True,
     )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        null=False,
+        blank=False,
+        db_index=True,
+        help_text="Controls questionnaire order within an authorisation process.",
+    )
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     created_by = models.ForeignKey(
         "users.User",
@@ -45,6 +52,11 @@ class Questionnaire(models.Model):
     )
 
     class Meta:
+        ordering = (
+            "process_id",
+            "name",
+            "-version",
+        )
         constraints = [
             models.UniqueConstraint(
                 "process",
@@ -78,6 +90,7 @@ class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerial
             "name",
             "version",
             "description",
+            "sort_order",
             "created_at",
             "document",
         )
