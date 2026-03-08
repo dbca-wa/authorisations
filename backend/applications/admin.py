@@ -34,8 +34,21 @@ class ApplicationAdmin(admin.ModelAdmin):
 
     form = ApplicationForm
     inlines = [ApplicationAttachmentInline]
-    list_display = ("owner", "questionnaire", "status", "created_at")
-    list_filter = ("status", "created_at")
+    list_display = (
+        "questionnaire",
+        "questionnaire__process",
+        "status",
+        "owner",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = (
+        "status",
+        "created_at",
+        "updated_at",
+        "questionnaire__process",
+        "questionnaire__name",
+    )
     search_fields = ("owner__username", "questionnaire__name")
     readonly_fields = (
         "key",

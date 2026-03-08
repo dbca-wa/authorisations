@@ -152,11 +152,12 @@
 ### Questionnaire Sort Order Normalisation Command
 - Command: `normalise_questionnaire_sort_order`
 - Purpose:
-  - Rebuild `Questionnaire.sort_order` values to contiguous positive integers per `process_id`.
+  - Rebuild `Questionnaire.sort_order` values globally with a visible/latest-first policy.
   - Recover from corrupted ordering states (for example many rows at `0`, gaps, duplicates, negative values).
 - Behavior:
-  - Operates per process, not globally.
-  - Orders existing rows deterministically by `sort_order`, `name`, `-version`, and `id` before reindexing.
+  - Determines current visible questionnaire order from latest versions by existing `sort_order`.
+  - Reassigns latest versions to contiguous visible ranks `1..N` in that preserved global order.
+  - Sets all historical (non-latest) versions to `0` so they do not interfere with visible ordering.
   - Updates only rows that need change.
   - Safe and idempotent: repeated runs converge to the same result and make no further updates once normalised.
 - Operational note:
@@ -169,7 +170,7 @@
 - Run tests: `cd backend && poetry run python manage.py test`
 - Run migrations: `cd backend && poetry run python manage.py migrate`
 - Collect static: `cd backend && poetry run python manage.py collectstatic`
-- Normalise questionnaire sort order per process:
+- Normalise questionnaire sort order globally:
   - `cd backend && poetry run python manage.py normalise_questionnaire_sort_order`
   - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
 

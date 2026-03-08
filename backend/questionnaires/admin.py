@@ -12,7 +12,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = QuestionnaireForm
     # Don't show the "Show counts" on the filter facet
     show_facets = admin.ShowFacets.NEVER
-    list_display = ("sort_order", "name", "process", "version")
+    list_display = ("sort_order", "name", "sort_order_int", "process", "version")
     list_filter = ("process",)
     readonly_fields = ("process", "name", "version", "created_at", "created_by")
     editable_fields = ("description", "document")
@@ -38,6 +38,9 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
             },
         ),
     )
+    
+    def sort_order_int(self, obj):
+        return obj.sort_order
 
     def has_add_permission(self, request, obj=None):
         return request.user.is_superuser
@@ -99,6 +102,17 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         )
 
     def save_model(self, request, obj, form, change):
+        """
+        Clone-on-edit versioning policy.
+
+        Editing an existing questionnaire creates a new row with incremented
+        version. New questionnaire names are saved through sortable2, which
+        assigns visible order.
+
+        We intentionally do not force old versions to ``sort_order=0`` here;
+        that cleanup is handled by the ``normalise_questionnaire_sort_order`` 
+        command to keep this save path simple.
+        """
         # If the object is being changed, increment the version
         if change:
             obj.version += 1
@@ -137,14 +151,3 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
             .filter(_latest_rank=1)
             .order_by("process__sort_order", "sort_order", "name")
         )
-
-    @staticmethod
-    def get_extra_model_filters(request):
-        """
-        Scope drag-and-drop reorder updates to the selected process filter.
-        Without this, sortable operations may affect rows across all processes.
-        """
-        process_id = request.GET.get("process__id__exact")
-        if process_id and process_id.isdigit():
-            return {"process_id": int(process_id)}
-        return {}

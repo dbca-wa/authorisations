@@ -1,13 +1,16 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
 
 from questionnaires.models import Questionnaire
 
 
 class Command(BaseCommand):
     help = (
-        "Normalise Questionnaire.sort_order values per process to contiguous positive "
-        "integers. Safe to run repeatedly."
+        "Normalise Questionnaire.sort_order globally so latest versions have "
+        "contiguous visible ranks (1..N) and historical versions are set to 0. "
+        "Safe to run repeatedly."
     )
 
     def add_arguments(self, parser):
@@ -19,32 +22,37 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
-        updated_total = 0
+        to_update = []
 
-        process_ids = (
-            Questionnaire.objects.values_list("process_id", flat=True)
-            .distinct()
-            .order_by("process_id")
-        )
-
-        for process_id in process_ids:
-            rows = list(
-                Questionnaire.objects.filter(process_id=process_id).order_by(
-                    "sort_order", "name", "-version", "id"
+        latest_rows = list(
+            Questionnaire.objects.annotate(
+                _latest_rank=Window(
+                    expression=RowNumber(),
+                    partition_by=[F("process_id"), F("name")],
+                    order_by=F("version").desc(),
                 )
             )
+            .filter(_latest_rank=1)
+            .order_by("sort_order", "process_id", "name", "-version", "-id")
+        )
 
-            to_update = []
-            for index, row in enumerate(rows, start=1):
-                if row.sort_order != index:
-                    row.sort_order = index
-                    to_update.append(row)
+        # Preserve the current visible global order, but compact it to 1..N.
+        for visible_rank, latest_row in enumerate(latest_rows, start=1):
+            if latest_row.sort_order != visible_rank:
+                latest_row.sort_order = visible_rank
+                to_update.append(latest_row)
 
-            if to_update:
-                updated_total += len(to_update)
-                if not dry_run:
-                    with transaction.atomic():
-                        Questionnaire.objects.bulk_update(to_update, ["sort_order"])
+        # Set all historical versions to 0 so they never compete in visible ordering.
+        historical_rows = Questionnaire.objects.exclude(id__in=[row.id for row in latest_rows])
+        for row in historical_rows:
+            if row.sort_order != 0:
+                row.sort_order = 0
+                to_update.append(row)
+
+        updated_total = len(to_update)
+        if to_update and not dry_run:
+            with transaction.atomic():
+                Questionnaire.objects.bulk_update(to_update, ["sort_order"])
 
         if dry_run:
             self.stdout.write(
