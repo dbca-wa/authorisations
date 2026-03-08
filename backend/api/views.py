@@ -2,6 +2,8 @@ import uuid
 
 from applications.models import Application, ApplicationAttachment
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
 from processes.models import AuthorisationProcess
 from processes.serialisers import AuthorisationProcessSerialiser
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
@@ -120,13 +122,23 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Override to return the latest version of each questionnaire.
+        Return only the latest questionnaire version for each (process, name),
+        then order for display by process and questionnaire sort order.
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        # Group by slug and get the latest version
-        distinct_slugs = queryset.order_by("process_id", "name", "-version").distinct("process_id", "name")
+        queryset = (
+            self.filter_queryset(self.get_queryset())
+            .annotate(
+                _latest_rank=Window(
+                    expression=RowNumber(),
+                    partition_by=[F("process_id"), F("name")],
+                    order_by=F("version").desc(),
+                )
+            )
+            .filter(_latest_rank=1)
+            .order_by("process__sort_order", "sort_order", "name")
+        )
 
-        serializer = self.get_serializer(distinct_slugs, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
