@@ -21,7 +21,10 @@ class Questionnaire(models.Model):
         default=1, blank=False, null=False, editable=False
     )
     name = models.CharField(
-        max_length=100, blank=False, null=False, editable=True,
+        max_length=100,
+        blank=False,
+        null=False,
+        editable=True,
         help_text='The unique name of the questionnaire within the process such as; "New application", "Renewal" etc.',
     )
     description = models.TextField(
@@ -61,7 +64,7 @@ class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerial
     because the schema.py imports serialisers.py.
     """
 
-    slug = serializers.SlugField(
+    process_slug = serializers.SlugField(
         source="process.slug",
         required=False,
         read_only=True,
@@ -70,7 +73,8 @@ class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerial
     class Meta:
         model = Questionnaire
         fields = (
-            "slug",
+            "process_slug",
+            "id",
             "name",
             "version",
             "description",

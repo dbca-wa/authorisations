@@ -1,11 +1,11 @@
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
+import MuiLink from '@mui/material/Link';
 import React from "react";
-import DialogProvider from '../../../context/Dialogs';
 
 import { Box, Button, Card, Stack, Tab, Tabs, Typography } from "@mui/material";
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
-import { Link, useLoaderData, useNavigate, type NavigateFunction } from "react-router";
+import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
 import { useDialog, type DialogOptions } from '../../../context/Dialogs';
 import { useSnackbar } from '../../../context/Snackbar';
@@ -23,84 +23,74 @@ const formatDate = (value: string): string => {
     return new Date(value).toLocaleDateString();
 }
 
-const getQuestionnaireProcessSlug = (questionnaire: IQuestionnaireData): string => {
-    return questionnaire.slug;
-}
+// const getQuestionnaireProcessSlug = (questionnaire: IQuestionnaireData): string => {
+//     return questionnaire.slug;
+// }
 
 const getQuestionnaireUiKey = (questionnaire: IQuestionnaireData): string => {
-    return `${getQuestionnaireProcessSlug(questionnaire)}:${questionnaire.name}:v${questionnaire.version}`;
+    return `${questionnaire.process_slug}:${questionnaire.name}:v${questionnaire.version}`;
 }
 
-const buildProcessName = (slug: string): string => {
-    return slug
-        .split(/[-_]/g)
-        .filter(Boolean)
-        .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-        .join(" ");
-}
+// const buildProcessName = (slug: string): string => {
+//     return slug
+//         .split(/[-_]/g)
+//         .filter(Boolean)
+//         .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+//         .join(" ");
+// }
 
-const buildProcesses = (questionnaires: IQuestionnaireData[]): IAuthorisationProcess[] => {
-    const processMap = new Map<string, IAuthorisationProcess>();
-    const longDescription = "The application process for using animals for scientific or educational purposes in Western Australia, integrating the Animal Welfare Act 2002, the Biodiversity Conservation Act 2016, and the Australian Code for the Care and Use of Animals for Scientific Purposes. It is designed to guide applicants, investigators, Animal Ethics Committee (AEC) members, and other stakeholders through the process.";
+// const buildProcesses = (questionnaires: IQuestionnaireData[]): IAuthorisationProcess[] => {
+//     const processMap = new Map<string, IAuthorisationProcess>();
+//     const longDescription = "The application process for using animals for scientific or educational purposes in Western Australia, integrating the Animal Welfare Act 2002, the Biodiversity Conservation Act 2016, and the Australian Code for the Care and Use of Animals for Scientific Purposes. It is designed to guide applicants, investigators, Animal Ethics Committee (AEC) members, and other stakeholders through the process.";
 
-    for (const questionnaire of questionnaires) {
-        const processSlug = getQuestionnaireProcessSlug(questionnaire);
-        const existingProcess = processMap.get(processSlug);
+//     for (const questionnaire of questionnaires) {
+//         const processSlug = getQuestionnaireProcessSlug(questionnaire);
+//         const existingProcess = processMap.get(processSlug);
 
-        if (existingProcess) {
-            existingProcess.updated_at =
-                new Date(questionnaire.created_at) > new Date(existingProcess.updated_at)
-                    ? questionnaire.created_at
-                    : existingProcess.updated_at;
-            continue;
-        }
+//         if (existingProcess) {
+//             existingProcess.updated_at =
+//                 new Date(questionnaire.created_at) > new Date(existingProcess.updated_at)
+//                     ? questionnaire.created_at
+//                     : existingProcess.updated_at;
+//             continue;
+//         }
 
-        processMap.set(processSlug, {
-            slug: processSlug,
-            // name: buildProcessName(processSlug),
-            name: "Care and Use of Animals for Scientific Purposes",
-            description: longDescription,
-            sort_order: processMap.size,
-            created_at: questionnaire.created_at,
-            updated_at: questionnaire.created_at,
-        });
-    }
+//         processMap.set(processSlug, {
+//             slug: processSlug,
+//             // name: buildProcessName(processSlug),
+//             name: "Care and Use of Animals for Scientific Purposes",
+//             description: longDescription,
+//             sort_order: processMap.size,
+//             created_at: questionnaire.created_at,
+//             updated_at: questionnaire.created_at,
+//         });
+//     }
 
-    return [...processMap.values()].sort((a, b) => {
-        if (a.sort_order !== b.sort_order) {
-            return a.sort_order - b.sort_order;
-        }
+//     return [...processMap.values()].sort((a, b) => {
+//         if (a.sort_order !== b.sort_order) {
+//             return a.sort_order - b.sort_order;
+//         }
 
-        return a.name.localeCompare(b.name);
-    });
-}
+//         return a.name.localeCompare(b.name);
+//     });
+// }
 
 const buildProcessGroups = (
-    questionnaires: IQuestionnaireData[],
     processes: IAuthorisationProcess[],
+    questionnaires: IQuestionnaireData[],
 ): IProcessGroup[] => {
     return processes
         .map((group) => ({
             process: group,
-            questionnaires: questionnaires
-                .filter((questionnaire) => getQuestionnaireProcessSlug(questionnaire) === group.slug)
-                .sort((a, b) => {
-                    if (a.name !== b.name) {
-                        return a.name.localeCompare(b.name);
-                    }
-
-                    return b.version - a.version;
-                }),
+            questionnaires: questionnaires.filter((q) => q.process_slug === group.slug),
         }))
         .filter((group) => group.questionnaires.length > 0);
 }
 
 const ProcessOverview = ({
     process,
-    questionnaireCount,
 }: {
     process: IAuthorisationProcess;
-    questionnaireCount: number;
 }) => {
     const processImageUrl = process.image_url;
     const processImageCredit = process.image_credit;
@@ -137,7 +127,7 @@ const ProcessOverview = ({
     );
 }
 
-const ProcessQuestionnaires = ({
+const ProcessGroup = ({
     group,
     inProgress,
     setInProgress,
@@ -161,7 +151,6 @@ const ProcessQuestionnaires = ({
             <Card className="p-6" elevation={4} sx={{ borderRadius: 2 }}>
                 <ProcessOverview
                     process={group.process}
-                    questionnaireCount={group.questionnaires.length}
                 />
 
                 <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
@@ -206,14 +195,18 @@ const ProcessQuestionnaires = ({
 }
 
 export const NewApplication = () => {
-    const questionnaires = useLoaderData<IQuestionnaireData[]>();
-    const processes = React.useMemo(
-        () => buildProcesses(questionnaires),
-        [questionnaires],
-    );
+    const { processes, questionnaires } = useLoaderData<{
+        processes: IAuthorisationProcess[];
+        questionnaires: IQuestionnaireData[];
+    }>();
+
+    // const processes = React.useMemo(
+    //     () => buildProcesses(questionnaires),
+    //     [questionnaires],
+    // );
     const processGroups = React.useMemo(
-        () => buildProcessGroups(questionnaires, processes),
-        [questionnaires, processes],
+        () => buildProcessGroups(processes, questionnaires),
+        [processes, questionnaires],
     );
 
     const [inProgress, setInProgress] = React.useState<string>("");
@@ -223,17 +216,17 @@ export const NewApplication = () => {
             <Typography variant="h4" gutterBottom>
                 Start a New Application
             </Typography>
-            {questionnaires.length === 0 ? <EmptyStateComponent /> :
-                <DialogProvider>
+            {processGroups.length === 0 ? <EmptyStateComponent /> :
+                <>
                     {processGroups.map((group) => (
-                        <ProcessQuestionnaires
+                        <ProcessGroup
                             key={group.process.slug}
                             group={group}
                             inProgress={inProgress}
                             setInProgress={setInProgress}
                         />
                     ))}
-                </DialogProvider>
+                </>
             }
         </Box>
     );
@@ -345,7 +338,7 @@ const startApplication = async ({
     hideDialog: () => void;
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
 }) => {
-    const processSlug = getQuestionnaireProcessSlug(questionnaire);
+    const processSlug = questionnaire.process_slug;
     const questionnaireUiKey = getQuestionnaireUiKey(questionnaire);
     setInProgress(questionnaireUiKey);
 
@@ -365,7 +358,7 @@ const startApplication = async ({
     }
 
     const inProgressApplication = existingApplications.find((app: IApplicationData) =>
-        app.questionnaire_slug === processSlug && !finalisedStatuses.includes(app.status)
+        app.process_slug === processSlug && !finalisedStatuses.includes(app.status)
     );
 
     console.debug("Existing applications:", existingApplications);
@@ -374,7 +367,7 @@ const startApplication = async ({
         showDialog({
             title: "Create a new application?",
             content: <>
-                <Typography>You already have <Link to="/my-applications">application(s)</Link> that
+                <Typography>You already have <MuiLink href="/my-applications">application(s)</MuiLink> that
                     are in-progress for this authorisation.</Typography><br />
                 <Typography>Are you sure you want to proceed and create a new one?</Typography>
             </>,

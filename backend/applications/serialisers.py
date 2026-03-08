@@ -31,18 +31,18 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
-    questionnaire_slug = serializers.SlugField(
+    process_slug = serializers.SlugField(
         source="questionnaire.process.slug",
-        required=False,
-        read_only=True,
-    )
-    questionnaire_version = serializers.IntegerField(
-        source="questionnaire.version",
         required=False,
         read_only=True,
     )
     questionnaire_name = serializers.CharField(
         source="questionnaire.name",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_version = serializers.IntegerField(
+        source="questionnaire.version",
         required=False,
         read_only=True,
     )
@@ -56,9 +56,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         fields = (
             "key",
             "owner",
-            "questionnaire_slug",
-            "questionnaire_version",
+            "process_slug",
             "questionnaire_name",
+            "questionnaire_version",
             "status",
             "created_at",
             "updated_at",
@@ -78,8 +78,8 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         isPatch = request.method == "PATCH" if request else False
 
         # Questionnaire slug is required when first creating
-        fields["questionnaire_slug"].required = isPost
-        fields["questionnaire_slug"].read_only = not isPost
+        fields["process_slug"].required = isPost
+        fields["process_slug"].read_only = not isPost
 
         # Document field is required only when updating
         fields["document"].required = isPut
@@ -116,9 +116,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         schema = get_answers_schema()
         return self._validate_document(value, schema)
 
-    def validate_questionnaire_slug(self, value):
+    def validate_process_slug(self, value):
         """
-        Validate the questionnaire process slug to ensure it exists in the database.
+        Validate the authorisation process slug to ensure it exists in the database.
         """
         questionnaire: Questionnaire = self.context.get("questionnaire", None)
 
@@ -159,7 +159,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         try:
             validated_data["questionnaire"] = self.context["questionnaire"]
         except KeyError:
-            raise exceptions.ValidationError("'questionnaire_slug' is required")
+            raise exceptions.ValidationError("'process_slug' is required")
 
         # Create a fresh document with questionnaire schema version
         validated_data["document"] = {

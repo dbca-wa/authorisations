@@ -104,20 +104,6 @@ class AttachmentViewSet(viewsets.ModelViewSet):
         instance.soft_delete()
 
 
-class VersionFilterBackend(filters.BaseFilterBackend):
-    """
-    Filter that only allows users to see their own objects.
-    """
-
-    def filter_queryset(self, request, queryset, view):
-        # If we received a ?version query parameter, filter the queryset.
-        version = view.get_request_version()
-        if version:
-            return queryset.filter(version=version)
-
-        return queryset
-
-
 class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A simple ViewSet for listing or retrieving questionnaires.
@@ -125,41 +111,12 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Questionnaire.objects.select_related("process")
     serializer_class = QuestionnaireSerialiser
-    lookup_field = "process__slug"
-    lookup_url_kwarg = "slug"
-    filter_backends = [VersionFilterBackend]
+    lookup_field = "id"
     http_method_names = [
         "get",
         "options",
         "head",
     ]
-
-    def get_request_version(self) -> int | None:
-        try:
-            return int(self.request.query_params.get("version"))
-        except (TypeError, ValueError):
-            return None
-
-    def get_object(self):
-        """
-        Override to get the object based on the slug.
-        """
-        queryset = self.filter_queryset(self.get_queryset())
-        filter_kwargs = {
-            self.lookup_field: self.kwargs[self.lookup_url_kwarg],
-        }
-
-        # Check if the "version" filter was applied
-        version = self.get_request_version()
-
-        if version:
-            try:
-                return queryset.get(**filter_kwargs)
-            except Questionnaire.DoesNotExist as error:
-                raise NotFound(str(error))
-
-        # No (integer) version number requested, return the latest
-        return queryset.filter(**filter_kwargs).latest("version")
 
     def list(self, request, *args, **kwargs):
         """

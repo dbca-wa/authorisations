@@ -5,7 +5,7 @@ from processes.models import AuthorisationProcess
 
 @admin.register(AuthorisationProcess)
 class AuthorisationProcessAdmin(SortableAdminMixin, admin.ModelAdmin):
-	list_display = ("name", "slug", "sort_order", "created_at", "updated_at")
+	list_display = ("sort_order", "name", "slug", "created_at", "updated_at")
 	ordering = ("sort_order", "name")
 	search_fields = ("name", "slug")
 

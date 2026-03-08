@@ -2,7 +2,7 @@ import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import axios from "axios";
 import { ConfigManager } from "./ConfigManager";
 import type { IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
-import type { IQuestionnaireData } from "./types/Questionnaire";
+import type { IAuthorisationProcess, IQuestionnaireData } from "./types/Questionnaire";
 
 
 export class ApiManager {
@@ -137,6 +137,13 @@ export class ApiManager {
     public static async fetchQuestionnaires(): Promise<IQuestionnaireData[]> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.get<IQuestionnaireData[]>("/questionnaires", requestConfig);
+
+        return response.data;
+    }
+
+    public static async fetchAuthorisationProcesses(): Promise<IAuthorisationProcess[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IAuthorisationProcess[]>("/processes", requestConfig);
 
         return response.data;
     }

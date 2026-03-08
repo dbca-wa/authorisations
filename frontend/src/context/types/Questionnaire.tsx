@@ -18,9 +18,9 @@ export interface IAuthorisationProcess {
  * Interface for a questionnaire data including meta data
  */
 export interface IQuestionnaireData {
-    slug: string;
-    version: number;
+    process_slug: string;
     name: string;
+    version: number;
     description: string;
     created_at: string;
     document: IQuestionnaire;
