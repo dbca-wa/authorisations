@@ -390,20 +390,20 @@ const startApplication = async ({
                         variant="contained"
                         color="warning"
                         onClick={async () => {
-                            hideDialog();
-                            setInProgress("");
-                            await createNewApplication(questionnaire, navigate, showSnackbar);
+                            await createNewApplication(questionnaire, navigate, showSnackbar)
+                                .finally(() => {
+                                    hideDialog();
+                                    setInProgress("");
+                                });
                         }}
                     >Confirm</Button>
                 </>
             ),
-            onClose: () => {
-                setInProgress("");
-            },
+            onClose: () => setInProgress(""),
         });
     }
     else {
-        setInProgress("");
-        await createNewApplication(questionnaire, navigate, showSnackbar);
+        await createNewApplication(questionnaire, navigate, showSnackbar)
+            .finally(() => setInProgress(""));
     }
 }
