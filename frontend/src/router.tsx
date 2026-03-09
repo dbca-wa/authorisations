@@ -64,7 +64,7 @@ const formLayoutLoader = async ({ params }: LoaderFunctionArgs) => {
 		.catch(handleApiError);
 
 	const questionnaire = await ApiManager
-		.getQuestionnaire(app.process_slug, app.questionnaire_version)
+		.getQuestionnaire(app.questionnaire_id)
 		.catch(handleApiError);
 
 	const attachments = await ApiManager

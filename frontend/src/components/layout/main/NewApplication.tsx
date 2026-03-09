@@ -304,19 +304,23 @@ const Questionnaire = ({
 }
 
 const createNewApplication = async (
-    questionnaire_slug: string,
+    questionnaire: IQuestionnaireData,
     navigate: NavigateFunction,
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
 ) => {
-    const newApplication: IApplicationData | null = await ApiManager.createApplication(questionnaire_slug)
-        .catch((error: AxiosError) => {
-            showSnackbar(
-                "Failed to create an application, please try again later. If problem persists, contact support.",
-                "error",
-            );
-            console.error('Error creating application:', error);
-            return null;
-        });
+    const newApplication: IApplicationData | null = await ApiManager.createApplication(
+        questionnaire.process_slug,
+        questionnaire.id,
+        questionnaire.name,
+        questionnaire.version,
+    ).catch((error: AxiosError) => {
+        showSnackbar(
+            "Failed to create an application, please try again later. If problem persists, contact support.",
+            "error",
+        );
+        console.error('Error creating application:', error);
+        return null;
+    });
 
     if (newApplication === null) {
         return;
@@ -338,7 +342,6 @@ const startApplication = async ({
     hideDialog: () => void;
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
 }) => {
-    const processSlug = questionnaire.process_slug;
     const questionnaireUiKey = getQuestionnaireUiKey(questionnaire);
     setInProgress(questionnaireUiKey);
 
@@ -358,10 +361,12 @@ const startApplication = async ({
     }
 
     const inProgressApplication = existingApplications.find((app: IApplicationData) =>
-        app.process_slug === processSlug && !finalisedStatuses.includes(app.status)
+        app.process_slug === questionnaire.process_slug && !finalisedStatuses.includes(app.status)
     );
 
-    console.debug("Existing applications:", existingApplications);
+    if (import.meta.env.DEV) {
+        console.debug("Existing applications:", existingApplications);
+    }
 
     if (inProgressApplication) {
         showDialog({
@@ -385,7 +390,9 @@ const startApplication = async ({
                         variant="contained"
                         color="warning"
                         onClick={async () => {
-                            await createNewApplication(processSlug, navigate, showSnackbar);
+                            hideDialog();
+                            setInProgress("");
+                            await createNewApplication(questionnaire, navigate, showSnackbar);
                         }}
                     >Confirm</Button>
                 </>
@@ -396,6 +403,6 @@ const startApplication = async ({
         });
     }
     else {
-        await createNewApplication(processSlug, navigate, showSnackbar);
+        await createNewApplication(questionnaire, navigate, showSnackbar);
     }
 }

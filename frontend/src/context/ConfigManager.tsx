@@ -30,7 +30,10 @@ export class ConfigManager {
             throw new TypeError("Config data is not an object.");
         }
 
-        console.debug("Config parsed:", this._config)
+        if (import.meta.env.DEV) {
+            console.debug("Config loaded:", this._config);
+        }
+        
         return _.clone(this._config);
     }
 }
