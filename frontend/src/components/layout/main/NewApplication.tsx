@@ -403,6 +403,7 @@ const startApplication = async ({
         });
     }
     else {
+        setInProgress("");
         await createNewApplication(questionnaire, navigate, showSnackbar);
     }
 }
