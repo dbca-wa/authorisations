@@ -1,19 +1,23 @@
+from adminsortable2.admin import SortableAdminMixin
 from django.contrib import admin
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
 
 from questionnaires.forms import QuestionnaireForm
 from questionnaires.models import Questionnaire
 
 
 @admin.register(Questionnaire)
-class QuestionnaireAdmin(admin.ModelAdmin):
+class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = QuestionnaireForm
-    list_display = ("name", "slug", "version")
-    ordering = (
-        "slug",
-        "-version",
-    )
-    readonly_fields = ("version", "created_at", "created_by", "slug")
-    editable_fields = ("name", "description", "document")
+    # Don't show the "Show counts" on the filter facet
+    show_facets = admin.ShowFacets.NEVER
+    list_display = ("sort_order", "name", "sort_order_int", "process", "version")
+    list_filter = ("process",)
+    readonly_fields = ("process", "name", "version", "created_at", "created_by")
+    editable_fields = ("description", "document")
+    # Keep sortable2 compatible: first field must be local/writable.
+    ordering = ("sort_order",)
 
     save_as = False
     save_as_continue = False
@@ -34,6 +38,9 @@ class QuestionnaireAdmin(admin.ModelAdmin):
             },
         ),
     )
+    
+    def sort_order_int(self, obj):
+        return obj.sort_order
 
     def has_add_permission(self, request, obj=None):
         return request.user.is_superuser
@@ -63,19 +70,21 @@ class QuestionnaireAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(self.readonly_fields)
 
-        # Slug to be defined once; when creating a new record
+        # Process to be defined once; when creating a new record
         if obj is None:
-            readonly_fields.remove("slug")
+            readonly_fields.remove("process")
+            readonly_fields.remove("name")
 
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
-        # If "slug" is not readonly, add it to editable fields
+        # If "process" is not readonly, add it to editable fields
         readonly_fields = self.get_readonly_fields(request, obj)
         editable_fields = list(self.editable_fields)
 
-        if "slug" not in readonly_fields:
-            editable_fields.insert(0, "slug")
+        if "process" not in readonly_fields:
+            editable_fields.insert(0, "process")
+            editable_fields.insert(1, "name")
 
         return (
             (
@@ -93,6 +102,17 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         )
 
     def save_model(self, request, obj, form, change):
+        """
+        Clone-on-edit versioning policy.
+
+        Editing an existing questionnaire creates a new row with incremented
+        version. New questionnaire names are saved through sortable2, which
+        assigns visible order.
+
+        We intentionally do not force old versions to ``sort_order=0`` here;
+        that cleanup is handled by the ``normalise_questionnaire_sort_order`` 
+        command to keep this save path simple.
+        """
         # If the object is being changed, increment the version
         if change:
             obj.version += 1
@@ -106,4 +126,28 @@ class QuestionnaireAdmin(admin.ModelAdmin):
         return super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).distinct("slug")
+        """
+        Override to return the latest version of each questionnaire.
+         - Use Window function to rank versions per (process, name) group
+         - Filter to keep only the latest version (rank=1)
+         - Order by process sort_order, then questionnaire sort_order and name
+         This ensures the admin list shows only the latest version of each questionnaire,
+         ordered in a user-friendly way.
+         Note: This approach may not be fully compatible with adminsortable2's drag-and-drop sorting,
+         as it relies on database-level ordering. Adminsortable2 typically expects a simple ordering field.
+        """
+
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("process")
+            .annotate(
+                _latest_rank=Window(
+                    expression=RowNumber(),
+                    partition_by=[F("process_id"), F("name")],
+                    order_by=F("version").desc(),
+                )
+            )
+            .filter(_latest_rank=1)
+            .order_by("process__sort_order", "sort_order", "name")
+        )

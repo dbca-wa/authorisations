@@ -31,18 +31,23 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
-    questionnaire_slug = serializers.SlugField(
-        source="questionnaire.slug",
+    process_slug = serializers.SlugField(
+        source="questionnaire.process.slug",
         required=False,
         read_only=True,
     )
-    questionnaire_version = serializers.IntegerField(
-        source="questionnaire.version",
+    questionnaire_id = serializers.IntegerField(
+        source="questionnaire.id",
         required=False,
         read_only=True,
     )
     questionnaire_name = serializers.CharField(
         source="questionnaire.name",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_version = serializers.IntegerField(
+        source="questionnaire.version",
         required=False,
         read_only=True,
     )
@@ -56,9 +61,10 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         fields = (
             "key",
             "owner",
-            "questionnaire_slug",
-            "questionnaire_version",
+            "process_slug",
+            "questionnaire_id",
             "questionnaire_name",
+            "questionnaire_version",
             "status",
             "created_at",
             "updated_at",
@@ -77,9 +83,19 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         isPut = request.method == "PUT" if request else False
         isPatch = request.method == "PATCH" if request else False
 
-        # Questionnaire slug is required when first creating
-        fields["questionnaire_slug"].required = isPost
-        fields["questionnaire_slug"].read_only = not isPost
+        # CREATE / POST
+        # Questionnaire ID is required when creating
+        fields["questionnaire_id"].required = isPost
+        fields["questionnaire_id"].read_only = not isPost
+        # Process slug is required when creating (to confirm data integrity)
+        fields["process_slug"].required = isPost
+        fields["process_slug"].read_only = not isPost
+        # Questionnaire name is required when creating (to confirm data integrity)
+        fields["questionnaire_name"].required = isPost
+        fields["questionnaire_name"].read_only = not isPost
+        # Questionnaire version is required when creating (to confirm data integrity)
+        fields["questionnaire_version"].required = isPost
+        fields["questionnaire_version"].read_only = not isPost
 
         # Document field is required only when updating
         fields["document"].required = isPut
@@ -116,61 +132,95 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         schema = get_answers_schema()
         return self._validate_document(value, schema)
 
-    def validate_questionnaire_slug(self, value):
+    def validate(self, attrs):
         """
-        Validate the questionnaire slug to ensure it exists in the database.
+        Object-level validation to ensure the questionnaire exists and matches the provided process slug, name, and version.
+        This runs after field-level validation, guaranteeing access to all fields.
         """
-        questionnaire: Questionnaire = self.context.get("questionnaire", None)
+        # Only validate on creation for data integrity
+        request = self.context.get("request")
+        if request.method != "POST":
+            return attrs
 
-        # Check if we have been already called and validated the slug before
-        if isinstance(questionnaire, Questionnaire) and questionnaire.slug == value:
-            # Intentionally return the original value
-            return value
+        questionnaire_data = attrs.get("questionnaire") or {}
+        process_data = questionnaire_data.get("process") or {}
 
-        # Try to find with the user provided slug
-        try:
-            questionnaire = Questionnaire.objects.filter(slug=value).latest("version")
-        except Questionnaire.DoesNotExist:
+        process_slug = process_data.get("slug")
+        questionnaire_id = questionnaire_data.get("id")
+        questionnaire_name = questionnaire_data.get("name")
+        questionnaire_version = questionnaire_data.get("version")
+        
+        # Make sure we did receive those required fields
+        if (
+            not process_slug
+            or not questionnaire_id
+            or not questionnaire_name
+            or not questionnaire_version
+        ):
             raise exceptions.ValidationError(
-                f"Questionnaire with slug '{value}' does not exist."
+                "Process slug, questionnaire id, name and version are required."
             )
 
-        # Add the questionnaire to the context for later use
+        # If we already have a validated questionnaire in the context, validate it
+        questionnaire: Questionnaire = self.context.get("questionnaire", None)
+        if (
+            isinstance(questionnaire, Questionnaire)
+            and questionnaire.process.slug == process_slug
+            and questionnaire.id == questionnaire_id
+            and questionnaire.name == questionnaire_name
+            and questionnaire.version == questionnaire_version
+        ):
+            return attrs
+
+        # Otherwise, try to find the questionnaire based on the provided fields
+        try:
+            questionnaire = Questionnaire.objects.select_related("process").get(
+                process__slug=process_slug,
+                id=questionnaire_id,
+                name=questionnaire_name,
+                version=questionnaire_version,
+            )
+        except Questionnaire.DoesNotExist:
+            raise exceptions.ValidationError(
+                "Questionnaire with the provided process slug, id, name and version does not exist."
+            )
+
+        # Add the found questionnaire to the context for later use
         self.context["questionnaire"] = questionnaire
 
-        # Intentionally return the original value
-        return value
+        return attrs
 
     def create(self, validated_data):
         """
         Create a new Application instance.
         """
-        # Add user to validated data
-        validated_data["owner"] = self.context["request"].user
-
         # Make sure we have the questionnaire object
         try:
-            validated_data["questionnaire"] = self.context["questionnaire"]
+            questionnaire = self.context["questionnaire"]
         except KeyError:
-            raise exceptions.ValidationError("'questionnaire_slug' is required")
+            raise exceptions.ValidationError("Questionnaire not found in context, validation did not run.")
+
+        # Hardcode the version from the current schema
+        schema = get_answers_schema()
 
         # Create a fresh document with questionnaire schema version
-        validated_data["document"] = {
-            "schema_version": None,  # to be set later
+        document = {
+            "schema_version": schema["properties"]["schema_version"]["default"],
             # initially with single step
             "active_step": 0,
             "steps": [{"is_valid": None, "answers": {}}],
         }
 
-        # Hardcode the version from the current schema
-        schema = get_answers_schema()
-        validated_data["document"]["schema_version"] = schema["properties"][
-            "schema_version"
-        ]["default"]
-
         # Validate and return with the JSON schema
-        self._validate_document(validated_data["document"], schema)
-        return super().create(validated_data)
+        self._validate_document(document, schema)
+
+        create_data = {
+            "owner": self.context["request"].user,
+            "questionnaire": questionnaire,
+            "document": document,
+        }
+
+        return super().create(create_data)
 
 
 class FileTooLargeError(exceptions.APIException):
@@ -304,9 +354,9 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         """
         request = self.context.get("request")
         try:
-            application = Application.objects.select_related("questionnaire").get(
-                key=value, owner=request.user
-            )
+            application = Application.objects.select_related(
+                "questionnaire", "questionnaire__process"
+            ).get(key=value, owner=request.user)
         except Application.DoesNotExist:
             raise serializers.ValidationError("Application not found.")
 

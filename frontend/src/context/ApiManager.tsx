@@ -2,7 +2,7 @@ import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import axios from "axios";
 import { ConfigManager } from "./ConfigManager";
 import type { IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
-import type { IQuestionnaireData } from "./types/Questionnaire";
+import type { IAuthorisationProcess, IQuestionnaireData } from "./types/Questionnaire";
 
 
 export class ApiManager {
@@ -45,10 +45,18 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async createApplication(questionnaireSlug: string): Promise<IApplicationData> {
+    public static async createApplication(
+        processSlug: string,
+        questionnaireId: number,
+        questionnaireName: string,
+        questionnaireVersion: number,
+    ): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.post<IApplicationData>("/applications", {
-            questionnaire_slug: questionnaireSlug,
+            process_slug: processSlug,
+            questionnaire_id: questionnaireId,
+            questionnaire_name: questionnaireName,
+            questionnaire_version: questionnaireVersion,
         }, requestConfig);
 
         return response.data;
@@ -126,9 +134,9 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async getQuestionnaire(slug: string, version: number): Promise<IQuestionnaireData> {
+    public static async getQuestionnaire(id: number): Promise<IQuestionnaireData> {
         const requestConfig = ApiManager.getRequestConfig();
-        const url = `/questionnaires/${slug}` + (version ? `?version=${version}` : '');
+        const url = `/questionnaires/${id}`;
         const response = await axios.get<IQuestionnaireData>(url, requestConfig);
 
         return response.data;
@@ -137,6 +145,13 @@ export class ApiManager {
     public static async fetchQuestionnaires(): Promise<IQuestionnaireData[]> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.get<IQuestionnaireData[]>("/questionnaires", requestConfig);
+
+        return response.data;
+    }
+
+    public static async fetchAuthorisationProcesses(): Promise<IAuthorisationProcess[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IAuthorisationProcess[]>("/processes", requestConfig);
 
         return response.data;
     }
