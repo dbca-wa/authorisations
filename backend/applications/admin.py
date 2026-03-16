@@ -9,12 +9,14 @@ class ApplicationAttachmentInline(admin.TabularInline):
 
     model = ApplicationAttachment
     extra = 0
-    readonly_fields = (
-        "key",
+    fields = (
         "question",
+        "name",
         "created_at",
+        "is_deleted",
         "deleted_at",
     )
+    readonly_fields = fields
     can_delete = False
     show_change_link = True
 
