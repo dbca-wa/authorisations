@@ -1,6 +1,7 @@
 from adminsortable2.admin import SortableAdminMixin
 from django.contrib import admin
-from django.db.models import F, Window
+from django.db import transaction
+from django.db.models import F, Max, Window
 from django.db.models.functions import RowNumber
 
 from questionnaires.forms import QuestionnaireForm
@@ -12,10 +13,10 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = QuestionnaireForm
     # Don't show the "Show counts" on the filter facet
     show_facets = admin.ShowFacets.NEVER
-    list_display = ("sort_order", "name", "sort_order_int", "process", "version")
+    list_display = ("sort_order", "name", "version", "process", "sort_order_int", )
     list_filter = ("process",)
-    readonly_fields = ("process", "name", "version", "created_at", "created_by")
-    editable_fields = ("description", "document")
+    readonly_fields = ("version", "created_at", "created_by")
+    editable_fields = ("process", "name", "description", "document")
     # Keep sortable2 compatible: first field must be local/writable.
     ordering = ("sort_order",)
 
@@ -38,7 +39,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
             },
         ),
     )
-    
+
     def sort_order_int(self, obj):
         return obj.sort_order
 
@@ -67,62 +68,94 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
 
         return super().add_view(request, form_url, extra_context)
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = list(self.readonly_fields)
-
-        # Process to be defined once; when creating a new record
-        if obj is None:
-            readonly_fields.remove("process")
-            readonly_fields.remove("name")
-
-        return readonly_fields
-
-    def get_fieldsets(self, request, obj=None):
-        # If "process" is not readonly, add it to editable fields
-        readonly_fields = self.get_readonly_fields(request, obj)
-        editable_fields = list(self.editable_fields)
-
-        if "process" not in readonly_fields:
-            editable_fields.insert(0, "process")
-            editable_fields.insert(1, "name")
-
-        return (
-            (
-                None,
-                {
-                    "fields": readonly_fields,
-                },
-            ),
-            (
-                "Editable Fields",
-                {
-                    "fields": tuple(editable_fields),
-                },
-            ),
-        )
-
+    @transaction.atomic
     def save_model(self, request, obj, form, change):
         """
-        Clone-on-edit versioning policy.
+        Persist a questionnaire according to what actually changed.
 
-        Editing an existing questionnaire creates a new row with incremented
-        version. New questionnaire names are saved through sortable2, which
-        assigns visible order.
+        Three distinct code paths exist depending on what the editor modified:
 
-        We intentionally do not force old versions to ``sort_order=0`` here;
-        that cleanup is handled by the ``normalise_questionnaire_sort_order`` 
-        command to keep this save path simple.
+        1. **New record** (``change=False``):
+           Saved as-is; ``created_by`` is stamped and all other fields are
+           taken directly from the submitted form.
+
+        2. **Document changed** (``change=True``, ``document`` in changed fields):
+           A new version row is cloned from the submitted data.  The version
+           number is set to one above the current maximum for that
+           ``(process, name)`` lineage so the history is never overwritten.
+           If a move or rename was submitted at the same time, it is applied to
+           the whole lineage first (see path 3) before the new version is
+           inserted, ensuring the new row lands in the correct lineage.
+
+        3. **Metadata only changed** (``change=True``, ``document`` unchanged):
+           The existing row is updated in place — no new version is created.
+           If ``process`` or ``name`` changed, the bulk-update below propagates
+           those changes to every historical version of this questionnaire so
+           the lineage identity stays consistent across all versions.
+           ``description`` and ``sort_order`` changes are applied only to the
+           latest version row (the one currently open in the form).
+
+        This method is wrapped by ``@transaction.atomic`` so partial updates
+        cannot leave the version history in an inconsistent state.
         """
-        # If the object is being changed, increment the version
-        if change:
-            obj.version += 1
-            obj.pk = None
-
-        # Newly created or version up
-        if obj.pk is None:
+        # ----------------------------------------------------------------
+        # Path 1: brand-new questionnaire — stamp author and save directly.
+        # ----------------------------------------------------------------
+        if not change:
             obj.created_by = request.user
+            return super().save_model(request, obj, form, change)
 
-        # Save and return
+        # Lock the current database row so concurrent edits cannot race
+        # between the read below and any subsequent writes in this block.
+        original = Questionnaire.objects.select_for_update().get(pk=obj.pk)
+
+        # Determine what kind of edit was submitted.
+        process_or_name_changed = (
+            original.process_id != obj.process_id or original.name != obj.name
+        )
+        document_changed = "document" in form.changed_data
+
+        # ----------------------------------------------------------------
+        # Lineage propagation: move or rename across all historical versions.
+        # Must run before the document-change path so the new version row
+        # is inserted under the already-updated (process, name) identity.
+        # ----------------------------------------------------------------
+        if process_or_name_changed:
+            Questionnaire.objects.filter(
+                process_id=original.process_id,
+                name=original.name,
+            ).update(
+                process_id=obj.process_id,
+                name=obj.name,
+            )
+
+        # ----------------------------------------------------------------
+        # Path 2: document edited — clone a new version row.
+        # ----------------------------------------------------------------
+        if document_changed:
+            # Find the highest version currently in this lineage (after any
+            # rename/move above) so the new version number is always N+1.
+            max_version = (
+                Questionnaire.objects.filter(
+                    process_id=obj.process_id,
+                    name=obj.name,
+                ).aggregate(max_version=Max("version"))["max_version"]
+                or 0
+            )
+            # Clear the pk so Django performs an INSERT rather than UPDATE,
+            # creating a new row while leaving all previous versions intact.
+            obj.version = max_version + 1
+            obj.pk = None
+            obj.created_by = request.user
+            return super().save_model(request, obj, form, False)
+
+        # ----------------------------------------------------------------
+        # Path 3: metadata-only edit — update the existing row in place.
+        # Restore immutable fields from the database so they cannot be
+        # accidentally overwritten by stale form data.
+        # ----------------------------------------------------------------
+        obj.version = original.version
+        obj.created_by = original.created_by
         return super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
