@@ -113,7 +113,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         process_or_name_changed = (
             original.process_id != obj.process_id or original.name != obj.name
         )
-        document_changed = "document" in form.changed_data
+        document_changed = "document" in form.changed_data and original.document != form.cleaned_data["document"]
 
         # ----------------------------------------------------------------
         # Lineage propagation: move or rename across all historical versions.
