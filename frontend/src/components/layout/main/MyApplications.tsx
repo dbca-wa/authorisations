@@ -234,7 +234,21 @@ const Application = ({
                 </Box>
 
                 <Box mt={4} mb={1} className="w-4/5 mx-auto">
-                    <Stepper activeStep={statusToActiveStep[application.status]} alternativeLabel>
+                    <Stepper
+                        activeStep={statusToActiveStep[application.status]}
+                        alternativeLabel
+                        sx={(theme) => ({
+                            '& .MuiStepIcon-root': {
+                                color: theme.palette.grey[400],
+                            },
+                            '& .MuiStepIcon-root.Mui-active': {
+                                color: theme.palette.success.main,
+                            },
+                            '& .MuiStepIcon-root.Mui-completed': {
+                                color: theme.palette.success.light,
+                            },
+                        })}
+                    >
                         {applicationSteps.map((label) => (
                             <Step key={label}>
                                 <StepLabel>{label}</StepLabel>

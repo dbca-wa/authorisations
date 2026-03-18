@@ -37,10 +37,10 @@ const theme = createTheme({
       styleOverrides: {
         root: ({ theme }) => ({
           '&.Mui-completed': {
-            color: theme.palette.success.light,
+            color: theme.palette.primary.light,
           },
           '&.Mui-active': {
-            color: theme.palette.success.main,
+            color: theme.palette.primary.main,
           },
           color: theme.palette.grey[400],
         }),
