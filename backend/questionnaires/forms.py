@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django_jsonform.utils import join_coords
 from django_jsonform.validators import JSONSchemaValidationError
@@ -53,6 +55,29 @@ class QuestionnaireForm(forms.ModelForm):
                 error_map={coordinate: exc.message},
             )
 
+    def clean_name(self):
+        """Normalise whitespace and validate allowed questionnaire name characters.
+
+        Allowed characters are letters, digits, spaces, and the ordinary
+        hyphen (``-``). Disallowed characters are rejected with a validation
+        error rather than silently modified.
+        """
+        name = self.cleaned_data["name"]
+        # Safe normalisation: trim ends and collapse repeated inner whitespace.
+        name = " ".join(name.split())
+
+        if name.startswith("-") or name.endswith("-"):
+            raise forms.ValidationError(
+                "Questionnaire name cannot start or end with a hyphen (-)."
+            )
+
+        if re.search(r"[^A-Za-z0-9\- ]", name):
+            raise forms.ValidationError(
+                "Use only letters, numbers, spaces, and hyphen (-)."
+            )
+
+        return name
+    
     def clean(self):
         """Cross-field validation: enforce case-insensitive (process, name) uniqueness.
 

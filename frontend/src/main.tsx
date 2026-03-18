@@ -33,6 +33,19 @@ const theme = createTheme({
         },
       },
     },
+    MuiStepIcon: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          '&.Mui-completed': {
+            color: theme.palette.success.light,
+          },
+          '&.Mui-active': {
+            color: theme.palette.success.main,
+          },
+          color: theme.palette.grey[400],
+        }),
+      },
+    },
   },
 });
 

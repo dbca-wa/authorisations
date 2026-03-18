@@ -23,7 +23,15 @@ export const ROUTES: IRoute[] = [
 		divider: false,
 		component: MyApplications,
 		loader: async () => {
-			return await ApiManager.fetchApplications().catch(handleApiError);
+			const processes = await ApiManager
+				.fetchAuthorisationProcesses()
+				.catch(handleApiError);
+
+			const applications = await ApiManager
+				.fetchApplications()
+				.catch(handleApiError);
+
+			return { processes, applications };
 		},
 	},
 	{
@@ -36,7 +44,7 @@ export const ROUTES: IRoute[] = [
 			const processes = await ApiManager
 				.fetchAuthorisationProcesses()
 				.catch(handleApiError);
-			
+
 			const questionnaires = await ApiManager
 				.fetchQuestionnaires()
 				.catch(handleApiError);

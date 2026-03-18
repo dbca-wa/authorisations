@@ -13,7 +13,13 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = QuestionnaireForm
     # Don't show the "Show counts" on the filter facet
     show_facets = admin.ShowFacets.NEVER
-    list_display = ("sort_order", "name", "version", "process", "sort_order_int", )
+    list_display = (
+        "sort_order",
+        "name",
+        "version",
+        "process",
+        "sort_order_int",
+    )
     list_filter = ("process",)
     readonly_fields = ("version", "created_at", "created_by")
     editable_fields = ("process", "name", "description", "document")
@@ -113,7 +119,10 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         process_or_name_changed = (
             original.process_id != obj.process_id or original.name != obj.name
         )
-        document_changed = "document" in form.changed_data and original.document != form.cleaned_data["document"]
+        document_changed = (
+            "document" in form.changed_data
+            and original.document != form.cleaned_data["document"]
+        )
 
         # ----------------------------------------------------------------
         # Lineage propagation: move or rename across all historical versions.
