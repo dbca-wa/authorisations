@@ -59,6 +59,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     class Meta:
         model = Application
         fields = (
+            "id",
             "key",
             "owner",
             "process_slug",

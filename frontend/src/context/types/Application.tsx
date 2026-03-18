@@ -24,6 +24,7 @@ export const finalisedStatuses: ApplicationStatus[] = [
  * Interface for application data, which includes the answers and meta data
  */
 export interface IApplicationData {
+    id: number;
     key: string;
     owner: string;
     process_slug: string;
