@@ -225,7 +225,7 @@ const Application = ({
                     <NumbersIcon></NumbersIcon> {getApplicationId(application)}
                 </Typography>
 
-                <Box display="flex" gap={1} my={2} flexWrap="wrap" justifyContent="center" className="max-w-min min-w-9/10 mx-auto">
+                <Box display="flex" gap={1} my={2} flexWrap="wrap" justifyContent="center" className="max-w-min min-w-1/1 mx-auto">
                     <Chip label={processName} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
                     <Chip label={`${statusCapitalised}`} size="small" variant="outlined" />
