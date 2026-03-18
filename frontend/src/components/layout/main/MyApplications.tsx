@@ -20,6 +20,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect, useMemo, useState } from "react";
 
 import { useLoaderData } from "react-router";
+import { LocalStorage } from "../../../context/LocalStorage";
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { openNewTab } from '../../../context/Utils';
@@ -62,11 +63,7 @@ const isSortOrderOption = (value: string): value is SortOrderOption => {
 };
 
 const getInitialSortOrder = (): SortOrderOption => {
-    if (typeof window === "undefined") {
-        return defaultSortOrder;
-    }
-
-    const storedValue = window.localStorage.getItem(myApplicationsSortOrderStorageKey);
+    const storedValue = LocalStorage.getValue<string>(myApplicationsSortOrderStorageKey);
     if (storedValue && isSortOrderOption(storedValue)) {
         return storedValue;
     }
@@ -98,7 +95,7 @@ export const MyApplications = () => {
     const [sortOrder, setSortOrder] = useState<SortOrderOption>(getInitialSortOrder);
 
     useEffect(() => {
-        window.localStorage.setItem(myApplicationsSortOrderStorageKey, sortOrder);
+        LocalStorage.setValue<SortOrderOption>(myApplicationsSortOrderStorageKey, sortOrder);
     }, [sortOrder]);
 
     const processBySlug = useMemo(
