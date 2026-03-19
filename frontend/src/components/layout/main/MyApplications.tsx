@@ -17,9 +17,10 @@ import Stepper from "@mui/material/Stepper";
 import Typography from "@mui/material/Typography";
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useLoaderData } from "react-router";
+import { LocalStorage } from "../../../context/LocalStorage";
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { openNewTab } from '../../../context/Utils';
@@ -44,16 +45,33 @@ const statusToActiveStep: Record<ApplicationStatus, number> = {
     REJECTED: 4,
 };
 
-type SortOrderOption =
-    | "none"
-    | "authorisation"
-    | "newest"
-    | "oldest"
-    | "recently_updated"
-    | "least_recently_updated";
+const sortOrderOptions = [
+    "authorisation",
+    "newest",
+    "oldest",
+    "recently_updated",
+    "least_recently_updated",
+] as const;
+
+type SortOrderOption = typeof sortOrderOptions[number];
+
+const myApplicationsSortOrderStorageKey = "my-applications-sort-order";
+const defaultSortOrder: SortOrderOption = "newest";
+
+const isSortOrderOption = (value: string): value is SortOrderOption => {
+    return sortOrderOptions.includes(value as SortOrderOption);
+};
+
+const getInitialSortOrder = (): SortOrderOption => {
+    const storedValue = LocalStorage.getValue<string>(myApplicationsSortOrderStorageKey);
+    if (storedValue && isSortOrderOption(storedValue)) {
+        return storedValue;
+    }
+
+    return defaultSortOrder;
+};
 
 const sortOrderLabels: Record<SortOrderOption, string> = {
-    none: "Sort by",
     authorisation: "Authorisation",
     newest: "Newest",
     oldest: "Oldest",
@@ -73,7 +91,12 @@ export const MyApplications = () => {
         processes: IAuthorisationProcess[];
         applications: IApplicationData[];
     }>();
-    const [sortOrder, setSortOrder] = useState<SortOrderOption>("none");
+    // Default to newest and restore the user's last selected sort when available.
+    const [sortOrder, setSortOrder] = useState<SortOrderOption>(getInitialSortOrder);
+
+    useEffect(() => {
+        LocalStorage.setValue<SortOrderOption>(myApplicationsSortOrderStorageKey, sortOrder);
+    }, [sortOrder]);
 
     const processBySlug = useMemo(
         () => new Map(processes.map((process) => [process.slug, process])),
@@ -84,11 +107,6 @@ export const MyApplications = () => {
     // applications.length = 0;
 
     const sortedApplications = useMemo(() => {
-        if (sortOrder === "none") {
-            // Preserve the original loader order when no sort is selected.
-            return applications;
-        }
-
         const sorted = [...applications];
 
         if (sortOrder === "authorisation") {
@@ -160,7 +178,6 @@ export const MyApplications = () => {
                             inputProps={{ 'aria-label': 'Sort applications' }}
                             renderValue={(selected) => {
                                 const option = selected as SortOrderOption;
-                                const isPlaceholder = option === "none";
 
                                 return (
                                     <Box
@@ -168,7 +185,6 @@ export const MyApplications = () => {
                                         display="inline-flex"
                                         alignItems="center"
                                         gap={1}
-                                        sx={{ color: isPlaceholder ? 'text.secondary' : 'text.primary' }}
                                     >
                                         <SortIcon fontSize="small" />
                                         <Box component="span">{sortOrderLabels[option]}</Box>
@@ -176,14 +192,11 @@ export const MyApplications = () => {
                                 );
                             }}
                         >
-                            <MenuItem value="none" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                                Sort by
-                            </MenuItem>
-                            <MenuItem value="authorisation">Authorisation</MenuItem>
-                            <MenuItem value="newest">Newest</MenuItem>
-                            <MenuItem value="oldest">Oldest</MenuItem>
-                            <MenuItem value="recently_updated">Recently updated</MenuItem>
-                            <MenuItem value="least_recently_updated">Least recently updated</MenuItem>
+                            {sortOrderOptions.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                    {sortOrderLabels[option]}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                 }
@@ -234,7 +247,21 @@ const Application = ({
                 </Box>
 
                 <Box mt={4} mb={1} className="w-4/5 mx-auto">
-                    <Stepper activeStep={statusToActiveStep[application.status]} alternativeLabel>
+                    <Stepper
+                        activeStep={statusToActiveStep[application.status]}
+                        alternativeLabel
+                        sx={(theme) => ({
+                            '& .MuiStepIcon-root': {
+                                color: theme.palette.grey[400],
+                            },
+                            '& .MuiStepIcon-root.Mui-active': {
+                                color: theme.palette.success.main,
+                            },
+                            '& .MuiStepIcon-root.Mui-completed': {
+                                color: theme.palette.success.light,
+                            },
+                        })}
+                    >
                         {applicationSteps.map((label) => (
                             <Step key={label}>
                                 <StepLabel>{label}</StepLabel>

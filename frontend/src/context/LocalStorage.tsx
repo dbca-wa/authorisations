@@ -15,6 +15,14 @@ export class LocalStorage {
         return `auth_${key}`;
     }
 
+    public static getValue<T>(key: string): T | null {
+        return this.getItem(this.getKey(key)) as T | null;
+    }
+
+    public static setValue<T>(key: string, value: T): void {
+        this.setItem(this.getKey(key), value as unknown as Object);
+    }
+
     public static getFormState(applicationKey: string): IFormDocument | null {
         // console.log("Getting answers for application:", applicationKey);
         const key = this.getKey(applicationKey);
