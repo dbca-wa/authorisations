@@ -9,12 +9,14 @@ class ApplicationAttachmentInline(admin.TabularInline):
 
     model = ApplicationAttachment
     extra = 0
-    readonly_fields = (
-        "key",
+    fields = (
         "question",
+        "name",
         "created_at",
+        "is_deleted",
         "deleted_at",
     )
+    readonly_fields = fields
     can_delete = False
     show_change_link = True
 
@@ -34,8 +36,21 @@ class ApplicationAdmin(admin.ModelAdmin):
 
     form = ApplicationForm
     inlines = [ApplicationAttachmentInline]
-    list_display = ("owner", "questionnaire", "status", "created_at")
-    list_filter = ("status", "created_at")
+    list_display = (
+        "questionnaire",
+        "questionnaire__process",
+        "status",
+        "owner",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = (
+        "status",
+        "created_at",
+        "updated_at",
+        "questionnaire__process",
+        "questionnaire__name",
+    )
     search_fields = ("owner__username", "questionnaire__name")
     readonly_fields = (
         "key",

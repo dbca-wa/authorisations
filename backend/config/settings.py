@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     "admin_tools.menu",
     "admin_tools.dashboard",
     "django_vite",
+    "adminsortable2",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -116,6 +117,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_jsonform",
     "users",
+    "processes",
     "questionnaires",
     "applications",
 ]

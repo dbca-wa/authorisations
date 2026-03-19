@@ -1,10 +1,27 @@
 /**
+ * Interface for an authorisation process, 
+ * which is the business domain that each questionnaire belongs to
+ */
+export interface IAuthorisationProcess {
+    slug: string;
+    name: string;
+    description: string;
+    image_url?: string;
+    image_credit?: string;
+    sort_order: number;
+    created_at: string;
+    updated_at: string;
+}
+
+
+/**
  * Interface for a questionnaire data including meta data
  */
 export interface IQuestionnaireData {
-    slug: string;
-    version: number;
+    process_slug: string;
+    id: number;
     name: string;
+    version: number;
     description: string;
     created_at: string;
     document: IQuestionnaire;

@@ -1,12 +1,18 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import ApplicationViewSet, QuestionnaireViewSet, AttachmentViewSet
+from .views import (
+    ApplicationViewSet,
+    AttachmentViewSet,
+    AuthorisationProcessViewSet,
+    QuestionnaireViewSet,
+)
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter(trailing_slash=False)
-router.register("applications", ApplicationViewSet)
+router.register("processes", AuthorisationProcessViewSet)
 router.register("questionnaires", QuestionnaireViewSet)
+router.register("applications", ApplicationViewSet)
 router.register("attachments", AttachmentViewSet)
 
 # Wire up our API using automatic URL routing.

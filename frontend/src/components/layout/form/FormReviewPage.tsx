@@ -27,6 +27,9 @@ import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
 import { FileAttachmentList } from '../../Common';
 
+const getStepPrefix = (stepIndex: number) => `${stepIndex + 1}.`;
+const getSectionPrefix = (sectionIndex: number) => `${String.fromCharCode(65 + sectionIndex)})`;
+
 
 export function FormReviewPage({
     userCanEdit,
@@ -83,7 +86,7 @@ export function FormReviewPage({
                 {questionnaire.steps.map((step: any, stepIdx: number) => (
                     <Paper elevation={3} key={stepIdx} sx={{ p: 3 }}>
                         <Typography variant="h5" gutterBottom>
-                            {step.title}
+                            {getStepPrefix(stepIdx)} {step.title}
                             <IconButton
                                 size="small" color="primary" aria-label="edit step"
                                 onClick={handleSubmit(stepIdx)}
@@ -96,7 +99,7 @@ export function FormReviewPage({
                             {step.sections.map((section: any, sectionIdx: number) => (
                                 <Box key={sectionIdx}>
                                     <Typography variant="h6" sx={{ mb: 1 }}>
-                                        {section.title}
+                                        {getSectionPrefix(sectionIdx)} {section.title}
                                     </Typography>
                                     <Stack spacing={2}>
                                         {section.questions.map((qObj: IQuestion, questionIdx: number) => {
@@ -135,7 +138,7 @@ export function FormReviewPage({
                                             return (
                                                 <Box key={questionIdx} sx={{ mb: 1 }}>
                                                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                                        {qObj.label}
+                                                        {question.labelText}
                                                     </Typography>
                                                     {displayAnswer}
                                                 </Box>

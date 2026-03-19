@@ -26,6 +26,26 @@ const theme = createTheme({
         },
       },
     },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+    MuiStepIcon: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          '&.Mui-completed': {
+            color: theme.palette.primary.light,
+          },
+          '&.Mui-active': {
+            color: theme.palette.primary.main,
+          },
+          color: theme.palette.grey[400],
+        }),
+      },
+    },
   },
 });
 

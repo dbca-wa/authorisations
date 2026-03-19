@@ -23,7 +23,15 @@ export const ROUTES: IRoute[] = [
 		divider: false,
 		component: MyApplications,
 		loader: async () => {
-			return await ApiManager.fetchApplications().catch(handleApiError);
+			const processes = await ApiManager
+				.fetchAuthorisationProcesses()
+				.catch(handleApiError);
+
+			const applications = await ApiManager
+				.fetchApplications()
+				.catch(handleApiError);
+
+			return { processes, applications };
 		},
 	},
 	{
@@ -33,7 +41,15 @@ export const ROUTES: IRoute[] = [
 		divider: true,
 		component: NewApplication,
 		loader: async () => {
-			return await ApiManager.fetchQuestionnaires().catch(handleApiError);
+			const processes = await ApiManager
+				.fetchAuthorisationProcesses()
+				.catch(handleApiError);
+
+			const questionnaires = await ApiManager
+				.fetchQuestionnaires()
+				.catch(handleApiError);
+
+			return { processes, questionnaires };
 		},
 	},
 	{
@@ -56,9 +72,9 @@ const formLayoutLoader = async ({ params }: LoaderFunctionArgs) => {
 		.catch(handleApiError);
 
 	const questionnaire = await ApiManager
-		.getQuestionnaire(app.questionnaire_slug, app.questionnaire_version)
+		.getQuestionnaire(app.questionnaire_id)
 		.catch(handleApiError);
-	
+
 	const attachments = await ApiManager
 		.getApplicationAttachments(params.key!)
 		.catch(handleApiError);
