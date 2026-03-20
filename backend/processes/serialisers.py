@@ -6,6 +6,8 @@ from .models import AuthorisationProcess
 class AuthorisationProcessSerialiser(serializers.ModelSerializer):
     """Serializer for the AuthorisationProcess model."""
 
+    can_review = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = AuthorisationProcess
         fields = (
@@ -13,6 +15,7 @@ class AuthorisationProcessSerialiser(serializers.ModelSerializer):
             "name",
             "description",
             "sort_order",
+            "can_review",
             "created_at",
             "updated_at",
         )

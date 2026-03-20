@@ -2,7 +2,7 @@ import uuid
 
 from applications.models import Application, ApplicationAttachment
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
-from django.db.models import F, Window
+from django.db.models import BooleanField, Exists, F, OuterRef, Value, Window
 from django.db.models.functions import RowNumber
 from processes.models import AuthorisationProcess
 from processes.serialisers import AuthorisationProcessSerialiser
@@ -153,5 +153,31 @@ class AuthorisationProcessViewSet(viewsets.ReadOnlyModelViewSet):
         "options",
         "head",
     ]
+
+    def get_queryset(self):
+        """Annotate each process with whether the current user can review it."""
+        queryset = super().get_queryset()
+
+        # Compute ``can_review`` at queryset level so the database can answer it
+        # for the whole process list in one query. Doing this in the serializer
+        # would push request-aware permission logic into presentation code and
+        # risks per-row checks / N+1 queries.
+        if not self.request.user.is_authenticated:
+            # Anonymous users can never review; annotate a constant False so the
+            # serializer still receives a stable field on every process row.
+            return queryset.annotate(
+                can_review=Value(False, output_field=BooleanField())
+            )
+
+        # Build an EXISTS subquery against the process<->group join table. If
+        # any linked reviewer group matches one of the current user's groups,
+        # the process is reviewable for that user.
+        reviewer_group_links = AuthorisationProcess.reviewer_groups.through.objects.filter(
+            authorisationprocess_id=OuterRef("pk"),
+            group_id__in=self.request.user.groups.values("id"),
+        )
+
+        # Expose the result as a boolean annotation for direct serialisation.
+        return queryset.annotate(can_review=Exists(reviewer_group_links))
 
 
