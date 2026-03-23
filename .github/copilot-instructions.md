@@ -9,6 +9,13 @@
 - Use British English spelling in code comments, docs, command names, and developer guidance.
 - Prefer forms such as `normalise`, `normalisation`, and `authorisation`.
 
+## Code Comment Conventions
+- Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists.
+  - For TypeScript/React: use a `/** ... */` JSDoc block before the function.
+  - For Python: use a `"""Docstring."""` inside the function body.
+- Every critical part within a function (non-obvious logic, guards, fallbacks, side effects) must have one or two single-line comments explaining the intent, not just restating the code.
+- Comments should explain **why**, not just **what**.
+
 ## Current Canonical Terminology
 - `AuthorisationProcess`:
   - Parent domain object that groups related questionnaires under a business process.

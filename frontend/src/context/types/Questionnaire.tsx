@@ -9,6 +9,7 @@ export interface IAuthorisationProcess {
     image_url?: string;
     image_credit?: string;
     sort_order: number;
+    can_review: boolean;
     created_at: string;
     updated_at: string;
 }

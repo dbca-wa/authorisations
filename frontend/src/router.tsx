@@ -1,3 +1,4 @@
+import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -10,9 +11,12 @@ import { FormLayout } from "./components/layout/form/FormLayout";
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
+import { ReviewApplications } from './components/layout/main/ReviewApplications';
 import { ApiManager } from './context/ApiManager';
 import type { IRoute } from "./context/types/Generic";
 import { handleApiError } from './context/Utils';
+
+
 
 // Routes for the application (text, path and icon)
 export const ROUTES: IRoute[] = [
@@ -26,12 +30,17 @@ export const ROUTES: IRoute[] = [
 			const processes = await ApiManager
 				.fetchAuthorisationProcesses()
 				.catch(handleApiError);
-
-			const applications = await ApiManager
-				.fetchApplications()
+			
+			const questionnaires = ApiManager
+				.fetchQuestionnaires()
 				.catch(handleApiError);
 
-			return { processes, applications };
+			const applications = ApiManager
+				.fetchApplications()
+				.catch(handleApiError);
+			
+
+			return { processes, questionnaires, applications };
 		},
 	},
 	{
@@ -44,12 +53,41 @@ export const ROUTES: IRoute[] = [
 			const processes = await ApiManager
 				.fetchAuthorisationProcesses()
 				.catch(handleApiError);
-
-			const questionnaires = await ApiManager
+			
+			const questionnaires = ApiManager
 				.fetchQuestionnaires()
 				.catch(handleApiError);
 
-			return { processes, questionnaires };
+			const applications = ApiManager
+				.fetchApplications()
+				.catch(handleApiError);
+			
+
+			return { processes, questionnaires, applications };
+		},
+	},
+	{
+		label: "Review",
+		path: "/review-applications",
+		icon: <ChecklistRtlIcon />,
+		divider: true,
+		component: ReviewApplications,
+		condition: (processes) => processes.some((process) => process.can_review),
+		loader: async () => {
+			const processes = await ApiManager
+				.fetchAuthorisationProcesses()
+				.catch(handleApiError);
+			
+			const questionnaires = ApiManager
+				.fetchQuestionnaires()
+				.catch(handleApiError);
+
+			const applications = ApiManager
+				.fetchApplications()
+				.catch(handleApiError);
+			
+
+			return { processes, questionnaires, applications };
 		},
 	},
 	{

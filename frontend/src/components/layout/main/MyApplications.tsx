@@ -1,49 +1,18 @@
-import NumbersIcon from '@mui/icons-material/Numbers';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import SortIcon from '@mui/icons-material/Sort';
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import Chip from "@mui/material/Chip";
 import FormControl from "@mui/material/FormControl";
-import Link from '@mui/material/Link';
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import Step from "@mui/material/Step";
-import StepLabel from "@mui/material/StepLabel";
-import Stepper from "@mui/material/Stepper";
 import Typography from "@mui/material/Typography";
-import dayjs from 'dayjs';
-import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect, useMemo, useState } from "react";
 
 import { useLoaderData } from "react-router";
 import { LocalStorage } from "../../../context/LocalStorage";
-import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
-import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
-import { openNewTab } from '../../../context/Utils';
+import type { IApplicationData } from "../../../context/types/Application";
+import { ApplicationCard } from "./ApplicationCard";
 import { EmptyStateComponent } from "./EmptyState";
-
-const applicationSteps = [
-    "Application",
-    "Submit",
-    "Review",
-    "Assessment",
-    "Decision",
-] as const;
-
-const statusToActiveStep: Record<ApplicationStatus, number> = {
-    DRAFT: 0,
-    DISCARDED: 0,
-    ACTION_REQUIRED: 0,
-    SUBMITTED: 1,
-    UNDER_REVIEW: 2,
-    PROCESSING: 3,
-    APPROVED: 4,
-    REJECTED: 4,
-};
+import type { LoaderData } from '../../../context/types/Generic';
 
 const sortOrderOptions = [
     "authorisation",
@@ -79,24 +48,50 @@ const sortOrderLabels: Record<SortOrderOption, string> = {
     least_recently_updated: "Least recently updated",
 };
 
-// Construct the application ID
-const getApplicationId = (application: IApplicationData): string => {
-    const questionnaireName = application.questionnaire_name.replace(/\s+/g, '-').toLowerCase();
-    return `${application.process_slug}-${questionnaireName}-${application.id}`;
-}
-
-
 export const MyApplications = () => {
-    const { processes, applications } = useLoaderData<{
-        processes: IAuthorisationProcess[];
-        applications: IApplicationData[];
-    }>();
+    const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
+    const [applications, setApplications] = useState<IApplicationData[]>([]);
+    const [isApplicationsLoading, setIsApplicationsLoading] = useState<boolean>(true);
+    
     // Default to newest and restore the user's last selected sort when available.
     const [sortOrder, setSortOrder] = useState<SortOrderOption>(getInitialSortOrder);
 
     useEffect(() => {
         LocalStorage.setValue<SortOrderOption>(myApplicationsSortOrderStorageKey, sortOrder);
     }, [sortOrder]);
+
+    /**
+     * Resolves the deferred `applicationsPromise` from the route loader into local state.
+     * The loader kicks off the API fetch immediately (without blocking navigation), and
+     * this effect picks up the result as soon as it arrives, keeping the UI responsive.
+     */
+    useEffect(() => {
+        // Guard flag: prevents state updates if the component unmounts before the Promise resolves.
+        let isMounted = true;
+        setIsApplicationsLoading(true);
+
+        applicationsPromise
+            .then((resolvedApplications) => {
+                // Only commit resolved data if the component is still mounted.
+                if (!isMounted) return;
+                setApplications(Array.isArray(resolvedApplications) ? resolvedApplications : []);
+            })
+            .catch(() => {
+                // Fall back to an empty list on error so the empty-state UI renders instead of crashing.
+                if (!isMounted) return;
+                setApplications([]);
+            })
+            .finally(() => {
+                // Always clear the loading flag, whether the fetch succeeded or failed.
+                if (!isMounted) return;
+                setIsApplicationsLoading(false);
+            });
+
+        // Cleanup: flip the guard flag so stale callbacks from the previous Promise are ignored.
+        return () => {
+            isMounted = false;
+        };
+    }, [applicationsPromise]);
 
     const processBySlug = useMemo(
         () => new Map(processes.map((process) => [process.slug, process])),
@@ -167,7 +162,7 @@ export const MyApplications = () => {
                 <Typography variant="h4" gutterBottom>
                     My Applications
                 </Typography>
-                {applications.length > 0 &&
+                {!isApplicationsLoading && applications.length > 0 &&
                     <FormControl size="small">
                         <Select
                             id="my-applications-sort"
@@ -203,92 +198,15 @@ export const MyApplications = () => {
             </Box>
             <p>Here you can view and manage your applications.</p>
 
-            {applications.length === 0 ? <EmptyStateComponent /> :
+            {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
+                applications.length === 0 ? <EmptyStateComponent /> :
                 <List>
                     {sortedApplications.map((a) => {
                         const process = processBySlug.get(a.process_slug);
-                        return <Application key={a.key} application={a} process={process} />;
+                        return <ApplicationCard key={a.key} application={a} process={process} />;
                     })}
                 </List>
             }
         </Box>
     );
-}
-
-/** Display a MUI card for an application with action buttons; to resume or to download its certificate */
-const Application = ({
-    process,
-    application,
-}: {
-    process?: IAuthorisationProcess;
-    application: IApplicationData;
-}) => {
-    // Format dates
-    dayjs.extend(relativeTime)
-    const processName = process?.name ?? `Unknown process (${application.process_slug})`;
-    const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
-    const statusCapitalised = application.status.split("_").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ");
-    const createdAtRelative = dayjs(application.created_at).fromNow()
-    const updatedAtRelative = dayjs(application.updated_at).fromNow()
-
-    return (
-        <ListItem sx={{ marginBottom: 2 }}>
-            <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
-                <Typography variant="h6">
-                    <NumbersIcon></NumbersIcon> {getApplicationId(application)}
-                </Typography>
-
-                <Box display="flex" gap={1} my={2} flexWrap="wrap" justifyContent="center" className="max-w-min min-w-1/1 mx-auto">
-                    <Chip label={processName} size="small" variant="outlined" />
-                    <Chip label={questionnaireName} size="small" variant="outlined" />
-                    <Chip label={`${statusCapitalised}`} size="small" variant="outlined" />
-                    <Chip label={`Created ${createdAtRelative}`} size="small" variant="outlined" />
-                    <Chip label={`Updated ${updatedAtRelative}`} size="small" variant="outlined" />
-                </Box>
-
-                <Box mt={4} mb={1} className="w-4/5 mx-auto">
-                    <Stepper
-                        activeStep={statusToActiveStep[application.status]}
-                        alternativeLabel
-                        sx={(theme) => ({
-                            '& .MuiStepIcon-root': {
-                                color: theme.palette.grey[400],
-                            },
-                            '& .MuiStepIcon-root.Mui-active': {
-                                color: theme.palette.success.main,
-                            },
-                            '& .MuiStepIcon-root.Mui-completed': {
-                                color: theme.palette.success.light,
-                            },
-                        })}
-                    >
-                        {applicationSteps.map((label) => (
-                            <Step key={label}>
-                                <StepLabel>{label}</StepLabel>
-                            </Step>
-                        ))}
-                    </Stepper>
-                </Box>
-                <Box display="flex" justifyContent="flex-end" mt={2}>
-                    <Link
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="Continue application"
-                        onClick={() => openNewTab(`/a/${application.key}`, application.key)}
-                    >
-                        <Button
-                            variant="contained"
-                            color="success"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={Boolean(false)}
-                            startIcon={<PlayArrowRoundedIcon />}
-                        >
-                            Continue
-                        </Button>
-                    </Link>
-                </Box>
-            </Card>
-        </ListItem>
-    )
 }

@@ -40,7 +40,9 @@ export class ApiManager {
 
     public static async fetchApplications(): Promise<IApplicationData[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching applications...");
         const response = await axios.get<IApplicationData[]>("/applications", requestConfig);
+        // console.debug("Fetched applications:", response.data.length);
 
         return response.data;
     }
@@ -144,14 +146,18 @@ export class ApiManager {
 
     public static async fetchQuestionnaires(): Promise<IQuestionnaireData[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching questionnaires...");
         const response = await axios.get<IQuestionnaireData[]>("/questionnaires", requestConfig);
+        // console.debug("Fetched questionnaires:", response.data.length);
 
         return response.data;
     }
 
     public static async fetchAuthorisationProcesses(): Promise<IAuthorisationProcess[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching processes...");
         const response = await axios.get<IAuthorisationProcess[]>("/processes", requestConfig);
+        // console.debug("Fetched processes:", response.data.length);
 
         return response.data;
     }

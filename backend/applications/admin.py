@@ -60,7 +60,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "submitted_at",
-        "document",
+        # "document",
     )
     editable_fields = ()
 

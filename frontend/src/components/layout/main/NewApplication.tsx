@@ -13,6 +13,7 @@ import { finalisedStatuses, type IApplicationData } from "../../../context/types
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
+import type { LoaderData } from '../../../context/types/Generic';
 
 interface IProcessGroup {
     process: IAuthorisationProcess;
@@ -195,16 +196,47 @@ const ProcessGroup = ({
 }
 
 export const NewApplication = () => {
-    const { processes, questionnaires } = useLoaderData<{
-        processes: IAuthorisationProcess[];
-        questionnaires: IQuestionnaireData[];
-    }>();
+    const { processes, questionnaires: questionnairesPromise } = useLoaderData<LoaderData>();
+    const [questionnaires, setQuestionnaires] = React.useState<IQuestionnaireData[]>([]);
+    const [isQuestionnairesLoading, setIsQuestionnairesLoading] = React.useState<boolean>(true);
+
+    /**
+     * Resolves the deferred `questionnairesPromise` from the route loader into local state.
+     * This keeps routing responsive while still allowing synchronous rendering logic afterwards.
+     */
+    React.useEffect(() => {
+        // Guard flag: prevents state updates after unmount.
+        let isMounted = true;
+        setIsQuestionnairesLoading(true);
+
+        questionnairesPromise
+            .then((resolvedQuestionnaires) => {
+                // Only update state when this component instance is still active.
+                if (!isMounted) return;
+                setQuestionnaires(Array.isArray(resolvedQuestionnaires) ? resolvedQuestionnaires : []);
+            })
+            .catch(() => {
+                // Fallback to an empty list so the empty state can render safely.
+                if (!isMounted) return;
+                setQuestionnaires([]);
+            })
+            .finally(() => {
+                // Always stop loading, regardless of success or failure.
+                if (!isMounted) return;
+                setIsQuestionnairesLoading(false);
+            });
+
+        // Cleanup: ignore stale Promise callbacks from a previous render.
+        return () => {
+            isMounted = false;
+        };
+    }, [questionnairesPromise]);
 
     // const processes = React.useMemo(
     //     () => buildProcesses(questionnaires),
     //     [questionnaires],
     // );
-    const processGroups = React.useMemo(
+    const processGroups: IProcessGroup[] = React.useMemo(
         () => buildProcessGroups(processes, questionnaires),
         [processes, questionnaires],
     );
@@ -216,7 +248,8 @@ export const NewApplication = () => {
             <Typography variant="h4" gutterBottom>
                 Start a New Application
             </Typography>
-            {processGroups.length === 0 ? <EmptyStateComponent /> :
+            {isQuestionnairesLoading ? <Typography>Loading questionnaires...</Typography> :
+                processGroups.length === 0 ? <EmptyStateComponent /> :
                 <>
                     {processGroups.map((group) => (
                         <ProcessGroup

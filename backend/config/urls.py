@@ -8,6 +8,7 @@ urlpatterns = [
     path("", home_page),
     path("my-applications", generic_template, name="my-applications"),
     path("new-application", generic_template, name="new-application"),
+    path("review-applications", generic_template, name="review-applications"),
     path("a/<uuid:key>", resume_application, name="resume-application"),
     path("d/<uuid:appKey>/<uuid:attachmentKey>", download_attachment, name="download-attachment"),
     
