@@ -1,4 +1,5 @@
 import NumbersIcon from '@mui/icons-material/Numbers';
+import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -49,9 +50,13 @@ const getApplicationId = (application: IApplicationData): string => {
 export const ApplicationCard = ({
     process,
     application,
+    showDownloadLink = false,
+    downloadUrl,
 }: {
     process?: IAuthorisationProcess;
     application: IApplicationData;
+    showDownloadLink?: boolean;
+    downloadUrl?: string;
 }) => {
     // Enable relative date labels like "2 days ago" for card metadata.
     dayjs.extend(relativeTime);
@@ -104,7 +109,28 @@ export const ApplicationCard = ({
                         ))}
                     </Stepper>
                 </Box>
-                <Box display="flex" justifyContent="flex-end" mt={2}>
+                <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+                    {/* Render the PDF action only when explicitly enabled and a designated URL is provided. */}
+                    {showDownloadLink && downloadUrl && (
+                        <Link
+                            target="_blank"
+                            rel="noopener"
+                            aria-label="Download application PDF"
+                            href={downloadUrl}
+                        >
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                loadingPosition='start'
+                                loading={false}
+                                disabled={Boolean(false)}
+                                startIcon={<DownloadIcon />}
+                            >
+                                Download
+                            </Button>
+                        </Link>
+                    )}
+
                     <Link
                         target="_blank"
                         rel="noopener"

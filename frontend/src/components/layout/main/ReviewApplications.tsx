@@ -87,12 +87,19 @@ export const ReviewApplications = () => {
 
             {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
                 sortedReviewApplications.length === 0 ? <EmptyStateComponent /> :
-                <List>
-                    {sortedReviewApplications.map((application) => {
-                        const process = processBySlug.get(application.process_slug);
-                        return <ApplicationCard key={application.key} application={application} process={process} />;
-                    })}
-                </List>
+                    <List>
+                        {sortedReviewApplications.map((application) => {
+                            const process = processBySlug.get(application.process_slug);
+                            return <ApplicationCard
+                                key={application.key}
+                                application={application}
+                                process={process}
+                                // showDownloadLink={false}
+                                showDownloadLink
+                                downloadUrl={`/d/${application.key}`}
+                            />;
+                        })}
+                    </List>
             }
         </Box>
     );

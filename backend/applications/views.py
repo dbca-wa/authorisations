@@ -67,3 +67,23 @@ def download_attachment(request, appKey, attachmentKey):
 
     # Serve the file
     return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
+
+
+def download_application(request, appKey):
+    
+    """Download an application in the .pdf format based on the application key provided in the URL."""
+    # Fetch the application object
+    try:
+        application = Application.objects.get(key=appKey)
+    except Application.DoesNotExist:
+        return RESPONSE_404
+
+    # Verify that the user has access to this application
+    if application.has_access(request.user) is False:
+        return RESPONSE_404
+
+    # Generate PDF file (this is a placeholder, implement your PDF generation logic here)
+    pdf_file = application.generate_pdf()
+
+    # Serve the PDF file
+    return FileResponse(pdf_file, as_attachment=True, filename=f"application_{appKey}.pdf")
