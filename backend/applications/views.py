@@ -70,11 +70,14 @@ def download_attachment(request, appKey, attachmentKey):
 
 
 def download_application(request, appKey):
-    
     """Download an application in the .pdf format based on the application key provided in the URL."""
     # Fetch the application object
     try:
-        application = Application.objects.get(key=appKey)
+        application = Application.objects.select_related(
+            "questionnaire",
+            "questionnaire__process",
+            "owner",
+        ).prefetch_related("attachments").get(key=appKey)
     except Application.DoesNotExist:
         return RESPONSE_404
 
@@ -82,8 +85,8 @@ def download_application(request, appKey):
     if application.has_access(request.user) is False:
         return RESPONSE_404
 
-    # Generate PDF file (this is a placeholder, implement your PDF generation logic here)
-    pdf_file = application.generate_pdf()
+    # Generate the PDF from the submitted questionnaire structure and stored answers.
+    pdf_file = application.generate_pdf(request=request)
 
     # Serve the PDF file
-    return FileResponse(pdf_file, as_attachment=True, filename=f"application_{appKey}.pdf")
+    return FileResponse(pdf_file, as_attachment=False, filename=f"application_{appKey}.pdf")
