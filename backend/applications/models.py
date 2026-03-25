@@ -12,6 +12,11 @@ from .prince import Prince
 from .schema import get_answers_schema
 
 
+def _boolean_checkbox(value):
+    """Return a checkbox glyph for boolean answers in the PDF output."""
+    return "☑" if value else "☐"
+
+
 def _normalise_answer_value(value, question, attachments_by_key):
     """Convert stored answer values into readable plain text for PDF export."""
     question_type = (question or {}).get("type")
@@ -20,9 +25,9 @@ def _normalise_answer_value(value, question, attachments_by_key):
     if value is None or value == "":
         return "Not provided"
 
-    # Prince renders plain text reliably, so booleans are exported as Yes/No labels.
+    # Prince renders these Unicode glyphs reliably in the current template font stack.
     if isinstance(value, bool):
-        return "Yes" if value else "No"
+        return _boolean_checkbox(value)
 
     # Grid answers are flattened into labelled multi-line rows for the simple PDF table layout.
     if question_type == "grid" and isinstance(value, list):
@@ -39,7 +44,7 @@ def _normalise_answer_value(value, question, attachments_by_key):
                 if column_value is None:
                     continue
                 if isinstance(column_value, bool):
-                    column_value = "Yes" if column_value else "No"
+                    column_value = _boolean_checkbox(column_value)
                 columns.append(f"{column_label}: {column_value}")
 
             for column_key, column_value in row.items():
@@ -49,7 +54,7 @@ def _normalise_answer_value(value, question, attachments_by_key):
                 ):
                     continue
                 if isinstance(column_value, bool):
-                    column_value = "Yes" if column_value else "No"
+                    column_value = _boolean_checkbox(column_value)
                 columns.append(f"{column_key}: {column_value}")
 
             rows.append(
