@@ -21,13 +21,13 @@ def _normalise_answer_value(value, question, attachments_by_key):
     """Convert stored answer values into readable plain text for PDF export."""
     question_type = (question or {}).get("type")
 
+    # Prince renders these Unicode glyphs reliably in the current template font stack.
+    if isinstance(value, bool) or question_type == "checkbox":
+        return _boolean_checkbox(value)
+
     # Preserve a clear distinction between a blank answer and a negative boolean.
     if value is None or value == "":
         return "Not provided"
-
-    # Prince renders these Unicode glyphs reliably in the current template font stack.
-    if isinstance(value, bool):
-        return _boolean_checkbox(value)
 
     # Grid answers are flattened into labelled multi-line rows for the simple PDF table layout.
     if question_type == "grid" and isinstance(value, list):
