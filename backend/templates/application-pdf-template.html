@@ -146,6 +146,14 @@
         margin: 0 0 12px;
       }
 
+      .section-description {
+        padding: 10px;
+        background: #ffffff;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #222;
+      }
+
       .question-label {
         padding: 8px 10px;
         font-size: 13px;
@@ -220,7 +228,7 @@
       <div class="meta-row">
         <div>DBCA AEC &mdash; New Project Application Form</div>
         <div class="meta-centre">OFFICIAL</div>
-        <div>Form last updated July 2024</div>
+        <div>Form last updated March 2026</div>
       </div>
 
       <table class="header-table" aria-label="Form Header">
@@ -272,6 +280,12 @@
                     <strong>{{ section.prefix }} {{ section.title }}</strong>
                   </td>
                 </tr>
+
+                {% if section.description %}
+                  <tr>
+                    <td class="section-description">{{ section.description|linebreaksbr }}</td>
+                  </tr>
+                {% endif %}
 
                 {% for question in section.questions %}
                   <tr>
@@ -326,30 +340,6 @@
             {% endfor %}
           </section>
         {% endfor %}
-      {% else %}
-        <section class="step-block">
-          <div class="step-title">{STEP.TITLE}</div>
-
-          <table class="section-table" aria-label="Application Section">
-            <tr>
-              <td class="section-heading">
-                <strong>{SECTION.TITLE}</strong>
-              </td>
-            </tr>
-            <tr>
-              <td class="field-label">1. Project Title</td>
-            </tr>
-            <tr>
-              <td class="field-value">Eradication of invasive rodents on islands in Western Australia</td>
-            </tr>
-            <tr>
-              <td class="field-label">2. Agency / Company / Institution:</td>
-            </tr>
-            <tr>
-              <td class="field-value">DBCA, BCS, Animal Science Program</td>
-            </tr>
-          </table>
-        </section>
       {% endif %}
     </main>
   </body>

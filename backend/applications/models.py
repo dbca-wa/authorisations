@@ -271,6 +271,7 @@ class Application(models.Model):
                 section_payload = {
                     "prefix": f"{chr(65 + section_index)})",
                     "title": section.get("title") or f"Section {section_index + 1}",
+                    "description": section.get("description") or "",
                     "questions": [],
                 }
 
