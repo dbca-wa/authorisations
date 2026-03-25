@@ -1,0 +1,356 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DBCA AEC New Project Application Form</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 14mm 12mm 16mm;
+        border: 0;
+        background: #fff;
+        marks: none;
+
+        @bottom-left {
+          content: "CI to submit electronically to animalethics@dbca.wa.gov.au";
+          font: 8pt Arial, Helvetica, sans-serif;
+          color: #5e5e5e;
+        }
+
+        @bottom-right {
+          content: counter(page);
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #2f2f2f;
+        }
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: #fff;
+        color: #111;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      main {
+        margin: 0;
+        padding: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin: 0 0 6px;
+        font-size: 10px;
+        color: #4c4c4c;
+      }
+
+      .meta-centre {
+        flex: 1;
+        text-align: center;
+        font-size: 18px;
+        letter-spacing: 0.3px;
+        color: #5a5a5a;
+      }
+
+      .header-table,
+      .intro-table,
+      .section-table,
+      .step-title {
+        margin: 0 0 16px;
+        border: 1px solid #222;
+      }
+
+      .header-table td,
+      .intro-table td,
+      .section-table td {
+        border: 1px solid #222;
+        vertical-align: top;
+      }
+
+      .header-logo {
+        width: 25%;
+        padding: 10px;
+      }
+
+      .header-logo img {
+        display: block;
+        width: 100%;
+        max-width: 170px;
+        max-height: 42px;
+      }
+
+      .header-title {
+        width: 75%;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.25;
+        padding: 12px 8px 10px;
+      }
+
+      .intro-title {
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.1px;
+        padding: 7px 10px;
+      }
+
+      .intro-content {
+        padding: 9px 14px 11px;
+        font-size: 11px;
+        line-height: 1.36;
+      }
+
+      .intro-content p {
+        margin: 0 0 7px;
+      }
+
+      .intro-content p:last-child {
+        margin: 0;
+      }
+
+      .note {
+        color: #173f82;
+      }
+
+      .step-title {
+        padding: 8px 10px;
+        font-size: 16px;
+        font-weight: 700;
+        background: #2d5a8c;
+        color: #ffffff;
+      }
+
+      .step-block {
+        margin: 0 0 14px;
+      }
+
+      .section-table {
+        margin: 0 0 12px;
+      }
+
+      .question-label {
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #173f82;
+      }
+
+      .question-value {
+        padding: 9px 10px;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .section-heading {
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.25;
+        padding: 8px 10px;
+        background: #e8f1f9;
+      }
+
+      .section-heading strong {
+        display: block;
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: #111;
+      }
+
+      .grid-table {
+        margin: 2px 0;
+        border: 1px solid #444;
+      }
+
+      .grid-table th,
+      .grid-table td {
+        border: 1px solid #777;
+        padding: 6px 8px;
+        font-size: 11px;
+        vertical-align: top;
+      }
+
+      .grid-table th {
+        text-align: left;
+          background: #dbe4bf;
+          color: #4f5f2f;
+        font-weight: 700;
+      }
+
+      .file-list {
+        margin: 0;
+        padding-left: 16px;
+      }
+
+      .file-list li {
+        margin: 0 0 2px;
+      }
+
+      .muted {
+        color: #666;
+        font-style: italic;
+      }
+
+      .checkbox-value {
+        font-size: 18px;
+        line-height: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="meta-row">
+        <div>DBCA AEC &mdash; New Project Application Form</div>
+        <div class="meta-centre">OFFICIAL</div>
+        <div>Form last updated July 2024</div>
+      </div>
+
+      <table class="header-table" aria-label="Form Header">
+        <tr>
+          <td class="header-logo">
+            <img alt="DBCA logo" src="{% static 'images/dbca-science-logo.png' %}" />
+          </td>
+          <td class="header-title">
+            Department of Biodiversity, Conservation and Attractions<br />
+            Animal Ethics Committee
+          </td>
+        </tr>
+      </table>
+
+      <table class="intro-table" aria-label="Form Introductory Text">
+        <tr>
+          <td class="intro-title">NEW PROJECT APPLICATION FORM</td>
+        </tr>
+        <tr>
+          <td class="intro-content">
+            <p>
+              <em>
+                Please answer all sections thoroughly and in plain English and ensure all
+                acronyms are defined the first time they are used. The information provided in
+                this application should support the case for ethical acceptability of the
+                project and allow the AEC to assess the project in relation to requirements of
+                the Code.
+              </em>
+            </p>
+            <p class="note">
+              <strong>NOTE: Death as an endpoint</strong> &ndash; if your project involves death
+              of an animal as a deliberate measure used for evaluating biological or chemical
+              processes, responses or effects please contact the AEC Executive Officer. You will
+              be required to fill out a different form.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      {% if steps %}
+        {% for step in steps %}
+          <section class="step-block">
+            <div class="step-title">{{ forloop.counter }}. {{ step.title }}</div>
+
+            {% for section in step.sections %}
+              <table class="section-table" aria-label="Application Section">
+                <tr>
+                  <td class="section-heading">
+                    <strong>{{ section.prefix }} {{ section.title }}</strong>
+                  </td>
+                </tr>
+
+                {% for question in section.questions %}
+                  <tr>
+                    <td class="question-label">{{ forloop.counter }}. {{ question.label }}</td>
+                  </tr>
+                  <tr>
+                    <td class="question-value">
+                      {% if question.type == 'grid' %}
+                        {% if question.grid_rows %}
+                          <table class="grid-table" aria-label="Grid Answer">
+                            <thead>
+                              <tr>
+                                {% for column_label in question.grid_columns %}
+                                  <th>{{ column_label }}</th>
+                                {% endfor %}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for row in question.grid_rows %}
+                                <tr>
+                                  {% for cell in row %}
+                                    <td>{{ cell|linebreaksbr }}</td>
+                                  {% endfor %}
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% else %}
+                          <span class="muted">Not provided</span>
+                        {% endif %}
+                      {% elif question.type == 'file' %}
+                        {% if question.files %}
+                          <ul class="file-list">
+                            {% for file_name in question.files %}
+                              <li>{{ file_name }}</li>
+                            {% endfor %}
+                          </ul>
+                        {% else %}
+                          <span class="muted">Not provided</span>
+                        {% endif %}
+                      {% else %}
+                        {% if question.value == '☑' or question.value == '☐' %}
+                          <span class="checkbox-value">{{ question.value }}</span>
+                        {% else %}
+                          {{ question.value|linebreaksbr }}
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </table>
+            {% endfor %}
+          </section>
+        {% endfor %}
+      {% else %}
+        <section class="step-block">
+          <div class="step-title">{STEP.TITLE}</div>
+
+          <table class="section-table" aria-label="Application Section">
+            <tr>
+              <td class="section-heading">
+                <strong>{SECTION.TITLE}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="field-label">1. Project Title</td>
+            </tr>
+            <tr>
+              <td class="field-value">Eradication of invasive rodents on islands in Western Australia</td>
+            </tr>
+            <tr>
+              <td class="field-label">2. Agency / Company / Institution:</td>
+            </tr>
+            <tr>
+              <td class="field-value">DBCA, BCS, Animal Science Program</td>
+            </tr>
+          </table>
+        </section>
+      {% endif %}
+    </main>
+  </body>
+</html>

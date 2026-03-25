@@ -14,7 +14,7 @@ from .schema import get_answers_schema
 
 def _boolean_checkbox(value):
     """Return a checkbox glyph for boolean answers in the PDF output."""
-    return "☑" if value else "☐"
+    return "☑ Yes" if value else "☐ No"
 
 
 def _normalise_answer_value(value, question, attachments_by_key):
@@ -84,6 +84,75 @@ def _normalise_answer_value(value, question, attachments_by_key):
         )
 
     return str(value)
+
+
+def _build_grid_rows(raw_value, question, attachments_by_key):
+    """Convert a grid answer into table rows consumable by the PDF template."""
+    if not isinstance(raw_value, list):
+        return []
+
+    grid_columns = question.get("grid_columns") or []
+    rows = []
+
+    for row in raw_value:
+        if not isinstance(row, dict):
+            continue
+
+        cells = []
+        for column in grid_columns:
+            column_label = column.get("label") or "Column"
+            column_type = column.get("type") or "text"
+
+            # Use the column type so checkbox/date cells are normalised predictably.
+            cell_value = _normalise_answer_value(
+                row.get(column_label),
+                {"type": column_type},
+                attachments_by_key,
+            )
+            cells.append(cell_value)
+
+        rows.append(cells)
+
+    return rows
+
+
+def _build_question_item(question, answer_value, question_index, attachments_by_key):
+    """Build a template-friendly question payload for PDF rendering."""
+    question_type = question.get("type") or "text"
+    question_label = question.get("label") or f"Question {question_index + 1}"
+
+    item = {
+        "label": question_label,
+        "type": question_type,
+    }
+
+    if question_type == "grid":
+        item["grid_columns"] = [
+            column.get("label") or "Column"
+            for column in question.get("grid_columns") or []
+        ]
+        item["grid_rows"] = _build_grid_rows(
+            answer_value,
+            question,
+            attachments_by_key,
+        )
+        return item
+
+    if question_type == "file" and isinstance(answer_value, list):
+        files = []
+        for attachment_key in answer_value:
+            attachment = attachments_by_key.get(str(attachment_key))
+            files.append(attachment.name if attachment else str(attachment_key))
+
+        item["files"] = files
+        return item
+
+    item["value"] = _normalise_answer_value(
+        answer_value,
+        question,
+        attachments_by_key,
+    )
+    return item
 
 
 class ApplicationStatus(models.TextChoices):
@@ -173,7 +242,7 @@ class Application(models.Model):
         return False
 
     def build_pdf_context(self):
-        """Build the flattened template context used to render the application PDF."""
+        """Build nested step/section/question data used by the PDF review template."""
         questionnaire_document = self.questionnaire.document or {}
         application_document = self.document or {}
         questionnaire_steps = questionnaire_document.get("steps") or []
@@ -185,7 +254,7 @@ class Application(models.Model):
             for attachment in self.attachments.filter(is_deleted=False)
         }
 
-        sections = []
+        steps = []
         for step_index, step in enumerate(questionnaire_steps):
             step_state = (
                 application_steps[step_index]
@@ -193,45 +262,45 @@ class Application(models.Model):
                 else {}
             )
             answers = step_state.get("answers") or {}
+            step_payload = {
+                "title": step.get("title") or f"Step {step_index + 1}",
+                "sections": [],
+            }
 
             for section_index, section in enumerate(step.get("sections") or []):
-                items = []
+                section_payload = {
+                    "prefix": f"{chr(65 + section_index)})",
+                    "title": section.get("title") or f"Section {section_index + 1}",
+                    "questions": [],
+                }
+
                 for question_index, question in enumerate(
                     section.get("questions") or []
                 ):
                     answer_key = f"{section_index}-{question_index}"
                     answer_value = answers.get(answer_key)
-                    items.append(
-                        {
-                            "label": question.get("label")
-                            or f"Question {question_index + 1}",
-                            "value": _normalise_answer_value(
-                                answer_value,
-                                question,
-                                attachments_by_key,
-                            ),
-                        }
+                    section_payload["questions"].append(
+                        _build_question_item(
+                            question,
+                            answer_value,
+                            question_index,
+                            attachments_by_key,
+                        )
                     )
 
-                # The PDF template repeats one framed block per questionnaire section.
-                sections.append(
-                    {
-                        "step_title": step.get("title") or f"Step {step_index + 1}",
-                        "section_title": section.get("title")
-                        or f"Section {section_index + 1}",
-                        "items": items,
-                    }
-                )
+                step_payload["sections"].append(section_payload)
+
+            steps.append(step_payload)
 
         return {
             "application": self,
-            "sections": sections,
+            "steps": steps,
         }
 
     def render_pdf_html(self):
         """Render the standalone HTML template used as the Prince input document."""
         return render_to_string(
-            "aec-template-test.html",
+            "application-pdf-template.html",
             self.build_pdf_context(),
         )
 
@@ -241,10 +310,10 @@ class Application(models.Model):
         html = self.render_pdf_html()
 
         # Write the HTML to a temporary file for debugging purposes (optional)
-        with open(
-            f"/tmp/application_{self.id}.html", "w", encoding="utf-8"
-        ) as temp_html_file:
-            temp_html_file.write(html)
+        # with open(
+        #     f"/tmp/application_{self.id}.html", "w", encoding="utf-8"
+        # ) as temp_html_file:
+        #     temp_html_file.write(html)
 
         # Prefer the current request origin so Prince resolves root-relative static URLs
         # against the actual running Django host instead of a hardcoded dev address.
