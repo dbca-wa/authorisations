@@ -8,21 +8,58 @@
     <style>
       @page {
         size: A4;
-        margin: 14mm 12mm 16mm;
+        margin: 20mm 12mm 16mm;
         border: 0;
         background: #fff;
         marks: none;
 
+        @top-left {
+          content: "#{{ application.internal_id }}";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #4c4c4c;
+          vertical-align: middle;
+        }
+
+        @top-center {
+          content: "OFFICIAL\00A0SENSITIVE";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #c62828;
+          white-space: nowrap;
+          vertical-align: middle;
+        }
+
+        @top-right {
+          content: "";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #4c4c4c;
+          vertical-align: middle;
+        }
+
         @bottom-left {
-          content: "Form last updated {{ application.questionnaire.updated_at|date:'F Y' }}";
+          content: string(current-breadcrumb-step, first) "\A" string(current-breadcrumb-section, first);
+          white-space: pre-line;
           font: 8pt Arial, Helvetica, sans-serif;
           color: #5e5e5e;
+        }
+
+        @bottom-center {
+          content: "OFFICIAL\00A0SENSITIVE";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #c62828;
+          white-space: nowrap;
+          vertical-align: middle;
         }
 
         @bottom-right {
            content: counter(page) " / " counter(pages);
           font: 8.5pt Arial, Helvetica, sans-serif;
           color: #2f2f2f;
+        }
+      }
+
+      @page:first {
+        @bottom-left {
+          content: "Form last updated at {{ application.questionnaire.updated_at|date:'F Y' }} (v{{ application.questionnaire.version }}).";
         }
       }
 
@@ -51,21 +88,15 @@
         margin: 0;
       }
 
-      .meta-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin: 0 0 6px;
-        font-size: 10px;
-        color: #4c4c4c;
-      }
-
-      .meta-centre {
-        flex: 1;
-        text-align: center;
-        font-size: 18px;
-        letter-spacing: 0.3px;
-        color: #c62828;
+      .section-breadcrumb-marker {
+        display: block;
+        height: 0;
+        overflow: hidden;
+        font-size: 0;
+        line-height: 0;
+        string-set:
+          current-breadcrumb-step attr(data-step-breadcrumb)
+          current-breadcrumb-section attr(data-section-breadcrumb);
       }
 
       .header-table,
@@ -225,13 +256,6 @@
   </head>
   <body>
     <main>
-      <div class="meta-row">
-        <div style="max-width: 400px">
-          DBCA AEC &mdash; New Project Application Form blabla bla bla bla gibbirikush
-        </div>
-        <div class="meta-centre">OFFICIAL SENSITIVE</div>
-      </div>
-
       <table class="header-table" aria-label="Form Header">
         <tr>
           <td class="header-logo">
@@ -275,6 +299,11 @@
             <div class="step-title">{{ forloop.counter }}. {{ step.title }}</div>
 
             {% for section in step.sections %}
+              <div
+                class="section-breadcrumb-marker"
+                data-step-breadcrumb="{{ forloop.parentloop.counter }}. {{ step.title }}"
+                data-section-breadcrumb="{{ section.prefix }} {{ section.title }}"
+              ></div>
               <table class="section-table" aria-label="Application Section">
                 <tr>
                   <td class="section-heading">
