@@ -1,6 +1,7 @@
 import re
 
 from django import forms
+from django.utils.text import slugify
 from django_jsonform.utils import join_coords
 from django_jsonform.validators import JSONSchemaValidationError
 from jsonschema import ValidationError, validate
@@ -13,7 +14,7 @@ class QuestionnaireForm(forms.ModelForm):
     """Admin form for the Questionnaire model.
 
     Wires a JSON Schema validator onto the ``document`` field and enforces a
-    case-insensitive uniqueness check on (process, name) at the form level so
+    case-insensitive uniqueness check on (process, code) at the form level so
     that a move or rename cannot silently collide with an existing questionnaire
     lineage in the target process.
     """
@@ -77,9 +78,19 @@ class QuestionnaireForm(forms.ModelForm):
             )
 
         return name
-    
+
+    def clean_code(self):
+        """Normalise the questionnaire lineage code into a stable admin-safe slug."""
+        code = self.cleaned_data["code"]
+        code = slugify(code)
+
+        if not code:
+            raise forms.ValidationError("Questionnaire code cannot be blank.")
+
+        return code
+
     def clean(self):
-        """Cross-field validation: enforce case-insensitive (process, name) uniqueness.
+        """Cross-field validation: enforce case-insensitive (process, code) uniqueness.
 
         Runs after all individual field validators have passed.  Guards against
         a rename or move that would collide with an existing questionnaire
@@ -101,30 +112,30 @@ class QuestionnaireForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         process = cleaned_data.get("process")
-        name = cleaned_data.get("name")
+        code = cleaned_data.get("code")
 
         # Abort cross-field check if either anchor field failed its own validation.
-        if not process or not name:
+        if not process or not code:
             return cleaned_data
 
-        # Find any questionnaire in the target process with the same name,
+        # Find any questionnaire in the target process with the same code,
         # using a case-insensitive match to prevent near-duplicate lineages.
-        conflicts = Questionnaire.objects.filter(process=process, name__iexact=name)
+        conflicts = Questionnaire.objects.filter(process=process, code__iexact=code)
 
         if self.instance and self.instance.pk:
             # Exclude the current questionnaire's own lineage (matched by the
-            # original process + name before edits) so a no-op save or a pure
+            # original process + code before edits) so a no-op save or a pure
             # description edit does not trigger a false conflict.
             conflicts = conflicts.exclude(
                 process_id=self.instance.process_id,
-                name=self.instance.name,
+                code=self.instance.code,
             )
 
         if conflicts.exists():
             self.add_error(
-                "name",
+                "code",
                 forms.ValidationError(
-                    "A questionnaire with this name already exists for the selected process (case-insensitive)."
+                    "A questionnaire with this code already exists for the selected process (case-insensitive)."
                 ),
             )
 

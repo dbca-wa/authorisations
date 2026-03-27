@@ -122,7 +122,7 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Return only the latest questionnaire version for each (process, name),
+        Return only the latest questionnaire version for each (process, code),
         then order for display by process and questionnaire sort order.
         """
         queryset = (
@@ -130,7 +130,7 @@ class QuestionnaireViewSet(viewsets.ReadOnlyModelViewSet):
             .annotate(
                 _latest_rank=Window(
                     expression=RowNumber(),
-                    partition_by=[F("process_id"), F("name")],
+                    partition_by=[F("process_id"), F("code")],
                     order_by=F("version").desc(),
                 )
             )

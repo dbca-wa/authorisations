@@ -14,13 +14,13 @@
         marks: none;
 
         @bottom-left {
-          content: "CI to submit electronically to animalethics@dbca.wa.gov.au";
+          content: "Form last updated {{ application.questionnaire.updated_at|date:'F Y' }}";
           font: 8pt Arial, Helvetica, sans-serif;
           color: #5e5e5e;
         }
 
         @bottom-right {
-          content: counter(page);
+           content: counter(page) " / " counter(pages);
           font: 8.5pt Arial, Helvetica, sans-serif;
           color: #2f2f2f;
         }
@@ -226,9 +226,10 @@
   <body>
     <main>
       <div class="meta-row">
-        <div>DBCA AEC &mdash; New Project Application Form</div>
-        <div class="meta-centre">OFFICIAL</div>
-        <div>Form last updated March 2026</div>
+        <div style="max-width: 400px">
+          DBCA AEC &mdash; New Project Application Form blabla bla bla bla gibbirikush
+        </div>
+        <div class="meta-centre">OFFICIAL SENSITIVE</div>
       </div>
 
       <table class="header-table" aria-label="Form Header">

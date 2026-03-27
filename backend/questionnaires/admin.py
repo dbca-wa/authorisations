@@ -17,14 +17,23 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     list_display = (
         "sort_order",
+        "code",
         "name",
         "version",
         "process",
         "sort_order_int",
     )
     list_filter = ("process",)
-    readonly_fields = ("version", "created_at", "created_by")
-    editable_fields = ("process", "name", "description", "document")
+    search_fields = ("code", "name", "process__slug", "process__name")
+    readonly_fields = (
+        "version",
+        "created_at",
+        "created_by",
+        "updated_at",
+        "updated_by",
+    )
+    editable_fields = ("process", "code", "name", "description", "document")
+    prepopulated_fields = {"code": ("name",)}
     # Keep sortable2 compatible: first field must be local/writable.
     ordering = ("sort_order",)
 
@@ -90,16 +99,17 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         2. **Document changed** (``change=True``, ``document`` in changed fields):
            A new version row is cloned from the submitted data.  The version
            number is set to one above the current maximum for that
-           ``(process, name)`` lineage so the history is never overwritten.
-           If a move or rename was submitted at the same time, it is applied to
+              ``(process, code)`` lineage so the history is never overwritten.
+              If a move or lineage-code change was submitted at the same time, it is applied to
            the whole lineage first (see path 3) before the new version is
            inserted, ensuring the new row lands in the correct lineage.
 
         3. **Metadata only changed** (``change=True``, ``document`` unchanged):
            The existing row is updated in place — no new version is created.
-           If ``process`` or ``name`` changed, the bulk-update below propagates
-           those changes to every historical version of this questionnaire so
-           the lineage identity stays consistent across all versions.
+              If ``process``, ``code``, or ``name`` changed, the bulk-update below
+              propagates those changes to every historical version of this
+              questionnaire so the lineage identity and shared display metadata
+              stay consistent across all versions.
            ``description`` and ``sort_order`` changes are applied only to the
            latest version row (the one currently open in the form).
 
@@ -111,6 +121,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         # ----------------------------------------------------------------
         if not change:
             obj.created_by = request.user
+            obj.updated_by = request.user
             return super().save_model(request, obj, form, change)
 
         # Lock the current database row so concurrent edits cannot race
@@ -118,8 +129,10 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         original = Questionnaire.objects.select_for_update().get(pk=obj.pk)
 
         # Determine what kind of edit was submitted.
-        process_or_name_changed = (
-            original.process_id != obj.process_id or original.name != obj.name
+        lineage_or_name_changed = (
+            original.process_id != obj.process_id
+            or original.code != obj.code
+            or original.name != obj.name
         )
         document_changed = (
             "document" in form.changed_data
@@ -129,14 +142,15 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         # ----------------------------------------------------------------
         # Lineage propagation: move or rename across all historical versions.
         # Must run before the document-change path so the new version row
-        # is inserted under the already-updated (process, name) identity.
+        # is inserted under the already-updated (process, code) identity.
         # ----------------------------------------------------------------
-        if process_or_name_changed:
+        if lineage_or_name_changed:
             Questionnaire.objects.filter(
                 process_id=original.process_id,
-                name=original.name,
+                code=original.code,
             ).update(
                 process_id=obj.process_id,
+                code=obj.code,
                 name=obj.name,
             )
 
@@ -149,7 +163,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
             max_version = (
                 Questionnaire.objects.filter(
                     process_id=obj.process_id,
-                    name=obj.name,
+                    code=obj.code,
                 ).aggregate(max_version=Max("version"))["max_version"]
                 or 0
             )
@@ -158,6 +172,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
             obj.version = max_version + 1
             obj.pk = None
             obj.created_by = request.user
+            obj.updated_by = request.user
             return super().save_model(request, obj, form, False)
 
         # ----------------------------------------------------------------
@@ -167,6 +182,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         # ----------------------------------------------------------------
         obj.version = original.version
         obj.created_by = original.created_by
+        obj.updated_by = request.user
         return super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
@@ -188,7 +204,7 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
             .annotate(
                 _latest_rank=Window(
                     expression=RowNumber(),
-                    partition_by=[F("process_id"), F("name")],
+                    partition_by=[F("process_id"), F("code")],
                     order_by=F("version").desc(),
                 )
             )

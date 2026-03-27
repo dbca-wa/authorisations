@@ -28,12 +28,12 @@ class Command(BaseCommand):
             Questionnaire.objects.annotate(
                 _latest_rank=Window(
                     expression=RowNumber(),
-                    partition_by=[F("process_id"), F("name")],
+                    partition_by=[F("process_id"), F("code")],
                     order_by=F("version").desc(),
                 )
             )
             .filter(_latest_rank=1)
-            .order_by("sort_order", "process_id", "name", "-version", "-id")
+            .order_by("sort_order", "process_id", "code", "-version", "-id")
         )
 
         # Preserve the current visible global order, but compact it to 1..N.
