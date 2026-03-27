@@ -37,11 +37,7 @@ const statusToActiveStep: Record<ApplicationStatus, number> = {
     REJECTED: 4,
 };
 
-/** Builds the human-readable application identifier shown on each card. */
-const getApplicationId = (application: IApplicationData): string => {
-    const questionnaireName = application.questionnaire_name.replace(/\s+/g, '-').toLowerCase();
-    return `${application.process_slug}-${questionnaireName}-${application.id}`;
-};
+
 
 /**
  * Renders a reusable application summary card for both applicant and reviewer list pages.
@@ -71,7 +67,7 @@ export const ApplicationCard = ({
         <ListItem sx={{ marginBottom: 2 }}>
             <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
                 <Typography variant="h6">
-                    <NumbersIcon></NumbersIcon> {getApplicationId(application)}
+                    <NumbersIcon></NumbersIcon>{application.internal_id}
                 </Typography>
 
                 <Box display="flex" gap={1} my={2} flexWrap="wrap" justifyContent="space-around" className="max-w-min min-w-1/1 mx-auto">

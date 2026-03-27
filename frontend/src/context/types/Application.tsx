@@ -26,9 +26,11 @@ export const finalisedStatuses: ApplicationStatus[] = [
 export interface IApplicationData {
     id: number;
     key: string;
+    internal_id: string;
     owner: string;
     process_slug: string;
     questionnaire_id: number;
+    questionnaire_code: string;
     questionnaire_name: string;
     questionnaire_version: number;
     status: ApplicationStatus;

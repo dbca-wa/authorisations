@@ -50,14 +50,14 @@ export class ApiManager {
     public static async createApplication(
         processSlug: string,
         questionnaireId: number,
-        questionnaireName: string,
+        questionnaireCode: string,
         questionnaireVersion: number,
     ): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.post<IApplicationData>("/applications", {
             process_slug: processSlug,
             questionnaire_id: questionnaireId,
-            questionnaire_name: questionnaireName,
+            questionnaire_code: questionnaireCode,
             questionnaire_version: questionnaireVersion,
         }, requestConfig);
 

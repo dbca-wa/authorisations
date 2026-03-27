@@ -41,6 +41,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
+    questionnaire_code = serializers.CharField(
+        source="questionnaire.code",
+        required=False,
+        read_only=True,
+    )
     questionnaire_name = serializers.CharField(
         source="questionnaire.name",
         required=False,
@@ -48,6 +53,10 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     )
     questionnaire_version = serializers.IntegerField(
         source="questionnaire.version",
+        required=False,
+        read_only=True,
+    )
+    internal_id = serializers.CharField(
         required=False,
         read_only=True,
     )
@@ -61,9 +70,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         fields = (
             "id",
             "key",
+            "internal_id",
             "owner",
             "process_slug",
             "questionnaire_id",
+            "questionnaire_code",
             "questionnaire_name",
             "questionnaire_version",
             "status",
@@ -91,9 +102,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Process slug is required when creating (to confirm data integrity)
         fields["process_slug"].required = isPost
         fields["process_slug"].read_only = not isPost
-        # Questionnaire name is required when creating (to confirm data integrity)
-        fields["questionnaire_name"].required = isPost
-        fields["questionnaire_name"].read_only = not isPost
+        # Questionnaire code is required when creating (to confirm data integrity)
+        fields["questionnaire_code"].required = isPost
+        fields["questionnaire_code"].read_only = not isPost
         # Questionnaire version is required when creating (to confirm data integrity)
         fields["questionnaire_version"].required = isPost
         fields["questionnaire_version"].read_only = not isPost
@@ -135,10 +146,10 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
     def validate(self, attrs):
         """
-        Object-level validation to ensure the questionnaire exists and matches the provided process slug, name, and version.
-        This runs after field-level validation, guaranteeing access to all fields.
+        Object-level validation to ensure the questionnaire exists and matches the
+        provided process slug, code, and version.
         """
-        # Only validate on creation for data integrity
+        # Only validate on creation for data integrity.
         request = self.context.get("request")
         if request.method != "POST":
             return attrs
@@ -148,45 +159,45 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
         process_slug = process_data.get("slug")
         questionnaire_id = questionnaire_data.get("id")
-        questionnaire_name = questionnaire_data.get("name")
+        questionnaire_code = questionnaire_data.get("code")
         questionnaire_version = questionnaire_data.get("version")
-        
-        # Make sure we did receive those required fields
+
+        # Ensure all integrity fields are present.
         if (
             not process_slug
             or not questionnaire_id
-            or not questionnaire_name
+            or not questionnaire_code
             or not questionnaire_version
         ):
             raise exceptions.ValidationError(
-                "Process slug, questionnaire id, name and version are required."
+                "Process slug, questionnaire id, code and version are required."
             )
 
-        # If we already have a validated questionnaire in the context, validate it
+        # Reuse a previously validated questionnaire instance when possible.
         questionnaire: Questionnaire = self.context.get("questionnaire", None)
         if (
             isinstance(questionnaire, Questionnaire)
             and questionnaire.process.slug == process_slug
             and questionnaire.id == questionnaire_id
-            and questionnaire.name == questionnaire_name
+            and questionnaire.code == questionnaire_code
             and questionnaire.version == questionnaire_version
         ):
             return attrs
 
-        # Otherwise, try to find the questionnaire based on the provided fields
+        # Otherwise, fetch the questionnaire by the provided identity fields.
         try:
             questionnaire = Questionnaire.objects.select_related("process").get(
                 process__slug=process_slug,
                 id=questionnaire_id,
-                name=questionnaire_name,
+                code=questionnaire_code,
                 version=questionnaire_version,
             )
         except Questionnaire.DoesNotExist:
             raise exceptions.ValidationError(
-                "Questionnaire with the provided process slug, id, name and version does not exist."
+                "Questionnaire with the provided process slug, id, code and version does not exist."
             )
 
-        # Add the found questionnaire to the context for later use
+        # Add the found questionnaire to the context for later use.
         self.context["questionnaire"] = questionnaire
 
         return attrs

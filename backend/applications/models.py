@@ -226,6 +226,11 @@ class Application(models.Model):
     def __str__(self):
         return f"Application #{self.id} by {self.owner.username} for {self.questionnaire.name}"
 
+    @property
+    def internal_id(self) -> str:
+        """Generate a unique human-readable identifier combining process slug, questionnaire code and application id."""
+        return f"{self.questionnaire.process.slug}-{self.questionnaire.code}-{self.id}"
+
     def has_access(self, user: User) -> bool:
         """
         Returns True if the user has access to this application.

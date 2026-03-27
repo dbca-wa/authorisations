@@ -29,7 +29,7 @@ const formatDate = (value: string): string => {
 // }
 
 const getQuestionnaireUiKey = (questionnaire: IQuestionnaireData): string => {
-    return `${questionnaire.process_slug}:${questionnaire.name}:v${questionnaire.version}`;
+    return `${questionnaire.process_slug}:${questionnaire.code}:v${questionnaire.version}`;
 }
 
 // const buildProcessName = (slug: string): string => {
@@ -344,7 +344,7 @@ const createNewApplication = async (
     const newApplication: IApplicationData | null = await ApiManager.createApplication(
         questionnaire.process_slug,
         questionnaire.id,
-        questionnaire.name,
+        questionnaire.code,
         questionnaire.version,
     ).catch((error: AxiosError) => {
         showSnackbar(
