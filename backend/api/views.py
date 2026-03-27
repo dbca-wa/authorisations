@@ -1,6 +1,7 @@
 import uuid
 
-from applications.models import Application, ApplicationAttachment
+from applications.models import Application, ApplicationAttachment, ApplicationStatus
+from django.utils import timezone
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
 from django.db.models import BooleanField, Exists, F, OuterRef, Value, Window
 from django.db.models.functions import RowNumber
@@ -47,6 +48,30 @@ class ApplicationViewSet(
             .select_related("owner", "questionnaire", "questionnaire__process")
             .filter(owner=self.request.user)
         )
+
+    def partial_update(self, request, *args, **kwargs):
+        """Handle PATCH updates and stamp submitted_at during the same save path as submission."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        save_kwargs = {}
+        requested_status = serializer.validated_data.get("status")
+
+        # Persist the first submission timestamp alongside the status change.
+        if (
+            instance.status == ApplicationStatus.DRAFT
+            and requested_status == ApplicationStatus.SUBMITTED
+            and instance.submitted_at is None
+        ):
+            save_kwargs["submitted_at"] = timezone.now()
+
+        serializer.save(**save_kwargs)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
 
 class ApplicationFilterBackend(filters.BaseFilterBackend):

@@ -229,7 +229,8 @@ class Application(models.Model):
     @property
     def internal_id(self) -> str:
         """Generate a unique human-readable identifier combining process slug, questionnaire code and application id."""
-        return f"{self.questionnaire.process.slug}-{self.questionnaire.code}-{self.id}"
+        submitted_at_suffix = self.submitted_at.strftime("/%y-%m") if self.submitted_at else ""
+        return f"{self.questionnaire.process.slug}-{self.questionnaire.code}-{self.id}{submitted_at_suffix}"
 
     def has_access(self, user: User) -> bool:
         """
