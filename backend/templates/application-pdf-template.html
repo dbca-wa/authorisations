@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DBCA AEC New Project Application Form</title>
+    <title>{{ application.questionnaire.process.name }} : DBCA Authorisations</title>
     <style>
       @page {
         size: A4;
@@ -59,7 +59,7 @@
 
       @page:first {
         @bottom-left {
-          content: "Form last updated at {{ application.questionnaire.updated_at|date:'F Y' }} (v{{ application.questionnaire.version }}).";
+          content: "Form last updated at {{ application.questionnaire.updated_at|date:'F Y' }} (v{{ application.questionnaire.version }})";
         }
       }
 
@@ -99,7 +99,6 @@
           current-breadcrumb-section attr(data-section-breadcrumb);
       }
 
-      .header-table,
       .intro-table,
       .section-table,
       .step-title {
@@ -107,32 +106,48 @@
         border: 1px solid #222;
       }
 
-      .header-table td,
+      .header-wrapper {
+        margin: 0 0 16px;
+      }
+
       .intro-table td,
       .section-table td {
         border: 1px solid #222;
         vertical-align: top;
       }
 
-      .header-logo {
-        width: 25%;
-        padding: 10px;
+      .header-cell {
+        padding: 0;
       }
 
-      .header-logo img {
+      .header-inner {
+        display: flex;
+        align-items: center;
+      }
+
+      .header-logo-wrap {
+        flex: 0 0 auto;
+        padding: 30px 80px;
+      }
+
+      .header-logo-img {
+        /* Adjust max-width to resize the logo without distortion */
         display: block;
-        width: 100%;
-        max-width: 170px;
-        max-height: 42px;
+        width: auto;
+        height: auto;
+        max-width: 80px;
       }
 
       .header-title {
-        width: 75%;
-        text-align: center;
+        flex: 1 1 auto;
+        text-align: left;
         font-size: 17px;
-        font-weight: 700;
+        font-weight: 400;
         line-height: 1.25;
-        padding: 12px 8px 10px;
+      }
+
+      .header-title strong {
+        font-weight: 700;
       }
 
       .intro-title {
@@ -161,12 +176,22 @@
         color: #173f82;
       }
 
+      .questionnaire-name {
+        text-align: center;
+        font-size: 24px;
+        margin-top: 40px;
+        text-transform: uppercase;
+        font-weight: 500;
+        margin-bottom: 24px;
+      }
+
       .step-title {
         padding: 8px 10px;
         font-size: 16px;
         font-weight: 700;
         background: #2d5a8c;
         color: #ffffff;
+        
       }
 
       .step-block {
@@ -206,7 +231,7 @@
         background: #e8f1f9;
       }
 
-      .section-heading strong {
+      .section-heading h3 {
         display: block;
         margin: 0;
         font-size: 16px;
@@ -234,13 +259,49 @@
         font-weight: 700;
       }
 
-      .file-list {
+      .attachment-list {
         margin: 0;
-        padding-left: 16px;
+        padding: 0;
+        list-style: none;
       }
 
-      .file-list li {
-        margin: 0 0 2px;
+      .attachment-item {
+        margin: 0 0 10px;
+      }
+
+      .attachment-item:last-child {
+        margin: 0;
+      }
+
+      .attachment-image {
+        display: block;
+        width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      .attachment-file-card {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        background: #f9f9f9;
+      }
+
+      .attachment-file-icon {
+        font-size: 22px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .attachment-file-name {
+        font-size: 11px;
+        color: #222;
+        word-break: break-all;
       }
 
       .muted {
@@ -256,47 +317,38 @@
   </head>
   <body>
     <main>
-      <table class="header-table" aria-label="Form Header">
-        <tr>
-          <td class="header-logo">
-            <img alt="DBCA logo" src="{% static 'images/dbca-science-logo.png' %}" />
-          </td>
-          <td class="header-title">
-            Department of Biodiversity, Conservation and Attractions<br />
-            Animal Ethics Committee
-          </td>
-        </tr>
-      </table>
+      <div class="header-wrapper" aria-label="Form Header">
+        <div class="header-cell">
+          <div class="header-inner">
+            <div class="header-logo-wrap">
+              <img class="header-logo-img" alt="DBCA logo" src="{% static 'images/Government_of_Western_Australia_logo.png' %}" />
+            </div>
+            <div class="header-title">
+            Department of <strong>Biodiversity, <br /> Conservation and Attractions</strong>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <table class="intro-table" aria-label="Form Introductory Text">
         <tr>
-          <td class="intro-title">NEW PROJECT APPLICATION FORM</td>
+          <td class="intro-title">{{ application.questionnaire.process.name }}</td>
         </tr>
         <tr>
           <td class="intro-content">
             <p>
-              <em>
-                Please answer all sections thoroughly and in plain English and ensure all
-                acronyms are defined the first time they are used. The information provided in
-                this application should support the case for ethical acceptability of the
-                project and allow the AEC to assess the project in relation to requirements of
-                the Code.
-              </em>
-            </p>
-            <p class="note">
-              <strong>NOTE: Death as an endpoint</strong> &ndash; if your project involves death
-              of an animal as a deliberate measure used for evaluating biological or chemical
-              processes, responses or effects please contact the AEC Executive Officer. You will
-              be required to fill out a different form.
+              {{ application.questionnaire.process.description|linebreaksbr }}
             </p>
           </td>
         </tr>
       </table>
 
+      <p class="questionnaire-name">{{ application.questionnaire.name}} application</p>
+
       {% if steps %}
         {% for step in steps %}
           <section class="step-block">
-            <div class="step-title">{{ forloop.counter }}. {{ step.title }}</div>
+            <h1 class="step-title">{{ forloop.counter }}. {{ step.title }}</h1>
 
             {% for section in step.sections %}
               <div
@@ -307,7 +359,7 @@
               <table class="section-table" aria-label="Application Section">
                 <tr>
                   <td class="section-heading">
-                    <strong>{{ section.prefix }} {{ section.title }}</strong>
+                    <h3>{{ section.prefix }} {{ section.title }}</h3>
                   </td>
                 </tr>
 
@@ -348,9 +400,20 @@
                         {% endif %}
                       {% elif question.type == 'file' %}
                         {% if question.files %}
-                          <ul class="file-list">
-                            {% for file_name in question.files %}
-                              <li>{{ file_name }}</li>
+                          <ul class="attachment-list">
+                            {% for file in question.files %}
+                              <li class="attachment-item">
+                                {% if file.is_image and file.file_path %}
+                                  <img class="attachment-image" src="file://{{ file.file_path }}" alt="{{ file.name }}" />
+                                {% else %}
+                                  <div class="attachment-file-card">
+                                    <span class="attachment-file-icon">
+                                      {% if file.extension == 'pdf' %}&#128196;{% elif file.extension == 'xls' or file.extension == 'xlsx' %}&#128202;{% elif file.extension == 'doc' or file.extension == 'docx' %}&#128209;{% else %}&#128206;{% endif %}
+                                    </span>
+                                    <span class="attachment-file-name">{{ file.name }}</span>
+                                  </div>
+                                {% endif %}
+                              </li>
                             {% endfor %}
                           </ul>
                         {% else %}

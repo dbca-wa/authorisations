@@ -25,7 +25,8 @@ def _normalise_answer_value(value, question, attachments_by_key):
     if isinstance(value, bool) or question_type == "checkbox":
         return _boolean_checkbox(value)
 
-    # Preserve a clear distinction between a blank answer and a negative boolean.
+    # Blank non-checkbox answers are shown as "Not provided". Checkbox blanks are
+    # handled above and intentionally map to unchecked (☐ No) rather than this path.
     if value is None or value == "":
         return "Not provided"
 
@@ -142,7 +143,25 @@ def _build_question_item(question, answer_value, question_index, attachments_by_
         files = []
         for attachment_key in answer_value:
             attachment = attachments_by_key.get(str(attachment_key))
-            files.append(attachment.name if attachment else str(attachment_key))
+            if attachment:
+                name = attachment.name
+                extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+                is_image = extension in {"jpg", "jpeg", "png"}
+                # Prince can resolve local file paths directly for inline images.
+                file_path = attachment.file.path if is_image else ""
+                files.append({
+                    "name": name,
+                    "extension": extension,
+                    "is_image": is_image,
+                    "file_path": file_path,
+                })
+            else:
+                files.append({
+                    "name": str(attachment_key),
+                    "extension": "",
+                    "is_image": False,
+                    "file_path": "",
+                })
 
         item["files"] = files
         return item
