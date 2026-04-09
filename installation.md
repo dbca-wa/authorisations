@@ -19,7 +19,7 @@ Create a docker volume to persist the database:
 > docker volume create pgdata
 
 Run the PostgreSQL container (set the `postgres` user password, mount the persistent data volume and expose the port):
-> docker run -d --name psql -e POSTGRES_PASSWORD=mysecretpassword -v pgdata:/var/lib/postgresql/data -p 5432:5432 postgres
+> docker run -d --name psql -e POSTGRES_PASSWORD=mysecretpassword -v pgdata:/var/lib/postgresql -p 5432:5432 postgres
 
 Check the container is running:
 > docker ps
