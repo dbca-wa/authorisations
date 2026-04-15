@@ -470,6 +470,8 @@
                       {% else %}
                         {% if question.value == '☑' or question.value == '☐' %}
                           <span class="checkbox-value">{{ question.value }}</span>
+                        {% elif not question.value %}
+                          <span class="muted">Not provided</span>
                         {% else %}
                           {{ question.value|linebreaksbr }}
                         {% endif %}

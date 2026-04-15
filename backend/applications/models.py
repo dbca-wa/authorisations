@@ -25,10 +25,10 @@ def _normalise_answer_value(value, question, attachments_by_key):
     if isinstance(value, bool) or question_type == "checkbox":
         return _boolean_checkbox(value)
 
-    # Blank non-checkbox answers are shown as "Not provided". Checkbox blanks are
-    # handled above and intentionally map to unchecked (☐ No) rather than this path.
+    # Blank non-checkbox answers signal emptiness to the caller via None. Checkbox
+    # blanks are handled above and intentionally map to unchecked (☐ No) rather than this path.
     if value is None or value == "":
-        return "Not provided"
+        return None
 
     # Grid answers are flattened into labelled multi-line rows for the simple PDF table layout.
     if question_type == "grid" and isinstance(value, list):
@@ -64,7 +64,7 @@ def _normalise_answer_value(value, question, attachments_by_key):
                 else f"Row {row_index}"
             )
 
-        return "\n".join(rows) if rows else "Not provided"
+        return "\n".join(rows) or None
 
     # File answers are stored as attachment UUIDs, so resolve them to stable human-readable names.
     if question_type == "file" and isinstance(value, list):
@@ -74,15 +74,13 @@ def _normalise_answer_value(value, question, attachments_by_key):
             attachment_names.append(
                 attachment.name if attachment else str(attachment_key)
             )
-        return "\n".join(attachment_names) if attachment_names else "Not provided"
+        return "\n".join(attachment_names) or None
 
     if isinstance(value, list):
-        return "\n".join(str(item) for item in value) if value else "Not provided"
+        return "\n".join(str(item) for item in value) or None
 
     if isinstance(value, dict):
-        return (
-            "\n".join(f"{key}: {item}" for key, item in value.items()) or "Not provided"
-        )
+        return "\n".join(f"{key}: {item}" for key, item in value.items()) or None
 
     return str(value)
 
