@@ -440,7 +440,7 @@
                               <ul class="attachment-list">
                                 {% for file in question.image_files %}
                                   <li class="attachment-item">
-                                    <img class="attachment-image" src="file://{{ file.file_path }}" alt="{{ file.name }}" />
+                                    <img class="attachment-image" src="{{ file.file_src }}" alt="{{ file.name }}" />
                                     <p class="attachment-image-caption">{{ file.name }}</p>
                                   </li>
                                 {% endfor %}

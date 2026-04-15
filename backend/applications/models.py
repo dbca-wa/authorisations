@@ -175,26 +175,34 @@ def _build_question_item(question, answer_value, question_index, attachments_by_
                 extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
                 is_image = extension in image_extensions
 
-                # Missing media should still appear in the PDF rather than vanishing silently.
-                file_path = ""
+                # Compute the img src to use in the PDF template.  For local
+                # storage Prince reads the file directly via a file:// URI.  For
+                # Azure (or any remote) storage we fall back to the signed URL
+                # and let Prince fetch it over HTTP(S) at render time.
+                file_src = ""
                 is_missing = False
                 if is_image:
                     try:
-                        file_path = attachment.file.path
-                    except (ValueError, FileNotFoundError, OSError):
-                        is_missing = True
+                        file_src = "file://" + attachment.file.path
+                    except (ValueError, NotImplementedError, OSError):
+                        # No local path — attempt the storage URL (e.g. Azure SAS URL).
+                        try:
+                            file_src = attachment.file.url
+                        except Exception:  # noqa: BLE001
+                            is_missing = True
 
                 file_item = {
                     "name": name,
                     "extension": extension,
                     "is_image": is_image,
-                    "file_path": file_path,
+                    # Ready-to-use src value for the <img> tag in the PDF template.
+                    "file_src": file_src,
                     "is_missing": is_missing,
                     # Used by the PDF template to render the iconify icon span.
                     "icon_class": _icon_class_for_extension(extension),
                 }
 
-                if is_image and file_path and not is_missing:
+                if is_image and file_src and not is_missing:
                     image_files.append(file_item)
                 else:
                     other_files.append(file_item)
