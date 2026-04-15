@@ -340,11 +340,6 @@
         font-style: italic;
       }
 
-      .checkbox-value {
-        font-size: 18px;
-        line-height: 1;
-      }
-
       /* File-type icons — inlined from backend/assets/pdf-icons.css */
       {{ pdf_icon_css|safe }}
     </style>
@@ -468,9 +463,7 @@
                           <span class="muted">Not provided</span>
                         {% endif %}
                       {% else %}
-                        {% if question.value == '☑' or question.value == '☐' %}
-                          <span class="checkbox-value">{{ question.value }}</span>
-                        {% elif not question.value %}
+                        {% if not question.value %}
                           <span class="muted">Not provided</span>
                         {% else %}
                           {{ question.value|linebreaksbr }}
