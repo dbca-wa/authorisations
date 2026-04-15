@@ -291,7 +291,7 @@ const displayString = (answer: IAnswer) => {
 };
 
 const displayFiles = (attachments: IApplicationAttachment[]) => {
-    return attachments ?
-        FileAttachmentList({ attachments: attachments, canEdit: false }) :
-        <Typography className="text-xs italic text-[#666]">(no file uploaded)</Typography>;
+    return attachments.length > 0
+        ? <FileAttachmentList attachments={attachments} canEdit={false} />
+        : <Typography className="text-xs italic text-[#666]">(no file uploaded)</Typography>;
 };
