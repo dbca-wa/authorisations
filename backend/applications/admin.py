@@ -86,22 +86,26 @@ class ApplicationAdmin(admin.ModelAdmin):
     def get_search_results(self, request, queryset, search_term):
         """
         Override search to support exact internal_id matching.
-        Allows users to search by the full internal_id (e.g., "s40-serk-21").
+        Allows users to search by the full internal_id (e.g., "s40-serk-21" or
+        the submitted form "s40-serk-21/26-03").
         """
         # First, try to match the search_term as an exact internal_id.
-        # Extract the application ID from the end of the internal_id string.
-        # Format is "{process_slug}-{questionnaire_code}-{application_id}".
-        # The application_id is always numeric and at the end.
+        # Format is "{process_slug}-{questionnaire_code}-{application_id}" with an
+        # optional submitted-at suffix of "/{yy}-{mm}" on submitted applications.
+        # Strip the suffix before parsing so the numeric ID is always at the end
+        # of the base segment — otherwise rsplit would split the date instead.
         if search_term:
-            # Try to extract numeric app ID from the end (last component after dash)
-            parts = search_term.rsplit("-", 1)
+            base = search_term.split("/", 1)[0]
+            parts = base.rsplit("-", 1)
             if len(parts) == 2 and parts[1].isdigit():
                 app_id = int(parts[1])
                 try:
                     app = Application.objects.select_related(
                         "questionnaire", "questionnaire__process"
                     ).get(id=app_id)
-                    # Verify the full internal_id matches the search term
+                    # Verify the full internal_id matches the original search term
+                    # to prevent a partial-prefix collision (e.g. two processes
+                    # whose slugs share the same numeric suffix).
                     if app.internal_id == search_term:
                         queryset = queryset.filter(id=app_id)
                         return queryset, False

@@ -94,8 +94,7 @@ export const ReviewApplications = () => {
                                 key={application.key}
                                 application={application}
                                 process={process}
-                                // showDownloadLink={false}
-                                showDownloadLink
+                                showDownloadLink={true}
                                 downloadUrl={`/d/${application.key}`}
                             />;
                         })}
