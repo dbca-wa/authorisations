@@ -13,10 +13,33 @@ import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
 import { ReviewApplications } from './components/layout/main/ReviewApplications';
 import { ApiManager } from './context/ApiManager';
-import type { IRoute } from "./context/types/Generic";
+import type { IRoute, LoaderData } from "./context/types/Generic";
 import { handleApiError } from './context/Utils';
 
 
+
+/**
+ * Shared loader for all main layout routes.
+ * Awaits processes (needed immediately by the sidebar) and defers
+ * questionnaires and applications as concurrent promises so the page
+ * can render while the slower data fetches are still in flight.
+ */
+const mainLoader = async (): Promise<LoaderData> => {
+	const processes = await ApiManager
+		.fetchAuthorisationProcesses()
+		.catch(handleApiError);
+
+	// Start both fetches concurrently; pages consume them via React Router deferred data.
+	const questionnaires = ApiManager
+		.fetchQuestionnaires()
+		.catch(handleApiError);
+
+	const applications = ApiManager
+		.fetchApplications()
+		.catch(handleApiError);
+
+	return { processes, questionnaires, applications };
+};
 
 // Routes for the application (text, path and icon)
 export const ROUTES: IRoute[] = [
@@ -26,22 +49,7 @@ export const ROUTES: IRoute[] = [
 		icon: <TopicIcon />,
 		divider: false,
 		component: MyApplications,
-		loader: async () => {
-			const processes = await ApiManager
-				.fetchAuthorisationProcesses()
-				.catch(handleApiError);
-			
-			const questionnaires = ApiManager
-				.fetchQuestionnaires()
-				.catch(handleApiError);
-
-			const applications = ApiManager
-				.fetchApplications()
-				.catch(handleApiError);
-			
-
-			return { processes, questionnaires, applications };
-		},
+		loader: mainLoader,
 	},
 	{
 		label: "New application",
@@ -49,22 +57,7 @@ export const ROUTES: IRoute[] = [
 		icon: <CreateNewFolderIcon />,
 		divider: true,
 		component: NewApplication,
-		loader: async () => {
-			const processes = await ApiManager
-				.fetchAuthorisationProcesses()
-				.catch(handleApiError);
-			
-			const questionnaires = ApiManager
-				.fetchQuestionnaires()
-				.catch(handleApiError);
-
-			const applications = ApiManager
-				.fetchApplications()
-				.catch(handleApiError);
-			
-
-			return { processes, questionnaires, applications };
-		},
+		loader: mainLoader,
 	},
 	{
 		label: "Review",
@@ -73,34 +66,23 @@ export const ROUTES: IRoute[] = [
 		divider: true,
 		component: ReviewApplications,
 		condition: (processes) => processes.some((process) => process.can_review),
-		loader: async () => {
-			const processes = await ApiManager
-				.fetchAuthorisationProcesses()
-				.catch(handleApiError);
-			
-			const questionnaires = ApiManager
-				.fetchQuestionnaires()
-				.catch(handleApiError);
-
-			const applications = ApiManager
-				.fetchApplications()
-				.catch(handleApiError);
-			
-
-			return { processes, questionnaires, applications };
-		},
+		loader: mainLoader,
 	},
 	{
 		label: "Settings",
 		path: "/settings",
 		icon: <SettingsIcon />,
 		divider: false,
+		// Dummy loader until the Settings page has real data requirements.
+		loader: mainLoader,
 	},
 	{
 		label: "Feedback",
+		// Opened directly by the sidebar via window.open; not registered as a React Router route.
 		path: "mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations Application",
 		icon: <RateReviewIcon />,
 		divider: false,
+		external: true,
 	},
 ];
 
@@ -122,8 +104,9 @@ const formLayoutLoader = async ({ params }: LoaderFunctionArgs) => {
 
 export const router = createBrowserRouter(
 	[
-		// Add routes from ROUTES constant
-		...ROUTES.map(route => ({
+		// Register only internal (non-external) routes with React Router.
+		// External routes (e.g. mailto: links) are handled directly by the sidebar.
+		...ROUTES.filter(route => !route.external).map(route => ({
 			path: route.path,
 			element: <MainLayout route={route} />,
 			loader: route.loader,

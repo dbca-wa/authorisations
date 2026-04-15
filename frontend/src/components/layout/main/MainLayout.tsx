@@ -80,8 +80,12 @@ const Sidebar = ({
                             return (
                                 <ListItem key={route.path} disablePadding divider={route.divider}>
                                     <ListItemButton
-                                        onClick={() => navigate(route.path, navOptions)}
-                                        selected={currentPath === route.path}
+                                        onClick={() => route.external
+                                            // External routes (e.g. mailto:) must not go through React Router.
+                                            ? window.open(route.path)
+                                            : navigate(route.path, navOptions)
+                                        }
+                                        selected={!route.external && currentPath === route.path}
                                     >
                                         <ListItemIcon>{route.icon}</ListItemIcon>
                                         <ListItemText primary={route.label} />

@@ -18,6 +18,8 @@ export interface IRoute {
     component?: React.ComponentType<any>;
     condition?: (processes: IAuthorisationProcess[]) => boolean;
     loader?: (params: LoaderFunctionArgs) => Promise<LoaderData>;
+    /** When true, the route is an external link (e.g. mailto:) and must not be registered with React Router. */
+    external?: boolean;
 }
 
 export type AsyncVoidAction = () => Promise<void>;
