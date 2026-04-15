@@ -52,7 +52,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         "questionnaire__process",
         "questionnaire__name",
     )
-    search_fields = ("owner__username", "questionnaire__name", "questionnaire__code", "questionnaire__process__slug", "id")
+    search_fields = ("owner__username", "questionnaire__name", "questionnaire__code", "questionnaire__process__slug")
     readonly_fields = (
         "internal_id",
         "key",
