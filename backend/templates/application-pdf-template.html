@@ -273,6 +273,21 @@
         margin: 0;
       }
 
+      .attachment-group-title {
+        margin: 0 0 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #173f82;
+      }
+
+      .attachment-group {
+        margin: 0 0 12px;
+      }
+
+      .attachment-group:last-child {
+        margin: 0;
+      }
+
       .attachment-image {
         display: block;
         width: 100%;
@@ -282,26 +297,42 @@
         border-radius: 3px;
       }
 
+      .attachment-image-caption {
+        margin: 6px 0 0;
+        font-size: 11px;
+        color: #222;
+        word-break: break-word;
+      }
+
+      .attachment-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
       .attachment-file-card {
         display: flex;
+        flex-direction: column;
+        justify-content: space-between;
         align-items: center;
-        gap: 8px;
+        width: 132px;
+        min-height: 132px;
+        gap: 10px;
         padding: 8px 10px;
         border: 1px solid #d0d0d0;
         border-radius: 4px;
         background: #f9f9f9;
       }
 
-      .attachment-file-icon {
-        font-size: 22px;
-        line-height: 1;
-        flex-shrink: 0;
-      }
-
       .attachment-file-name {
         font-size: 11px;
         color: #222;
         word-break: break-all;
+        text-align: center;
+      }
+
+      .attachment-missing {
+        color: #b71c1c;
       }
 
       .muted {
@@ -313,6 +344,9 @@
         font-size: 18px;
         line-height: 1;
       }
+
+      /* File-type icons — inlined from backend/assets/pdf-icons.css */
+      {{ pdf_icon_css|safe }}
     </style>
   </head>
   <body>
@@ -400,22 +434,36 @@
                         {% endif %}
                       {% elif question.type == 'file' %}
                         {% if question.files %}
-                          <ul class="attachment-list">
-                            {% for file in question.files %}
-                              <li class="attachment-item">
-                                {% if file.is_image and file.file_path %}
-                                  <img class="attachment-image" src="file://{{ file.file_path }}" alt="{{ file.name }}" />
-                                {% else %}
+                          {% if question.image_files %}
+                            <div class="attachment-group">
+                              <p class="attachment-group-title">Image attachments</p>
+                              <ul class="attachment-list">
+                                {% for file in question.image_files %}
+                                  <li class="attachment-item">
+                                    <img class="attachment-image" src="file://{{ file.file_path }}" alt="{{ file.name }}" />
+                                    <p class="attachment-image-caption">{{ file.name }}</p>
+                                  </li>
+                                {% endfor %}
+                              </ul>
+                            </div>
+                          {% endif %}
+
+                          {% if question.other_files %}
+                            <div class="attachment-group">
+                              <p class="attachment-group-title">Other attachments</p>
+                              <p class="muted">Please refer to the attachments provided with this application for the following files:</p>
+                              <div class="attachment-cards" aria-label="Other file attachments">
+                                {% for file in question.other_files %}
                                   <div class="attachment-file-card">
-                                    <span class="attachment-file-icon">
-                                      {% if file.extension == 'pdf' %}&#128196;{% elif file.extension == 'xls' or file.extension == 'xlsx' %}&#128202;{% elif file.extension == 'doc' or file.extension == 'docx' %}&#128209;{% else %}&#128206;{% endif %}
+                                    <span class="iconify-color {{ file.icon_class }}"></span>
+                                    <span class="attachment-file-name{% if file.is_missing %} attachment-missing{% endif %}">
+                                      {{ file.name }}
                                     </span>
-                                    <span class="attachment-file-name">{{ file.name }}</span>
                                   </div>
-                                {% endif %}
-                              </li>
-                            {% endfor %}
-                          </ul>
+                                {% endfor %}
+                              </div>
+                            </div>
+                          {% endif %}
                         {% else %}
                           <span class="muted">Not provided</span>
                         {% endif %}

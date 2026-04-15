@@ -104,17 +104,41 @@ def _build_grid_rows(raw_value, question, attachments_by_key):
             column_label = column.get("label") or "Column"
             column_type = column.get("type") or "text"
 
-            # Use the column type so checkbox/date cells are normalised predictably.
+            # Grid columns do not include file uploads in this domain model, so we
+            # intentionally bypass attachment resolution for grid cell normalisation.
             cell_value = _normalise_answer_value(
                 row.get(column_label),
                 {"type": column_type},
-                attachments_by_key,
+                {},
             )
             cells.append(cell_value)
 
         rows.append(cells)
 
     return rows
+
+
+_EXTENSION_TO_ICON_CLASS = {
+    # Must mirror getIconFromFilename in frontend/src/context/Utils.tsx.
+    "pdf":  "vscode-icons--file-type-pdf2",
+    "doc":  "vscode-icons--file-type-word",
+    "docx": "vscode-icons--file-type-word",
+    "xls":  "vscode-icons--file-type-excel",
+    "xlsx": "vscode-icons--file-type-excel",
+    "png":  "flat-color-icons--image-file",
+    "jpg":  "flat-color-icons--image-file",
+    "jpeg": "flat-color-icons--image-file",
+}
+_DEFAULT_ICON_CLASS = "flat-color-icons--file"
+
+
+def _icon_class_for_extension(extension: str) -> str:
+    """Return the iconify CSS class name for a file extension.
+
+    Matches the switch statement in getIconFromFilename (Utils.tsx) so the PDF
+    and the web review page always show the same icon for a given file type.
+    """
+    return _EXTENSION_TO_ICON_CLASS.get(extension, _DEFAULT_ICON_CLASS)
 
 
 def _build_question_item(question, answer_value, question_index, attachments_by_key):
@@ -140,30 +164,54 @@ def _build_question_item(question, answer_value, question_index, attachments_by_
         return item
 
     if question_type == "file" and isinstance(answer_value, list):
-        files = []
+        image_extensions = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "tif", "tiff"}
+        image_files = []
+        other_files = []
+
         for attachment_key in answer_value:
             attachment = attachments_by_key.get(str(attachment_key))
             if attachment:
                 name = attachment.name
                 extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-                is_image = extension in {"jpg", "jpeg", "png"}
-                # Prince can resolve local file paths directly for inline images.
-                file_path = attachment.file.path if is_image else ""
-                files.append({
+                is_image = extension in image_extensions
+
+                # Missing media should still appear in the PDF rather than vanishing silently.
+                file_path = ""
+                is_missing = False
+                if is_image:
+                    try:
+                        file_path = attachment.file.path
+                    except (ValueError, FileNotFoundError, OSError):
+                        is_missing = True
+
+                file_item = {
                     "name": name,
                     "extension": extension,
                     "is_image": is_image,
                     "file_path": file_path,
-                })
+                    "is_missing": is_missing,
+                    # Used by the PDF template to render the iconify icon span.
+                    "icon_class": _icon_class_for_extension(extension),
+                }
+
+                if is_image and file_path and not is_missing:
+                    image_files.append(file_item)
+                else:
+                    other_files.append(file_item)
             else:
-                files.append({
-                    "name": str(attachment_key),
+                other_files.append({
+                    "name": f"Missing file ({attachment_key})",
                     "extension": "",
                     "is_image": False,
                     "file_path": "",
+                    "is_missing": True,
+                    "icon_class": _DEFAULT_ICON_CLASS,
                 })
 
-        item["files"] = files
+        # Always render images first, then remaining/non-image items.
+        item["image_files"] = image_files
+        item["other_files"] = other_files
+        item["files"] = image_files + other_files
         return item
 
     item["value"] = _normalise_answer_value(
@@ -266,6 +314,25 @@ class Application(models.Model):
         # TODO: Add logic for Technical Officers or other roles
         return False
 
+    @staticmethod
+    def _load_pdf_icon_css() -> str:
+        """Read the pre-generated iconify CSS for file-type icons and return it
+        as a safe string for inlining into the PDF template.
+
+        Reading at call-time means no server restart is needed when the CSS is
+        regenerated, and Prince never has to make an HTTP request to fetch it.
+        """
+        from django.contrib.staticfiles.finders import find as find_static  # noqa: PLC0415
+
+        css_path = find_static("pdf-icons.css")
+        if not css_path:
+            return ""
+        try:
+            with open(css_path, encoding="utf-8") as fh:
+                return fh.read()
+        except OSError:
+            return ""
+
     def build_pdf_context(self):
         """Build nested step/section/question data used by the PDF review template."""
         questionnaire_document = self.questionnaire.document or {}
@@ -321,6 +388,8 @@ class Application(models.Model):
         return {
             "application": self,
             "steps": steps,
+            # Inlined so Prince never needs to resolve an external stylesheet URL.
+            "pdf_icon_css": self._load_pdf_icon_css(),
         }
 
     def render_pdf_html(self):
