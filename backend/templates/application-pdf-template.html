@@ -267,6 +267,9 @@
 
       .attachment-item {
         margin: 0 0 10px;
+        /* Prevent the image and its caption from being split across a page break. */
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
 
       .attachment-item:last-child {
@@ -290,9 +293,18 @@
 
       .attachment-image {
         display: block;
-        width: 100%;
+        /* Let the image size itself naturally, constrained by both axes.
+           max-width prevents overflow for wide/landscape images.
+           max-height caps very tall/portrait images.
+           Using auto for both dimensions (instead of width:100%) ensures Prince
+           respects both constraints simultaneously, avoiding the letterbox effect
+           where a portrait image would be padded by empty space to fill 100% width. */
+        width: auto;
+        height: auto;
+        max-width: 100%;
         max-height: 400px;
-        object-fit: contain;
+        /* Centre the image within the available column width. */
+        margin: 0 auto;
         border: 1px solid #ccc;
         border-radius: 3px;
       }

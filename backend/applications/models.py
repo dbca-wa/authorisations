@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import io
 import uuid
+from typing import Any
 
 from django.conf import settings
 from django.db import models
@@ -12,105 +15,64 @@ from .prince import Prince
 from .schema import get_answers_schema
 
 
-def _boolean_checkbox(value):
+def _boolean_checkbox(value: Any) -> str:
     """Return a checkbox glyph for boolean answers in the PDF output."""
     return "☑ Yes" if value else "☐ No"
 
 
-def _normalise_answer_value(value, question, attachments_by_key):
-    """Convert stored answer values into readable plain text for PDF export."""
+def _normalise_answer_value(question: dict[str, Any], value: Any) -> str | None:
+    """Convert a stored answer value into a display string for PDF text fields.
+
+    Returns None for empty answers so the template can render a styled placeholder.
+    Grid and file questions are handled by their own builders and never reach this
+    function, so only scalar, list, dict, checkbox, and empty cases are covered here.
+    """
     question_type = (question or {}).get("type")
 
-    # Prince renders these Unicode glyphs reliably in the current template font stack.
+    # Checkbox answers always render as a glyph regardless of truthiness.
     if isinstance(value, bool) or question_type == "checkbox":
         return _boolean_checkbox(value)
 
-    # Blank non-checkbox answers signal emptiness to the caller via None. Checkbox
-    # blanks are handled above and intentionally map to unchecked (☐ No) rather than this path.
+    # Absent or blank answers signal emptiness to the template via None.
     if value is None or value == "":
         return None
 
-    # Grid answers are flattened into labelled multi-line rows for the simple PDF table layout.
-    if question_type == "grid" and isinstance(value, list):
-        rows = []
-        for row_index, row in enumerate(value, start=1):
-            if not isinstance(row, dict):
-                rows.append(f"Row {row_index}: {row}")
-                continue
-
-            columns = []
-            for column in question.get("grid_columns") or []:
-                column_label = column.get("label") or "Column"
-                column_value = row.get(column_label)
-                if column_value is None:
-                    continue
-                if isinstance(column_value, bool):
-                    column_value = _boolean_checkbox(column_value)
-                columns.append(f"{column_label}: {column_value}")
-
-            for column_key, column_value in row.items():
-                if any(
-                    (column.get("label") == column_key)
-                    for column in question.get("grid_columns") or []
-                ):
-                    continue
-                if isinstance(column_value, bool):
-                    column_value = _boolean_checkbox(column_value)
-                columns.append(f"{column_key}: {column_value}")
-
-            rows.append(
-                f"Row {row_index}: " + "; ".join(columns)
-                if columns
-                else f"Row {row_index}"
-            )
-
-        return "\n".join(rows) or None
-
-    # File answers are stored as attachment UUIDs, so resolve them to stable human-readable names.
-    if question_type == "file" and isinstance(value, list):
-        attachment_names = []
-        for attachment_key in value:
-            attachment = attachments_by_key.get(str(attachment_key))
-            attachment_names.append(
-                attachment.name if attachment else str(attachment_key)
-            )
-        return "\n".join(attachment_names) or None
-
+    # Flatten list answers (e.g. multi-select) to one entry per line.
     if isinstance(value, list):
         return "\n".join(str(item) for item in value) or None
 
+    # Flatten dict answers to "key: value" lines.
     if isinstance(value, dict):
-        return "\n".join(f"{key}: {item}" for key, item in value.items()) or None
+        return "\n".join(f"{key}: {val}" for key, val in value.items()) or None
 
     return str(value)
 
 
-def _build_grid_rows(raw_value, question, attachments_by_key):
-    """Convert a grid answer into table rows consumable by the PDF template."""
+def _build_grid_rows(question: dict[str, Any], raw_value: Any) -> list[list[str | None]]:
+    """Convert raw grid answer data into a list of cell-value rows for the PDF table.
+
+    Each row is a list of display strings aligned to the question's column definitions.
+    Missing or non-list answers return an empty list so the template renders nothing.
+    """
     if not isinstance(raw_value, list):
         return []
 
-    grid_columns = question.get("grid_columns") or []
-    rows = []
+    grid_columns: list[dict[str, Any]] = question.get("grid_columns") or []
+    rows: list[list[str | None]] = []
 
     for row in raw_value:
         if not isinstance(row, dict):
             continue
 
-        cells = []
-        for column in grid_columns:
-            column_label = column.get("label") or "Column"
-            column_type = column.get("type") or "text"
-
-            # Grid columns do not include file uploads in this domain model, so we
-            # intentionally bypass attachment resolution for grid cell normalisation.
-            cell_value = _normalise_answer_value(
-                row.get(column_label),
-                {"type": column_type},
-                {},
+        # Build one cell per column in definition order; normalise each cell value
+        # as a simple scalar — grid cells never contain nested files or grids.
+        cells = [
+            _normalise_answer_value(
+                {"type": column.get("type") or "text"},
+                row.get(column.get("label") or "Column"),
             )
-            cells.append(cell_value)
-
+            for column in grid_columns
+        ]
         rows.append(cells)
 
     return rows
@@ -139,12 +101,22 @@ def _icon_class_for_extension(extension: str) -> str:
     return _EXTENSION_TO_ICON_CLASS.get(extension, _DEFAULT_ICON_CLASS)
 
 
-def _build_question_item(question, answer_value, question_index, attachments_by_key):
-    """Build a template-friendly question payload for PDF rendering."""
+def _build_question_item(
+    question: dict[str, Any],
+    answer_value: Any,
+    question_index: int,
+    attachments_by_key: dict[str, ApplicationAttachment],
+) -> dict[str, Any]:
+    """Build a template-friendly question payload for PDF rendering.
+
+    Returns a dict keyed by the question type's expected template variables.
+    Grid and file types carry structured sub-data; all other types carry a
+    single normalised `value` string (or None for empty answers).
+    """
     question_type = question.get("type") or "text"
     question_label = question.get("label") or f"Question {question_index + 1}"
 
-    item = {
+    item: dict[str, Any] = {
         "label": question_label,
         "type": question_type,
     }
@@ -154,77 +126,72 @@ def _build_question_item(question, answer_value, question_index, attachments_by_
             column.get("label") or "Column"
             for column in question.get("grid_columns") or []
         ]
-        item["grid_rows"] = _build_grid_rows(
-            answer_value,
-            question,
-            attachments_by_key,
-        )
+        item["grid_rows"] = _build_grid_rows(question, answer_value)
         return item
 
-    if question_type == "file" and isinstance(answer_value, list):
+    if question_type == "file":
+        # Normalise the answer to a list of attachment keys; treat missing or
+        # non-list values (e.g. unanswered questions) as an empty upload set.
+        attachment_keys: list[str] = answer_value if isinstance(answer_value, list) else []
         image_extensions = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "tif", "tiff"}
-        image_files = []
-        other_files = []
+        image_files: list[dict[str, Any]] = []
+        other_files: list[dict[str, Any]] = []
 
-        for attachment_key in answer_value:
+        for attachment_key in attachment_keys:
             attachment = attachments_by_key.get(str(attachment_key))
-            if attachment:
-                name = attachment.name
-                extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-                is_image = extension in image_extensions
 
-                # Compute the img src to use in the PDF template.  For local
-                # storage Prince reads the file directly via a file:// URI.  For
-                # Azure (or any remote) storage we fall back to the signed URL
-                # and let Prince fetch it over HTTP(S) at render time.
-                file_src = ""
-                is_missing = False
-                if is_image:
-                    try:
-                        file_src = "file://" + attachment.file.path
-                    except (ValueError, NotImplementedError, OSError):
-                        # No local path — attempt the storage URL (e.g. Azure SAS URL).
-                        try:
-                            file_src = attachment.file.url
-                        except Exception:  # noqa: BLE001
-                            is_missing = True
-
-                file_item = {
-                    "name": name,
-                    "extension": extension,
-                    "is_image": is_image,
-                    # Ready-to-use src value for the <img> tag in the PDF template.
-                    "file_src": file_src,
-                    "is_missing": is_missing,
-                    # Used by the PDF template to render the iconify icon span.
-                    "icon_class": _icon_class_for_extension(extension),
-                }
-
-                if is_image and file_src and not is_missing:
-                    image_files.append(file_item)
-                else:
-                    other_files.append(file_item)
-            else:
+            if attachment is None:
+                # Record a placeholder card so the reviewer knows a file was expected.
                 other_files.append({
                     "name": f"Missing file ({attachment_key})",
                     "extension": "",
                     "is_image": False,
-                    "file_path": "",
+                    "file_src": "",
                     "is_missing": True,
                     "icon_class": _DEFAULT_ICON_CLASS,
                 })
+                continue
 
-        # Always render images first, then remaining/non-image items.
+            name = attachment.name
+            extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+            is_image = extension in image_extensions
+            file_src = ""
+            is_missing = False
+
+            if is_image:
+                # For local storage Prince reads the file via a file:// URI.
+                # For Azure (or any remote storage) fall back to the signed URL
+                # and let Prince fetch it over HTTP(S) at render time.
+                try:
+                    file_src = "file://" + attachment.file.path
+                except (ValueError, NotImplementedError, OSError):
+                    try:
+                        file_src = attachment.file.url
+                    except Exception:  # noqa: BLE001
+                        is_missing = True
+
+            file_item: dict[str, Any] = {
+                "name": name,
+                "extension": extension,
+                "is_image": is_image,
+                "file_src": file_src,
+                "is_missing": is_missing,
+                "icon_class": _icon_class_for_extension(extension),
+            }
+
+            if is_image and file_src and not is_missing:
+                image_files.append(file_item)
+            else:
+                other_files.append(file_item)
+
+        # Images render inline in the PDF; other files are listed as named cards.
         item["image_files"] = image_files
         item["other_files"] = other_files
         item["files"] = image_files + other_files
         return item
 
-    item["value"] = _normalise_answer_value(
-        answer_value,
-        question,
-        attachments_by_key,
-    )
+    # All scalar/simple types: normalise to a display string (or None if empty).
+    item["value"] = _normalise_answer_value(question, answer_value)
     return item
 
 
