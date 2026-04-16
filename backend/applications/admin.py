@@ -83,6 +83,14 @@ class ApplicationAdmin(admin.ModelAdmin):
         ),
     )
 
+    def get_queryset(self, request):
+        """Prefetch questionnaire and process to avoid N+1 queries on the list view."""
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("owner", "questionnaire", "questionnaire__process")
+        )
+
     def get_search_results(self, request, queryset, search_term):
         """
         Override search to support exact internal_id matching.
