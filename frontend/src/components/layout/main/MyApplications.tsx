@@ -9,10 +9,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useLoaderData } from "react-router";
 import { LocalStorage } from "../../../context/LocalStorage";
-import type { IApplicationData } from "../../../context/types/Application";
+import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
+import type { LoaderData } from '../../../context/types/Generic';
 import { ApplicationCard } from "./ApplicationCard";
 import { EmptyStateComponent } from "./EmptyState";
-import type { LoaderData } from '../../../context/types/Generic';
 
 const sortOrderOptions = [
     "authorisation",
@@ -48,11 +48,23 @@ const sortOrderLabels: Record<SortOrderOption, string> = {
     least_recently_updated: "Least recently updated",
 };
 
+/** Statuses that the download link should be visible. */
+const downloadableStatuses = new Set<ApplicationStatus>([
+    "SUBMITTED",
+    "UNDER_REVIEW",
+    "UNDER_ASSESSMENT",
+    "APPROVED",
+    "APPROVED_WITH_CONDITIONS",
+    "DEFERRED",
+    "REJECTED"
+]);
+
+
 export const MyApplications = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
     const [applications, setApplications] = useState<IApplicationData[]>([]);
     const [isApplicationsLoading, setIsApplicationsLoading] = useState<boolean>(true);
-    
+
     // Default to newest and restore the user's last selected sort when available.
     const [sortOrder, setSortOrder] = useState<SortOrderOption>(getInitialSortOrder);
 
@@ -200,12 +212,18 @@ export const MyApplications = () => {
 
             {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
                 applications.length === 0 ? <EmptyStateComponent /> :
-                <List>
-                    {sortedApplications.map((a) => {
-                        const process = processBySlug.get(a.process_slug);
-                        return <ApplicationCard key={a.key} application={a} process={process} />;
-                    })}
-                </List>
+                    <List>
+                        {sortedApplications.map((a) => {
+                            const process = processBySlug.get(a.process_slug);
+                            const downloadUrl = downloadableStatuses.has(a.status) ? `/d/${a.key}` : undefined;
+                            return <ApplicationCard
+                                key={a.key}
+                                application={a}
+                                process={process}
+                                downloadUrl={downloadUrl}
+                            />;
+                        })}
+                    </List>
             }
         </Box>
     );

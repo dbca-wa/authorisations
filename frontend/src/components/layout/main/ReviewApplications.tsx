@@ -9,7 +9,7 @@ import { EmptyStateComponent } from "./EmptyState";
 import type { LoaderData } from '../../../context/types/Generic';
 import { ApplicationCard } from "./ApplicationCard";
 
-const reviewRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", "PROCESSING"] as const;
+const reviewRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", "UNDER_ASSESSMENT"] as const;
 
 /**
  * Displays applications for technical officer review workflows.
@@ -94,7 +94,6 @@ export const ReviewApplications = () => {
                                 key={application.key}
                                 application={application}
                                 process={process}
-                                showDownloadLink={true}
                                 downloadUrl={`/d/${application.key}`}
                             />;
                         })}

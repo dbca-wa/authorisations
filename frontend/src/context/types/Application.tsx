@@ -6,17 +6,22 @@ import type { PrimitiveType } from "./Generic";
 export type ApplicationStatus =
     | "DRAFT"
     | "DISCARDED"
+    | "WITHDRAWN"
     | "SUBMITTED"
     | "UNDER_REVIEW"
     | "ACTION_REQUIRED"
-    | "PROCESSING"
+    | "UNDER_ASSESSMENT"
     | "APPROVED"
+    | "APPROVED_WITH_CONDITIONS"
+    | "DEFERRED"
     | "REJECTED";
 
 
 export const finalisedStatuses: ApplicationStatus[] = [
     "DISCARDED",
+    "WITHDRAWN",
     "APPROVED",
+    "APPROVED_WITH_CONDITIONS",
     "REJECTED",
 ]
 

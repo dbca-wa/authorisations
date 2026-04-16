@@ -28,15 +28,20 @@ const applicationSteps = [
 
 const statusToActiveStep: Record<ApplicationStatus, number> = {
     DRAFT: 0,
-    DISCARDED: 0,
+    DISCARDED: 0,           // Terminated during drafting — never submitted.
     ACTION_REQUIRED: 0,
     SUBMITTED: 1,
+    WITHDRAWN: 2,           // Terminated after submission — reached review stage.
     UNDER_REVIEW: 2,
-    PROCESSING: 3,
+    UNDER_ASSESSMENT: 3,
     APPROVED: 4,
+    APPROVED_WITH_CONDITIONS: 4,
+    DEFERRED: 4,            // Decision deferred — may resume; shown at decision step.
     REJECTED: 4,
 };
 
+/** Statuses that represent a terminal negative outcome at their respective step. */
+const terminatedStatuses = new Set<ApplicationStatus>(["DISCARDED", "WITHDRAWN"]);
 
 
 /**
@@ -46,12 +51,10 @@ const statusToActiveStep: Record<ApplicationStatus, number> = {
 export const ApplicationCard = ({
     process,
     application,
-    showDownloadLink = false,
     downloadUrl,
 }: {
     process?: IAuthorisationProcess;
     application: IApplicationData;
-    showDownloadLink?: boolean;
     downloadUrl?: string;
 }) => {
     // Enable relative date labels like "2 days ago" for card metadata.
@@ -62,6 +65,8 @@ export const ApplicationCard = ({
     const statusCapitalised = application.status.split("_").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ");
     const createdAtRelative = dayjs(application.created_at).fromNow();
     const updatedAtRelative = dayjs(application.updated_at).fromNow();
+
+    const isTerminated = terminatedStatuses.has(application.status);
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -91,10 +96,16 @@ export const ApplicationCard = ({
                                 color: theme.palette.grey[400],
                             },
                             '& .MuiStepIcon-root.Mui-active': {
-                                color: theme.palette.success.main,
+                                // Terminated applications (discarded/withdrawn) use a muted grey
+                                // to signal "stopped here" without implying an error occurred.
+                                color: isTerminated
+                                    ? theme.palette.grey[700]
+                                    : theme.palette.success.main,
                             },
                             '& .MuiStepIcon-root.Mui-completed': {
-                                color: theme.palette.success.light,
+                                color: isTerminated
+                                    ? theme.palette.grey[600]
+                                    : theme.palette.success.light,
                             },
                         })}
                     >
@@ -107,7 +118,7 @@ export const ApplicationCard = ({
                 </Box>
                 <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
                     {/* Render the PDF action only when explicitly enabled and a designated URL is provided. */}
-                    {showDownloadLink && downloadUrl && (
+                    {downloadUrl && (
                         <Link
                             target="_blank"
                             rel="noopener"

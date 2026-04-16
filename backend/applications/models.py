@@ -201,14 +201,13 @@ class ApplicationStatus(models.TextChoices):
     DRAFT = "DRAFT"
     DISCARDED = "DISCARDED"
     SUBMITTED = "SUBMITTED"
-    # WITHDRAWN = "WITHDRAWN"
+    WITHDRAWN = "WITHDRAWN"
     UNDER_REVIEW = "UNDER_REVIEW"
     ACTION_REQUIRED = "ACTION_REQUIRED"
-    PROCESSING = "PROCESSING"
-    # UNDER_ASSESSMENT = "UNDER_ASSESSMENT"
+    UNDER_ASSESSMENT = "UNDER_ASSESSMENT"
     APPROVED = "APPROVED"
-    # APPROVED_WITH_CONDITIONS = "APPROVED_WITH_CONDITIONS"
-    # DEFERRED = "DEFERRED"
+    APPROVED_WITH_CONDITIONS = "APPROVED_WITH_CONDITIONS"
+    DEFERRED = "DEFERRED"
     REJECTED = "REJECTED"
 
 
@@ -232,7 +231,7 @@ class Application(models.Model):
         editable=False,
     )
     status = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=ApplicationStatus.choices,
         default=ApplicationStatus.DRAFT,
         editable=False,
