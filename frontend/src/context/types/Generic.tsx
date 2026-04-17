@@ -6,8 +6,10 @@ export type PrimitiveType = string | number | boolean | null;
 
 export type LoaderData = {
 	processes: IAuthorisationProcess[];
-	questionnaires: Promise<IQuestionnaireData[]>;
-	applications: Promise<IApplicationData[]>;
+	/** Omitted when the route does not need questionnaire data. */
+	questionnaires?: Promise<IQuestionnaireData[]>;
+	/** Omitted when the route does not need application data. */
+	applications?: Promise<IApplicationData[]>;
 }
 
 export interface IRoute {

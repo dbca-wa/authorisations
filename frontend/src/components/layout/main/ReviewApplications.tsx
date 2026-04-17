@@ -1,13 +1,14 @@
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
-import { useEffect, useMemo, useState } from "react";
-import { useLoaderData } from "react-router";
 
+import { useMemo } from "react";
+import { useLoaderData } from "react-router";
 import type { IApplicationData } from "../../../context/types/Application";
-import { EmptyStateComponent } from "./EmptyState";
 import type { LoaderData } from '../../../context/types/Generic';
+import { useResolvedPromise } from "../../Common";
 import { ApplicationCard } from "./ApplicationCard";
+import { EmptyStateComponent } from "./EmptyState";
 
 const reviewRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", "UNDER_ASSESSMENT"] as const;
 
@@ -17,40 +18,7 @@ const reviewRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", 
  */
 export const ReviewApplications = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
-    const [applications, setApplications] = useState<IApplicationData[]>([]);
-    const [isApplicationsLoading, setIsApplicationsLoading] = useState<boolean>(true);
-
-    /**
-     * Resolves deferred applications into component state so the list can render synchronously.
-     * A mount guard is used to avoid setting state after unmount during route transitions.
-     */
-    useEffect(() => {
-        // Guard against stale async callbacks after unmount.
-        let isMounted = true;
-        setIsApplicationsLoading(true);
-
-        applicationsPromise
-            .then((resolvedApplications) => {
-                // Only apply data if this component instance is still current.
-                if (!isMounted) return;
-                setApplications(Array.isArray(resolvedApplications) ? resolvedApplications : []);
-            })
-            .catch(() => {
-                // Fall back safely to an empty list on API failure.
-                if (!isMounted) return;
-                setApplications([]);
-            })
-            .finally(() => {
-                // Always clear loading state regardless of fetch outcome.
-                if (!isMounted) return;
-                setIsApplicationsLoading(false);
-            });
-
-        // Cleanup prevents late Promise resolution from mutating stale state.
-        return () => {
-            isMounted = false;
-        };
-    }, [applicationsPromise]);
+    const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
 
     const processBySlug = useMemo(
         () => new Map(processes.map((process) => [process.slug, process])),

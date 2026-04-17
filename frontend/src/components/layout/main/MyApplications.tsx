@@ -5,12 +5,13 @@ import List from "@mui/material/List";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
-import { useEffect, useMemo, useState } from "react";
 
+import { useEffect, useMemo, useState } from "react";
 import { useLoaderData } from "react-router";
 import { LocalStorage } from "../../../context/LocalStorage";
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
+import { useResolvedPromise } from "../../Common";
 import { ApplicationCard } from "./ApplicationCard";
 import { EmptyStateComponent } from "./EmptyState";
 
@@ -62,8 +63,7 @@ const downloadableStatuses = new Set<ApplicationStatus>([
 
 export const MyApplications = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
-    const [applications, setApplications] = useState<IApplicationData[]>([]);
-    const [isApplicationsLoading, setIsApplicationsLoading] = useState<boolean>(true);
+    const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
 
     // Default to newest and restore the user's last selected sort when available.
     const [sortOrder, setSortOrder] = useState<SortOrderOption>(getInitialSortOrder);
@@ -71,39 +71,6 @@ export const MyApplications = () => {
     useEffect(() => {
         LocalStorage.setValue<SortOrderOption>(myApplicationsSortOrderStorageKey, sortOrder);
     }, [sortOrder]);
-
-    /**
-     * Resolves the deferred `applicationsPromise` from the route loader into local state.
-     * The loader kicks off the API fetch immediately (without blocking navigation), and
-     * this effect picks up the result as soon as it arrives, keeping the UI responsive.
-     */
-    useEffect(() => {
-        // Guard flag: prevents state updates if the component unmounts before the Promise resolves.
-        let isMounted = true;
-        setIsApplicationsLoading(true);
-
-        applicationsPromise
-            .then((resolvedApplications) => {
-                // Only commit resolved data if the component is still mounted.
-                if (!isMounted) return;
-                setApplications(Array.isArray(resolvedApplications) ? resolvedApplications : []);
-            })
-            .catch(() => {
-                // Fall back to an empty list on error so the empty-state UI renders instead of crashing.
-                if (!isMounted) return;
-                setApplications([]);
-            })
-            .finally(() => {
-                // Always clear the loading flag, whether the fetch succeeded or failed.
-                if (!isMounted) return;
-                setIsApplicationsLoading(false);
-            });
-
-        // Cleanup: flip the guard flag so stale callbacks from the previous Promise are ignored.
-        return () => {
-            isMounted = false;
-        };
-    }, [applicationsPromise]);
 
     const processBySlug = useMemo(
         () => new Map(processes.map((process) => [process.slug, process])),

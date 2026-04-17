@@ -19,27 +19,28 @@ import { handleApiError } from './context/Utils';
 
 
 /**
- * Shared loader for all main layout routes.
- * Awaits processes (needed immediately by the sidebar) and defers
- * questionnaires and applications as concurrent promises so the page
- * can render while the slower data fetches are still in flight.
+ * Factory that produces a route loader for the main layout.
+ * Awaits processes (needed immediately for the sidebar) and optionally
+ * kicks off questionnaire and/or application fetches as unblocked promises,
+ * so routes that don't need a dataset never trigger its request.
  */
-const mainLoader = async (): Promise<LoaderData> => {
-	const processes = await ApiManager
-		.fetchAuthorisationProcesses()
-		.catch(handleApiError);
+const mainLoader = (options: { questionnaires?: boolean; applications?: boolean } = {}) =>
+	async (): Promise<LoaderData> => {
+		const processes = await ApiManager
+			.fetchAuthorisationProcesses()
+			.catch(handleApiError);
 
-	// Start both fetches concurrently; pages consume them via React Router deferred data.
-	const questionnaires = ApiManager
-		.fetchQuestionnaires()
-		.catch(handleApiError);
+		// Only start each fetch when the route has declared it needs the data.
+		const questionnaires = options.questionnaires
+			? ApiManager.fetchQuestionnaires().catch(handleApiError)
+			: undefined;
 
-	const applications = ApiManager
-		.fetchApplications()
-		.catch(handleApiError);
+		const applications = options.applications
+			? ApiManager.fetchApplications().catch(handleApiError)
+			: undefined;
 
-	return { processes, questionnaires, applications };
-};
+		return { processes, questionnaires, applications };
+	};
 
 // Routes for the application (text, path and icon)
 export const ROUTES: IRoute[] = [
@@ -49,7 +50,7 @@ export const ROUTES: IRoute[] = [
 		icon: <TopicIcon />,
 		divider: false,
 		component: MyApplications,
-		loader: mainLoader,
+		loader: mainLoader({ applications: true }),
 	},
 	{
 		label: "New application",
@@ -57,7 +58,7 @@ export const ROUTES: IRoute[] = [
 		icon: <CreateNewFolderIcon />,
 		divider: true,
 		component: NewApplication,
-		loader: mainLoader,
+		loader: mainLoader({ questionnaires: true }),
 	},
 	{
 		label: "Review",
@@ -66,15 +67,15 @@ export const ROUTES: IRoute[] = [
 		divider: true,
 		component: ReviewApplications,
 		condition: (processes) => processes.some((process) => process.can_review),
-		loader: mainLoader,
+		loader: mainLoader({ applications: true }),
 	},
 	{
 		label: "Settings",
 		path: "/settings",
 		icon: <SettingsIcon />,
 		divider: false,
-		// Dummy loader until the Settings page has real data requirements.
-		loader: mainLoader,
+		// No data beyond processes is needed on this page.
+		loader: mainLoader(),
 	},
 	{
 		label: "Feedback",
