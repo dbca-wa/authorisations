@@ -67,7 +67,17 @@ export const ROUTES: IRoute[] = [
 		divider: true,
 		component: ReviewApplications,
 		condition: (processes) => processes.some((process) => process.can_review),
-		loader: mainLoader({ applications: true }),
+		loader: async (): Promise<LoaderData> => {
+			const processes = await ApiManager
+				.fetchAuthorisationProcesses()
+				.catch(handleApiError);
+
+			const applications = ApiManager
+				.fetchAssessmentApplications()
+				.catch(handleApiError);
+
+			return { processes, applications };
+		},
 	},
 	{
 		label: "Settings",

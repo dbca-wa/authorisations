@@ -161,4 +161,11 @@ export class ApiManager {
 
         return response.data;
     }
+
+    public static async fetchAssessmentApplications(): Promise<IApplicationData[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IApplicationData[]>("/assessment", requestConfig);
+
+        return response.data;
+    }
 }
