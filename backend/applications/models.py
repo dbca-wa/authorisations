@@ -292,19 +292,39 @@ class Application(models.Model):
         return f"{self.questionnaire.process.slug}-{self.questionnaire.code}-{self.id}{submitted_at_suffix}"
 
     def has_access(self, user: User) -> bool:
-        """
-        Returns True if the user has access to this application.
-        - Owners always have access.
-        - TODO: Extend this logic for Technical Officers or other roles in the future.
+        """Return True if the user may read this application.
+
+        Two principals are permitted:
+        - The application owner (always has full access to their own record).
+        - A reviewer / technical officer whose groups intersect with the
+          ``reviewer_groups`` of the application's process.  This mirrors the
+          ``can_review`` annotation logic in ``AuthorisationProcessViewSet``.
+
+        Note: read access does NOT imply write access.  Callers that require
+        ownership for mutation (e.g. ``resume_application``) must check
+        ``application.owner == request.user`` directly rather than delegating
+        to this method.
         """
         if not user.is_authenticated:
             return False
 
+        # Owners always have access to their own applications.
         if self.owner == user:
             return True
 
-        # TODO: Add logic for Technical Officers or other roles
-        return False
+        # Reviewers may read any application that belongs to a process they
+        # are authorised to review.  We use the M2M through table directly to
+        # avoid loading the full AuthorisationProcess object when only the
+        # group membership check is needed.
+        from processes.models import AuthorisationProcess  # noqa: PLC0415 — avoid circular import at module level
+
+        is_reviewer = (
+            AuthorisationProcess.reviewer_groups.through.objects.filter(
+                authorisationprocess_id=self.questionnaire.process_id,
+                group_id__in=user.groups.values("id"),
+            ).exists()
+        )
+        return is_reviewer
 
     @staticmethod
     def _load_pdf_icon_css() -> str:

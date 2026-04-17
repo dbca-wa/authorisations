@@ -97,6 +97,15 @@
 - Attachment deletions are soft-delete and must include ownership checks.
 - CSRF behavior includes project-specific configuration and has known interactions with third-party admin endpoints.
 
+### Read Access vs Write Access (`has_access` vs owner check)
+- `Application.has_access(user)` grants **read** access. Two principals qualify:
+  1. The application owner.
+  2. Any authenticated user whose groups intersect the process's `reviewer_groups` (technical officers / assessors).
+- `has_access` must **not** be used as the guard for write/mutation paths.
+  - `resume_application` (the interactive form URL) uses an explicit `application.owner == request.user` check so that reviewers cannot open and modify someone else's application through the form.
+  - `download_application` and `download_attachment` correctly use `has_access` because those are read-only operations.
+- Whenever adding a new endpoint or view that touches application data, decide explicitly: is this a read path (use `has_access`) or a write/owner-only path (use explicit `owner == user` check)?
+
 ### Ordering Rules
 - Keep model `Meta.ordering` simple and local-field based when sortable admin integrations are used.
 - Use explicit queryset ordering in API/admin where relation-based ordering is needed.
