@@ -42,7 +42,8 @@ export interface IApplicationData {
     created_at: string;
     updated_at: string;
     submitted_at: string | null;
-    document: IFormDocument;
+    /** Present on single-record fetches only; omitted from list endpoints to reduce payload size. */
+    document?: IFormDocument;
 }
 
 /**

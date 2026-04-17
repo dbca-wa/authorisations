@@ -119,6 +119,22 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
         return fields
 
+    def to_representation(self, instance):
+        """Exclude ``document`` from list responses to reduce payload size.
+
+        The ``document`` field is only meaningful on single-record detail views
+        (FormLayout). Including it in list responses wastes bandwidth since no
+        list-consuming component reads it.
+        """
+        data = super().to_representation(instance)
+        # The viewset sets ``action`` on the serialiser context's view; retrieve
+        # is the only action that should include the full document payload.
+        view = self.context.get("view")
+        is_detail = view and getattr(view, "action", None) == "retrieve"
+        if not is_detail:
+            data.pop("document", None)
+        return data
+
     def validate_status(self, value):
         """
         Validate the status field to ensure only allowed transitions.
