@@ -334,6 +334,9 @@
         border: 1px solid #d0d0d0;
         border-radius: 4px;
         background: #f9f9f9;
+        /* Prevent an individual card from being split across a page break. */
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
 
       .attachment-file-name {
