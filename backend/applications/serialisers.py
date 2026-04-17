@@ -17,7 +17,7 @@ from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
 from rest_framework import exceptions, serializers, status
 
-from .models import Application, ApplicationAttachment, ApplicationStatus
+from .models import Application, ApplicationAttachment, ApplicationStatus, REVIEW_QUEUE_STATUSES, REVIEWER_SETTABLE_STATUSES
 from .schema import get_answers_schema
 
 
@@ -509,3 +509,92 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         instance.name = name
         instance.save(update_fields=["name"])
         return instance
+
+
+class AssessmentSerialiser(serializers.ModelSerializer):
+    """
+    Serialiser for the assessment-facing application view.
+
+    All fields are read-only except ``status``, which an assessor may advance
+    via PATCH. Transition validation enforces that:
+      - the current status is a review-queue status (i.e. the application is
+        actually awaiting assessor action), and
+      - the requested status is one an assessor is permitted to set.
+    """
+
+    owner = serializers.CharField(
+        source="owner.username",
+        read_only=True,
+    )
+    process_slug = serializers.SlugField(
+        source="questionnaire.process.slug",
+        read_only=True,
+    )
+    questionnaire_id = serializers.IntegerField(
+        source="questionnaire.id",
+        read_only=True,
+    )
+    questionnaire_name = serializers.CharField(
+        source="questionnaire.name",
+        read_only=True,
+    )
+    questionnaire_version = serializers.IntegerField(
+        source="questionnaire.version",
+        read_only=True,
+    )
+    internal_id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Application
+        fields = (
+            "id",
+            "key",
+            "internal_id",
+            "owner",
+            "process_slug",
+            "questionnaire_id",
+            "questionnaire_name",
+            "questionnaire_version",
+            "status",
+            "created_at",
+            "updated_at",
+            "submitted_at",
+        )
+        # All fields are read-only by default; status is made writable via PATCH in get_fields().
+        read_only_fields = fields
+
+    def get_fields(self, *args, **kwargs):
+        fields = super().get_fields(*args, **kwargs)
+        request = self.context.get("request", None)
+
+        isPatch = request.method == "PATCH" if request else False
+
+        # Status is the only writable field, and only during a PATCH status-advancement request.
+        fields["status"].required = isPatch
+        fields["status"].read_only = not isPatch
+
+        return fields
+
+    def validate_status(self, value: str) -> str:
+        """
+        Validate that the requested status transition is permitted for an assessor.
+
+        Rejects transitions from non-queue statuses (e.g. DRAFT) to prevent
+        assessors from accidentally acting on applications that are not yet in
+        their queue, and rejects attempts to set applicant-only statuses.
+        """
+        current = self.instance.status
+
+        # Guard: the application must actually be in the review queue.
+        if current not in REVIEW_QUEUE_STATUSES:
+            raise exceptions.ValidationError(
+                f"Application with status '{current}' is not in the assessment queue."
+            )
+
+        # Guard: the target status must be one assessors are permitted to set.
+        if value not in REVIEWER_SETTABLE_STATUSES:
+            raise exceptions.ValidationError(
+                f"Status '{value}' cannot be set by an assessor."
+            )
+
+        return value

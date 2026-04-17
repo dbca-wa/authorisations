@@ -211,6 +211,26 @@ class ApplicationStatus(models.TextChoices):
     REJECTED = "REJECTED"
 
 
+# Statuses visible in the reviewer queue — applications awaiting or under active review.
+REVIEW_QUEUE_STATUSES = frozenset([
+    ApplicationStatus.SUBMITTED,
+    ApplicationStatus.UNDER_REVIEW,
+    ApplicationStatus.ACTION_REQUIRED,
+    ApplicationStatus.UNDER_ASSESSMENT,
+])
+
+# Statuses a reviewer is permitted to set; excludes applicant-only transitions (DRAFT, DISCARDED).
+REVIEWER_SETTABLE_STATUSES = frozenset([
+    ApplicationStatus.UNDER_REVIEW,
+    ApplicationStatus.ACTION_REQUIRED,
+    ApplicationStatus.UNDER_ASSESSMENT,
+    ApplicationStatus.APPROVED,
+    ApplicationStatus.APPROVED_WITH_CONDITIONS,
+    ApplicationStatus.DEFERRED,
+    ApplicationStatus.REJECTED,
+])
+
+
 class Application(models.Model):
     """Model to represent an application."""
 

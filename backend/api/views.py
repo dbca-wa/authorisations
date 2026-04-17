@@ -1,8 +1,17 @@
 import uuid
 
-from applications.models import Application, ApplicationAttachment, ApplicationStatus
+from applications.models import (
+    Application,
+    ApplicationAttachment,
+    ApplicationStatus,
+    REVIEW_QUEUE_STATUSES,
+)
 from django.utils import timezone
-from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
+from applications.serialisers import (
+    ApplicationSerialiser,
+    AttachmentSerialiser,
+    AssessmentSerialiser,
+)
 from django.db.models import BooleanField, Exists, F, OuterRef, Value, Window
 from django.db.models.functions import RowNumber
 from processes.models import AuthorisationProcess
@@ -197,12 +206,86 @@ class AuthorisationProcessViewSet(viewsets.ReadOnlyModelViewSet):
         # Build an EXISTS subquery against the process<->group join table. If
         # any linked reviewer group matches one of the current user's groups,
         # the process is reviewable for that user.
-        reviewer_group_links = AuthorisationProcess.reviewer_groups.through.objects.filter(
-            authorisationprocess_id=OuterRef("pk"),
-            group_id__in=self.request.user.groups.values("id"),
+        reviewer_group_links = (
+            AuthorisationProcess.reviewer_groups.through.objects.filter(
+                authorisationprocess_id=OuterRef("pk"),
+                group_id__in=self.request.user.groups.values("id"),
+            )
         )
 
         # Expose the result as a boolean annotation for direct serialisation.
         return queryset.annotate(can_review=Exists(reviewer_group_links))
 
 
+class AssessmentViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    ViewSet for assessors to manage submitted applications.
+
+    Provides:
+      - LIST     — the assessment queue: applications in a review-relevant status
+                   that belong to processes the current user is authorised to assess.
+      - RETRIEVE — a single application from that same scoped queue.
+      - PATCH    — advance the application status (e.g. SUBMITTED → UNDER_REVIEW,
+                   UNDER_REVIEW → ACTION_REQUIRED, UNDER_ASSESSMENT → APPROVED).
+
+    Access is implicitly scoped by the user's reviewer group memberships; an
+    authenticated user with no reviewer group assignments will receive an empty
+    list and 404s on individual lookups.
+
+    Future: answer-level comments will be added as a nested action on this viewset.
+    """
+
+    queryset = Application.objects.all()
+    serializer_class = AssessmentSerialiser
+    lookup_field = "key"
+    http_method_names = ["get", "patch", "options", "head"]
+
+    def get_queryset(self):
+        """
+        Return applications that are in the review queue and belong to processes
+        the current user is authorised to review.
+
+        Reviewer authorisation is determined by group membership: a user can
+        review a process if any of their groups is listed in that process's
+        ``reviewer_groups``. This mirrors the ``can_review`` annotation logic
+        in ``AuthorisationProcessViewSet`` but expressed as a queryset filter.
+        """
+        # Resolve which process IDs this user may review via the M2M join table.
+        # Using the through model avoids a JOIN through AuthorisationProcess itself.
+        reviewable_process_ids = (
+            AuthorisationProcess.reviewer_groups.through.objects.filter(
+                group_id__in=self.request.user.groups.values("id")
+            ).values("authorisationprocess_id")
+        )
+
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                questionnaire__process_id__in=reviewable_process_ids,
+                status__in=REVIEW_QUEUE_STATUSES,
+            )
+            .select_related("owner", "questionnaire", "questionnaire__process")
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Advance the status of a single application in the review queue.
+
+        Only ``status`` is accepted; all other fields are read-only on this
+        endpoint. Transition validity is enforced by the serialiser.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        # Clear any prefetch cache so the response reflects the saved state.
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
