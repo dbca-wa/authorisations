@@ -9,6 +9,13 @@
 - Use British English spelling in code comments, docs, command names, and developer guidance.
 - Prefer forms such as `normalise`, `normalisation`, and `authorisation`.
 
+## Code Comment Conventions
+- Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists.
+  - For TypeScript/React: use a `/** ... */` JSDoc block before the function.
+  - For Python: use a `"""Docstring."""` inside the function body.
+- Every critical part within a function (non-obvious logic, guards, fallbacks, side effects) must have one or two single-line comments explaining the intent, not just restating the code.
+- Comments should explain **why**, not just **what**.
+
 ## Current Canonical Terminology
 - `AuthorisationProcess`:
   - Parent domain object that groups related questionnaires under a business process.
@@ -89,6 +96,15 @@
 - Application and attachment querysets must always enforce owner scoping.
 - Attachment deletions are soft-delete and must include ownership checks.
 - CSRF behavior includes project-specific configuration and has known interactions with third-party admin endpoints.
+
+### Read Access vs Write Access (`has_access` vs owner check)
+- `Application.has_access(user)` grants **read** access. Two principals qualify:
+  1. The application owner.
+  2. Any authenticated user whose groups intersect the process's `reviewer_groups` (technical officers / assessors).
+- `has_access` must **not** be used as the guard for write/mutation paths.
+  - `resume_application` (the interactive form URL) uses an explicit `application.owner == request.user` check so that reviewers cannot open and modify someone else's application through the form.
+  - `download_application` and `download_attachment` correctly use `has_access` because those are read-only operations.
+- Whenever adding a new endpoint or view that touches application data, decide explicitly: is this a read path (use `has_access`) or a write/owner-only path (use explicit `owner == user` check)?
 
 ### Ordering Rules
 - Keep model `Meta.ordering` simple and local-field based when sortable admin integrations are used.

@@ -1,0 +1,497 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ application.questionnaire.process.name }} : DBCA Authorisations</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 20mm 12mm 16mm;
+        border: 0;
+        background: #fff;
+        marks: none;
+
+        @top-left {
+          content: "#{{ application.internal_id }}";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #4c4c4c;
+          vertical-align: middle;
+        }
+
+        @top-center {
+          content: "OFFICIAL\00A0SENSITIVE";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #c62828;
+          white-space: nowrap;
+          vertical-align: middle;
+        }
+
+        @top-right {
+          content: "";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #4c4c4c;
+          vertical-align: middle;
+        }
+
+        @bottom-left {
+          content: string(current-breadcrumb-step, first) "\A" string(current-breadcrumb-section, first);
+          white-space: pre-line;
+          font: 8pt Arial, Helvetica, sans-serif;
+          color: #5e5e5e;
+        }
+
+        @bottom-center {
+          content: "OFFICIAL\00A0SENSITIVE";
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #c62828;
+          white-space: nowrap;
+          vertical-align: middle;
+        }
+
+        @bottom-right {
+           content: counter(page) " / " counter(pages);
+          font: 8.5pt Arial, Helvetica, sans-serif;
+          color: #2f2f2f;
+        }
+      }
+
+      @page:first {
+        @bottom-left {
+          content: "Form last updated at {{ application.questionnaire.updated_at|date:'F Y' }} (v{{ application.questionnaire.version }})";
+        }
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: #fff;
+        color: #111;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      main {
+        margin: 0;
+        padding: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .section-breadcrumb-marker {
+        display: block;
+        height: 0;
+        overflow: hidden;
+        font-size: 0;
+        line-height: 0;
+        string-set:
+          current-breadcrumb-step attr(data-step-breadcrumb)
+          current-breadcrumb-section attr(data-section-breadcrumb);
+      }
+
+      .intro-table,
+      .section-table,
+      .step-title {
+        margin: 0 0 16px;
+        border: 1px solid #222;
+      }
+
+      .header-wrapper {
+        margin: 0 0 16px;
+      }
+
+      .intro-table td,
+      .section-table td {
+        border: 1px solid #222;
+        vertical-align: top;
+      }
+
+      .header-cell {
+        padding: 0;
+      }
+
+      .header-inner {
+        display: flex;
+        align-items: center;
+      }
+
+      .header-logo-wrap {
+        flex: 0 0 auto;
+        padding: 30px 80px;
+      }
+
+      .header-logo-img {
+        /* Adjust max-width to resize the logo without distortion */
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: 80px;
+      }
+
+      .header-title {
+        flex: 1 1 auto;
+        text-align: left;
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 1.25;
+      }
+
+      .header-title strong {
+        font-weight: 700;
+      }
+
+      .intro-title {
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.1px;
+        padding: 7px 10px;
+      }
+
+      .intro-content {
+        padding: 9px 14px 11px;
+        font-size: 11px;
+        line-height: 1.36;
+      }
+
+      .intro-content p {
+        margin: 0 0 7px;
+      }
+
+      .intro-content p:last-child {
+        margin: 0;
+      }
+
+      .note {
+        color: #173f82;
+      }
+
+      .questionnaire-name {
+        text-align: center;
+        font-size: 24px;
+        margin-top: 40px;
+        text-transform: uppercase;
+        font-weight: 500;
+        margin-bottom: 24px;
+      }
+
+      .step-title {
+        padding: 8px 10px;
+        font-size: 16px;
+        font-weight: 700;
+        background: #2d5a8c;
+        color: #ffffff;
+        
+      }
+
+      .step-block {
+        margin: 0 0 14px;
+      }
+
+      .section-table {
+        margin: 0 0 12px;
+      }
+
+      .section-description {
+        padding: 10px;
+        background: #ffffff;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #222;
+      }
+
+      .question-label {
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #173f82;
+      }
+
+      .question-value {
+        padding: 9px 10px;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .section-heading {
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.25;
+        padding: 8px 10px;
+        background: #e8f1f9;
+      }
+
+      .section-heading h3 {
+        display: block;
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: #111;
+      }
+
+      .grid-table {
+        margin: 2px 0;
+        border: 1px solid #444;
+      }
+
+      .grid-table th,
+      .grid-table td {
+        border: 1px solid #777;
+        padding: 6px 8px;
+        font-size: 11px;
+        vertical-align: top;
+      }
+
+      .grid-table th {
+        text-align: left;
+          background: #dbe4bf;
+          color: #4f5f2f;
+        font-weight: 700;
+      }
+
+      .attachment-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .attachment-item {
+        margin: 0 0 10px;
+        /* Prevent the image and its caption from being split across a page break. */
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .attachment-item:last-child {
+        margin: 0;
+      }
+
+      .attachment-group-title {
+        margin: 0 0 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #173f82;
+      }
+
+      .attachment-group {
+        margin: 0 0 12px;
+      }
+
+      .attachment-group:last-child {
+        margin: 0;
+      }
+
+      .attachment-image {
+        display: block;
+        /* Let the image size itself naturally, constrained by both axes.
+           max-width prevents overflow for wide/landscape images.
+           max-height caps very tall/portrait images.
+           Using auto for both dimensions (instead of width:100%) ensures Prince
+           respects both constraints simultaneously, avoiding the letterbox effect
+           where a portrait image would be padded by empty space to fill 100% width. */
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 400px;
+        /* Centre the image within the available column width. */
+        margin: 0 auto;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      .attachment-image-caption {
+        margin: 6px 0 0;
+        font-size: 11px;
+        color: #222;
+        word-break: break-word;
+      }
+
+      .attachment-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .attachment-file-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        width: 132px;
+        min-height: 132px;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        background: #f9f9f9;
+        /* Prevent an individual card from being split across a page break. */
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .attachment-file-name {
+        font-size: 11px;
+        color: #222;
+        word-break: break-all;
+        text-align: center;
+      }
+
+      .attachment-missing {
+        color: #b71c1c;
+      }
+
+      .muted {
+        color: #666;
+        font-style: italic;
+      }
+
+      /* File-type icons — inlined from backend/assets/pdf-icons.css */
+      {{ pdf_icon_css|safe }}
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="header-wrapper" aria-label="Form Header">
+        <div class="header-cell">
+          <div class="header-inner">
+            <div class="header-logo-wrap">
+              <img class="header-logo-img" alt="DBCA logo" src="{% static 'images/Government_of_Western_Australia_logo.png' %}" />
+            </div>
+            <div class="header-title">
+            Department of <strong>Biodiversity, <br /> Conservation and Attractions</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="intro-table" aria-label="Form Introductory Text">
+        <tr>
+          <td class="intro-title">{{ application.questionnaire.process.name }}</td>
+        </tr>
+        <tr>
+          <td class="intro-content">
+            <p>
+              {{ application.questionnaire.process.description|linebreaksbr }}
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p class="questionnaire-name">{{ application.questionnaire.name}}</p>
+
+      {% if steps %}
+        {% for step in steps %}
+          <section class="step-block">
+            <h1 class="step-title">{{ forloop.counter }}. {{ step.title }}</h1>
+
+            {% for section in step.sections %}
+              <div
+                class="section-breadcrumb-marker"
+                data-step-breadcrumb="{{ forloop.parentloop.counter }}. {{ step.title }}"
+                data-section-breadcrumb="{{ section.prefix }} {{ section.title }}"
+              ></div>
+              <table class="section-table" aria-label="Application Section">
+                <tr>
+                  <td class="section-heading">
+                    <h3>{{ section.prefix }} {{ section.title }}</h3>
+                  </td>
+                </tr>
+
+                {% if section.description %}
+                  <tr>
+                    <td class="section-description">{{ section.description|linebreaksbr }}</td>
+                  </tr>
+                {% endif %}
+
+                {% for question in section.questions %}
+                  <tr>
+                    <td class="question-label">{{ forloop.counter }}. {{ question.label }}</td>
+                  </tr>
+                  <tr>
+                    <td class="question-value">
+                      {% if question.type == 'grid' %}
+                        {% if question.grid_rows %}
+                          <table class="grid-table" aria-label="Grid Answer">
+                            <thead>
+                              <tr>
+                                {% for column_label in question.grid_columns %}
+                                  <th>{{ column_label }}</th>
+                                {% endfor %}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for row in question.grid_rows %}
+                                <tr>
+                                  {% for cell in row %}
+                                    <td>{{ cell|linebreaksbr }}</td>
+                                  {% endfor %}
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% else %}
+                          <span class="muted">Not provided</span>
+                        {% endif %}
+                      {% elif question.type == 'file' %}
+                        {% if question.files %}
+                          {% if question.image_files %}
+                            <div class="attachment-group">
+                              <p class="attachment-group-title">Image attachments</p>
+                              <ul class="attachment-list">
+                                {% for file in question.image_files %}
+                                  <li class="attachment-item">
+                                    <img class="attachment-image" src="{{ file.file_src }}" alt="{{ file.name }}" />
+                                    <p class="attachment-image-caption">{{ file.name }}</p>
+                                  </li>
+                                {% endfor %}
+                              </ul>
+                            </div>
+                          {% endif %}
+
+                          {% if question.other_files %}
+                            <div class="attachment-group">
+                              <p class="attachment-group-title">Other attachments</p>
+                              <p class="muted">Please refer to the attachments provided with this application for the following files:</p>
+                              <div class="attachment-cards" aria-label="Other file attachments">
+                                {% for file in question.other_files %}
+                                  <div class="attachment-file-card">
+                                    <span class="iconify-color {{ file.icon_class }}"></span>
+                                    <span class="attachment-file-name{% if file.is_missing %} attachment-missing{% endif %}">
+                                      {{ file.name }}
+                                    </span>
+                                  </div>
+                                {% endfor %}
+                              </div>
+                            </div>
+                          {% endif %}
+                        {% else %}
+                          <span class="muted">Not provided</span>
+                        {% endif %}
+                      {% else %}
+                        {% if not question.value %}
+                          <span class="muted">Not provided</span>
+                        {% else %}
+                          {{ question.value|linebreaksbr }}
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </table>
+            {% endfor %}
+          </section>
+        {% endfor %}
+      {% endif %}
+    </main>
+  </body>
+</html>

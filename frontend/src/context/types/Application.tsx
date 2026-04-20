@@ -6,17 +6,22 @@ import type { PrimitiveType } from "./Generic";
 export type ApplicationStatus =
     | "DRAFT"
     | "DISCARDED"
+    | "WITHDRAWN"
     | "SUBMITTED"
     | "UNDER_REVIEW"
     | "ACTION_REQUIRED"
-    | "PROCESSING"
+    | "UNDER_ASSESSMENT"
     | "APPROVED"
+    | "APPROVED_WITH_CONDITIONS"
+    | "DEFERRED"
     | "REJECTED";
 
 
 export const finalisedStatuses: ApplicationStatus[] = [
     "DISCARDED",
+    "WITHDRAWN",
     "APPROVED",
+    "APPROVED_WITH_CONDITIONS",
     "REJECTED",
 ]
 
@@ -26,16 +31,19 @@ export const finalisedStatuses: ApplicationStatus[] = [
 export interface IApplicationData {
     id: number;
     key: string;
+    internal_id: string;
     owner: string;
     process_slug: string;
     questionnaire_id: number;
+    questionnaire_code: string;
     questionnaire_name: string;
     questionnaire_version: number;
     status: ApplicationStatus;
     created_at: string;
     updated_at: string;
     submitted_at: string | null;
-    document: IFormDocument;
+    /** Present on single-record fetches only; omitted from list endpoints to reduce payload size. */
+    document?: IFormDocument;
 }
 
 /**

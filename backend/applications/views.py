@@ -33,15 +33,22 @@ def generic_template(request):
 
 
 def resume_application(request, key):
-    """Resume an application based on the key provided in the URL."""
+    """Resume an application based on the key provided in the URL.
+
+    Deliberately uses a strict owner check rather than ``has_access``.
+    Reviewers may read and download applications, but they must not be able
+    to open the interactive form and modify answers on behalf of an applicant.
+    """
     # Fetch the application object
     try:
         application = Application.objects.get(key=key)
     except Application.DoesNotExist:
         return RESPONSE_404
 
-    # Verify application key access
-    if application.has_access(request.user) is False:
+    # Only the owner may resume (edit) their own application.
+    # Using an explicit equality check — not has_access — to prevent
+    # reviewers from inadvertently gaining write access via the form URL.
+    if not request.user.is_authenticated or application.owner != request.user:
         return RESPONSE_404
 
     return generic_template(request)
@@ -67,3 +74,26 @@ def download_attachment(request, appKey, attachmentKey):
 
     # Serve the file
     return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
+
+
+def download_application(request, appKey):
+    """Download an application in the .pdf format based on the application key provided in the URL."""
+    # Fetch the application object
+    try:
+        application = Application.objects.select_related(
+            "questionnaire",
+            "questionnaire__process",
+            "owner",
+        ).prefetch_related("attachments").get(key=appKey)
+    except Application.DoesNotExist:
+        return RESPONSE_404
+
+    # Verify that the user has access to this application
+    if application.has_access(request.user) is False:
+        return RESPONSE_404
+
+    # Generate the PDF from the submitted questionnaire structure and stored answers.
+    pdf_file = application.generate_pdf(request=request)
+
+    # Serve the PDF file
+    return FileResponse(pdf_file, as_attachment=False, filename=f"application_{appKey}.pdf")

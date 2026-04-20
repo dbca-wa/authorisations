@@ -13,6 +13,8 @@ import { finalisedStatuses, type IApplicationData } from "../../../context/types
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
+import type { LoaderData } from '../../../context/types/Generic';
+import { useResolvedPromise } from "../../Common";
 
 interface IProcessGroup {
     process: IAuthorisationProcess;
@@ -23,57 +25,9 @@ const formatDate = (value: string): string => {
     return new Date(value).toLocaleDateString();
 }
 
-// const getQuestionnaireProcessSlug = (questionnaire: IQuestionnaireData): string => {
-//     return questionnaire.slug;
-// }
-
 const getQuestionnaireUiKey = (questionnaire: IQuestionnaireData): string => {
-    return `${questionnaire.process_slug}:${questionnaire.name}:v${questionnaire.version}`;
+    return `${questionnaire.process_slug}:${questionnaire.code}:v${questionnaire.version}`;
 }
-
-// const buildProcessName = (slug: string): string => {
-//     return slug
-//         .split(/[-_]/g)
-//         .filter(Boolean)
-//         .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-//         .join(" ");
-// }
-
-// const buildProcesses = (questionnaires: IQuestionnaireData[]): IAuthorisationProcess[] => {
-//     const processMap = new Map<string, IAuthorisationProcess>();
-//     const longDescription = "The application process for using animals for scientific or educational purposes in Western Australia, integrating the Animal Welfare Act 2002, the Biodiversity Conservation Act 2016, and the Australian Code for the Care and Use of Animals for Scientific Purposes. It is designed to guide applicants, investigators, Animal Ethics Committee (AEC) members, and other stakeholders through the process.";
-
-//     for (const questionnaire of questionnaires) {
-//         const processSlug = getQuestionnaireProcessSlug(questionnaire);
-//         const existingProcess = processMap.get(processSlug);
-
-//         if (existingProcess) {
-//             existingProcess.updated_at =
-//                 new Date(questionnaire.created_at) > new Date(existingProcess.updated_at)
-//                     ? questionnaire.created_at
-//                     : existingProcess.updated_at;
-//             continue;
-//         }
-
-//         processMap.set(processSlug, {
-//             slug: processSlug,
-//             // name: buildProcessName(processSlug),
-//             name: "Care and Use of Animals for Scientific Purposes",
-//             description: longDescription,
-//             sort_order: processMap.size,
-//             created_at: questionnaire.created_at,
-//             updated_at: questionnaire.created_at,
-//         });
-//     }
-
-//     return [...processMap.values()].sort((a, b) => {
-//         if (a.sort_order !== b.sort_order) {
-//             return a.sort_order - b.sort_order;
-//         }
-
-//         return a.name.localeCompare(b.name);
-//     });
-// }
 
 const buildProcessGroups = (
     processes: IAuthorisationProcess[],
@@ -195,16 +149,10 @@ const ProcessGroup = ({
 }
 
 export const NewApplication = () => {
-    const { processes, questionnaires } = useLoaderData<{
-        processes: IAuthorisationProcess[];
-        questionnaires: IQuestionnaireData[];
-    }>();
+    const { processes, questionnaires: questionnairesPromise } = useLoaderData<LoaderData>();
+    const [questionnaires, isQuestionnairesLoading] = useResolvedPromise<IQuestionnaireData[]>(questionnairesPromise, []);
 
-    // const processes = React.useMemo(
-    //     () => buildProcesses(questionnaires),
-    //     [questionnaires],
-    // );
-    const processGroups = React.useMemo(
+    const processGroups: IProcessGroup[] = React.useMemo(
         () => buildProcessGroups(processes, questionnaires),
         [processes, questionnaires],
     );
@@ -216,17 +164,18 @@ export const NewApplication = () => {
             <Typography variant="h4" gutterBottom>
                 Start a New Application
             </Typography>
-            {processGroups.length === 0 ? <EmptyStateComponent /> :
-                <>
-                    {processGroups.map((group) => (
-                        <ProcessGroup
-                            key={group.process.slug}
-                            group={group}
-                            inProgress={inProgress}
-                            setInProgress={setInProgress}
-                        />
-                    ))}
-                </>
+            {isQuestionnairesLoading ? <Typography>Loading questionnaires...</Typography> :
+                processGroups.length === 0 ? <EmptyStateComponent /> :
+                    <>
+                        {processGroups.map((group) => (
+                            <ProcessGroup
+                                key={group.process.slug}
+                                group={group}
+                                inProgress={inProgress}
+                                setInProgress={setInProgress}
+                            />
+                        ))}
+                    </>
             }
         </Box>
     );
@@ -311,7 +260,7 @@ const createNewApplication = async (
     const newApplication: IApplicationData | null = await ApiManager.createApplication(
         questionnaire.process_slug,
         questionnaire.id,
-        questionnaire.name,
+        questionnaire.code,
         questionnaire.version,
     ).catch((error: AxiosError) => {
         showSnackbar(

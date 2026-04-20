@@ -307,6 +307,19 @@ function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
     question.o.grid_columns?.forEach((column, _) => {
+        // Default to boolean false for checkboxes
+        if (column.type === "checkbox") {
+            row[column.label] = false;
+            return;
+        }
+
+        // Default to not selected for date
+        if (column.type === "date") {
+            row[column.label] = null;
+            return;
+        }
+
+        // Default to empty string for other types
         row[column.label] = '';
     });
     return row;

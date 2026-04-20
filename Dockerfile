@@ -27,6 +27,20 @@ RUN update-ca-certificates
 # Update timezone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Install Prince XML with dpkg (architecture-aware)
+RUN DEB_FILE=prince_16.2-1.deb \
+    && ARCH=$(dpkg --print-architecture) \
+    && if [ "$ARCH" = "arm64" ]; then \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian13_arm64.deb"; \
+    else \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian13_amd64.deb"; \
+    fi \
+    && wget -O ${DEB_FILE} $PRINCE_URL \
+    && dpkg -i ${DEB_FILE} || apt-get install -y -f \
+    && rm -f ${DEB_FILE}
+
+
+
 ## FRONTEND
 # Install Node.js
 # https://github.com/nodesource/distributions/
@@ -97,6 +111,7 @@ WORKDIR /app
 
 # Collect static
 RUN python manage.py collectstatic --noinput
+
 
 # Expose django app on port 8080
 EXPOSE 8080

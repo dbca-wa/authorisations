@@ -245,7 +245,7 @@
               "type": "grid",
               "label": "List of project personnel",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "text",
@@ -285,7 +285,7 @@
             {
               "type": "file",
               "label": "Attach the competency forms of other project personnel",
-              "description": "The competency forms must be the most recent and less than 12 months old.",
+              "description": "All staff undertaking field work that involves animals must have the relevant competencies and training to undertake this work. It is the Chief Investigators (CIs) responsibility to obtain and maintain current competency checklists for all project staff. Competency checklists current to within 12 months are required for all CIs and competency checklists for project staff may be requested by the AEC.",
               "is_required": false,
               "grid_columns": [],
               "grid_max_rows": null,
@@ -349,7 +349,7 @@
               "type": "date",
               "label": "Start date",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -379,7 +379,7 @@
               "type": "checkbox",
               "label": "I confirm that adequate resources are available to ensure that the project is conducted according to the project approval, conditions and animal welfare is not compromised.",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -464,7 +464,7 @@
               "type": "textarea",
               "label": "Location of fieldwork | Source of animals | Location(s) where animals will be held",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -536,7 +536,7 @@
               "type": "select",
               "label": "Purpose of the proposed project",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -553,7 +553,7 @@
               "type": "grid",
               "label": "Key aims / objectives",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "text",
@@ -570,7 +570,7 @@
               "type": "textarea",
               "label": "Explain the relevance, benefits and the justification for the project",
               "description": "Applicants must demonstrate that the benefits of undertaking the project are justified in relation to the potential impact on animals, e.g How will your project contribute to the conservation of wildlife? How will it improve knowledge and understanding of biodiversity, ecosystems and processes?",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -592,7 +592,7 @@
               "type": "textarea",
               "label": "Project design description",
               "description": "i.e. site locations, number of sites, trap types, numbers of traps, spacing/configuration, frequency and timing of monitoring.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -602,7 +602,7 @@
               "type": "grid",
               "label": "Species and number of individuals that will be handled or observed",
               "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the DBCA AEC website or requested from the Executive Officer.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "text",
@@ -698,7 +698,7 @@
               "type": "textarea",
               "label": "Explain the necessity for the number of animals to be handled.",
               "description": "Explain how the number of animals to be handled or observed and/or the sampling effort supports the validity of the research. e.g. statistical rigour, training, education. Consider whether the length (number of continuous days’ trapping) and number of survey sessions is appropriate to achieve the outcomes of your project while also minimising the impact on animals.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -714,7 +714,7 @@
               "type": "grid",
               "label": "Method of capture / observation",
               "description": "Selecting methods that are appropriate to the species & circumstances; avoiding or minimising harm to target and non-target species.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "select",
@@ -763,7 +763,7 @@
               "type": "textarea",
               "label": "Timing and frequency of trap checking",
               "description": "Identify the timing and frequency of trap checking and provide justification where these differ from the SOPs.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -872,7 +872,7 @@
               "type": "grid",
               "label": "Number of animals to be marked",
               "description": "You may attach as a spreadsheet as long as it contains the same information. A template spreadsheet can be found on the DBCA AEC website or requested from the Executive Officer.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "select",
@@ -917,14 +917,15 @@
               "select_options": []
             },
             {
-              "type": "text",
+              "type": "file",
               "label": "Spreadsheet attachment for the number of animals to be marked.",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
-              "select_options": []
+              "select_options": [],
+              "file_max_attachments": 3
             },
             {
               "type": "textarea",
@@ -960,7 +961,7 @@
               "type": "textarea",
               "label": "Animal handling timeline",
               "description": "Brief description and expected timeline from start to finish for animal handling. e.g. animals will be removed from trap, morphometrics taken and released at point of capture. On average handling time will be no more than 5 minutes per individual.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -992,7 +993,7 @@
               "type": "textarea",
               "label": "Identify key strategies and measures to assess, monitor and manage animal wellbeing, including expected and unexpected adverse events.",
               "description": "This section should explain how you will monitor animal welfare and manage impacts including signs of elevated stress, ejected pouch young and unexpected injuries. Include details, where appropriate, on the decision-making steps that project personnel will take regarding adverse events. Include your Euthanasia Plan: briefly outline the decision-making process for determining when an animal should be humanely killed, and any arrangements for euthanasia and/or post mortem examination.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -1002,7 +1003,7 @@
               "type": "textarea",
               "label": "Pest species",
               "description": "If pest species (e.g. wild dog, fox, cat, rabbit, black rat, house house) are target or potential non-target species, please identify how you intend to manage these species (eg release at point of capture, euthanase). If pest species will be released at the point of capture, justification must be provided.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -1012,7 +1013,7 @@
               "type": "textarea",
               "label": "Expected adverse events",
               "description": "If you expect to have some adverse events (e.g. predation events, pouch young deaths), please try to provide an estimate of the likely numbers for each type of event.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,
@@ -1028,7 +1029,7 @@
               "type": "grid",
               "label": "Methods for euthanasia",
               "description": "Identify method(s) in table below. If the method is species specific, please use the last (blank) column to identify the species, group of species etc to which this method will be applied.",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [
                 {
                   "type": "select",
@@ -1045,7 +1046,8 @@
                     "Ice slurry",
                     "Pentobarbitone injection",
                     "Pithing",
-                    "Shooting via firearm"
+                    "Shooting via firearm",
+                    "Other (please explain)"
                   ]
                 },
                 {
@@ -1067,7 +1069,7 @@
               "type": "text",
               "label": "Identify the criteria that project personnel will use to confirm death",
               "description": "",
-              "is_required": false,
+              "is_required": true,
               "grid_columns": [],
               "grid_max_rows": null,
               "dependent_step": null,

@@ -40,7 +40,9 @@ export class ApiManager {
 
     public static async fetchApplications(): Promise<IApplicationData[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching applications...");
         const response = await axios.get<IApplicationData[]>("/applications", requestConfig);
+        // console.debug("Fetched applications:", response.data.length);
 
         return response.data;
     }
@@ -48,14 +50,14 @@ export class ApiManager {
     public static async createApplication(
         processSlug: string,
         questionnaireId: number,
-        questionnaireName: string,
+        questionnaireCode: string,
         questionnaireVersion: number,
     ): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.post<IApplicationData>("/applications", {
             process_slug: processSlug,
             questionnaire_id: questionnaireId,
-            questionnaire_name: questionnaireName,
+            questionnaire_code: questionnaireCode,
             questionnaire_version: questionnaireVersion,
         }, requestConfig);
 
@@ -144,14 +146,25 @@ export class ApiManager {
 
     public static async fetchQuestionnaires(): Promise<IQuestionnaireData[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching questionnaires...");
         const response = await axios.get<IQuestionnaireData[]>("/questionnaires", requestConfig);
+        // console.debug("Fetched questionnaires:", response.data.length);
 
         return response.data;
     }
 
     public static async fetchAuthorisationProcesses(): Promise<IAuthorisationProcess[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching processes...");
         const response = await axios.get<IAuthorisationProcess[]>("/processes", requestConfig);
+        // console.debug("Fetched processes:", response.data.length);
+
+        return response.data;
+    }
+
+    public static async fetchAssessmentApplications(): Promise<IApplicationData[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IApplicationData[]>("/assessment", requestConfig);
 
         return response.data;
     }

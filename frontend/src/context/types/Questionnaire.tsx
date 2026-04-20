@@ -9,6 +9,7 @@ export interface IAuthorisationProcess {
     image_url?: string;
     image_credit?: string;
     sort_order: number;
+    can_review: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -20,6 +21,7 @@ export interface IAuthorisationProcess {
 export interface IQuestionnaireData {
     process_slug: string;
     id: number;
+    code: string;
     name: string;
     version: number;
     description: string;

@@ -20,12 +20,20 @@ class Questionnaire(models.Model):
     version = models.PositiveSmallIntegerField(
         default=1, blank=False, null=False, editable=False
     )
+    code = models.SlugField(
+        max_length=20,
+        null=False,
+        blank=False,
+        db_index=True,
+        editable=True,
+        help_text="Stable questionnaire code used to identify a version lineage within a process.",
+    )
     name = models.CharField(
         max_length=100,
         blank=False,
         null=False,
         editable=True,
-        help_text='The unique name of the questionnaire within the process such as; "New application", "Renewal" etc.',
+        help_text='The display name of the questionnaire such as; "New application", "Renewal" etc.',
     )
     description = models.TextField(
         max_length=500, blank=False, null=False, editable=True
@@ -50,24 +58,36 @@ class Questionnaire(models.Model):
         on_delete=models.PROTECT,
         editable=False,
     )
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    updated_by = models.ForeignKey(
+        "users.User",
+        related_name="updated_questionnaires",
+        on_delete=models.PROTECT,
+        editable=False,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         ordering = (
             "process_id",
-            "name",
+            "code",
             "-version",
         )
         constraints = [
             models.UniqueConstraint(
                 "process",
-                "name",
+                "code",
                 models.F("version").desc(),
-                name="qnaire_unique_process_name_version_desc",
+                name="qnaire_unique_process_code_version_desc",
             )
         ]
 
     def __str__(self):
-        return f'Questionnaire "{self.name}" (v{self.version}) for {self.process.slug}'
+        return (
+            f'Questionnaire "{self.name}" [{self.code}] '
+            f'(v{self.version}) for {self.process.slug}'
+        )
 
 
 class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializer):
@@ -87,11 +107,13 @@ class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerial
         fields = (
             "process_slug",
             "id",
+            "code",
             "name",
             "version",
             "description",
             "sort_order",
             "created_at",
+            "updated_at",
             "document",
         )
         # All fields are read-only by default (see `.get_fields()` method).

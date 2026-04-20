@@ -10,10 +10,11 @@ import ListItemText from '@mui/material/ListItemText';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
-import { useEffect } from 'react';
-import { useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
+import { useEffect, useMemo } from 'react';
+import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
 import { DRAWER_WIDTH } from '../../../context/Constants';
-import type { IRoute } from "../../../context/types/Generic";
+import type { IRoute, LoaderData } from "../../../context/types/Generic";
+import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { ROUTES } from '../../../router';
 
 
@@ -27,6 +28,7 @@ export const MainLayout = ({
         document.title = `${route.label} : DBCA Authorisations`;
     }, [route.label]);
 
+    const { processes } = useLoaderData<LoaderData>();
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -38,7 +40,7 @@ export const MainLayout = ({
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <Sidebar />
+            <Sidebar processes={processes} />
             <Box component="main" sx={{ marginTop: "64px", p: 3 }}>
                 {route.component && <route.component />}
             </Box>
@@ -47,10 +49,19 @@ export const MainLayout = ({
 }
 
 
-const Sidebar = () => {
+const Sidebar = ({
+    processes,
+}: {
+    processes: IAuthorisationProcess[];
+}) => {
     const currentPath = window.location.pathname;
-    const navOptions: NavigateOptions = { viewTransition: true }
+    const navOptions: NavigateOptions = { viewTransition: true };
     const navigate: NavigateFunction = useNavigate();
+
+    const visibleRoutes = useMemo(
+        () => ROUTES.filter((route) => !route.condition || route.condition(processes)),
+        [processes],
+    );
 
     return (
         <Drawer
@@ -65,17 +76,23 @@ const Sidebar = () => {
             <Box sx={{ overflow: 'auto' }}>
                 <List>
                     {
-                        ROUTES.map((route) => (
-                            <ListItem key={route.path} disablePadding divider={route.divider}>
-                                <ListItemButton
-                                    onClick={() => navigate(route.path, navOptions)}
-                                    selected={currentPath === route.path}
-                                >
-                                    <ListItemIcon>{route.icon}</ListItemIcon>
-                                    <ListItemText primary={route.label} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))
+                        visibleRoutes.map((route) => {
+                            return (
+                                <ListItem key={route.path} disablePadding divider={route.divider}>
+                                    <ListItemButton
+                                        onClick={() => route.external
+                                            // External routes (e.g. mailto:) must not go through React Router.
+                                            ? window.open(route.path)
+                                            : navigate(route.path, navOptions)
+                                        }
+                                        selected={!route.external && currentPath === route.path}
+                                    >
+                                        <ListItemIcon>{route.icon}</ListItemIcon>
+                                        <ListItemText primary={route.label} />
+                                    </ListItemButton>
+                                </ListItem>
+                            );
+                        })
                     }
                 </List>
             </Box>

@@ -17,7 +17,13 @@ from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
 from rest_framework import exceptions, serializers, status
 
-from .models import Application, ApplicationAttachment, ApplicationStatus
+from .models import (
+    Application,
+    ApplicationAttachment,
+    ApplicationStatus,
+    REVIEW_QUEUE_STATUSES,
+    REVIEWER_SETTABLE_STATUSES,
+)
 from .schema import get_answers_schema
 
 
@@ -41,6 +47,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
+    questionnaire_code = serializers.CharField(
+        source="questionnaire.code",
+        required=False,
+        read_only=True,
+    )
     questionnaire_name = serializers.CharField(
         source="questionnaire.name",
         required=False,
@@ -48,6 +59,10 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     )
     questionnaire_version = serializers.IntegerField(
         source="questionnaire.version",
+        required=False,
+        read_only=True,
+    )
+    internal_id = serializers.CharField(
         required=False,
         read_only=True,
     )
@@ -61,9 +76,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         fields = (
             "id",
             "key",
+            "internal_id",
             "owner",
             "process_slug",
             "questionnaire_id",
+            "questionnaire_code",
             "questionnaire_name",
             "questionnaire_version",
             "status",
@@ -91,9 +108,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Process slug is required when creating (to confirm data integrity)
         fields["process_slug"].required = isPost
         fields["process_slug"].read_only = not isPost
-        # Questionnaire name is required when creating (to confirm data integrity)
-        fields["questionnaire_name"].required = isPost
-        fields["questionnaire_name"].read_only = not isPost
+        # Questionnaire code is required when creating (to confirm data integrity)
+        fields["questionnaire_code"].required = isPost
+        fields["questionnaire_code"].read_only = not isPost
         # Questionnaire version is required when creating (to confirm data integrity)
         fields["questionnaire_version"].required = isPost
         fields["questionnaire_version"].read_only = not isPost
@@ -107,6 +124,22 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         fields["status"].read_only = not isPatch
 
         return fields
+
+    def to_representation(self, instance):
+        """Exclude ``document`` from list responses to reduce payload size.
+
+        The ``document`` field is only meaningful on single-record detail views
+        (FormLayout). Including it in list responses wastes bandwidth since no
+        list-consuming component reads it.
+        """
+        data = super().to_representation(instance)
+        # The viewset sets ``action`` on the serialiser context's view; retrieve
+        # is the only action that should include the full document payload.
+        view = self.context.get("view")
+        is_detail = view and getattr(view, "action", None) == "retrieve"
+        if not is_detail:
+            data.pop("document", None)
+        return data
 
     def validate_status(self, value):
         """
@@ -135,10 +168,10 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
     def validate(self, attrs):
         """
-        Object-level validation to ensure the questionnaire exists and matches the provided process slug, name, and version.
-        This runs after field-level validation, guaranteeing access to all fields.
+        Object-level validation to ensure the questionnaire exists and matches the
+        provided process slug, code, and version.
         """
-        # Only validate on creation for data integrity
+        # Only validate on creation for data integrity.
         request = self.context.get("request")
         if request.method != "POST":
             return attrs
@@ -148,45 +181,45 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
         process_slug = process_data.get("slug")
         questionnaire_id = questionnaire_data.get("id")
-        questionnaire_name = questionnaire_data.get("name")
+        questionnaire_code = questionnaire_data.get("code")
         questionnaire_version = questionnaire_data.get("version")
-        
-        # Make sure we did receive those required fields
+
+        # Ensure all integrity fields are present.
         if (
             not process_slug
             or not questionnaire_id
-            or not questionnaire_name
+            or not questionnaire_code
             or not questionnaire_version
         ):
             raise exceptions.ValidationError(
-                "Process slug, questionnaire id, name and version are required."
+                "Process slug, questionnaire id, code and version are required."
             )
 
-        # If we already have a validated questionnaire in the context, validate it
+        # Reuse a previously validated questionnaire instance when possible.
         questionnaire: Questionnaire = self.context.get("questionnaire", None)
         if (
             isinstance(questionnaire, Questionnaire)
             and questionnaire.process.slug == process_slug
             and questionnaire.id == questionnaire_id
-            and questionnaire.name == questionnaire_name
+            and questionnaire.code == questionnaire_code
             and questionnaire.version == questionnaire_version
         ):
             return attrs
 
-        # Otherwise, try to find the questionnaire based on the provided fields
+        # Otherwise, fetch the questionnaire by the provided identity fields.
         try:
             questionnaire = Questionnaire.objects.select_related("process").get(
                 process__slug=process_slug,
                 id=questionnaire_id,
-                name=questionnaire_name,
+                code=questionnaire_code,
                 version=questionnaire_version,
             )
         except Questionnaire.DoesNotExist:
             raise exceptions.ValidationError(
-                "Questionnaire with the provided process slug, id, name and version does not exist."
+                "Questionnaire with the provided process slug, id, code and version does not exist."
             )
 
-        # Add the found questionnaire to the context for later use
+        # Add the found questionnaire to the context for later use.
         self.context["questionnaire"] = questionnaire
 
         return attrs
@@ -199,7 +232,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         try:
             questionnaire = self.context["questionnaire"]
         except KeyError:
-            raise exceptions.ValidationError("Questionnaire not found in context, validation did not run.")
+            raise exceptions.ValidationError(
+                "Questionnaire not found in context, validation did not run."
+            )
 
         # Hardcode the version from the current schema
         schema = get_answers_schema()
@@ -498,3 +533,92 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         instance.name = name
         instance.save(update_fields=["name"])
         return instance
+
+
+class AssessmentSerialiser(serializers.ModelSerializer):
+    """
+    Serialiser for the assessment-facing application view.
+
+    All fields are read-only except ``status``, which an assessor may advance
+    via PATCH. Transition validation enforces that:
+      - the current status is a review-queue status (i.e. the application is
+        actually awaiting assessor action), and
+      - the requested status is one an assessor is permitted to set.
+    """
+
+    owner = serializers.CharField(
+        source="owner.username",
+        read_only=True,
+    )
+    process_slug = serializers.SlugField(
+        source="questionnaire.process.slug",
+        read_only=True,
+    )
+    questionnaire_id = serializers.IntegerField(
+        source="questionnaire.id",
+        read_only=True,
+    )
+    questionnaire_name = serializers.CharField(
+        source="questionnaire.name",
+        read_only=True,
+    )
+    questionnaire_version = serializers.IntegerField(
+        source="questionnaire.version",
+        read_only=True,
+    )
+    internal_id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Application
+        fields = (
+            "id",
+            "key",
+            "internal_id",
+            "owner",
+            "process_slug",
+            "questionnaire_id",
+            "questionnaire_name",
+            "questionnaire_version",
+            "status",
+            "created_at",
+            "updated_at",
+            "submitted_at",
+        )
+        # All fields are read-only by default; status is made writable via PATCH in get_fields().
+        read_only_fields = fields
+
+    def get_fields(self, *args, **kwargs):
+        fields = super().get_fields(*args, **kwargs)
+        request = self.context.get("request", None)
+
+        isPatch = request.method == "PATCH" if request else False
+
+        # Status is the only writable field, and only during a PATCH status-advancement request.
+        fields["status"].required = isPatch
+        fields["status"].read_only = not isPatch
+
+        return fields
+
+    def validate_status(self, value: str) -> str:
+        """
+        Validate that the requested status transition is permitted for an assessor.
+
+        Rejects transitions from non-queue statuses (e.g. DRAFT) to prevent
+        assessors from accidentally acting on applications that are not yet in
+        their queue, and rejects attempts to set applicant-only statuses.
+        """
+        current = self.instance.status
+
+        # Guard: the application must actually be in the review queue.
+        if current not in REVIEW_QUEUE_STATUSES:
+            raise exceptions.ValidationError(
+                f"Application with status '{current}' is not in the assessment queue."
+            )
+
+        # Guard: the target status must be one assessors are permitted to set.
+        if value not in REVIEWER_SETTABLE_STATUSES:
+            raise exceptions.ValidationError(
+                f"Status '{value}' cannot be set by an assessor."
+            )
+
+        return value

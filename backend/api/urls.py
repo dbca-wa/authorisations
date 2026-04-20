@@ -3,6 +3,7 @@ from rest_framework import routers
 
 from .views import (
     ApplicationViewSet,
+    AssessmentViewSet,
     AttachmentViewSet,
     AuthorisationProcessViewSet,
     QuestionnaireViewSet,
@@ -14,6 +15,7 @@ router.register("processes", AuthorisationProcessViewSet)
 router.register("questionnaires", QuestionnaireViewSet)
 router.register("applications", ApplicationViewSet)
 router.register("attachments", AttachmentViewSet)
+router.register("assessment", AssessmentViewSet, basename="assessment")
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

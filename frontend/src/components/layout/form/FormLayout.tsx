@@ -56,7 +56,7 @@ export const FormLayout = () => {
 
     // Current active step index (or the review page if not editable)
     const [activeStep, setActiveStep] = React.useState<number>(
-        userCanEdit ? app.document.active_step : questionnaire.document.steps.length
+        userCanEdit ? app.document!.active_step : questionnaire.document.steps.length
     );
 
     const { showSnackbar } = useSnackbar();
@@ -64,7 +64,7 @@ export const FormLayout = () => {
     // Manage completed steps
     const [validatedSteps, setValidSteps] = React.useState<NumberedBooleanObj>(
         // Calculate initial state from application document
-        app.document.steps.reduce((acc, step, index) => {
+        app.document!.steps.reduce((acc, step, index) => {
             if (step.is_valid !== null)
                 acc[index] = step.is_valid;
             return acc;
@@ -74,7 +74,7 @@ export const FormLayout = () => {
     // Form methods
     const formMethods = useForm<IFormAnswers>({
         // Generate default values based on application document
-        defaultValues: app.document.steps.reduce((acc, step, index) => {
+        defaultValues: app.document!.steps.reduce((acc, step, index) => {
             acc[index] = step.answers ?? {};
             return acc;
         }, {} as IFormAnswers),
@@ -98,7 +98,7 @@ export const FormLayout = () => {
         // Convert form answers to document structure
         const answers: IFormAnswers = formMethods.getValues();
         const document: IFormDocument = {
-            schema_version: app.document.schema_version,
+            schema_version: app.document!.schema_version,
             active_step: newActiveStep ?? activeStep,
             steps: questionnaire.document.steps.map((_step, index) => ({
                 // Use the passed-in object first, falling back to the state variable
