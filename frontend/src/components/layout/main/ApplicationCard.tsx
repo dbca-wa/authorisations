@@ -52,10 +52,12 @@ export const ApplicationCard = ({
     process,
     application,
     downloadUrl,
+    displayContinue,
 }: {
     process?: IAuthorisationProcess;
     application: IApplicationData;
     downloadUrl?: string;
+    displayContinue?: boolean;
 }) => {
     // Enable relative date labels like "2 days ago" for card metadata.
     dayjs.extend(relativeTime);
@@ -138,23 +140,25 @@ export const ApplicationCard = ({
                         </Link>
                     )}
 
-                    <Link
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="Continue application"
-                        onClick={() => openNewTab(`/a/${application.key}`, application.key)}
-                    >
-                        <Button
-                            variant="contained"
-                            color="success"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={Boolean(false)}
-                            startIcon={<PlayArrowRoundedIcon />}
+                    {displayContinue && (
+                        <Link
+                            target="_blank"
+                            rel="noopener"
+                            aria-label="Continue application"
+                            onClick={() => openNewTab(`/a/${application.key}`, application.key)}
                         >
-                            Continue
-                        </Button>
-                    </Link>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                loadingPosition='start'
+                                loading={false}
+                                disabled={Boolean(false)}
+                                startIcon={<PlayArrowRoundedIcon />}
+                            >
+                                Continue
+                            </Button>
+                        </Link>
+                    )}
                 </Box>
             </Card>
         </ListItem>

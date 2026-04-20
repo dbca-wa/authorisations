@@ -188,6 +188,7 @@ export const MyApplications = () => {
                                 application={a}
                                 process={process}
                                 downloadUrl={downloadUrl}
+                                displayContinue={true}
                             />;
                         })}
                     </List>

@@ -41,8 +41,8 @@ export const ApplicationAssessment = () => {
                 return statusRankA - statusRankB;
             }
 
-            // Then sort by freshest activity within each status bucket.
-            return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+            // Then sort by arrival order within each status bucket — oldest first (FIFO queue).
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         });
     }, [applications]);
 
@@ -63,6 +63,7 @@ export const ApplicationAssessment = () => {
                                 application={application}
                                 process={process}
                                 downloadUrl={`/d/${application.key}`}
+                                displayContinue={false}
                             />;
                         })}
                     </List>
