@@ -11,7 +11,7 @@ import { FormLayout } from "./components/layout/form/FormLayout";
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
-import { AssessmentApplications } from './components/layout/main/AssessmentApplications';
+import { ApplicationAssessment } from './components/layout/main/Assessment';
 import { ApiManager } from './context/ApiManager';
 import type { IRoute, LoaderData } from "./context/types/Generic";
 import { handleApiError } from './context/Utils';
@@ -65,7 +65,7 @@ export const ROUTES: IRoute[] = [
 		path: "/assessment",
 		icon: <ChecklistRtlIcon />,
 		divider: true,
-		component: AssessmentApplications,
+		component: ApplicationAssessment,
 		condition: (processes) => processes.some((process) => process.can_review),
 		loader: async (): Promise<LoaderData> => {
 			const processes = await ApiManager

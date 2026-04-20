@@ -16,7 +16,7 @@ const assessmentRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRE
  * Displays applications in the assessment queue for technical officers.
  * This page resolves deferred loader data and prioritises active assessment statuses.
  */
-export const AssessmentApplications = () => {
+export const ApplicationAssessment = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
     const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
 
