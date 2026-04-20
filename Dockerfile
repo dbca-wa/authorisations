@@ -14,6 +14,7 @@ RUN apt-get upgrade -y
 RUN apt-get install --no-install-recommends --fix-missing -y \
     # command-line tools
     curl wget git htop vim nano sudo mtr coreutils rsyslog \
+    gdebi \
     # libraries
     tzdata libmagic-dev gcc binutils libproj-dev gdal-bin \
     bzip2 unzip libpq-dev patch pkg-config ca-certificates \
@@ -27,16 +28,20 @@ RUN update-ca-certificates
 # Update timezone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Install Prince XML with dpkg (architecture-aware)
+# Install Prince XML with gdebi (architecture-aware).
+# gdebi is used instead of dpkg so that apt automatically resolves and installs
+# all dependencies declared by the .deb before unpacking it.
+# The Ubuntu 24.04-specific packages are used (not the Debian 13 builds) so
+# that the declared dependency versions are satisfiable from the Ubuntu repos.
 RUN DEB_FILE=prince_16.2-1.deb \
     && ARCH=$(dpkg --print-architecture) \
     && if [ "$ARCH" = "arm64" ]; then \
-    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian13_arm64.deb"; \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_ubuntu24.04_arm64.deb"; \
     else \
-    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian13_amd64.deb"; \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_ubuntu24.04_amd64.deb"; \
     fi \
     && wget -O ${DEB_FILE} $PRINCE_URL \
-    && dpkg -i ${DEB_FILE} || apt-get install -y -f \
+    && gdebi --non-interactive ${DEB_FILE} \
     && rm -f ${DEB_FILE}
 
 
