@@ -10,13 +10,13 @@ import { useResolvedPromise } from "../../Common";
 import { ApplicationCard } from "./ApplicationCard";
 import { EmptyStateComponent } from "./EmptyState";
 
-const reviewRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", "UNDER_ASSESSMENT"] as const;
+const assessmentRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", "UNDER_ASSESSMENT"] as const;
 
 /**
- * Displays applications for technical officer review workflows.
- * This page resolves deferred loader data and prioritises active review statuses.
+ * Displays applications in the assessment queue for technical officers.
+ * This page resolves deferred loader data and prioritises active assessment statuses.
  */
-export const ReviewApplications = () => {
+export const AssessmentApplications = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
     const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
 
@@ -26,17 +26,17 @@ export const ReviewApplications = () => {
     );
 
     /**
-     * Orders review list with actively reviewed statuses first, then most recently updated.
+     * Orders the assessment queue with actively progressing statuses first, then most recently updated.
      * This helps technical officers focus on currently actionable work.
      */
-    const sortedReviewApplications = useMemo(() => {
-        const reviewStatusRank = new Map(reviewRelevantStatuses.map((status, index) => [status, index]));
+    const sortedAssessmentApplications = useMemo(() => {
+        const assessmentStatusRank = new Map(assessmentRelevantStatuses.map((status, index) => [status, index]));
 
         return [...applications].sort((a, b) => {
-            const statusRankA = reviewStatusRank.get(a.status as (typeof reviewRelevantStatuses)[number]) ?? Number.MAX_SAFE_INTEGER;
-            const statusRankB = reviewStatusRank.get(b.status as (typeof reviewRelevantStatuses)[number]) ?? Number.MAX_SAFE_INTEGER;
+            const statusRankA = assessmentStatusRank.get(a.status as (typeof assessmentRelevantStatuses)[number]) ?? Number.MAX_SAFE_INTEGER;
+            const statusRankB = assessmentStatusRank.get(b.status as (typeof assessmentRelevantStatuses)[number]) ?? Number.MAX_SAFE_INTEGER;
 
-            // First sort by review workflow priority.
+            // First sort by assessment workflow priority.
             if (statusRankA !== statusRankB) {
                 return statusRankA - statusRankB;
             }
@@ -49,14 +49,14 @@ export const ReviewApplications = () => {
     return (
         <Box className="p-8 min-w-4xl max-w-7xl">
             <Typography variant="h4" gutterBottom>
-                Review Applications
+                Application Assessment 
             </Typography>
-            <p>Here you can review and action applications assigned to your review stream.</p>
+            <p>Here you can assess and action applications assigned to your assessment stream.</p>
 
             {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
-                sortedReviewApplications.length === 0 ? <EmptyStateComponent /> :
+                sortedAssessmentApplications.length === 0 ? <EmptyStateComponent /> :
                     <List>
-                        {sortedReviewApplications.map((application) => {
+                        {sortedAssessmentApplications.map((application) => {
                             const process = processBySlug.get(application.process_slug);
                             return <ApplicationCard
                                 key={application.key}

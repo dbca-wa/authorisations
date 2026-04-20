@@ -17,7 +17,13 @@ from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
 from rest_framework import exceptions, serializers, status
 
-from .models import Application, ApplicationAttachment, ApplicationStatus, REVIEW_QUEUE_STATUSES, REVIEWER_SETTABLE_STATUSES
+from .models import (
+    Application,
+    ApplicationAttachment,
+    ApplicationStatus,
+    REVIEW_QUEUE_STATUSES,
+    REVIEWER_SETTABLE_STATUSES,
+)
 from .schema import get_answers_schema
 
 
@@ -226,7 +232,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         try:
             questionnaire = self.context["questionnaire"]
         except KeyError:
-            raise exceptions.ValidationError("Questionnaire not found in context, validation did not run.")
+            raise exceptions.ValidationError(
+                "Questionnaire not found in context, validation did not run."
+            )
 
         # Hardcode the version from the current schema
         schema = get_answers_schema()
