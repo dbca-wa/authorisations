@@ -400,6 +400,9 @@ class Application(models.Model):
         return {
             "application": self,
             "steps": steps,
+            # file:// URI so Prince reads the logo directly from disk rather than
+            # making an outbound HTTP request that fails behind the auth proxy.
+            "logo_src": f"file://{settings.STATIC_ROOT}/images/Government_of_Western_Australia_logo.png",
             # Inlined so Prince never needs to resolve an external stylesheet URL.
             "pdf_icon_css": self._load_pdf_icon_css(),
         }
