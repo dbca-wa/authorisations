@@ -207,7 +207,7 @@ class AuthorisationProcessViewSet(viewsets.ReadOnlyModelViewSet):
         # any linked reviewer group matches one of the current user's groups,
         # the process is reviewable for that user.
         reviewer_group_links = (
-            AuthorisationProcess.reviewer_groups.through.objects.filter(
+            AuthorisationProcess.assessor_groups.through.objects.filter(
                 authorisationprocess_id=OuterRef("pk"),
                 group_id__in=self.request.user.groups.values("id"),
             )
@@ -251,13 +251,13 @@ class AssessmentViewSet(
 
         Reviewer authorisation is determined by group membership: a user can
         review a process if any of their groups is listed in that process's
-        ``reviewer_groups``. This mirrors the ``can_review`` annotation logic
+        ``assessor_groups``. This mirrors the ``can_review`` annotation logic
         in ``AuthorisationProcessViewSet`` but expressed as a queryset filter.
         """
         # Resolve which process IDs this user may review via the M2M join table.
         # Using the through model avoids a JOIN through AuthorisationProcess itself.
         reviewable_process_ids = (
-            AuthorisationProcess.reviewer_groups.through.objects.filter(
+            AuthorisationProcess.assessor_groups.through.objects.filter(
                 group_id__in=self.request.user.groups.values("id")
             ).values("authorisationprocess_id")
         )

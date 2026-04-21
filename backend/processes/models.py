@@ -27,11 +27,11 @@ class AuthorisationProcess(models.Model):
 		db_index=True,
 		help_text="Controls display order in UI; lower values appear first.",
 	)
-	reviewer_groups = models.ManyToManyField(
+	assessor_groups = models.ManyToManyField(
 		"auth.Group",
 		related_name="+",
 		blank=True,
-		help_text="Reviewer groups responsible for this authorisation process.",
+		help_text="Assessor groups responsible for this authorisation process.",
 	)
 	created_at = models.DateTimeField(auto_now_add=True, editable=False)
 	updated_at = models.DateTimeField(auto_now=True, editable=False)

@@ -297,7 +297,7 @@ class Application(models.Model):
         Two principals are permitted:
         - The application owner (always has full access to their own record).
         - A reviewer / technical officer whose groups intersect with the
-          ``reviewer_groups`` of the application's process.  This mirrors the
+          ``assessor_groups`` of the application's process.  This mirrors the
           ``can_review`` annotation logic in ``AuthorisationProcessViewSet``.
 
         Note: read access does NOT imply write access.  Callers that require
@@ -319,7 +319,7 @@ class Application(models.Model):
         from processes.models import AuthorisationProcess  # noqa: PLC0415 — avoid circular import at module level
 
         is_reviewer = (
-            AuthorisationProcess.reviewer_groups.through.objects.filter(
+            AuthorisationProcess.assessor_groups.through.objects.filter(
                 authorisationprocess_id=self.questionnaire.process_id,
                 group_id__in=user.groups.values("id"),
             ).exists()

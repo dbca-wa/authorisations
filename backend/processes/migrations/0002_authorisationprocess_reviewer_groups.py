@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='authorisationprocess',
-            name='reviewer_groups',
-            field=models.ManyToManyField(blank=True, help_text='Reviewer groups responsible for this authorisation process.', related_name='+', to='auth.group'),
+            name='assessor_groups',
+            field=models.ManyToManyField(blank=True, help_text='Assessor groups responsible for this authorisation process.', related_name='+', to='auth.group'),
         ),
     ]
