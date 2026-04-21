@@ -92,18 +92,24 @@ ENV DATABASE_URL=${DATABASE_URL} \
 USER appuser
 WORKDIR /app
 
-# Copy backend code base
-COPY --chown=appuser:appuser backend /app/
-
-# Copy frontend code base (to a temp directory)
+# Copy both source trees into /tmp first so that the @source paths in
+# frontend/src/pdf-icons.css (../../backend/... relative to the CSS file)
+# correctly resolve to /tmp/backend/ during the npm build step.
 COPY --chown=appuser:appuser frontend /tmp/frontend/
+COPY --chown=appuser:appuser backend /tmp/backend/
 
 # Install frontend dependencies & build assets
 RUN cd /tmp/frontend; npm install; npm run build
 
-# Copy frontend built assets before collecting static
-RUN mkdir /app/assets;
+# Move backend from its temporary location into the final app directory
+RUN mv /tmp/backend/. /app/
+
+# Copy frontend built assets into the app directory before collecting static
+RUN mkdir /app/assets
 RUN cp -r /tmp/frontend/dist/* /app/assets/
+
+# Clean up the temporary frontend source tree to reduce image size
+RUN rm -rf /tmp/frontend
 
 # Create virtualenv & install backend dependencies
 # (this will always create the local `.venv` folder as per `poetry.toml` config)
