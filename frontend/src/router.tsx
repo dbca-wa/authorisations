@@ -90,7 +90,7 @@ export const ROUTES: IRoute[] = [
 	{
 		label: "Feedback",
 		// Opened directly by the sidebar via window.open; not registered as a React Router route.
-		path: "mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations Application",
+		path: "mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations System",
 		icon: <RateReviewIcon />,
 		divider: false,
 		external: true,

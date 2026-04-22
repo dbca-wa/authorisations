@@ -2,7 +2,7 @@ import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import MuiLink from '@mui/material/Link';
 import React from "react";
 
-import { Box, Button, Card, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from "@mui/material";
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
 import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
@@ -280,6 +280,70 @@ const createNewApplication = async (
     navigate('/my-applications', { viewTransition: true });
 }
 
+/**
+ * Renders the temporary PRIS consent content and action controls before creation.
+ */
+const PrisConsentDialogContent = ({
+    onAgree,
+    onDecline,
+}: {
+    onAgree: () => Promise<void>;
+    onDecline: () => void;
+}) => {
+    const [isAccepted, setIsAccepted] = React.useState<boolean>(false);
+
+    return (
+        <Box>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra,
+                est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida.
+                Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper,
+                ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi.
+                Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque.
+            </Typography>
+
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat.
+                Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis,
+                laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci.
+                In hac habitasse platea dictumst. Fusce convallis, mauris imperdiet gravida bibendum, nisl turpis suscipit mauris,
+                sed placerat ipsum urna sed risus. Class aptent taciti sociosqu ad litora torquent per conubia nostra,
+                per inceptos himenaeos. Praesent sapien turpis, fermentum vel, eleifend faucibus, vehicula eu, lacus.
+            </Typography>
+
+            <FormControlLabel
+                control={(
+                    <Checkbox
+                        checked={isAccepted}
+                        onChange={(_event, checked) => setIsAccepted(checked)}
+                    />
+                )}
+                label="I have read and agree to the PRIS consent statement."
+            />
+
+            <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: "flex-end" }}>
+                <Button
+                    variant="outlined"
+                    color="inherit"
+                    onClick={onDecline}
+                >I decline</Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={!isAccepted}
+                    onClick={async () => {
+                        await onAgree();
+                    }}
+                >I agree</Button>
+            </Stack>
+        </Box>
+    );
+}
+
 const startApplication = async ({
     questionnaire, setInProgress, navigate,
     showDialog, hideDialog, showSnackbar,
@@ -317,6 +381,31 @@ const startApplication = async ({
         console.debug("Existing applications:", existingApplications);
     }
 
+    /**
+     * Opens the PRIS consent window and gates application creation on acceptance.
+     */
+    const showPrisConsentDialog = () => {
+        showDialog({
+            title: "Privacy and Responsible Information Sharing Act 2024 (WA)",
+            content: (
+                <PrisConsentDialogContent
+                    onDecline={() => {
+                        hideDialog();
+                        setInProgress("");
+                    }}
+                    onAgree={async () => {
+                        await createNewApplication(questionnaire, navigate, showSnackbar)
+                            .finally(() => {
+                                hideDialog();
+                                setInProgress("");
+                            });
+                    }}
+                />
+            ),
+            onClose: () => setInProgress(""),
+        });
+    }
+
     if (inProgressApplication) {
         showDialog({
             title: "Create a new application?",
@@ -339,11 +428,8 @@ const startApplication = async ({
                         variant="contained"
                         color="warning"
                         onClick={async () => {
-                            await createNewApplication(questionnaire, navigate, showSnackbar)
-                                .finally(() => {
-                                    hideDialog();
-                                    setInProgress("");
-                                });
+                            hideDialog();
+                            showPrisConsentDialog();
                         }}
                     >Confirm</Button>
                 </>
@@ -352,7 +438,6 @@ const startApplication = async ({
         });
     }
     else {
-        await createNewApplication(questionnaire, navigate, showSnackbar)
-            .finally(() => setInProgress(""));
+        showPrisConsentDialog();
     }
 }
