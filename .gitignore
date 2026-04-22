@@ -178,3 +178,6 @@ cython_debug/
 
 # Private media: uploaded documents
 private-media/
+
+# Sample data
+data/
