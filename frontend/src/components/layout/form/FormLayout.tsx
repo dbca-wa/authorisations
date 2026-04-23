@@ -1,12 +1,10 @@
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import MenuIcon from '@mui/icons-material/Menu';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SaveIcon from '@mui/icons-material/Save';
 import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import React from 'react';
@@ -146,7 +144,7 @@ export const FormLayout = () => {
             prev.map(atch => atch.key === updatedAttachment.key ? updatedAttachment : atch)
         );
     };
-    
+
 
     /**
      * 
@@ -206,9 +204,6 @@ export const FormLayout = () => {
         return formMethods.handleSubmit(onValid, onInvalid);
     }
 
-    // Account menu state and handlers
-    const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
-
     // Change page title
     React.useEffect(() => {
         document.title = `${app.questionnaire_name} : DBCA Authorisations`;
@@ -251,8 +246,6 @@ export const FormLayout = () => {
                         {app.questionnaire_name}
                     </Typography>
                     <AccountMenu
-                        anchorEl={menuAnchorEl}
-                        setAnchorEl={setMenuAnchorEl}
                         isDirty={isDirty}
                         saveAnswers={saveAnswers}
                     />
@@ -318,71 +311,30 @@ const AppBar = styled(MuiAppBar, {
 
 
 const AccountMenu = ({
-    anchorEl, setAnchorEl,
     isDirty,
     saveAnswers,
 }: {
-    anchorEl: null | HTMLElement;
-    setAnchorEl: React.Dispatch<React.SetStateAction<null | HTMLElement>>;
+    anchorEl?: null | HTMLElement;
+    setAnchorEl?: React.Dispatch<React.SetStateAction<null | HTMLElement>>;
     isDirty: boolean;
     saveAnswers: () => Promise<void>;
 }) => {
-    const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
-    const handleClose = () => setAnchorEl(null);
-
     return (
-        <Box sx={{ marginLeft: 'auto' }}>
-            <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenu}
+        <Box sx={{ marginLeft: 'auto', display: 'flex', gap: 1 }}>
+            <Button
                 color="inherit"
-            >
-                <MoreVertIcon />
-            </IconButton>
-            <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
+                startIcon={<SaveIcon />}
+                disabled={!isDirty}
+                onClick={() => saveAnswers()}
+            >Save</Button>
+            <Button
+                color="inherit"
+                startIcon={<ExitToAppIcon />}
+                onClick={() => {
+                    // Assuming we're in a popup window
+                    window.close();
                 }}
-                keepMounted
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-                sx={{
-                    '& .MuiMenuItem-root': { gap: 1.5 }
-                    , '& .MuiSvgIcon-root': { fontSize: 'inherit' }
-                }}
-            >
-                <MenuItem
-                    disabled={!isDirty}
-                    onClick={() => {
-                        saveAnswers();
-                        handleClose();
-                    }}
-                >
-                    <SaveIcon /> Save
-                </MenuItem>
-                <MenuItem
-                    onClick={() => {
-                        // Assuming we're in a popup window
-                        window.close();
-
-                        // If there are unsaved changes and user cancels the closing...
-                        // do nothing.
-                        // if (!window.closed) { }
-                    }}
-                >
-                    <ExitToAppIcon /> Exit
-                </MenuItem>
-            </Menu>
+            >Exit</Button>
         </Box>
     )
 }
