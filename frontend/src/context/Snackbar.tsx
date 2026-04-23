@@ -59,7 +59,7 @@ export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
                 <Snackbar
                     key={notification.id}
                     open={notification.open}
-                    autoHideDuration={notification.severity === "error" ? 8000 : 4000}
+                    autoHideDuration={notification.severity === "success" ? 4000 : 8000}
                     onClose={(_, reason) => { if (reason !== "clickaway") dismiss(notification.id); }}
                     anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
                     // Stack upward: newest at the base, older ones stack above.

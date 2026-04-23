@@ -5,6 +5,7 @@ import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import React from 'react';
@@ -208,6 +209,26 @@ export const FormLayout = () => {
     React.useEffect(() => {
         document.title = `${app.questionnaire_name} : DBCA Authorisations`;
     }, [app.questionnaire_name]);
+
+    // Guard against StrictMode double-invocation: only show the notice once per mount.
+    const privacyNoticeShown = React.useRef(false);
+
+    // Notify once on mount that personal information is being collected.
+    React.useEffect(() => {
+        if (privacyNoticeShown.current) return;
+        privacyNoticeShown.current = true;
+        showSnackbar(
+            <>
+                DBCA will collect, use and disclose your personal information in <br />
+                accordance with applicable privacy laws and DBCA's{" "}
+                <Link href="/privacy" target="_blank" rel="noopener" color="inherit" underline="always">
+                    Privacy Policy
+                </Link>.
+            </>,
+            "info",
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Scroll to top when step changes
     React.useEffect(() => scrollToTop(), [activeStep]);
