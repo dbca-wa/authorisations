@@ -9,7 +9,7 @@ import { useLoaderData, useNavigate, type NavigateFunction } from "react-router"
 import { ApiManager } from '../../../context/ApiManager';
 import { useDialog, type DialogOptions } from '../../../context/Dialogs';
 import { useSnackbar } from '../../../context/Snackbar';
-import { PrivacyContent } from './PrivacyContent';
+import { PrivacyContent } from './PrivacyPolicy';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
