@@ -2,7 +2,7 @@ import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import MuiLink from '@mui/material/Link';
 import React from "react";
 
-import { Box, Button, Card, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from "@mui/material";
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
 import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
@@ -280,6 +280,54 @@ const createNewApplication = async (
     navigate('/my-applications', { viewTransition: true });
 }
 
+/**
+ * Wraps the privacy notice with dialog-specific acknowledgement controls.
+ *
+ * The content stays reusable for standalone pages, while this component owns
+ * the acceptance state required only for the application creation flow.
+ */
+const PrivacyConsentDialogContent = ({
+    onAgree,
+    onDecline,
+}: {
+    onAgree: () => Promise<void>;
+    onDecline: () => void;
+}) => {
+    const [isAccepted, setIsAccepted] = React.useState<boolean>(false);
+
+    return (
+        <>
+            <Box sx={{ maxHeight: "60vh", overflowY: "auto", mb: 2, pr: 1 }}>
+                <PrivacyContent />
+            </Box>
+
+            <FormControlLabel
+                control={(
+                    <Checkbox
+                        checked={isAccepted}
+                        onChange={(_event, checked) => setIsAccepted(checked)}
+                    />
+                )}
+                label="I acknowledge that DBCA will collect, use and disclose my personal information in accordance with applicable privacy laws and DBCA's Privacy Policy."
+            />
+
+            <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: "space-between" }}>
+                <Button
+                    variant="outlined"
+                    color="inherit"
+                    onClick={onDecline}
+                >I decline</Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={!isAccepted}
+                    onClick={onAgree}
+                >I agree</Button>
+            </Stack>
+        </>
+    );
+}
+
 const startApplication = async ({
     questionnaire, setInProgress, navigate,
     showDialog, hideDialog, showSnackbar,
@@ -323,7 +371,7 @@ const startApplication = async ({
         showDialog({
             title: "Collection Notice Disclaimer",
             content: (
-                <PrivacyContent
+                <PrivacyConsentDialogContent
                     onDecline={() => {
                         hideDialog();
                         setInProgress(false);
