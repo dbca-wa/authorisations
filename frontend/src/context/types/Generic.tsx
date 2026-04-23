@@ -22,6 +22,8 @@ export interface IRoute {
     loader?: (params: LoaderFunctionArgs) => Promise<LoaderData>;
     /** When true, the route is an external link (e.g. mailto:) and must not be registered with React Router. */
     external?: boolean;
+    /** When false, the route is hidden from the sidebar and can be rendered elsewhere (e.g. footer). */
+    sidebar?: boolean;
 }
 
 export type AsyncVoidAction = () => Promise<void>;
