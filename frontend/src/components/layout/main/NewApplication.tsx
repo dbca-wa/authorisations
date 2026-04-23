@@ -252,17 +252,24 @@ const Questionnaire = ({
     );
 }
 
-const createNewApplication = async (
-    questionnaire: IQuestionnaireData,
-    navigate: NavigateFunction,
-    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
-) => {
-    const newApplication: IApplicationData | null = await ApiManager.createApplication(
-        questionnaire.process_slug,
-        questionnaire.id,
-        questionnaire.code,
-        questionnaire.version,
-    ).catch((error: AxiosError) => {
+const createNewApplication = async ({
+    questionnaire,
+    privacyConsentAgreed,
+    navigate,
+    showSnackbar,
+}: {
+    questionnaire: IQuestionnaireData;
+    privacyConsentAgreed: boolean;
+    navigate: NavigateFunction;
+    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void;
+}) => {
+    const newApplication: IApplicationData | null = await ApiManager.createApplication({
+        processSlug: questionnaire.process_slug,
+        questionnaireId: questionnaire.id,
+        questionnaireCode: questionnaire.code,
+        questionnaireVersion: questionnaire.version,
+        privacyConsentAgreed,
+    }).catch((error: AxiosError) => {
         showSnackbar(
             "Failed to create an application, please try again later. If problem persists, contact support.",
             "error",
@@ -377,11 +384,15 @@ const startApplication = async ({
                         setInProgress(false);
                     }}
                     onAgree={async () => {
-                        await createNewApplication(questionnaire, navigate, showSnackbar)
-                            .finally(() => {
-                                hideDialog();
-                                setInProgress(false);
-                            });
+                        await createNewApplication({
+                            questionnaire,
+                            privacyConsentAgreed: true,
+                            navigate,
+                            showSnackbar,
+                        }).finally(() => {
+                            hideDialog();
+                            setInProgress(false);
+                        });
                     }}
                 />
             ),

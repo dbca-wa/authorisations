@@ -62,6 +62,10 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
+    privacy_consent_agreed = serializers.BooleanField(
+        required=False,
+        write_only=True,
+    )
     internal_id = serializers.CharField(
         required=False,
         read_only=True,
@@ -83,6 +87,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             "questionnaire_code",
             "questionnaire_name",
             "questionnaire_version",
+            "privacy_consent_agreed",
             "status",
             "created_at",
             "updated_at",
@@ -114,6 +119,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Questionnaire version is required when creating (to confirm data integrity)
         fields["questionnaire_version"].required = isPost
         fields["questionnaire_version"].read_only = not isPost
+        # Privacy consent acknowledgement is required when creating for auditability.
+        fields["privacy_consent_agreed"].required = isPost
+        fields["privacy_consent_agreed"].read_only = not isPost
 
         # Document field is required only when updating
         fields["document"].required = isPut
@@ -183,6 +191,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         questionnaire_id = questionnaire_data.get("id")
         questionnaire_code = questionnaire_data.get("code")
         questionnaire_version = questionnaire_data.get("version")
+        privacy_consent_agreed = attrs.get("privacy_consent_agreed")
 
         # Ensure all integrity fields are present.
         if (
@@ -193,6 +202,14 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         ):
             raise exceptions.ValidationError(
                 "Process slug, questionnaire id, code and version are required."
+            )
+
+        # Creation is allowed only when explicit consent is acknowledged.
+        if privacy_consent_agreed is not True:
+            raise exceptions.ValidationError(
+                {
+                    "privacy_consent_agreed": "This field must be true to create an application."
+                }
             )
 
         # Reuse a previously validated questionnaire instance when possible.

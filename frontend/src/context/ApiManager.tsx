@@ -47,18 +47,26 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async createApplication(
-        processSlug: string,
-        questionnaireId: number,
-        questionnaireCode: string,
-        questionnaireVersion: number,
-    ): Promise<IApplicationData> {
+    public static async createApplication({
+        processSlug,
+        questionnaireId,
+        questionnaireCode,
+        questionnaireVersion,
+        privacyConsentAgreed,
+    }: {
+        processSlug: string;
+        questionnaireId: number;
+        questionnaireCode: string;
+        questionnaireVersion: number;
+        privacyConsentAgreed: boolean;
+    }): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.post<IApplicationData>("/applications", {
             process_slug: processSlug,
             questionnaire_id: questionnaireId,
             questionnaire_code: questionnaireCode,
             questionnaire_version: questionnaireVersion,
+            privacy_consent_agreed: privacyConsentAgreed,
         }, requestConfig);
 
         return response.data;
