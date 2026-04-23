@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
  * The content structure mirrors the source notice so reviewers can validate wording,
  * bullet points, and links before final legal sign-off.
  */
-export function PrivacyContent() {
+export const PrivacyContent = () => {
     return (
         <>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>

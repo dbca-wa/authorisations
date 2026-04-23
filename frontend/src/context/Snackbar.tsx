@@ -29,7 +29,7 @@ let nextNotificationId = 0;
 const NOTIFICATION_STRIDE = 68;
 const NOTIFICATION_BASE_BOTTOM = 16;
 
-export default function SnackbarProvider({ children }: { children: ReactNode }) {
+export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
     const [notifications, setNotifications] = useState<SnackbarNotification[]>([]);
 
     /** Sets open=false to trigger MUI's exit animation; the item stays in the array until onExited fires. */
@@ -82,4 +82,4 @@ export default function SnackbarProvider({ children }: { children: ReactNode }) 
             ))}
         </SnackbarContext.Provider>
     );
-}
+};
