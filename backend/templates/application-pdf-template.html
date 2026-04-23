@@ -439,7 +439,7 @@
                             </tbody>
                           </table>
                         {% else %}
-                          <span class="muted">Not provided</span>
+                          <span class="muted">(Not provided)</span>
                         {% endif %}
                       {% elif question.type == 'file' %}
                         {% if question.files %}
@@ -474,11 +474,11 @@
                             </div>
                           {% endif %}
                         {% else %}
-                          <span class="muted">Not provided</span>
+                          <span class="muted">(Not provided)</span>
                         {% endif %}
                       {% else %}
                         {% if not question.value %}
-                          <span class="muted">Not provided</span>
+                          <span class="muted">(Not provided)</span>
                         {% else %}
                           {{ question.value|linebreaksbr }}
                         {% endif %}

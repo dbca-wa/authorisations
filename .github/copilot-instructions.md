@@ -133,6 +133,8 @@
 - Keep frontend type contracts aligned with API payloads:
   - Process identifiers and questionnaire identifiers must be explicit and unambiguous.
 - Use `dayjs` for dates with `en-au` locale.
+- Prefer React component definitions as `const` (for example `const MyComponent = () => { ... }`) rather than `function` declarations unless there is a clear technical reason to do otherwise.
+- Prefer explicit named exports/imports over default exports/imports for project modules where practical, to make refactoring safer and imports more consistent.
 
 ## Integration Contracts
 

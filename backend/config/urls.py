@@ -17,6 +17,7 @@ urlpatterns = [
     path("my-applications", generic_template, name="my-applications"),
     path("new-application", generic_template, name="new-application"),
     path("assessment", generic_template, name="assessment"),
+    path("privacy", generic_template, name="privacy"),
     path("a/<uuid:key>", resume_application, name="resume-application"),
     path("d/<uuid:appKey>", download_application, name="download-application"),
     path(

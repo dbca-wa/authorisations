@@ -1,15 +1,20 @@
 import { Alert, Snackbar, type AlertColor } from "@mui/material";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
-// 1. Define the shape of the data your context will provide.
+interface SnackbarNotification {
+    id: number;
+    message: ReactNode;
+    severity: AlertColor;
+    /** Drives MUI's open/close transition; set to false to play the exit animation. */
+    open: boolean;
+}
+
 interface SnackbarContextType {
     showSnackbar: (message: ReactNode, severity?: AlertColor) => void;
 }
 
-// 2. Create the context with a default value.
 const SnackbarContext = createContext<SnackbarContextType | undefined>(undefined);
 
-// 3. Create a custom hook for easy access to the context.
 export const useSnackbar = () => {
     const context = useContext(SnackbarContext);
     if (!context) {
@@ -18,42 +23,63 @@ export const useSnackbar = () => {
     return context;
 };
 
-// 4. Implement the provider to manage state and render the Snackbar.
-export default function SnackbarProvider({ children }: { children: ReactNode }) {
-    const [message, setMessage] = useState<ReactNode>("");
-    const [severity, setSeverity] = useState<AlertColor>("info");
+let nextNotificationId = 0;
 
-    const showSnackbar = (newMessage: ReactNode, newSeverity: AlertColor = "info") => {
-        setSeverity(newSeverity);
-        setMessage(newMessage);
-    };
+// Approximate rendered height of each notification + gap between them.
+const NOTIFICATION_STRIDE = 68;
+const NOTIFICATION_BASE_BOTTOM = 16;
 
-    const handleClose = (_?: React.SyntheticEvent | Event, reason?: string) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setMessage("");
-    };
+export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
+    const [notifications, setNotifications] = useState<SnackbarNotification[]>([]);
 
-    const value = { showSnackbar };
+    /** Sets open=false to trigger MUI's exit animation; the item stays in the array until onExited fires. */
+    const dismiss = useCallback((id: number) => {
+        setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, open: false } : n));
+    }, []);
+
+    /** Removes the item from the array after its exit animation has completed. */
+    const remove = useCallback((id: number) => {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }, []);
+
+    /**
+     * Adds a new notification to the bottom of the stack and schedules auto-dismissal.
+     * Errors stay visible longer to give users time to read them.
+     */
+    const showSnackbar = useCallback((message: ReactNode, severity: AlertColor = "info") => {
+        const id = nextNotificationId++;
+        setNotifications((prev) => [...prev, { id, message, severity, open: true }]);
+    }, []);
 
     return (
-        <SnackbarContext.Provider value={value}>
+        <SnackbarContext.Provider value={{ showSnackbar }}>
             {children}
-            
-            {message &&
+
+            {notifications.map((notification, index) => (
                 <Snackbar
-                    open={!!message}
-                    autoHideDuration={severity === 'error' ? 15000 : 6000}
-                    onClose={handleClose}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                    key={notification.id}
+                    open={notification.open}
+                    autoHideDuration={notification.severity === "success" ? 4000 : 8000}
+                    onClose={(_, reason) => { if (reason !== "clickaway") dismiss(notification.id); }}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                    // Stack upward: newest at the base, older ones stack above.
+                    // CSS transition smooths repositioning when a lower item is dismissed.
+                    sx={{
+                        bottom: `${NOTIFICATION_BASE_BOTTOM + (notifications.length - 1 - index) * NOTIFICATION_STRIDE}px !important`,
+                        transition: "bottom 0.3s ease",
+                    }}
+                    slotProps={{ transition: { onExited: () => remove(notification.id) } }}
                 >
-                    {/* The Alert component provides the styling (color, icon) */}
-                    <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }} variant="filled">
-                        {message}
+                    <Alert
+                        onClose={() => dismiss(notification.id)}
+                        severity={notification.severity}
+                        variant="filled"
+                        sx={{ width: "100%" }}
+                    >
+                        {notification.message}
                     </Alert>
                 </Snackbar>
-            }
+            ))}
         </SnackbarContext.Provider>
     );
-}
+};

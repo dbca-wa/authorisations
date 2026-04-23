@@ -11,10 +11,10 @@ import 'dayjs/locale/en-au';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
-import SnackbarProvider from './context/Snackbar';
+import DialogProvider from './context/Dialogs';
+import { SnackbarProvider } from './context/Snackbar';
 import './index.css';
 import { router } from './router';
-import DialogProvider from './context/Dialogs';
 
 
 const theme = createTheme({

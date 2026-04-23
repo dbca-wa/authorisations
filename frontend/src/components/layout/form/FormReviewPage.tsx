@@ -224,7 +224,7 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
         return <Typography className="text-xs italic text-[#666]">N/A - invalid answer</Typography>;
     }
     if (answer.length === 0) {
-        return <Typography className="text-xs italic text-[#666]">(unanswered)</Typography>;
+        return <Typography className="text-xs italic text-[#666]">(Not provided)</Typography>;
     }
 
     return (
@@ -251,7 +251,7 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
                                 } else if (col.type === "date") {
                                     displayValue = displayDate(cellValue);
                                 } else if (cellValue === null || cellValue === undefined || (typeof cellValue === "string" && cellValue.trim() === "")) {
-                                    displayValue = <span className="italic text-[#666]">(unanswered)</span>;
+                                    displayValue = <span className="italic text-[#666]">(Not provided)</span>;
                                 } else {
                                     displayValue = String(cellValue);
                                 }
@@ -276,7 +276,7 @@ const displayDate = (answer: IAnswer) => {
         return <Typography className="text-xs italic text-[#666]">N/A - invalid answer</Typography>;
     }
     return isEmptyAnswer(answer)
-        ? <Typography className="text-xs italic text-[#666]">(unanswered)</Typography>
+        ? <Typography className="text-xs italic text-[#666]">(Not provided)</Typography>
         : <Typography className="text-xs text-[#111]">{dayjs(answer).format('DD/MM/YYYY')}</Typography>;
 };
 
@@ -286,7 +286,7 @@ const displayString = (answer: IAnswer) => {
         return <Typography className="text-xs italic text-[#666]">N/A - invalid answer</Typography>;
     }
     return isEmptyAnswer(answer)
-        ? <Typography className="text-xs italic text-[#666]">(unanswered)</Typography>
+        ? <Typography className="text-xs italic text-[#666]">(Not provided)</Typography>
         : <Typography className="whitespace-pre-wrap text-xs text-[#111]">{String(answer)}</Typography>;
 };
 

@@ -1,5 +1,6 @@
 import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
+import PolicyIcon from '@mui/icons-material/Policy';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TopicIcon from '@mui/icons-material/Topic';
@@ -8,10 +9,11 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { createBrowserRouter } from "react-router";
 import { ErrorPage } from "./components/layout/ErrorPage";
 import { FormLayout } from "./components/layout/form/FormLayout";
+import { ApplicationAssessment } from './components/layout/main/Assessment';
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
-import { ApplicationAssessment } from './components/layout/main/Assessment';
+import { PrivacyPolicy } from './components/layout/main/PrivacyPolicy';
 import { ApiManager } from './context/ApiManager';
 import type { IRoute, LoaderData } from "./context/types/Generic";
 import { handleApiError } from './context/Utils';
@@ -84,16 +86,25 @@ export const ROUTES: IRoute[] = [
 		path: "/settings",
 		icon: <SettingsIcon />,
 		divider: false,
-		// No data beyond processes is needed on this page.
 		loader: mainLoader(),
 	},
 	{
+		label: "Privacy Policy",
+		path: "/privacy",
+		icon: <PolicyIcon />,
+		divider: false,
+		component: PrivacyPolicy,
+		loader: mainLoader(),
+		sidebar: false,
+	},
+	{
 		label: "Feedback",
-		// Opened directly by the sidebar via window.open; not registered as a React Router route.
-		path: "mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations Application",
+		// Opened directly by the footer via window.open; not registered as a React Router route.
+		path: "mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations System",
 		icon: <RateReviewIcon />,
 		divider: false,
 		external: true,
+		sidebar: false,
 	},
 ];
 

@@ -2,13 +2,14 @@ import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import MuiLink from '@mui/material/Link';
 import React from "react";
 
-import { Box, Button, Card, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from "@mui/material";
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
 import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
 import { useDialog, type DialogOptions } from '../../../context/Dialogs';
 import { useSnackbar } from '../../../context/Snackbar';
+import { PrivacyContent } from './PrivacyPolicy';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
@@ -87,8 +88,8 @@ const ProcessGroup = ({
     setInProgress,
 }: {
     group: IProcessGroup;
-    inProgress: string;
-    setInProgress: React.Dispatch<React.SetStateAction<string>>;
+    inProgress: boolean;
+    setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
     const [selectedQuestionnaireTab, setSelectedQuestionnaireTab] = React.useState<number>(0);
 
@@ -157,7 +158,7 @@ export const NewApplication = () => {
         [processes, questionnaires],
     );
 
-    const [inProgress, setInProgress] = React.useState<string>("");
+    const [inProgress, setInProgress] = React.useState<boolean>(false);
 
     return (
         <Box className="p-8 min-w-4xl max-w-7xl">
@@ -185,11 +186,10 @@ const Questionnaire = ({
     questionnaire, inProgress, setInProgress,
 }: {
     questionnaire: IQuestionnaireData;
-    inProgress: string;
-    setInProgress: React.Dispatch<React.SetStateAction<string>>;
+    inProgress: boolean;
+    setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
     const localDate = formatDate(questionnaire.created_at)
-    const questionnaireUiKey = getQuestionnaireUiKey(questionnaire);
     const navigate: NavigateFunction = useNavigate();
     const { showDialog, hideDialog } = useDialog();
     const { showSnackbar } = useSnackbar();
@@ -219,8 +219,8 @@ const Questionnaire = ({
                     variant="outlined"
                     color="info"
                     loadingPosition='start'
-                    loading={inProgress === questionnaireUiKey}
-                    disabled={Boolean(inProgress)}
+                    loading={inProgress}
+                    disabled={inProgress}
                     startIcon={<CreateOutlinedIcon />}
                     onClick={() => startApplication({
                         questionnaire,
@@ -252,17 +252,24 @@ const Questionnaire = ({
     );
 }
 
-const createNewApplication = async (
-    questionnaire: IQuestionnaireData,
-    navigate: NavigateFunction,
-    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
-) => {
-    const newApplication: IApplicationData | null = await ApiManager.createApplication(
-        questionnaire.process_slug,
-        questionnaire.id,
-        questionnaire.code,
-        questionnaire.version,
-    ).catch((error: AxiosError) => {
+const createNewApplication = async ({
+    questionnaire,
+    privacyConsentAgreed,
+    navigate,
+    showSnackbar,
+}: {
+    questionnaire: IQuestionnaireData;
+    privacyConsentAgreed: boolean;
+    navigate: NavigateFunction;
+    showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void;
+}) => {
+    const newApplication: IApplicationData | null = await ApiManager.createApplication({
+        processSlug: questionnaire.process_slug,
+        questionnaireId: questionnaire.id,
+        questionnaireCode: questionnaire.code,
+        questionnaireVersion: questionnaire.version,
+        privacyConsentAgreed,
+    }).catch((error: AxiosError) => {
         showSnackbar(
             "Failed to create an application, please try again later. If problem persists, contact support.",
             "error",
@@ -280,19 +287,66 @@ const createNewApplication = async (
     navigate('/my-applications', { viewTransition: true });
 }
 
+/**
+ * Wraps the privacy notice with dialog-specific acknowledgement controls.
+ *
+ * The content stays reusable for standalone pages, while this component owns
+ * the acceptance state required only for the application creation flow.
+ */
+const PrivacyConsentDialogContent = ({
+    onAgree,
+    onDecline,
+}: {
+    onAgree: () => Promise<void>;
+    onDecline: () => void;
+}) => {
+    const [isAccepted, setIsAccepted] = React.useState<boolean>(false);
+
+    return (
+        <>
+            <Box sx={{ maxHeight: "60vh", overflowY: "auto", mb: 2, pr: 1 }}>
+                <PrivacyContent />
+            </Box>
+
+            <FormControlLabel
+                control={(
+                    <Checkbox
+                        checked={isAccepted}
+                        onChange={(_event, checked) => setIsAccepted(checked)}
+                    />
+                )}
+                label="I acknowledge that DBCA will collect, use and disclose my personal information in accordance with applicable privacy laws and DBCA's Privacy Policy."
+            />
+
+            <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: "space-between" }}>
+                <Button
+                    variant="outlined"
+                    color="inherit"
+                    onClick={onDecline}
+                >I decline</Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={!isAccepted}
+                    onClick={onAgree}
+                >I agree</Button>
+            </Stack>
+        </>
+    );
+}
+
 const startApplication = async ({
     questionnaire, setInProgress, navigate,
     showDialog, hideDialog, showSnackbar,
 }: {
     questionnaire: IQuestionnaireData;
-    setInProgress: React.Dispatch<React.SetStateAction<string>>;
+    setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
     navigate: NavigateFunction;
     showDialog: (options: DialogOptions) => void;
     hideDialog: () => void;
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void,
 }) => {
-    const questionnaireUiKey = getQuestionnaireUiKey(questionnaire);
-    setInProgress(questionnaireUiKey);
+    setInProgress(true);
 
     const existingApplications: IApplicationData[] | null = await ApiManager.fetchApplications()
         .catch((error: AxiosError) => {
@@ -305,7 +359,7 @@ const startApplication = async ({
         })
 
     if (existingApplications === null) {
-        setInProgress("");
+        setInProgress(false);
         return;
     }
 
@@ -315,6 +369,35 @@ const startApplication = async ({
 
     if (import.meta.env.DEV) {
         console.debug("Existing applications:", existingApplications);
+    }
+
+    /**
+     * Opens the PRIS consent window and gates application creation on acceptance.
+     */
+    const showPrivacyConsentDialog = () => {
+        showDialog({
+            title: "Collection Notice Disclaimer",
+            content: (
+                <PrivacyConsentDialogContent
+                    onDecline={() => {
+                        hideDialog();
+                        setInProgress(false);
+                    }}
+                    onAgree={async () => {
+                        await createNewApplication({
+                            questionnaire,
+                            privacyConsentAgreed: true,
+                            navigate,
+                            showSnackbar,
+                        }).finally(() => {
+                            hideDialog();
+                            setInProgress(false);
+                        });
+                    }}
+                />
+            ),
+            onClose: () => setInProgress(false),
+        });
     }
 
     if (inProgressApplication) {
@@ -332,27 +415,23 @@ const startApplication = async ({
                         color="inherit"
                         onClick={() => {
                             hideDialog();
-                            setInProgress("");
+                            setInProgress(false);
                         }}
                     >Cancel</Button>
                     <Button
                         variant="contained"
                         color="warning"
                         onClick={async () => {
-                            await createNewApplication(questionnaire, navigate, showSnackbar)
-                                .finally(() => {
-                                    hideDialog();
-                                    setInProgress("");
-                                });
+                            hideDialog();
+                            showPrivacyConsentDialog();
                         }}
                     >Confirm</Button>
                 </>
             ),
-            onClose: () => setInProgress(""),
+            onClose: () => setInProgress(false),
         });
     }
     else {
-        await createNewApplication(questionnaire, navigate, showSnackbar)
-            .finally(() => setInProgress(""));
+        showPrivacyConsentDialog();
     }
 }
