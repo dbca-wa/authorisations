@@ -53,12 +53,14 @@ export class ApiManager {
         questionnaireCode,
         questionnaireVersion,
         privacyConsentAgreed,
+        turnstileToken,
     }: {
         processSlug: string;
         questionnaireId: number;
         questionnaireCode: string;
         questionnaireVersion: number;
         privacyConsentAgreed: boolean;
+        turnstileToken: string;
     }): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.post<IApplicationData>("/applications", {
@@ -67,6 +69,7 @@ export class ApiManager {
             questionnaire_code: questionnaireCode,
             questionnaire_version: questionnaireVersion,
             privacy_consent_agreed: privacyConsentAgreed,
+            turnstile_token: turnstileToken,
         }, requestConfig);
 
         return response.data;

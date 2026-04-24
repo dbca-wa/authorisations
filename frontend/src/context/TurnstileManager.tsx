@@ -9,9 +9,18 @@ interface TurnstileApiRenderOptions {
     size?: "normal" | "flexible" | "compact";
     execution?: "render" | "execute";
     appearance?: "always" | "execute" | "interaction-only";
+    callback?: (token: string) => void;
+    "error-callback"?: () => void;
+    "expired-callback"?: () => void;
     retry?: "auto" | "never";
     "refresh-expired"?: "auto" | "manual" | "never";
     "refresh-timeout"?: "auto" | "manual" | "never";
+}
+
+interface TurnstileRenderCallbacks {
+    onSuccess?: (token: string) => void;
+    onError?: () => void;
+    onExpire?: () => void;
 }
 
 interface TurnstileApi {
@@ -106,9 +115,12 @@ export class TurnstileManager {
     /**
      * Renders a Turnstile widget explicitly into the supplied container and returns its widget id.
      */
-    public static async render(container: TurnstileContainer): Promise<TurnstileWidgetId> {
+    public static async render(
+        container: TurnstileContainer,
+        callbacks?: TurnstileRenderCallbacks,
+    ): Promise<TurnstileWidgetId> {
         const api = await this.loadScript();
-        const renderOptions = this.toApiRenderOptions();
+        const renderOptions = this.toApiRenderOptions(callbacks);
 
         return api.render(container, renderOptions);
     }
@@ -208,13 +220,18 @@ export class TurnstileManager {
     /**
      * Builds the API render options using only hardcoded manager defaults.
      */
-    private static toApiRenderOptions(): TurnstileApiRenderOptions {
+    private static toApiRenderOptions(
+        callbacks?: TurnstileRenderCallbacks,
+    ): TurnstileApiRenderOptions {
         return {
             sitekey: this.getSiteKey(),
             theme: "light",
             size: "normal",
             execution: "render",
             appearance: "always",
+            callback: callbacks?.onSuccess,
+            "error-callback": callbacks?.onError,
+            "expired-callback": callbacks?.onExpire,
             retry: "auto",
             "refresh-expired": "auto",
             "refresh-timeout": "auto",
