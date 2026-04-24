@@ -83,10 +83,16 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async submitApplication(key: string): Promise<IApplicationData> {
+    public static async submitApplication(key: string, turnstileToken: string): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.patch<IApplicationData>(
-            `/applications/${key}`, { status: "SUBMITTED" }, requestConfig);
+            `/applications/${key}`,
+            {
+                status: "SUBMITTED",
+                turnstile_token: turnstileToken,
+            },
+            requestConfig,
+        );
 
         return response.data;
     }

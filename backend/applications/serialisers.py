@@ -28,7 +28,11 @@ from .models import (
 from .schema import get_answers_schema
 
 
-def verify_turnstile_token(token: str, remote_ip: str | None = None) -> bool:
+def verify_turnstile_token(
+    token: str,
+    remote_ip: str | None = None,
+    idempotency_key: str | None = None,
+) -> bool:
     """Verify a Turnstile token against Cloudflare Siteverify.
 
     The application create flow should fail closed: if the service is not
@@ -49,6 +53,11 @@ def verify_turnstile_token(token: str, remote_ip: str | None = None) -> bool:
     # token in the same request context that produced it.
     if remote_ip:
         payload["remoteip"] = remote_ip
+
+    # Reuse the same idempotency key for retry-safe validations of the same
+    # submission attempt.
+    if idempotency_key:
+        payload["idempotency_key"] = idempotency_key
 
     try:
         response = requests.post(
@@ -165,9 +174,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Privacy consent acknowledgement is required when creating for auditability.
         fields["privacy_consent_agreed"].required = isPost
         fields["privacy_consent_agreed"].read_only = not isPost
-        # Turnstile verification token is required only when creating.
-        fields["turnstile_token"].required = isPost
-        fields["turnstile_token"].read_only = not isPost
+        # Turnstile verification token is required during create and final submit PATCH.
+        fields["turnstile_token"].required = isPost or isPatch
+        fields["turnstile_token"].read_only = not (isPost or isPatch)
 
         # Document field is required only when updating
         fields["document"].required = isPut
@@ -210,6 +219,42 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             f"Invalid status transition from {self.instance.status} to {value}"
         )
 
+    def validate_turnstile_token(self, value: str) -> str:
+        """Validate Turnstile token for create and final submit flows.
+
+        For POST create requests, Turnstile is always required.
+        For PATCH requests, Turnstile is required only for the draft->submitted
+        transition, using application key as idempotency key.
+        """
+        request = self.context.get("request")
+        if request is None:
+            return value
+
+        request_meta = getattr(request, "META", {})
+        remote_ip = request_meta.get("REMOTE_ADDR")
+
+        if request.method == "POST":
+            if not verify_turnstile_token(value, remote_ip):
+                raise exceptions.ValidationError(
+                    "Turnstile verification failed. Please try again."
+                )
+            return value
+
+        if request.method == "PATCH":
+            requested_status = self.initial_data.get("status")
+            if (
+                self.instance is not None
+                and self.instance.status == ApplicationStatus.DRAFT
+                and requested_status == ApplicationStatus.SUBMITTED
+            ):
+                idempotency_key = str(self.instance.key)
+                if not verify_turnstile_token(value, remote_ip, idempotency_key):
+                    raise exceptions.ValidationError(
+                        "Turnstile verification failed. Please try again."
+                    )
+
+        return value
+
     def validate_document(self, value):
         if self.instance.status != ApplicationStatus.DRAFT:
             raise exceptions.ValidationError(
@@ -225,7 +270,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         Object-level validation to ensure the questionnaire exists and matches the
         provided process slug, code, and version.
         """
-        # Only validate on creation for data integrity.
+        # Only creation needs questionnaire identity checks.
         request = self.context.get("request")
         if request.method != "POST":
             return attrs
@@ -238,7 +283,6 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         questionnaire_code = questionnaire_data.get("code")
         questionnaire_version = questionnaire_data.get("version")
         privacy_consent_agreed = attrs.get("privacy_consent_agreed")
-        turnstile_token = attrs.get("turnstile_token")
 
         # Ensure all integrity fields are present.
         if (
@@ -256,18 +300,6 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             raise exceptions.ValidationError(
                 {
                     "privacy_consent_agreed": "This field must be true to create an application."
-                }
-            )
-
-        request_meta = getattr(request, "META", {})
-        remote_ip = request_meta.get("REMOTE_ADDR")
-
-        # Reject application creation when the bot challenge token is missing,
-        # invalid, expired, or cannot be verified by Cloudflare.
-        if not verify_turnstile_token(turnstile_token, remote_ip):
-            raise exceptions.ValidationError(
-                {
-                    "turnstile_token": "Turnstile verification failed. Please try again."
                 }
             )
 

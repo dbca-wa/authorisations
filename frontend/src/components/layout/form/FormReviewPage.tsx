@@ -13,6 +13,7 @@ import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
 import { useSnackbar } from '../../../context/Snackbar';
+import { TurnstileManager } from '../../../context/TurnstileManager';
 import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
@@ -41,13 +42,84 @@ export function FormReviewPage({
     const answers: IFormAnswers = getValues();
 
     const [hasConfirmed, setHasConfirmed] = React.useState<boolean>(false);
+    const [turnstileLoading, setTurnstileLoading] = React.useState<boolean>(userCanEdit);
+    const [turnstileError, setTurnstileError] = React.useState<string | null>(null);
+    const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
+    const hasInitializedRef = React.useRef<boolean>(false);
+    const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null);
 
     const { showSnackbar } = useSnackbar();
 
+    /**
+     * Render the Turnstile widget once and rely on callbacks to unlock
+     * final confirmation only after successful verification.
+     */
+    React.useEffect(() => {
+        // Read-only review mode does not need Turnstile verification.
+        if (!userCanEdit) {
+            setTurnstileLoading(false);
+            setTurnstileError(null);
+            setTurnstileToken(null);
+            return;
+        }
+
+        // Prevent duplicate initialisation in React StrictMode development.
+        if (hasInitializedRef.current) {
+            return;
+        }
+        hasInitializedRef.current = true;
+
+        const initialiseTurnstile = async () => {
+            try {
+                setTurnstileLoading(true);
+                setTurnstileError(null);
+                setTurnstileToken(null);
+
+                const container = turnstileContainerRef.current;
+                if (!container) {
+                    setTurnstileError("Verification widget container not found.");
+                    setTurnstileLoading(false);
+                    return;
+                }
+
+                await TurnstileManager.render(container, {
+                    onSuccess: (token: string) => {
+                        setTurnstileToken(token);
+                        setTurnstileError(null);
+                        setTurnstileLoading(false);
+                    },
+                    onError: () => {
+                        setTurnstileToken(null);
+                        setTurnstileError("Verification failed. Please try again.");
+                        setTurnstileLoading(false);
+                    },
+                    onExpire: () => {
+                        setTurnstileToken(null);
+                        setTurnstileLoading(true);
+                    },
+                });
+            } catch (error) {
+                setTurnstileError(
+                    error instanceof Error ? error.message : "Verification widget failed to initialise.",
+                );
+                setTurnstileLoading(false);
+            }
+        };
+
+        initialiseTurnstile();
+    }, [userCanEdit]);
+
+    const isTurnstileVerified = !userCanEdit || (!turnstileLoading && !turnstileError && !!turnstileToken);
+
     // Dummy submit handler for now
     const onFinalSubmit = async () => {
+        if (userCanEdit && !turnstileToken) {
+            showSnackbar("Please complete verification before submitting.", "error");
+            return;
+        }
+
         // alert("Submitted! (implement server-side integration here)");
-        await ApiManager.submitApplication(applicationKey)
+        await ApiManager.submitApplication(applicationKey, turnstileToken || "")
             // Successfully save to API    
             .then((resp) => {
                 showSnackbar("Application has been successfully submitted and is read-only now.", "success");
@@ -57,7 +129,8 @@ export function FormReviewPage({
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
-                const message = (error.response?.data as any)?.status?.[0] ?? error.message;
+                const responseData = error.response?.data as any;
+                const message = responseData?.turnstile_token?.[0] ?? responseData?.status?.[0] ?? error.message;
                 showSnackbar(`Failed to submit: ${message}`, "error");
                 return null;
             });
@@ -153,10 +226,20 @@ export function FormReviewPage({
 
             <div className="mt-8 flex justify-center">
                 <FormControl>
+                    {userCanEdit && (
+                        <div className="mb-3 flex flex-col items-center">
+                            <div ref={turnstileContainerRef} />
+                            {turnstileError && (
+                                <Typography variant="body2" color="error" sx={{ mt: 1, textAlign: "center" }}>
+                                    Verification failed: {turnstileError}
+                                </Typography>
+                            )}
+                        </div>
+                    )}
                     <FormControlLabel
                         control={<Checkbox checked={hasConfirmed || !userCanEdit} />}
-                        disabled={!userCanEdit}
-                        onChange={(_event, checked) => setHasConfirmed(checked)}
+                        disabled={!userCanEdit || !isTurnstileVerified}
+                        onChange={(_event, checked) => isTurnstileVerified && setHasConfirmed(checked)}
                         label="I confirm that the information provided in this application is accurate and complete."
                     />
                 </FormControl>
@@ -168,7 +251,7 @@ export function FormReviewPage({
                     size="large"
                     color="success"
                     onClick={onFinalSubmit}
-                    disabled={!hasConfirmed || !userCanEdit}
+                    disabled={!hasConfirmed || !userCanEdit || !isTurnstileVerified}
                     startIcon={<AssignmentTurnedInRoundedIcon />}
                 >
                     Submit Application

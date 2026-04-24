@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from django.test import RequestFactory, TestCase
 
+from applications.models import Application, ApplicationStatus
 from applications.serialisers import ApplicationSerialiser
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
@@ -60,6 +61,13 @@ class ApplicationSerialiserTurnstileTests(TestCase):
 		request.META["REMOTE_ADDR"] = "127.0.0.1"
 		return request
 
+	def _build_patch_request(self):
+		"""Build a PATCH request with an authenticated owner and client IP."""
+		request = self.factory.patch("/api/applications/test-key")
+		request.user = self.user
+		request.META["REMOTE_ADDR"] = "127.0.0.1"
+		return request
+
 	def _build_payload(self):
 		"""Build the minimal valid application creation payload."""
 		return {
@@ -100,3 +108,64 @@ class ApplicationSerialiserTurnstileTests(TestCase):
 			{"turnstile_token": ["Turnstile verification failed. Please try again."]},
 		)
 		verify_turnstile_token_mock.assert_called_once_with("test-token", "127.0.0.1")
+
+	@patch("applications.serialisers.verify_turnstile_token", return_value=True)
+	def test_patch_submit_accepts_valid_turnstile_token(self, verify_turnstile_token_mock):
+		"""Allow draft->submitted transition when Turnstile verification succeeds."""
+		application = Application.objects.create(
+			owner=self.user,
+			questionnaire=self.questionnaire,
+			document={
+				"schema_version": "2025.07-1",
+				"active_step": 0,
+				"steps": [{"is_valid": None, "answers": {}}],
+			},
+		)
+
+		serializer = ApplicationSerialiser(
+			instance=application,
+			data={"status": ApplicationStatus.SUBMITTED, "turnstile_token": "patch-token"},
+			partial=True,
+			context={"request": self._build_patch_request()},
+		)
+
+		self.assertTrue(serializer.is_valid(), serializer.errors)
+		updated = serializer.save()
+
+		self.assertEqual(updated.status, ApplicationStatus.SUBMITTED)
+		verify_turnstile_token_mock.assert_called_once_with(
+			"patch-token",
+			"127.0.0.1",
+			str(application.key),
+		)
+
+	@patch("applications.serialisers.verify_turnstile_token", return_value=False)
+	def test_patch_submit_rejects_invalid_turnstile_token(self, verify_turnstile_token_mock):
+		"""Reject draft->submitted transition when Turnstile verification fails."""
+		application = Application.objects.create(
+			owner=self.user,
+			questionnaire=self.questionnaire,
+			document={
+				"schema_version": "2025.07-1",
+				"active_step": 0,
+				"steps": [{"is_valid": None, "answers": {}}],
+			},
+		)
+
+		serializer = ApplicationSerialiser(
+			instance=application,
+			data={"status": ApplicationStatus.SUBMITTED, "turnstile_token": "bad-token"},
+			partial=True,
+			context={"request": self._build_patch_request()},
+		)
+
+		self.assertFalse(serializer.is_valid())
+		self.assertEqual(
+			serializer.errors,
+			{"turnstile_token": ["Turnstile verification failed. Please try again."]},
+		)
+		verify_turnstile_token_mock.assert_called_once_with(
+			"bad-token",
+			"127.0.0.1",
+			str(application.key),
+		)
