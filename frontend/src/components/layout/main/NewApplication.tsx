@@ -9,6 +9,7 @@ import { useLoaderData, useNavigate, type NavigateFunction } from "react-router"
 import { ApiManager } from '../../../context/ApiManager';
 import { useDialog, type DialogOptions } from '../../../context/Dialogs';
 import { useSnackbar } from '../../../context/Snackbar';
+import { TurnstileManager } from '../../../context/TurnstileManager';
 import { PrivacyContent } from './PrivacyPolicy';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
@@ -255,11 +256,13 @@ const Questionnaire = ({
 const createNewApplication = async ({
     questionnaire,
     privacyConsentAgreed,
+    turnstileToken,
     navigate,
     showSnackbar,
 }: {
     questionnaire: IQuestionnaireData;
     privacyConsentAgreed: boolean;
+    turnstileToken: string;
     navigate: NavigateFunction;
     showSnackbar: (message: React.ReactNode, severity?: AlertColor) => void;
 }) => {
@@ -269,6 +272,7 @@ const createNewApplication = async ({
         questionnaireCode: questionnaire.code,
         questionnaireVersion: questionnaire.version,
         privacyConsentAgreed,
+        turnstileToken,
     }).catch((error: AxiosError) => {
         showSnackbar(
             "Failed to create an application, please try again later. If problem persists, contact support.",
@@ -292,15 +296,80 @@ const createNewApplication = async ({
  *
  * The content stays reusable for standalone pages, while this component owns
  * the acceptance state required only for the application creation flow.
+ * Renders a Turnstile verification widget and gates checkbox interaction on successful verification.
  */
 const PrivacyConsentDialogContent = ({
     onAgree,
     onDecline,
 }: {
-    onAgree: () => Promise<void>;
+    onAgree: (turnstileToken: string) => Promise<void>;
     onDecline: () => void;
 }) => {
     const [isAccepted, setIsAccepted] = React.useState<boolean>(false);
+    const [turnstileLoading, setTurnstileLoading] = React.useState<boolean>(true);
+    const [turnstileError, setTurnstileError] = React.useState<string | null>(null);
+    const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
+    const hasInitializedRef = React.useRef<boolean>(false);
+    const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null);
+
+    /**
+    * Render the Turnstile widget on component mount and wait for its callbacks
+    * to report success or failure before enabling consent.
+     * Uses a ref guard to prevent double-initialization in React StrictMode (development).
+     */
+    React.useEffect(() => {
+        // Prevent running effect twice in StrictMode even in development.
+        if (hasInitializedRef.current) {
+            return;
+        }
+        hasInitializedRef.current = true;
+
+        const initializeTurnstile = async () => {
+            try {
+                setTurnstileLoading(true);
+                setTurnstileError(null);
+                setTurnstileToken(null);
+
+                const container = turnstileContainerRef.current;
+                if (!container) {
+                    setTurnstileError("Verification widget container not found.");
+                    setTurnstileLoading(false);
+                    return;
+                }
+
+                // Managed widgets execute during render, so rely on callbacks
+                // instead of polling for a token immediately afterwards.
+                await TurnstileManager.render(container, {
+                    onSuccess: (token: string) => {
+                        setTurnstileToken(token);
+                        setTurnstileError(null);
+                        setTurnstileLoading(false);
+                    },
+                    onError: () => {
+                        setTurnstileToken(null);
+                        setTurnstileError("Verification failed. Please try again.");
+                        setTurnstileLoading(false);
+                    },
+                    onExpire: () => {
+                        setTurnstileToken(null);
+                        setTurnstileLoading(true);
+                    },
+                });
+            } catch (error) {
+                setTurnstileError(
+                    error instanceof Error ? error.message : "Verification widget failed to initialise."
+                );
+                setTurnstileLoading(false);
+            }
+        };
+
+        initializeTurnstile();
+    }, []);
+
+    /**
+     * Checkbox is only interactive once Turnstile verification succeeds and a token is available.
+     */
+    const isVerificationComplete = !turnstileLoading && !turnstileError && !!turnstileToken;
 
     return (
         <>
@@ -308,11 +377,25 @@ const PrivacyConsentDialogContent = ({
                 <PrivacyContent />
             </Box>
 
+            {/* Turnstile verification widget container with loading spinner */}
+            <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <div ref={turnstileContainerRef} />
+                </Box>
+                {turnstileError && (
+                    <Typography variant="body2" color="error" sx={{ mt: 1, textAlign: "center" }}>
+                        Verification failed: {turnstileError}
+                    </Typography>
+                )}
+            </Box>
+
+            {/* Privacy acknowledgement checkbox is disabled until verification succeeds */}
             <FormControlLabel
                 control={(
                     <Checkbox
-                        checked={isAccepted}
-                        onChange={(_event, checked) => setIsAccepted(checked)}
+                        checked={isAccepted && isVerificationComplete}
+                        onChange={(_event, checked) => isVerificationComplete && setIsAccepted(checked)}
+                        disabled={!isVerificationComplete}
                     />
                 )}
                 label="I acknowledge that DBCA will collect, use and disclose my personal information in accordance with applicable privacy laws and DBCA's Privacy Policy."
@@ -327,8 +410,12 @@ const PrivacyConsentDialogContent = ({
                 <Button
                     variant="contained"
                     color="primary"
-                    disabled={!isAccepted}
-                    onClick={onAgree}
+                    disabled={!isAccepted || !isVerificationComplete}
+                    onClick={async () => {
+                        if (turnstileToken) {
+                            await onAgree(turnstileToken);
+                        }
+                    }}
                 >I agree</Button>
             </Stack>
         </>
@@ -383,10 +470,11 @@ const startApplication = async ({
                         hideDialog();
                         setInProgress(false);
                     }}
-                    onAgree={async () => {
+                    onAgree={async (turnstileToken: string) => {
                         await createNewApplication({
                             questionnaire,
                             privacyConsentAgreed: true,
+                            turnstileToken,
                             navigate,
                             showSnackbar,
                         }).finally(() => {
@@ -435,3 +523,4 @@ const startApplication = async ({
         showPrivacyConsentDialog();
     }
 }
+
