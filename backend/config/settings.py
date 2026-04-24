@@ -93,12 +93,6 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = SECURE_ONLY
     SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_ONLY
 
-    # Do not redirect 'https://' because the proxy server (nginx) connection
-    # may be unsecure that will cause infinite redirection loop
-    # (if the `SECURE_PROXY_SSL_HEADER` was not set correctly)
-    # SECURE_SSL_REDIRECT = SECURE_ONLY
-    # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -322,3 +316,8 @@ UPLOAD_MIME_TYPES = [
     # "application/vnd.ms-excel", # don't accept old format
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]
+
+
+# Cloudflare Turnstile configuration
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default=None)
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default=None)

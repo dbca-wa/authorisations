@@ -55,6 +55,12 @@ class ClientConfigSerialiser(serializers.Serializer):
     csrf_header = serializers.CharField(default=ClientConfig.csrf_header)
     csrf_token = serializers.CharField(required=False, allow_blank=True)
     upload_max_size = serializers.IntegerField(default=ClientConfig.upload_max_size)
+    turnstile_site_key = serializers.CharField(
+        default=settings.TURNSTILE_SITE_KEY,
+        required=False,
+        allow_null=True,
+        allow_blank=False,
+    )
     # Provide a fresh copy of the configured mime types as the default so the
     # serializer doesn't reference dataclass Field objects or share a mutable
     # list between instances.
@@ -63,7 +69,7 @@ class ClientConfigSerialiser(serializers.Serializer):
     )
 
     def create(self, validated_data):
-        return ClientConfig(**validated_data)
+        return ClientConfig(csrf_token=validated_data.get("csrf_token"))
 
     def update(self, instance, validated_data):
-        return ClientConfig(**{**instance.__dict__, **validated_data})
+        return ClientConfig(csrf_token=validated_data.get("csrf_token", instance.csrf_token))

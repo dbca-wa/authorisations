@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from django.conf import settings
 
@@ -14,6 +14,7 @@ class ClientConfig:
     csrf_header: str = settings.CSRF_HEADER_CLIENT
     csrf_token: str = None
     upload_max_size: int = settings.UPLOAD_MAX_SIZE
+    turnstile_site_key: Optional[str] = settings.TURNSTILE_SITE_KEY
     # Use a default_factory so we don't bind a mutable list at class-level.
     # Copy the settings list to avoid accidental shared-mutation.
     upload_mime_types: List[str] = field(
