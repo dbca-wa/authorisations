@@ -10,6 +10,7 @@ import React from 'react';
 
 import type { AlertColor } from '@mui/material/Alert';
 import type { AxiosError, AxiosProgressEvent } from 'axios';
+import type { FileRejection } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
 import { useController, type ControllerRenderProps, type FieldValues } from "react-hook-form";
 import { ApiManager } from '../../context/ApiManager';
@@ -174,7 +175,7 @@ const DropzoneDialogContent = ({
     /**
      * Handles the file drop event, uploads the file via API, and updates the form state.
      */
-    const onDrop = React.useCallback(async (acceptedFiles: File[], fileRejections: any[]) => {
+    const onDrop = React.useCallback(async (acceptedFiles: File[], fileRejections: FileRejection[]) => {
         // Dropped file(s) has been rejected - we want exactly 1 accepted file.
         if (acceptedFiles.length !== 1 || fileRejections.length !== 0) {
             setHadDropRejected(true);
@@ -216,7 +217,7 @@ const DropzoneDialogContent = ({
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
-                const responseData = error.response?.data as any;
+                const responseData = error.response?.data as { file?: string } | undefined;
                 const message = responseData?.file ?? error.message;
                 showSnackbar(`Failed to upload: ${message}`, "error");
                 return null;
@@ -268,13 +269,14 @@ const DropzoneDialogContent = ({
 
     // Disable all drag n drop and click events while uploading 
     // to prevent user from interrupting the upload process
+    type PreventableEvent = React.SyntheticEvent<HTMLElement>;
     const disabledHandlers = progress !== null ? {
-        onClick: (e: any) => e.preventDefault(),
-        onKeyDown: (e: any) => e.preventDefault(),
-        onDrop: (e: any) => e.preventDefault(),
-        onDragEnter: (e: any) => e.preventDefault(),
-        onDragLeave: (e: any) => e.preventDefault(),
-        onDragOver: (e: any) => e.preventDefault(),
+        onClick: (e: PreventableEvent) => e.preventDefault(),
+        onKeyDown: (e: PreventableEvent) => e.preventDefault(),
+        onDrop: (e: PreventableEvent) => e.preventDefault(),
+        onDragEnter: (e: PreventableEvent) => e.preventDefault(),
+        onDragLeave: (e: PreventableEvent) => e.preventDefault(),
+        onDragOver: (e: PreventableEvent) => e.preventDefault(),
     } : {};
 
     // Dropzone and file input props

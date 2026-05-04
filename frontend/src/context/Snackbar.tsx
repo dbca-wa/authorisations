@@ -1,4 +1,6 @@
-import { Alert, Snackbar, type AlertColor } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import type { AlertColor } from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
 interface SnackbarNotification {

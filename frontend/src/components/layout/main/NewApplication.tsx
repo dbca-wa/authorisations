@@ -2,7 +2,15 @@ import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import MuiLink from '@mui/material/Link';
 import React from "react";
 
-import { Box, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Stack from "@mui/material/Stack";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import Typography from "@mui/material/Typography";
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
 import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";

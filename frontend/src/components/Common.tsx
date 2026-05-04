@@ -5,9 +5,9 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
+import TextField from '@mui/material/TextField';
 import Typography from "@mui/material/Typography";
 
-import { TextField } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { ApiManager } from '../context/ApiManager';
 import { useDialog } from '../context/Dialogs';
@@ -127,7 +127,7 @@ export const FileAttachmentList = ({
                                 })
                                 .catch((error) => {
                                     console.error("Error deleting attachment:", error);
-                                    const responseData = error.response?.data as any;
+                                    const responseData = error.response?.data as { detail?: string } | undefined;
                                     const message = responseData?.detail ?? error.message;
                                     showSnackbar(`Failed to delete file: ${message}`, "error");
                                 });

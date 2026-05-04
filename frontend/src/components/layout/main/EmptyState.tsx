@@ -1,5 +1,6 @@
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
-import { Box, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 export const EmptyStateComponent = () => {
     return (

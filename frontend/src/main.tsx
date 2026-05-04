@@ -1,11 +1,10 @@
 // Polyfill support for old browsers
 // https://github.com/vitejs/vite/issues/4786
-// @ts-expect-error
 import 'vite/modulepreload-polyfill';
 
 import { ThemeProvider } from '@emotion/react';
-import { createTheme } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers';
+import { createTheme } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-au';
 import { StrictMode } from 'react';

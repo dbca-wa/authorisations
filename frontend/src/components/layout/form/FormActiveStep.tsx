@@ -9,7 +9,7 @@ import React from "react";
 
 import { useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
-import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
+import { Question, type IFormSection, type IFormStep, type IQuestion } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
 import { FileInput } from "../../inputs/file";
@@ -149,11 +149,11 @@ const Section = ({
 
     // map array -> keyed object
     const parentValues = React.useMemo(() => {
-        const m: Record<string, any> = {};
+        const m: Record<string, unknown> = {};
         if (Array.isArray(parentValuesArray)) {
             parentKeys.forEach((k, i) => { m[k] = parentValuesArray?.[i]; });
         } else if (parentValuesArray && typeof parentValuesArray === 'object') {
-            parentKeys.forEach((k) => { m[k] = (parentValuesArray as Record<string, any>)[k]; });
+            parentKeys.forEach((k) => { m[k] = (parentValuesArray as Record<string, unknown>)[k]; });
         }
         return m;
     }, [parentKeys, parentValuesArray]);
@@ -269,7 +269,7 @@ const Section = ({
  * @param followupObj Mapping of question key to walkback offset
  */
 const computeFollowupMap = (
-    questions: any[],
+    questions: IQuestion[],
     stepIndex: number,
     sectionIndex: number,
     // followupObj: Record<string, number>

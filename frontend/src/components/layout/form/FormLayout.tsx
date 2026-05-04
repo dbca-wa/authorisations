@@ -184,7 +184,8 @@ export const FormLayout = () => {
 
             // We know the errors there, fetch their keys with assertive approach
             const stepKey = _.first(_.keys(errors)) as string;
-            const stepErrors = (errors as any)[stepKey]!;      // assert exists
+            const stepErrors = errors[stepKey as unknown as number];
+            if (!stepErrors || typeof stepErrors !== "object") return;
             const fieldKey = _.first(_.keys(stepErrors)) as string;
             const firstErrorField = `${stepKey}.${fieldKey}`;
             // console.log('fieldKey:', fieldKey)
@@ -431,7 +432,8 @@ const _doSaveAnswers = async (
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
-                const message = (error.response?.data as any)?.document?.[0] ?? error.message;
+                const responseData = error.response?.data as { document?: string[] } | undefined;
+                const message = responseData?.document?.[0] ?? error.message;
                 showSnackbar(`Failed to save: ${message}`, "error");
                 return null;
             });
