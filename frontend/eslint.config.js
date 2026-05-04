@@ -23,6 +23,11 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      // Allow intentionally-unused variables/args prefixed with underscore.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^_', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
       // https://mui.com/material-ui/guides/minimizing-bundle-size/#enforce-best-practices-with-eslint
       "no-restricted-imports": [
         "error",
