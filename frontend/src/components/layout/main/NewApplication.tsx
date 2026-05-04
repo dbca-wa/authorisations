@@ -103,7 +103,7 @@ const ProcessGroup = ({
     const selectedQuestionnaire = group.questionnaires[selectedQuestionnaireTab];
 
     return (
-        <Box mb={5}>
+        <Box sx={{ mb: 5 }}>
             <Card className="p-6" elevation={4} sx={{ borderRadius: 2 }}>
                 <ProcessOverview
                     process={group.process}
@@ -232,7 +232,7 @@ const Questionnaire = ({
                     })}
                 >Start Application</Button>
                 <Box sx={{ textAlign: "right" }}>
-                    <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                    <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }} useFlexGap>
                         <Typography variant="body2" color="textSecondary">
                             Steps: <strong>{questionnaire.document.steps.length}</strong>
                         </Typography>

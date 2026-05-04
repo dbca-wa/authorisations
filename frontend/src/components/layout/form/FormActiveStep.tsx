@@ -56,7 +56,7 @@ export const FormActiveStep = ({
                     />
                 })}
 
-                <Box justifyContent={"space-around"} display="flex" mt={4}>
+                <Box sx={{ justifyContent: "space-around", display: "flex", mt: 4 }}>
                     {activeStep !== 0 && (
                         <Button
                             variant="outlined"

@@ -96,9 +96,17 @@ export const FileAttachmentList = ({
         showDialog({
             title: "Confirm Deletion",
             content:
-                <Box alignItems="center" justifyContent="center"
-                    display="flex" flexDirection="column" paddingX={4} gap={2}>
-                    <Typography textAlign={"center"}>Are you sure you want to delete the attachment<br />
+                <Box
+                    sx={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        px: 4,
+                        gap: 2,
+                    }}
+                >
+                    <Typography sx={{ textAlign: "center" }}>Are you sure you want to delete the attachment<br />
                         <strong>{attachment.name}</strong> ?
                     </Typography>
                     <Typography>This action cannot be undone.</Typography>
@@ -165,7 +173,7 @@ export const FileAttachmentList = ({
             title: "Rename Attachment",
             content:
                 <Box className="w-md items-center justify-center flex flex-col gap-2">
-                    <Box display="flex" alignItems="flex-end" gap={1} width="100%">
+                    <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1, width: "100%" }}>
                         <TextField
                             inputRef={renameInputRef}
                             defaultValue={baseName}

@@ -118,7 +118,7 @@ const StepItem = ({
     return (
         <>
             <StepButton icon={icon} onClick={onClick}>
-                <Typography fontWeight={isActive ? "fontWeightBold" : "fontWeightRegular"}>
+                <Typography sx={{ fontWeight: isActive ? "fontWeightBold" : "fontWeightRegular" }}>
                     {step.title}
                 </Typography>
             </StepButton>

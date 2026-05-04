@@ -137,7 +137,7 @@ export const MyApplications = () => {
 
     return (
         <Box className="p-8 min-w-4xl max-w-7xl">
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h4" gutterBottom>
                     My Applications
                 </Typography>
@@ -156,9 +156,7 @@ export const MyApplications = () => {
                                 return (
                                     <Box
                                         component="span"
-                                        display="inline-flex"
-                                        alignItems="center"
-                                        gap={1}
+                                        sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}
                                     >
                                         <SortIcon fontSize="small" />
                                         <Box component="span">{sortOrderLabels[option]}</Box>

@@ -77,7 +77,7 @@ export const ApplicationCard = ({
                     <NumbersIcon></NumbersIcon>{application.internal_id}
                 </Typography>
 
-                <Box display="flex" gap={1} my={2} flexWrap="wrap" justifyContent="space-around" className="max-w-min min-w-1/1 mx-auto">
+                <Box sx={{ display: "flex", gap: 1, my: 2, flexWrap: "wrap", justifyContent: "space-around" }} className="max-w-min min-w-1/1 mx-auto">
                     <Chip label={processName} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
 
@@ -89,7 +89,7 @@ export const ApplicationCard = ({
                     <Chip label={`Updated ${updatedAtRelative}`} size="small" variant="outlined" />
                 </Box>
 
-                <Box mt={4} mb={1} className="w-4/5 mx-auto">
+                <Box sx={{ mt: 4, mb: 1 }} className="w-4/5 mx-auto">
                     <Stepper
                         activeStep={statusToActiveStep[application.status]}
                         alternativeLabel
@@ -118,7 +118,7 @@ export const ApplicationCard = ({
                         ))}
                     </Stepper>
                 </Box>
-                <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
                     {/* Render the PDF action only when explicitly enabled and a designated URL is provided. */}
                     {downloadUrl && (
                         <Link
