@@ -163,7 +163,7 @@ const Section = ({
         const cache: Record<string, boolean> = {};
 
         const compute = (qKey: string): boolean => {
-            if (cache.hasOwnProperty(qKey)) return cache[qKey];
+            if (Object.hasOwn(cache, qKey)) return cache[qKey];
             const info = followupMap[qKey];
             if (!info) return (cache[qKey] = true);
             const parentVal = parentValues[info.parentKey];
