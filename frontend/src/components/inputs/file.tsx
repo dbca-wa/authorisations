@@ -134,6 +134,8 @@ const DropzoneDialogContent = ({
     const [filename, setFilename] = React.useState<string | null>(null);
     // Uploading progress state (0-100) or null (not uploading yet)
     const [progress, setProgress] = React.useState<number | null>(null);
+    // Persist a short-lived post-drop rejection state because v15 clears isDragReject after drop.
+    const [hadDropRejected, setHadDropRejected] = React.useState<boolean>(false);
     // Ref to hold pending reset timer id so we can clear it on unmount
     const resetTimerRef = React.useRef<number | null>(null);
 
@@ -155,6 +157,7 @@ const DropzoneDialogContent = ({
         // clear UI state
         setFilename(null);
         setProgress(null);
+        setHadDropRejected(false);
     }, []);
 
     // Clear any pending timeout when the component unmounts to avoid updating
@@ -174,6 +177,7 @@ const DropzoneDialogContent = ({
     const onDrop = React.useCallback(async (acceptedFiles: File[], fileRejections: any[]) => {
         // Dropped file(s) has been rejected - we want exactly 1 accepted file.
         if (acceptedFiles.length !== 1 || fileRejections.length !== 0) {
+            setHadDropRejected(true);
             // console.debug("File drop rejected", { acceptedFiles, fileRejections });
             // const message = fileRejections[0]?.errors?.[0]?.message ??
             //     "Invalid file type, please ensure it meets the requirements.";
@@ -183,6 +187,7 @@ const DropzoneDialogContent = ({
         }
 
         const file = acceptedFiles[0];
+        setHadDropRejected(false);
         setFilename(file.name);
         // console.log("File selected:", file);
 
@@ -245,7 +250,10 @@ const DropzoneDialogContent = ({
         validator: fileSizeValidator,
         onDrop,
         onDragLeave: () => Reset(0),
-        onDropRejected: () => Reset(3),
+        onDropRejected: () => {
+            setHadDropRejected(true);
+            Reset(3);
+        },
         accept: acceptedTypes,
         multiple: false,
         noClick: true,
@@ -254,8 +262,8 @@ const DropzoneDialogContent = ({
     });
 
     const styling: IDragStateStyling = React.useMemo(
-        () => getStyling(isDragAccept, isDragReject),
-        [isDragAccept, isDragReject],
+        () => getStyling(isDragAccept, isDragReject || hadDropRejected),
+        [isDragAccept, isDragReject, hadDropRejected],
     );
 
     // Disable all drag n drop and click events while uploading 
@@ -349,7 +357,7 @@ interface IDragStateStyling {
  * Decides what styling to apply based on the dropzone state.
  * 
  * @param isDragAccept Active drag over file will be accepted
- * @param isDragReject Dragged file (whether drag over or dropped) is rejected
+ * @param isDragReject Dragged file is rejected (active drag state, or post-drop state provided by caller)
  */
 const getStyling = (isDragAccept: boolean, isDragReject: boolean): IDragStateStyling => {
     if (isDragAccept) {
