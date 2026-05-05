@@ -146,7 +146,7 @@ export const MyApplications = () => {
                         <Select
                             id="my-applications-sort"
                             value={sortOrder}
-                            className="min-w-[220px]"
+                            className="min-w-55"
                             displayEmpty
                             onChange={(event) => setSortOrder(event.target.value as SortOrderOption)}
                             inputProps={{ 'aria-label': 'Sort applications' }}
