@@ -2,6 +2,7 @@ import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import MuiLink from '@mui/material/Link';
 import React from "react";
 
+import type { AlertColor } from '@mui/material/Alert';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -11,20 +12,18 @@ import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
-import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
 import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
-import { useDialog, type DialogOptions } from '../../../context/Dialogs';
-import { useSnackbar } from '../../../context/Snackbar';
+import type { DialogOptions } from '../../../context/DialogContext';
+import { useDialog, useResolvedPromise, useSnackbar } from '../../../context/Hooks';
 import { TurnstileManager } from '../../../context/TurnstileManager';
-import { PrivacyContent } from './PrivacyPolicy';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
+import type { LoaderData } from '../../../context/types/Generic';
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
-import { useResolvedPromise } from '../../../context/Hooks';
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
-import type { LoaderData } from '../../../context/types/Generic';
+import { PrivacyContent } from './PrivacyPolicy';
 
 interface IProcessGroup {
     process: IAuthorisationProcess;
@@ -102,13 +101,12 @@ const ProcessGroup = ({
 }) => {
     const [selectedQuestionnaireTab, setSelectedQuestionnaireTab] = React.useState<number>(0);
 
-    React.useEffect(() => {
-        if (selectedQuestionnaireTab >= group.questionnaires.length) {
-            setSelectedQuestionnaireTab(0);
-        }
-    }, [group.questionnaires.length, selectedQuestionnaireTab]);
-
-    const selectedQuestionnaire = group.questionnaires[selectedQuestionnaireTab];
+    // Keep tab state stable while preventing out-of-range access when questionnaire lists change.
+    const safeSelectedQuestionnaireTab = Math.min(
+        selectedQuestionnaireTab,
+        Math.max(group.questionnaires.length - 1, 0),
+    );
+    const selectedQuestionnaire = group.questionnaires[safeSelectedQuestionnaireTab];
 
     return (
         <Box sx={{ mb: 5 }}>
@@ -120,7 +118,7 @@ const ProcessGroup = ({
                 <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
                     <Tabs
                         orientation="vertical"
-                        value={selectedQuestionnaireTab}
+                        value={safeSelectedQuestionnaireTab}
                         onChange={(_, value: number) => setSelectedQuestionnaireTab(value)}
                         aria-label={`${group.process.name} questionnaire tabs`}
                         sx={{ minWidth: 220, borderRight: 1, borderColor: "divider" }}
@@ -141,8 +139,8 @@ const ProcessGroup = ({
                     {selectedQuestionnaire && (
                         <Box
                             role="tabpanel"
-                            id={`questionnaire-tabpanel-${group.process.slug}-${selectedQuestionnaireTab}`}
-                            aria-labelledby={`questionnaire-tab-${group.process.slug}-${selectedQuestionnaireTab}`}
+                            id={`questionnaire-tabpanel-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
+                            aria-labelledby={`questionnaire-tab-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
                             sx={{ flex: 1, minWidth: 0 }}
                         >
                             <Questionnaire

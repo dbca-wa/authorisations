@@ -215,7 +215,7 @@ const Section = ({
                         return null;
                     }
 
-                    let inputComponent = null;
+                    let inputComponent: React.ReactNode;
                     switch (question.o.type) {
                         case "text":
                         case "textarea":

@@ -16,7 +16,7 @@ import { useController, type ControllerRenderProps, type FieldValues } from "rea
 import { ApiManager } from '../../context/ApiManager';
 import { ConfigManager } from '../../context/ConfigManager';
 import { ERROR_MSG } from "../../context/Constants";
-import { useSnackbar } from '../../context/Snackbar';
+import { useSnackbar } from '../../context/Hooks';
 import type { IApplicationAttachment } from '../../context/types/Application';
 import type { Question } from "../../context/types/Questionnaire";
 import { VisuallyHiddenInput } from '../../context/Utils';

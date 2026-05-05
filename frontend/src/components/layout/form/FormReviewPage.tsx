@@ -12,7 +12,7 @@ import React from "react";
 import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
-import { useSnackbar } from '../../../context/Snackbar';
+import { useSnackbar } from '../../../context/Hooks';
 import { TurnstileManager } from '../../../context/TurnstileManager';
 import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
@@ -57,9 +57,6 @@ export function FormReviewPage({
     React.useEffect(() => {
         // Read-only review mode does not need Turnstile verification.
         if (!userCanEdit) {
-            setTurnstileLoading(false);
-            setTurnstileError(null);
-            setTurnstileToken(null);
             return;
         }
 
@@ -184,7 +181,7 @@ export function FormReviewPage({
                                                 question: questionIdx,
                                             });
                                             const answer = answers[stepIdx][`${sectionIdx}-${questionIdx}`];
-                                            let displayAnswer: React.ReactNode = null;
+                                            let displayAnswer: React.ReactNode;
 
                                             switch (qObj.type) {
                                                 case "checkbox":

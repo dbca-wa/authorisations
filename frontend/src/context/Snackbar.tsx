@@ -1,7 +1,8 @@
 import Alert from "@mui/material/Alert";
 import type { AlertColor } from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
+import { SnackbarContext } from './SnackbarContext';
 
 interface SnackbarNotification {
     id: number;
@@ -10,20 +11,6 @@ interface SnackbarNotification {
     /** Drives MUI's open/close transition; set to false to play the exit animation. */
     open: boolean;
 }
-
-interface SnackbarContextType {
-    showSnackbar: (message: ReactNode, severity?: AlertColor) => void;
-}
-
-const SnackbarContext = createContext<SnackbarContextType | undefined>(undefined);
-
-export const useSnackbar = () => {
-    const context = useContext(SnackbarContext);
-    if (!context) {
-        throw new Error("useSnackbar must be used within a SnackbarProvider");
-    }
-    return context;
-};
 
 let nextNotificationId = 0;
 

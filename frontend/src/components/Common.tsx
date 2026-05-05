@@ -10,8 +10,7 @@ import Typography from "@mui/material/Typography";
 
 import { useRef } from 'react';
 import { ApiManager } from '../context/ApiManager';
-import { useDialog } from '../context/Dialogs';
-import { useSnackbar } from '../context/Snackbar';
+import { useDialog, useSnackbar } from '../context/Hooks';
 import { getIconFromFilename } from "../context/Utils";
 import type { IApplicationAttachment } from "../context/types/Application";
 

@@ -1,4 +1,30 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { DialogContext, type DialogContextType } from './DialogContext';
+import { SnackbarContext, type SnackbarContextType } from './SnackbarContext';
+
+
+/**
+ * Returns the shared dialog context API and enforces provider usage.
+ */
+export const useDialog = (): DialogContextType => {
+	const context = useContext(DialogContext);
+	if (!context) {
+		throw new Error('useDialog must be used within a DialogProvider');
+	}
+	return context;
+};
+
+
+/**
+ * Returns the shared snackbar context API and enforces provider usage.
+ */
+export const useSnackbar = (): SnackbarContextType => {
+	const context = useContext(SnackbarContext);
+	if (!context) {
+		throw new Error('useSnackbar must be used within a SnackbarProvider');
+	}
+	return context;
+};
 
 
 /**
@@ -19,39 +45,37 @@ export const useResolvedPromise = <T,>(
 	// re-run when the caller passes an inline literal (e.g. [] or {}).
 	const initialValueRef = useRef<T>(initialValue);
 	const [value, setValue] = useState<T>(initialValue);
-	// Start as loading only when a promise is actually provided, avoiding a
-	// spurious loading flash on routes that omit this data.
-	const [isLoading, setIsLoading] = useState<boolean>(promise !== undefined);
+	// Track which promise has settled so loading can be derived without
+	// mutating state synchronously inside the effect body.
+	const [settledPromise, setSettledPromise] = useState<Promise<T> | undefined>(undefined);
 
 	useEffect(() => {
 		if (!promise) {
-			setIsLoading(false);
 			return;
 		}
 
 		// Guard flag: prevents state updates if the component unmounts before the promise settles.
 		let isMounted = true;
-		setIsLoading(true);
 
 		promise
 			.then((resolved) => {
 				if (!isMounted) return;
 				setValue(resolved);
+				setSettledPromise(promise);
 			})
 			.catch(() => {
 				// Fall back to the initial value so the empty-state UI can render safely.
 				if (!isMounted) return;
 				setValue(initialValueRef.current);
-			})
-			.finally(() => {
-				if (!isMounted) return;
-				setIsLoading(false);
+				setSettledPromise(promise);
 			});
 
 		return () => {
 			isMounted = false;
 		};
 	}, [promise]);
+
+	const isLoading = promise !== undefined && settledPromise !== promise;
 
 	return [value, isLoading];
 };
