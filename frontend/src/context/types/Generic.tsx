@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router";
-import type { IAuthorisationProcess, IQuestionnaireData } from "./Questionnaire";
 import type { IApplicationData } from "./Application";
+import type { IAuthorisationProcess, IQuestionnaireData } from "./Questionnaire";
 
 export type PrimitiveType = string | number | boolean | null;
 

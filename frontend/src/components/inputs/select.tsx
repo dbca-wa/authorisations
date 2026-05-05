@@ -3,9 +3,10 @@ import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
+
 import { Controller } from "react-hook-form";
-import { Question } from "../../context/types/Questionnaire";
 import { ERROR_MSG } from "../../context/Constants";
+import { Question } from "../../context/types/Questionnaire";
 
 export function SelectInput({
     question,

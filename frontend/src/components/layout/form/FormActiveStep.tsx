@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import React from "react";
 
 import { useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
+import type { IApplicationAttachment } from '../../../context/types/Application';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep, type IQuestion } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
@@ -16,7 +17,6 @@ import { FileInput } from "../../inputs/file";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import type { IApplicationAttachment } from '../../../context/types/Application';
 
 
 export const FormActiveStep = ({

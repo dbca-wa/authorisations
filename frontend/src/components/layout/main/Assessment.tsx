@@ -4,8 +4,8 @@ import Typography from "@mui/material/Typography";
 
 import { useMemo } from "react";
 import { useLoaderData } from "react-router";
-import type { IApplicationData } from "../../../context/types/Application";
 import { useResolvedPromise } from "../../../context/Hooks";
+import type { IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
 import { ApplicationCard } from "./ApplicationCard";
 import { EmptyStateComponent } from "./EmptyState";

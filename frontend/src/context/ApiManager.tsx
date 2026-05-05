@@ -1,5 +1,6 @@
-import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import axios from "axios";
+
+import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import { ConfigManager } from "./ConfigManager";
 import type { IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "./types/Questionnaire";

@@ -12,12 +12,8 @@ import Typography from "@mui/material/Typography";
 import dayjs from 'dayjs';
 import React from 'react';
 
-import { useController, type ValidateResult } from 'react-hook-form';
-import { v6 as uuidv6 } from 'uuid';
-import { Question } from "../../context/types/Questionnaire";
-import { type PrimitiveType } from "../../context/types/Generic";
-import { assert } from '../../context/Utils';
-
+import { GridActionsCellItem, Toolbar } from '@mui/x-data-grid/components';
+import { DataGrid } from '@mui/x-data-grid/DataGrid';
 import type {
     GridColDef,
     GridRowId,
@@ -27,8 +23,11 @@ import type {
     GridSlotProps
 } from '@mui/x-data-grid/models';
 import { GridRowModes } from '@mui/x-data-grid/models';
-import { DataGrid } from '@mui/x-data-grid/DataGrid';
-import { GridActionsCellItem, Toolbar } from '@mui/x-data-grid/components';
+import { useController, type ValidateResult } from 'react-hook-form';
+import { v6 as uuidv6 } from 'uuid';
+import { type PrimitiveType } from "../../context/types/Generic";
+import { Question } from "../../context/types/Questionnaire";
+import { assert } from '../../context/Utils';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps

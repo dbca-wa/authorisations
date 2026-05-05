@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState } from 'react';
+
 import { DialogContext, type DialogContextType } from './DialogContext';
 import { SnackbarContext, type SnackbarContextType } from './SnackbarContext';
 
