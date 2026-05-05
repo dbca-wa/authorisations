@@ -98,8 +98,9 @@ WORKDIR /app
 COPY --chown=appuser:appuser frontend /tmp/frontend/
 COPY --chown=appuser:appuser backend /tmp/backend/
 
-# Install frontend dependencies & build assets
-RUN cd /tmp/frontend; npm install; npm run build
+# Install frontend dependencies, lint, then build assets.
+# Lint runs after install (ESLint plugins required) but before build to fail fast.
+RUN cd /tmp/frontend; npm install; npm run lint; npm run build
 
 # Copy backend into its final location
 RUN cp -r /tmp/backend/. /app/
