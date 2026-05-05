@@ -152,6 +152,33 @@
 - PostgreSQL behavior matters for DISTINCT and ORDER BY query design.
 - `django-admin-sortable2` used for admin ordering UX; plugin limitations should be accounted for in model/admin configuration.
 
+## PDF Icon CSS Build Contract
+
+### Why `pdf-icons.css` Exists
+- The application PDF renders file-type icons that must match frontend icon mapping logic.
+- Prince renders the PDF without relying on runtime HTTP fetches for this icon stylesheet.
+- A dedicated Vite entry builds a stable output file named `pdf-icons.css` so Django staticfiles can always find it by that exact name.
+
+### How It Is Generated
+- Source entry is `frontend/src/pdf-icons.css`.
+- Vite includes a dedicated build input named `pdf-icons` and emits hash-free `pdf-icons.css`.
+- Tailwind v4 scans explicit sources declared in `pdf-icons.css`:
+  - `backend/applications/models.py` (icon class mapping values)
+  - `backend/templates/application-pdf-template.html` (base icon class usage)
+- During PDF context building, backend code loads `pdf-icons.css` via Django staticfiles finder and inlines it into the template.
+
+### Docker Build Path Requirement (Critical)
+- `frontend/src/pdf-icons.css` uses relative `@source` paths that assume:
+  - frontend source is available at `/tmp/frontend`
+  - backend source is available at `/tmp/backend`
+- Therefore Docker builds that run `npm run build` for frontend must copy both source trees into those temporary locations before the build step.
+- If either source path is missing, Tailwind cannot resolve icon class sources and the generated `pdf-icons.css` will be incomplete or incorrect.
+
+### Safe Change Checklist
+- If moving directories or changing Docker stages, preserve the relative source relationship used by `pdf-icons.css`.
+- If adding new attachment file types, update `_EXTENSION_TO_ICON_CLASS` in `backend/applications/models.py` and rebuild frontend assets.
+- After build changes, verify that output contains `pdf-icons.css` and that generated PDFs still show correct file-type icons.
+
 ## Known Gotchas And Learnings
 
 ### Distinct On (PostgreSQL)
