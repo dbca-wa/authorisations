@@ -529,7 +529,17 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         """
         Object-level validation: Parse question definition and validate against file_max_attachments.
         This runs after all field validators, guaranteeing access to cached application.
+
+        On PATCH (rename), only `name` is being mutated — application/question context
+        is not sent and not needed, so skip POST-specific validation entirely.
         """
+        request = self.context.get("request")
+        is_post = request.method == "POST" if request else False
+
+        # PATCH updates (rename) only touch `name`; skip creation-only validation.
+        if not is_post:
+            return data
+
         # Get the cached application from field validator
         application = self.context.get("application")
         if application is None:
