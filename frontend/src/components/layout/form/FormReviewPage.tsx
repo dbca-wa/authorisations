@@ -161,7 +161,7 @@ export function FormReviewPage({
                                 aria-label="edit step"
                                 onClick={handleSubmit(stepIdx)}
                                 disabled={!userCanEdit}
-                                className="!text-white disabled:!text-gray-300"
+                                className="text-white! disabled:text-gray-300!"
                             >
                                 <EditIcon fontSize="small" />
                             </IconButton>

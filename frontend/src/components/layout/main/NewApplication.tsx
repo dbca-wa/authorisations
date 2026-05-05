@@ -21,10 +21,10 @@ import { TurnstileManager } from '../../../context/TurnstileManager';
 import { PrivacyContent } from './PrivacyPolicy';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
+import { useResolvedPromise } from '../../../context/Hooks';
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
 import type { LoaderData } from '../../../context/types/Generic';
-import { useResolvedPromise } from "../../Common";
 
 interface IProcessGroup {
     process: IAuthorisationProcess;

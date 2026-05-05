@@ -70,7 +70,7 @@ export const FileInput = ({
             // Or has keys that don't match the current attachments explicitly
             field.value.some((key: string) => !attachmentKeys.includes(key)) ||
             // Or if there are attachments but the field value is empty (e.g. after deletion)
-            (attachments.length > 0 && field.value.length === 0)
+            (attachmentKeys.length > 0 && field.value.length === 0)
         ) {
             console.warn(`Field value does not match the given attachments "${question.key}", re-assigning...`, {
                 value: field.value,
@@ -79,7 +79,7 @@ export const FileInput = ({
             // Update the form field value to match the current attachments (or clear it if no attachments)
             field.onChange(attachmentKeys);
         }
-    }, [question.key, attachmentKeysString, field]);
+    }, [question.key, attachmentKeys, attachmentKeysString, field]);
 
     return (
         <Box className="w-full">
@@ -141,25 +141,33 @@ const DropzoneDialogContent = ({
     const resetTimerRef = React.useRef<number | null>(null);
 
     /**
-     * Resets the dropzone state to allow user to try uploading again.
+     * Clears all transient dropzone UI state immediately.
      */
-    const Reset = React.useCallback((delay: number = 3) => {
-        // Delay the reset for visual feedback
-        if (delay > 0) {
-            // clear any existing timer first
-            if (resetTimerRef.current) {
-                clearTimeout(resetTimerRef.current);
-            }
-            // schedule a new timer and store id so we can cancel on unmount
-            resetTimerRef.current = window.setTimeout(() => Reset(0), delay * 1000) as number;
-            return;
-        }
-
-        // clear UI state
+    const resetNow = React.useCallback(() => {
         setFilename(null);
         setProgress(null);
         setHadDropRejected(false);
     }, []);
+
+    /**
+     * Resets the dropzone state immediately or after a short delay.
+     */
+    const resetDropzoneState = React.useCallback((delay: number = 3) => {
+        // Delay the reset for visual feedback.
+        if (delay > 0) {
+            // Clear any existing timer first.
+            if (resetTimerRef.current) {
+                clearTimeout(resetTimerRef.current);
+            }
+            // Schedule a new timer and store id so we can cancel on unmount.
+            resetTimerRef.current = window.setTimeout(() => {
+                resetNow();
+            }, delay * 1000) as number;
+            return;
+        }
+
+        resetNow();
+    }, [resetNow]);
 
     // Clear any pending timeout when the component unmounts to avoid updating
     // state after unmount (prevents React warnings / potential leaks).
@@ -183,7 +191,7 @@ const DropzoneDialogContent = ({
             // const message = fileRejections[0]?.errors?.[0]?.message ??
             //     "Invalid file type, please ensure it meets the requirements.";
             showSnackbar("Invalid file type, please ensure it meets the requirements.", "error");
-            Reset(3);
+            resetDropzoneState(3);
             return;
         }
 
@@ -223,11 +231,11 @@ const DropzoneDialogContent = ({
                 return null;
             })
             // Reset the state so user can try uploading again (up to the max limit).
-            .finally(() => Reset(3));
+            .finally(() => resetDropzoneState(3));
 
         // Something went terribly wrong with the upload, i.e. network error.
         if (!response) return;
-    }, [field]);
+    }, [applicationKey, field, onAttachmentAdded, resetDropzoneState, showSnackbar]);
 
     // Build the accept map expected by react-dropzone from the configured
     // mime types. react-dropzone accepts an object like { "image/png": [] }
@@ -250,10 +258,10 @@ const DropzoneDialogContent = ({
     } = useDropzone({
         validator: fileSizeValidator,
         onDrop,
-        onDragLeave: () => Reset(0),
+        onDragLeave: () => resetDropzoneState(0),
         onDropRejected: () => {
             setHadDropRejected(true);
-            Reset(3);
+            resetDropzoneState(3);
         },
         accept: acceptedTypes,
         multiple: false,

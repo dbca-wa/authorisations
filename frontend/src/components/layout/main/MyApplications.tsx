@@ -8,10 +8,10 @@ import Typography from "@mui/material/Typography";
 
 import { useEffect, useMemo, useState } from "react";
 import { useLoaderData } from "react-router";
+import { useResolvedPromise } from "../../../context/Hooks";
 import { LocalStorage } from "../../../context/LocalStorage";
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
-import { useResolvedPromise } from "../../Common";
 import { ApplicationCard } from "./ApplicationCard";
 import { EmptyStateComponent } from "./EmptyState";
 
