@@ -10,12 +10,13 @@ import React from 'react';
 
 import type { AlertColor } from '@mui/material/Alert';
 import type { AxiosError, AxiosProgressEvent } from 'axios';
+import type { FileRejection } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
 import { useController, type ControllerRenderProps, type FieldValues } from "react-hook-form";
 import { ApiManager } from '../../context/ApiManager';
 import { ConfigManager } from '../../context/ConfigManager';
 import { ERROR_MSG } from "../../context/Constants";
-import { useSnackbar } from '../../context/Snackbar';
+import { useSnackbar } from '../../context/Hooks';
 import type { IApplicationAttachment } from '../../context/types/Application';
 import type { Question } from "../../context/types/Questionnaire";
 import { VisuallyHiddenInput } from '../../context/Utils';
@@ -69,7 +70,7 @@ export const FileInput = ({
             // Or has keys that don't match the current attachments explicitly
             field.value.some((key: string) => !attachmentKeys.includes(key)) ||
             // Or if there are attachments but the field value is empty (e.g. after deletion)
-            (attachments.length > 0 && field.value.length === 0)
+            (attachmentKeys.length > 0 && field.value.length === 0)
         ) {
             console.warn(`Field value does not match the given attachments "${question.key}", re-assigning...`, {
                 value: field.value,
@@ -78,7 +79,7 @@ export const FileInput = ({
             // Update the form field value to match the current attachments (or clear it if no attachments)
             field.onChange(attachmentKeys);
         }
-    }, [question.key, attachmentKeysString, field]);
+    }, [question.key, attachmentKeys, attachmentKeysString, field]);
 
     return (
         <Box className="w-full">
@@ -134,28 +135,39 @@ const DropzoneDialogContent = ({
     const [filename, setFilename] = React.useState<string | null>(null);
     // Uploading progress state (0-100) or null (not uploading yet)
     const [progress, setProgress] = React.useState<number | null>(null);
+    // Persist a short-lived post-drop rejection state because v15 clears isDragReject after drop.
+    const [hadDropRejected, setHadDropRejected] = React.useState<boolean>(false);
     // Ref to hold pending reset timer id so we can clear it on unmount
     const resetTimerRef = React.useRef<number | null>(null);
 
     /**
-     * Resets the dropzone state to allow user to try uploading again.
+     * Clears all transient dropzone UI state immediately.
      */
-    const Reset = React.useCallback((delay: number = 3) => {
-        // Delay the reset for visual feedback
+    const resetNow = React.useCallback(() => {
+        setFilename(null);
+        setProgress(null);
+        setHadDropRejected(false);
+    }, []);
+
+    /**
+     * Resets the dropzone state immediately or after a short delay.
+     */
+    const resetDropzoneState = React.useCallback((delay: number = 3) => {
+        // Delay the reset for visual feedback.
         if (delay > 0) {
-            // clear any existing timer first
+            // Clear any existing timer first.
             if (resetTimerRef.current) {
                 clearTimeout(resetTimerRef.current);
             }
-            // schedule a new timer and store id so we can cancel on unmount
-            resetTimerRef.current = window.setTimeout(() => Reset(0), delay * 1000) as number;
+            // Schedule a new timer and store id so we can cancel on unmount.
+            resetTimerRef.current = window.setTimeout(() => {
+                resetNow();
+            }, delay * 1000) as number;
             return;
         }
 
-        // clear UI state
-        setFilename(null);
-        setProgress(null);
-    }, []);
+        resetNow();
+    }, [resetNow]);
 
     // Clear any pending timeout when the component unmounts to avoid updating
     // state after unmount (prevents React warnings / potential leaks).
@@ -171,18 +183,20 @@ const DropzoneDialogContent = ({
     /**
      * Handles the file drop event, uploads the file via API, and updates the form state.
      */
-    const onDrop = React.useCallback(async (acceptedFiles: File[], fileRejections: any[]) => {
+    const onDrop = React.useCallback(async (acceptedFiles: File[], fileRejections: FileRejection[]) => {
         // Dropped file(s) has been rejected - we want exactly 1 accepted file.
         if (acceptedFiles.length !== 1 || fileRejections.length !== 0) {
+            setHadDropRejected(true);
             // console.debug("File drop rejected", { acceptedFiles, fileRejections });
             // const message = fileRejections[0]?.errors?.[0]?.message ??
             //     "Invalid file type, please ensure it meets the requirements.";
             showSnackbar("Invalid file type, please ensure it meets the requirements.", "error");
-            Reset(3);
+            resetDropzoneState(3);
             return;
         }
 
         const file = acceptedFiles[0];
+        setHadDropRejected(false);
         setFilename(file.name);
         // console.log("File selected:", file);
 
@@ -211,17 +225,17 @@ const DropzoneDialogContent = ({
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
-                const responseData = error.response?.data as any;
+                const responseData = error.response?.data as { file?: string } | undefined;
                 const message = responseData?.file ?? error.message;
                 showSnackbar(`Failed to upload: ${message}`, "error");
                 return null;
             })
             // Reset the state so user can try uploading again (up to the max limit).
-            .finally(() => Reset(3));
+            .finally(() => resetDropzoneState(3));
 
         // Something went terribly wrong with the upload, i.e. network error.
         if (!response) return;
-    }, [field]);
+    }, [applicationKey, field, onAttachmentAdded, resetDropzoneState, showSnackbar]);
 
     // Build the accept map expected by react-dropzone from the configured
     // mime types. react-dropzone accepts an object like { "image/png": [] }
@@ -244,8 +258,11 @@ const DropzoneDialogContent = ({
     } = useDropzone({
         validator: fileSizeValidator,
         onDrop,
-        onDragLeave: () => Reset(0),
-        onDropRejected: () => Reset(3),
+        onDragLeave: () => resetDropzoneState(0),
+        onDropRejected: () => {
+            setHadDropRejected(true);
+            resetDropzoneState(3);
+        },
         accept: acceptedTypes,
         multiple: false,
         noClick: true,
@@ -254,19 +271,20 @@ const DropzoneDialogContent = ({
     });
 
     const styling: IDragStateStyling = React.useMemo(
-        () => getStyling(isDragAccept, isDragReject),
-        [isDragAccept, isDragReject],
+        () => getStyling(isDragAccept, isDragReject || hadDropRejected),
+        [isDragAccept, isDragReject, hadDropRejected],
     );
 
     // Disable all drag n drop and click events while uploading 
     // to prevent user from interrupting the upload process
+    type PreventableEvent = React.SyntheticEvent<HTMLElement>;
     const disabledHandlers = progress !== null ? {
-        onClick: (e: any) => e.preventDefault(),
-        onKeyDown: (e: any) => e.preventDefault(),
-        onDrop: (e: any) => e.preventDefault(),
-        onDragEnter: (e: any) => e.preventDefault(),
-        onDragLeave: (e: any) => e.preventDefault(),
-        onDragOver: (e: any) => e.preventDefault(),
+        onClick: (e: PreventableEvent) => e.preventDefault(),
+        onKeyDown: (e: PreventableEvent) => e.preventDefault(),
+        onDrop: (e: PreventableEvent) => e.preventDefault(),
+        onDragEnter: (e: PreventableEvent) => e.preventDefault(),
+        onDragLeave: (e: PreventableEvent) => e.preventDefault(),
+        onDragOver: (e: PreventableEvent) => e.preventDefault(),
     } : {};
 
     // Dropzone and file input props
@@ -309,7 +327,7 @@ const DropzoneDialogContent = ({
                             Select from computer
                         </Button>
                     </Typography>
-                    <Typography color={styling.textColour} fontStyle="italic">
+                    <Typography sx={{ color: styling.textColour, fontStyle: "italic" }}>
                         Only PDF, Excel and image (jpeg, png) files are accepted.<br />
                         Maximum file size limit is <strong>{maxFilesizeMB} MB</strong>.<br />
                         Up to <strong>{maxAttachments} file{maxAttachments > 1 ? "s" : ""}</strong> can be uploaded for this question.
@@ -349,7 +367,7 @@ interface IDragStateStyling {
  * Decides what styling to apply based on the dropzone state.
  * 
  * @param isDragAccept Active drag over file will be accepted
- * @param isDragReject Dragged file (whether drag over or dropped) is rejected
+ * @param isDragReject Dragged file is rejected (active drag state, or post-drop state provided by caller)
  */
 const getStyling = (isDragAccept: boolean, isDragReject: boolean): IDragStateStyling => {
     if (isDragAccept) {

@@ -1,22 +1,29 @@
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MuiLink from '@mui/material/Link';
+import Stack from "@mui/material/Stack";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import Typography from "@mui/material/Typography";
 import React from "react";
 
-import { Box, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from "@mui/material";
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
 import { useLoaderData, useNavigate, type NavigateFunction } from "react-router";
 import { ApiManager } from '../../../context/ApiManager';
-import { useDialog, type DialogOptions } from '../../../context/Dialogs';
-import { useSnackbar } from '../../../context/Snackbar';
+import type { DialogOptions } from '../../../context/DialogContext';
+import { useDialog, useResolvedPromise, useSnackbar } from '../../../context/Hooks';
 import { TurnstileManager } from '../../../context/TurnstileManager';
-import { PrivacyContent } from './PrivacyPolicy';
 import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
+import type { LoaderData } from '../../../context/types/Generic';
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
-import type { LoaderData } from '../../../context/types/Generic';
-import { useResolvedPromise } from "../../Common";
+import { PrivacyContent } from './PrivacyPolicy';
 
 interface IProcessGroup {
     process: IAuthorisationProcess;
@@ -94,16 +101,15 @@ const ProcessGroup = ({
 }) => {
     const [selectedQuestionnaireTab, setSelectedQuestionnaireTab] = React.useState<number>(0);
 
-    React.useEffect(() => {
-        if (selectedQuestionnaireTab >= group.questionnaires.length) {
-            setSelectedQuestionnaireTab(0);
-        }
-    }, [group.questionnaires.length, selectedQuestionnaireTab]);
-
-    const selectedQuestionnaire = group.questionnaires[selectedQuestionnaireTab];
+    // Keep tab state stable while preventing out-of-range access when questionnaire lists change.
+    const safeSelectedQuestionnaireTab = Math.min(
+        selectedQuestionnaireTab,
+        Math.max(group.questionnaires.length - 1, 0),
+    );
+    const selectedQuestionnaire = group.questionnaires[safeSelectedQuestionnaireTab];
 
     return (
-        <Box mb={5}>
+        <Box sx={{ mb: 5 }}>
             <Card className="p-6" elevation={4} sx={{ borderRadius: 2 }}>
                 <ProcessOverview
                     process={group.process}
@@ -112,7 +118,7 @@ const ProcessGroup = ({
                 <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
                     <Tabs
                         orientation="vertical"
-                        value={selectedQuestionnaireTab}
+                        value={safeSelectedQuestionnaireTab}
                         onChange={(_, value: number) => setSelectedQuestionnaireTab(value)}
                         aria-label={`${group.process.name} questionnaire tabs`}
                         sx={{ minWidth: 220, borderRight: 1, borderColor: "divider" }}
@@ -133,8 +139,8 @@ const ProcessGroup = ({
                     {selectedQuestionnaire && (
                         <Box
                             role="tabpanel"
-                            id={`questionnaire-tabpanel-${group.process.slug}-${selectedQuestionnaireTab}`}
-                            aria-labelledby={`questionnaire-tab-${group.process.slug}-${selectedQuestionnaireTab}`}
+                            id={`questionnaire-tabpanel-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
+                            aria-labelledby={`questionnaire-tab-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
                             sx={{ flex: 1, minWidth: 0 }}
                         >
                             <Questionnaire
@@ -232,7 +238,7 @@ const Questionnaire = ({
                     })}
                 >Start Application</Button>
                 <Box sx={{ textAlign: "right" }}>
-                    <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                    <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }} useFlexGap>
                         <Typography variant="body2" color="textSecondary">
                             Steps: <strong>{questionnaire.document.steps.length}</strong>
                         </Typography>

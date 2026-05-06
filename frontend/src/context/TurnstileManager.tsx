@@ -1,7 +1,7 @@
+import { ConfigManager } from "./ConfigManager";
+
 export type TurnstileContainer = string | HTMLElement;
 export type TurnstileWidgetId = string;
-
-import { ConfigManager } from "./ConfigManager";
 
 interface TurnstileApiRenderOptions {
     sitekey: string;

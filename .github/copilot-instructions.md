@@ -134,7 +134,12 @@
   - Process identifiers and questionnaire identifiers must be explicit and unambiguous.
 - Use `dayjs` for dates with `en-au` locale.
 - Prefer React component definitions as `const` (for example `const MyComponent = () => { ... }`) rather than `function` declarations unless there is a clear technical reason to do otherwise.
+- Prefer frontend function expressions assigned to `const` (including hooks and local helpers) rather than `function` declarations unless there is a clear technical reason (for example hoisting requirements).
 - Prefer explicit named exports/imports over default exports/imports for project modules where practical, to make refactoring safer and imports more consistent.
+- Group imports by style with a single blank line separating default imports from named/type imports:
+  - First block: default imports (no curly braces), for example `import React from "react"` or `import Box from "@mui/material/Box"`.
+  - Second block: named and type imports (with curly braces), for example `import { useState } from "react"` or `import type { AlertColor } from "@mui/material/Alert"`.
+  - This separation is purely organisational — it makes the import block easier to scan at a glance and reflects the technical distinction between default and named exports.
 
 ## Integration Contracts
 
@@ -146,6 +151,33 @@
 ### External Dependencies
 - PostgreSQL behavior matters for DISTINCT and ORDER BY query design.
 - `django-admin-sortable2` used for admin ordering UX; plugin limitations should be accounted for in model/admin configuration.
+
+## PDF Icon CSS Build Contract
+
+### Why `pdf-icons.css` Exists
+- The application PDF renders file-type icons that must match frontend icon mapping logic.
+- Prince renders the PDF without relying on runtime HTTP fetches for this icon stylesheet.
+- A dedicated Vite entry builds a stable output file named `pdf-icons.css` so Django staticfiles can always find it by that exact name.
+
+### How It Is Generated
+- Source entry is `frontend/src/pdf-icons.css`.
+- Vite includes a dedicated build input named `pdf-icons` and emits hash-free `pdf-icons.css`.
+- Tailwind v4 scans explicit sources declared in `pdf-icons.css`:
+  - `backend/applications/models.py` (icon class mapping values)
+  - `backend/templates/application-pdf-template.html` (base icon class usage)
+- During PDF context building, backend code loads `pdf-icons.css` via Django staticfiles finder and inlines it into the template.
+
+### Docker Build Path Requirement (Critical)
+- `frontend/src/pdf-icons.css` uses relative `@source` paths that assume:
+  - frontend source is available at `/tmp/frontend`
+  - backend source is available at `/tmp/backend`
+- Therefore Docker builds that run `npm run build` for frontend must copy both source trees into those temporary locations before the build step.
+- If either source path is missing, Tailwind cannot resolve icon class sources and the generated `pdf-icons.css` will be incomplete or incorrect.
+
+### Safe Change Checklist
+- If moving directories or changing Docker stages, preserve the relative source relationship used by `pdf-icons.css`.
+- If adding new attachment file types, update `_EXTENSION_TO_ICON_CLASS` in `backend/applications/models.py` and rebuild frontend assets.
+- After build changes, verify that output contains `pdf-icons.css` and that generated PDFs still show correct file-type icons.
 
 ## Known Gotchas And Learnings
 

@@ -2,12 +2,12 @@ import type { IFormDocument } from "./types/Application";
 
 
 export class LocalStorage {
-    private static getItem(key: string): Object | null {
+    private static getItem(key: string): object | null {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : null;
     }
 
-    private static setItem(key: string, value: Object): void {
+    private static setItem(key: string, value: object): void {
         localStorage.setItem(key, JSON.stringify(value));
     }
 
@@ -20,7 +20,7 @@ export class LocalStorage {
     }
 
     public static setValue<T>(key: string, value: T): void {
-        this.setItem(this.getKey(key), value as unknown as Object);
+        this.setItem(this.getKey(key), value as unknown as object);
     }
 
     public static getFormState(applicationKey: string): IFormDocument | null {

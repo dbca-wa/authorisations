@@ -5,9 +5,10 @@ import StepContent from '@mui/material/StepContent';
 import Stepper from '@mui/material/Stepper';
 import Typography from '@mui/material/Typography';
 import type React from 'react';
+import _ from 'underscore';
+
 import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IFormStep } from "../../../context/types/Questionnaire";
-import _ from 'underscore';
 
 
 const reviewStep = {
@@ -118,7 +119,7 @@ const StepItem = ({
     return (
         <>
             <StepButton icon={icon} onClick={onClick}>
-                <Typography fontWeight={isActive ? "fontWeightBold" : "fontWeightRegular"}>
+                <Typography sx={{ fontWeight: isActive ? "fontWeightBold" : "fontWeightRegular" }}>
                     {step.title}
                 </Typography>
             </StepButton>

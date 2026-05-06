@@ -1,11 +1,14 @@
 # =================== BUILDER FRONTEND ===================
 FROM node:23-alpine AS builder_frontend
 
-# Copy the project into temporary folder for now
+# Copy both source trees into /tmp so @source paths in frontend/src/pdf-icons.css
+# (../../backend/... relative to CSS) can resolve during npm build.
 COPY frontend /tmp/frontend/
+COPY backend /tmp/backend/
 
-# Install frontend dependencies & build assets
-RUN cd /tmp/frontend; npm install; npm run build
+# Install frontend dependencies, lint, then build assets.
+# Lint runs after install (ESLint plugins required) but before build to fail fast.
+RUN cd /tmp/frontend; npm install; npm run lint; npm run build
 
 # =================== BUILDER BACKEND ===================
 FROM python:3.13-slim AS builder_backend

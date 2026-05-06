@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router";
-import type { IAuthorisationProcess, IQuestionnaireData } from "./Questionnaire";
 import type { IApplicationData } from "./Application";
+import type { IAuthorisationProcess, IQuestionnaireData } from "./Questionnaire";
 
 export type PrimitiveType = string | number | boolean | null;
 
@@ -17,7 +17,7 @@ export interface IRoute {
     path: string;
     icon: React.ReactNode;
     divider: boolean;
-    component?: React.ComponentType<any>;
+    component?: React.ComponentType<object>;
     condition?: (processes: IAuthorisationProcess[]) => boolean;
     loader?: (params: LoaderFunctionArgs) => Promise<LoaderData>;
     /** When true, the route is an external link (e.g. mailto:) and must not be registered with React Router. */

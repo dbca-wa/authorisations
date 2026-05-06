@@ -4,38 +4,18 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
+
 import { styled } from '@mui/material/styles';
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { DialogContext, type DialogOptions } from './DialogContext';
 
-// 1. Define the shape of the data your context will provide.
-export interface DialogOptions {
-    title: ReactNode;
-    content: ReactNode;
-    actions?: ReactNode;
-    onOpen?: () => void;
-    onClose?: () => void;
-}
-
-interface DialogContextType {
-    showDialog: (options: DialogOptions) => void;
-    hideDialog: () => void;
-}
-
-// 2. Create the context with a default value that matches the type.
-// This fixes the "Expected 1 arguments" error.
-const DialogContext = createContext<DialogContextType | undefined>(undefined);
-
-// 3. Create a custom hook for easy access to the context.
-export const useDialog = () => {
-    const context = useContext(DialogContext);
-    if (!context) {
-        throw new Error("useDialog must be used within a DialogProvider");
-    }
-    return context;
-};
-
-// 4. Implement the provider to manage state and render the dialog.
-export default function DialogProvider({ children }: { children: ReactNode }) {
+/**
+ * Provides a shared dialog API and renders a single project-wide dialog host.
+ *
+ * Keeping the host centralised ensures all feature areas open/close dialogs
+ * consistently without duplicating modal state in each page component.
+ */
+export const DialogProvider = ({ children }: { children: ReactNode }) => {
     const [options, setOptions] = useState<DialogOptions | null>(null);
 
     const showDialog = (newOptions: DialogOptions) => {
@@ -47,10 +27,10 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
         setOptions(null);
     };
 
-    // Call onOpen callback after the dialog has rendered
+    // Fire onOpen after paint so focus-sensitive handlers run against mounted dialog content.
     useEffect(() => {
         if (options) {
-            // Use requestAnimationFrame to ensure focus happens after browser paint
+            // requestAnimationFrame avoids race conditions with MUI portal/layout timing.
             requestAnimationFrame(() => {
                 options.onOpen?.();
             });
@@ -94,7 +74,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
             )}
         </DialogContext.Provider>
     );
-}
+};
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {

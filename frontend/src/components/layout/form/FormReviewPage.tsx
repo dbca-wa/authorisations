@@ -12,11 +12,11 @@ import React from "react";
 import type { AxiosError } from 'axios';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
-import { useSnackbar } from '../../../context/Snackbar';
+import { useSnackbar } from '../../../context/Hooks';
 import { TurnstileManager } from '../../../context/TurnstileManager';
 import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
-import { Question, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
+import { Question, type IFormSection, type IFormStep, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
 import { FileAttachmentList } from '../../Common';
 
 const getStepPrefix = (stepIndex: number) => `${stepIndex + 1}.`;
@@ -57,9 +57,6 @@ export function FormReviewPage({
     React.useEffect(() => {
         // Read-only review mode does not need Turnstile verification.
         if (!userCanEdit) {
-            setTurnstileLoading(false);
-            setTurnstileError(null);
-            setTurnstileToken(null);
             return;
         }
 
@@ -129,7 +126,10 @@ export function FormReviewPage({
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
-                const responseData = error.response?.data as any;
+                const responseData = error.response?.data as {
+                    turnstile_token?: string[];
+                    status?: string[];
+                } | undefined;
                 const message = responseData?.turnstile_token?.[0] ?? responseData?.status?.[0] ?? error.message;
                 showSnackbar(`Failed to submit: ${message}`, "error");
                 return null;
@@ -147,7 +147,7 @@ export function FormReviewPage({
                 Please review your answers below. You can go back to make changes if needed.
             </p>
             <div className="space-y-6">
-                {questionnaire.steps.map((step: any, stepIdx: number) => (
+                {questionnaire.steps.map((step: IFormStep, stepIdx: number) => (
                     <section key={stepIdx} className="overflow-hidden border border-[#222] bg-white">
                         <div className="flex items-center justify-between bg-[#2d5a8c] px-3 py-2">
                             <h2 className="m-0 text-base font-bold text-white">
@@ -158,14 +158,14 @@ export function FormReviewPage({
                                 aria-label="edit step"
                                 onClick={handleSubmit(stepIdx)}
                                 disabled={!userCanEdit}
-                                className="!text-white disabled:!text-gray-300"
+                                className="text-white! disabled:text-gray-300!"
                             >
                                 <EditIcon fontSize="small" />
                             </IconButton>
                         </div>
 
                         <div className="space-y-3 p-3">
-                            {step.sections.map((section: any, sectionIdx: number) => (
+                            {step.sections.map((section: IFormSection, sectionIdx: number) => (
                                 <div key={sectionIdx} className="border border-[#222]">
                                     <div className="bg-[#e8f1f9] px-3 py-2">
                                         <h3 className="m-0 text-base font-bold text-[#111]">
@@ -181,7 +181,7 @@ export function FormReviewPage({
                                                 question: questionIdx,
                                             });
                                             const answer = answers[stepIdx][`${sectionIdx}-${questionIdx}`];
-                                            let displayAnswer: React.ReactNode = null;
+                                            let displayAnswer: React.ReactNode;
 
                                             switch (qObj.type) {
                                                 case "checkbox":
@@ -267,7 +267,7 @@ const humaniseBoolean = (val: IAnswer): string => {
     return val === true ? "Yes" : "No";
 }
 
-const isEmptyAnswer = (answer: any) => {
+const isEmptyAnswer = (answer: IAnswer | undefined) => {
     return (
         // answer === undefined ||
         answer === null ||

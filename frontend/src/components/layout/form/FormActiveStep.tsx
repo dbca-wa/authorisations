@@ -8,15 +8,15 @@ import Stack from "@mui/material/Stack";
 import React from "react";
 
 import { useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
+import type { IApplicationAttachment } from '../../../context/types/Application';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
-import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
+import { Question, type IFormSection, type IFormStep, type IQuestion } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
 import { FileInput } from "../../inputs/file";
 import { GridInput } from "../../inputs/grid";
 import { SelectInput } from "../../inputs/select";
 import { TextInput } from "../../inputs/text";
-import type { IApplicationAttachment } from '../../../context/types/Application';
 
 
 export const FormActiveStep = ({
@@ -56,7 +56,7 @@ export const FormActiveStep = ({
                     />
                 })}
 
-                <Box justifyContent={"space-around"} display="flex" mt={4}>
+                <Box sx={{ justifyContent: "space-around", display: "flex", mt: 4 }}>
                     {activeStep !== 0 && (
                         <Button
                             variant="outlined"
@@ -149,11 +149,11 @@ const Section = ({
 
     // map array -> keyed object
     const parentValues = React.useMemo(() => {
-        const m: Record<string, any> = {};
+        const m: Record<string, unknown> = {};
         if (Array.isArray(parentValuesArray)) {
             parentKeys.forEach((k, i) => { m[k] = parentValuesArray?.[i]; });
         } else if (parentValuesArray && typeof parentValuesArray === 'object') {
-            parentKeys.forEach((k) => { m[k] = (parentValuesArray as Record<string, any>)[k]; });
+            parentKeys.forEach((k) => { m[k] = (parentValuesArray as Record<string, unknown>)[k]; });
         }
         return m;
     }, [parentKeys, parentValuesArray]);
@@ -163,7 +163,7 @@ const Section = ({
         const cache: Record<string, boolean> = {};
 
         const compute = (qKey: string): boolean => {
-            if (cache.hasOwnProperty(qKey)) return cache[qKey];
+            if (Object.hasOwn(cache, qKey)) return cache[qKey];
             const info = followupMap[qKey];
             if (!info) return (cache[qKey] = true);
             const parentVal = parentValues[info.parentKey];
@@ -215,7 +215,7 @@ const Section = ({
                         return null;
                     }
 
-                    let inputComponent = null;
+                    let inputComponent: React.ReactNode;
                     switch (question.o.type) {
                         case "text":
                         case "textarea":
@@ -269,7 +269,7 @@ const Section = ({
  * @param followupObj Mapping of question key to walkback offset
  */
 const computeFollowupMap = (
-    questions: any[],
+    questions: IQuestion[],
     stepIndex: number,
     sectionIndex: number,
     // followupObj: Record<string, number>

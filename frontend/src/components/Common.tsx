@@ -5,71 +5,14 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
+import TextField from '@mui/material/TextField';
 import Typography from "@mui/material/Typography";
 
-import { TextField } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { ApiManager } from '../context/ApiManager';
-import { useDialog } from '../context/Dialogs';
-import { useSnackbar } from '../context/Snackbar';
+import { useDialog, useSnackbar } from '../context/Hooks';
 import { getIconFromFilename } from "../context/Utils";
 import type { IApplicationAttachment } from "../context/types/Application";
-
-
-/**
- * Resolves a deferred promise from a route loader into component state.
- *
- * Data-agnostic: the hook does not know or care whether it is handling
- * applications, questionnaires, or any other resource type. The calling
- * component owns the type and the initial (empty) value.
- *
- * Returns a [resolvedValue, isLoading] tuple that mirrors the useState
- * pair it replaces, so call-sites stay readable and minimal.
- */
-export function useResolvedPromise<T>(
-    promise: Promise<T> | undefined,
-    initialValue: T,
-): [T, boolean] {
-    // Capture the initial value in a ref so it never causes the effect to
-    // re-run when the caller passes an inline literal (e.g. [] or {}).
-    const initialValueRef = useRef<T>(initialValue);
-    const [value, setValue] = useState<T>(initialValue);
-    // Start as loading only when a promise is actually provided, avoiding a
-    // spurious loading flash on routes that omit this data.
-    const [isLoading, setIsLoading] = useState<boolean>(promise !== undefined);
-
-    useEffect(() => {
-        if (!promise) {
-            setIsLoading(false);
-            return;
-        }
-
-        // Guard flag: prevents state updates if the component unmounts before the promise settles.
-        let isMounted = true;
-        setIsLoading(true);
-
-        promise
-            .then((resolved) => {
-                if (!isMounted) return;
-                setValue(resolved);
-            })
-            .catch(() => {
-                // Fall back to the initial value so the empty-state UI can render safely.
-                if (!isMounted) return;
-                setValue(initialValueRef.current);
-            })
-            .finally(() => {
-                if (!isMounted) return;
-                setIsLoading(false);
-            });
-
-        return () => {
-            isMounted = false;
-        };
-    }, [promise]);
-
-    return [value, isLoading];
-}
 
 
 export const FileAttachmentList = ({
@@ -96,9 +39,17 @@ export const FileAttachmentList = ({
         showDialog({
             title: "Confirm Deletion",
             content:
-                <Box alignItems="center" justifyContent="center"
-                    display="flex" flexDirection="column" paddingX={4} gap={2}>
-                    <Typography textAlign={"center"}>Are you sure you want to delete the attachment<br />
+                <Box
+                    sx={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        px: 4,
+                        gap: 2,
+                    }}
+                >
+                    <Typography sx={{ textAlign: "center" }}>Are you sure you want to delete the attachment<br />
                         <strong>{attachment.name}</strong> ?
                     </Typography>
                     <Typography>This action cannot be undone.</Typography>
@@ -119,7 +70,7 @@ export const FileAttachmentList = ({
                                 })
                                 .catch((error) => {
                                     console.error("Error deleting attachment:", error);
-                                    const responseData = error.response?.data as any;
+                                    const responseData = error.response?.data as { detail?: string } | undefined;
                                     const message = responseData?.detail ?? error.message;
                                     showSnackbar(`Failed to delete file: ${message}`, "error");
                                 });
@@ -165,7 +116,7 @@ export const FileAttachmentList = ({
             title: "Rename Attachment",
             content:
                 <Box className="w-md items-center justify-center flex flex-col gap-2">
-                    <Box display="flex" alignItems="flex-end" gap={1} width="100%">
+                    <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1, width: "100%" }}>
                         <TextField
                             inputRef={renameInputRef}
                             defaultValue={baseName}

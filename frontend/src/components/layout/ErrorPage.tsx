@@ -1,4 +1,5 @@
 import Button from "@mui/material/Button";
+
 import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
 export const ErrorPage = () => {
