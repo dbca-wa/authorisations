@@ -2,7 +2,7 @@
 # Keep base image tags explicit and on official Docker Hub images.
 # For strict supply-chain control in CI/CD, pin these to immutable digests.
 # NODE_IMAGE:    node:22-bookworm-slim
-# PYTHON_IMAGE:  python:3.12-slim
+# PYTHON_IMAGE:  python:3.12-slim-bookworm
 # POETRY:        2.1.3
 
 
@@ -38,7 +38,7 @@ RUN npm run build
 
 
 # =================== BUILDER BACKEND ===================
-FROM python:3.12-slim AS builder_backend
+FROM python:3.12-slim-bookworm AS builder_backend
 
 # Security-lean Python defaults.
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -66,7 +66,7 @@ RUN poetry install --only main --no-root --no-interaction --no-ansi
 
 
 # =================== RUNTIME ===================
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 # Accept non-sensitive build arguments used during collectstatic.
 ARG DATABASE_URL
@@ -95,6 +95,27 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone
+
+# Install Prince XML in a dedicated layer so PDF runtime dependency management
+# is isolated from the base runtime package installation.
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y gdebi-core \
+    && DEB_FILE=prince_16.2-1.deb \
+    && ARCH="$(dpkg --print-architecture)" \
+    && if [ "$ARCH" = "arm64" ]; then \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian12_arm64.deb"; \
+    elif [ "$ARCH" = "amd64" ]; then \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian12_amd64.deb"; \
+    else \
+    echo "Unsupported architecture for Prince package: $ARCH"; \
+    exit 1; \
+    fi \
+    && wget -O "${DEB_FILE}" "${PRINCE_URL}" \
+    && gdebi --non-interactive "${DEB_FILE}" \
+    && rm -f "${DEB_FILE}" \
+    && prince --version \
+    && apt-get purge -y --auto-remove gdebi-core \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create least-privilege runtime user and app directory.
 RUN groupadd -g 5000 appuser \
