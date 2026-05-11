@@ -22,7 +22,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
-    SECURE_HSTS_SECONDS=(int, 3600 * 24),
+    SECURE_HSTS_SECONDS=(int, 3600 * 24 * 365),  # 1 year
     SECURE_ONLY=(bool, False),
     # File storage
     LOCAL_MEDIA_STORAGE=(bool, False),
@@ -76,8 +76,9 @@ CSRF_HEADER_CLIENT = env("CSRF_HEADER_CLIENT", default="X-CsrfToken")
 # Set custom CSRF cookie name (probably the session key as well)
 CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME", default="csrftoken")
 
-# Non-secure redirection cache: 1 minute in debug mode, longer in production
+# Non-secure redirection cache: 1 minute in debug mode, 1 year in production
 SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 if not DEBUG:
     SESSION_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
@@ -91,7 +92,6 @@ if not DEBUG:
     SECURE_ONLY = env("SECURE_ONLY")
     CSRF_COOKIE_SECURE = SECURE_ONLY
     SESSION_COOKIE_SECURE = SECURE_ONLY
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_ONLY
 
 
 # Application definition
