@@ -126,6 +126,7 @@ MIDDLEWARE = [
     "dbca_utils.middleware.SSOLoginMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "config.cache_control_middleware.GlobalNeverCacheMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
