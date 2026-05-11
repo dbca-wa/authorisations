@@ -23,7 +23,7 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
     SECURE_HSTS_SECONDS=(int, 3600 * 24 * 365),  # 1 year
-    SECURE_ONLY=(bool, False),
+    SECURE_ONLY=(bool, True),
     # File storage
     LOCAL_MEDIA_STORAGE=(bool, False),
 )
