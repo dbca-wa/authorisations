@@ -56,6 +56,15 @@ stages:
         poetry install --with dev
       displayName: Install backend dependencies
     - script: |
+        echo "SECRET_KEY is set: $( [ -n "$SECRET_KEY" ] && echo yes || echo NO )"
+        echo "LOCAL_MEDIA_STORAGE=$LOCAL_MEDIA_STORAGE"
+        echo "PRIVATE_MEDIA_ROOT=$PRIVATE_MEDIA_ROOT"
+      displayName: Debug environment variables
+      env:
+        SECRET_KEY: $(SECRET_KEY)
+        LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
+        PRIVATE_MEDIA_ROOT: $(PRIVATE_MEDIA_ROOT)
+    - script: |
         cd backend
         poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
       displayName: Run backend tests with coverage
