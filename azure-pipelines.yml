@@ -40,6 +40,40 @@ stages:
 - stage: Validate
   displayName: Validate Code
   jobs:
+  - job: DiagnoseEnv
+    displayName: Diagnose Library variable resolution
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: |
+        echo "=== Azure Pipelines variable group diagnostics ==="
+        if [ -n "$MAPPED_DJANGO_SECRET_KEY" ]; then
+          echo "DJANGO_SECRET_KEY (Library): SET"
+        else
+          echo "DJANGO_SECRET_KEY (Library): NOT SET or empty - rename SECRET_KEY to DJANGO_SECRET_KEY in the Library"
+        fi
+        if [ -n "$MAPPED_LOCAL_MEDIA_STORAGE" ]; then
+          echo "LOCAL_MEDIA_STORAGE (Library): SET => $MAPPED_LOCAL_MEDIA_STORAGE"
+        else
+          echo "LOCAL_MEDIA_STORAGE (Library): NOT SET or empty"
+        fi
+        if [ -n "$MAPPED_PRIVATE_MEDIA_ROOT" ]; then
+          echo "PRIVATE_MEDIA_ROOT (Library): SET => $MAPPED_PRIVATE_MEDIA_ROOT"
+        else
+          echo "PRIVATE_MEDIA_ROOT (Library): NOT SET or empty"
+        fi
+        if [ -n "$MAPPED_DATABASE_URL" ]; then
+          echo "DATABASE_URL (Library): SET"
+        else
+          echo "DATABASE_URL (Library): NOT SET or empty"
+        fi
+      displayName: Report variable group values
+      env:
+        MAPPED_DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+        MAPPED_LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
+        MAPPED_PRIVATE_MEDIA_ROOT: $(PRIVATE_MEDIA_ROOT)
+        MAPPED_DATABASE_URL: $(DATABASE_URL)
+
   - job: BackendTests
     displayName: Backend pytest
     pool:
@@ -62,8 +96,12 @@ stages:
       env:
         DATABASE_URL: 'sqlite:///:memory:'
         SECRET_KEY: $(DJANGO_SECRET_KEY)
-        LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
-        PRIVATE_MEDIA_ROOT: $(PRIVATE_MEDIA_ROOT)
+        # LOCAL_MEDIA_STORAGE must be true in CI so settings.py does not try to
+        # read AZURE_ACCOUNT_NAME/AZURE_CONTAINER/AZURE_SAS_TOKEN (not set in CI).
+        # test_settings.py overrides the storage backend anyway; this just prevents
+        # the settings import from crashing before that override is applied.
+        LOCAL_MEDIA_STORAGE: 'true'
+        PRIVATE_MEDIA_ROOT: '/tmp/private-media'
     - task: PublishCodeCoverageResults@2
       displayName: Publish backend coverage
       condition: succeededOrFailed()
