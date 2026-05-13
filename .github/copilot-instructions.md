@@ -231,6 +231,33 @@
   - Use `Docker@2` `command: build` with `arguments`, followed by `Docker@2` `command: push` in the same job.
   - Keep build and push in the same job so the local image remains available for push.
 
+### Docker Image Availability Across Jobs
+- Docker images built on Microsoft-hosted agents are not shared across jobs/stages.
+- Symptom:
+  - Push job logs `An image does not exist locally with the tag ...` when build and push are split across different jobs/stages.
+- Safe pattern for this codebase:
+  - Keep Docker build and Docker push in the same job.
+  - If stages must be split, explicitly transfer image artifacts (`docker save` / `docker load`).
+
+### Node Task Migration Gotcha (`UseNode@1`)
+- `NodeTool@0` is deprecated and should be replaced with `UseNode@1`.
+- `UseNode@1` expects input key `version` (not `versionSpec`).
+- Symptom when misconfigured:
+  - Task label says Node 22, but agent installs default Node 10.x.
+  - Frontend `npm ci` fails with dependency-resolution/runtime errors.
+- Safe pattern for this codebase:
+  - Use:
+    - task: `UseNode@1`
+    - inputs: `version: '22.x'`
+
+### Coverage Publish Overwrite Behaviour
+- Publishing backend and frontend coverage independently can lead Azure DevOps Code Coverage tab to show only the last published dataset.
+- Symptom:
+  - Coverage tab shows only frontend (`.tsx`) or only backend files depending on publish order.
+- Safe pattern for this codebase:
+  - Publish raw coverage XML from each test job as pipeline artifacts.
+  - Add a dedicated downstream `Coverage` job that downloads both artifacts and runs a single `PublishCodeCoverageResults@2` step.
+
 ## Development Workflows
 
 ### Backend Commands
@@ -260,6 +287,17 @@
 - The Docker build and push steps may still keep a `Build.Reason != PullRequest` condition as a defensive guard, but PR suppression should be enforced primarily by `pr: none`.
 - When Docker build arguments are required (for example env used during `collectstatic`), prefer `Docker@2 build` then `Docker@2 push` in one job instead of `buildAndPush`.
 - For script steps, do not use environment variable keys beginning with `SECRET_`; use `DJANGO_SECRET_KEY` and map to Django settings accordingly.
+- For frontend CI Node setup, use `UseNode@1` with `version: '22.x'`.
+- For code coverage, publish once from a dedicated aggregation job rather than publishing separately from backend and frontend jobs.
+
+### CI Test Environment Requirements
+- Backend pytest uses `config.test_settings`, which imports `config.settings` first.
+- Import-time settings evaluation still requires baseline env vars before test overrides apply.
+- Safe pattern for this codebase in CI backend test job:
+  - set `DATABASE_URL` to SQLite (`sqlite:///:memory:`)
+  - pass `DJANGO_SECRET_KEY`
+  - set `LOCAL_MEDIA_STORAGE='true'`
+  - set `PRIVATE_MEDIA_ROOT` to a writable temp path (for example `/tmp/private-media`)
 
 ## Notable Files
 - `backend/entrypoint.sh`:
