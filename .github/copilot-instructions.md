@@ -213,6 +213,24 @@
 - Operational note:
   - Prefer this command over `manage.py reorder questionnaires.Questionnaire` for this model, because `reorder` uses `Meta.ordering[0]` and may target non-sort fields.
 
+### Azure Pipelines Secret Prefix Filtering
+- Azure Pipelines can filter script environment variable names that begin with reserved prefixes, including `secret` (case-insensitive).
+- Practical impact observed in this project:
+  - `SECRET_KEY` in a script `env:` block arrives empty in bash even when the source pipeline variable is set.
+  - `DJANGO_SECRET_KEY` in the same `env:` block arrives correctly.
+- Safe pattern for this codebase:
+  - Do not map script env keys that begin with `SECRET_`.
+  - Map `DJANGO_SECRET_KEY` in pipeline YAML and read it first in Django settings, with `SECRET_KEY` fallback for local compatibility.
+
+### Docker@2 `buildAndPush` And Build Arguments
+- In this project, `Docker@2` with `command: buildAndPush` did not reliably pass `arguments` (for example `--build-arg LOCAL_MEDIA_STORAGE=...`) to the Docker build.
+- Symptom:
+  - Pipeline debug step shows `LOCAL_MEDIA_STORAGE` is set.
+  - Dockerfile step before `collectstatic` sees `LOCAL_MEDIA_STORAGE(raw)=''`.
+- Safe pattern for this codebase:
+  - Use `Docker@2` `command: build` with `arguments`, followed by `Docker@2` `command: push` in the same job.
+  - Keep build and push in the same job so the local image remains available for push.
+
 ## Development Workflows
 
 ### Backend Commands
@@ -240,6 +258,8 @@
   - push to `feature/*` runs the full test pipeline once.
   - opening or updating a PR from that feature branch should not start a second PR-validation pipeline.
 - The Docker build and push steps may still keep a `Build.Reason != PullRequest` condition as a defensive guard, but PR suppression should be enforced primarily by `pr: none`.
+- When Docker build arguments are required (for example env used during `collectstatic`), prefer `Docker@2 build` then `Docker@2 push` in one job instead of `buildAndPush`.
+- For script steps, do not use environment variable keys beginning with `SECRET_`; use `DJANGO_SECRET_KEY` and map to Django settings accordingly.
 
 ## Notable Files
 - `backend/entrypoint.sh`:
