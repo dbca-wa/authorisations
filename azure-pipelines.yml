@@ -61,7 +61,7 @@ stages:
       displayName: Run backend tests with coverage
       env:
         DATABASE_URL: 'sqlite:///:memory:'
-        SECRET_KEY: $(SECRET_KEY)
+        SECRET_KEY: $(DJANGO_SECRET_KEY)
         LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
         PRIVATE_MEDIA_ROOT: $(PRIVATE_MEDIA_ROOT)
     - task: PublishCodeCoverageResults@2
@@ -123,7 +123,7 @@ stages:
           $(imageTagPrefix)-$(tagDate)
         arguments: >-
           --build-arg DATABASE_URL=$(DATABASE_URL)
-          --build-arg SECRET_KEY=$(SECRET_KEY)
+          --build-arg SECRET_KEY=$(DJANGO_SECRET_KEY)
           --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
           --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
       env:
