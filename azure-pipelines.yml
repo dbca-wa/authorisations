@@ -111,6 +111,33 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+    - script: |
+        echo "--- docker build input debug ---"
+        if [ -n "$MAPPED_LOCAL_MEDIA_STORAGE" ]; then
+          echo "LOCAL_MEDIA_STORAGE (pipeline): '$MAPPED_LOCAL_MEDIA_STORAGE'"
+        else
+          echo "LOCAL_MEDIA_STORAGE (pipeline): EMPTY"
+        fi
+        lower="$(echo "$MAPPED_LOCAL_MEDIA_STORAGE" | tr '[:upper:]' '[:lower:]')"
+        case "$lower" in
+          1|true|yes|on)
+            echo "LOCAL_MEDIA_STORAGE normalised truthy: true"
+            ;;
+          0|false|no|off|"")
+            echo "LOCAL_MEDIA_STORAGE normalised truthy: false"
+            ;;
+          *)
+            echo "LOCAL_MEDIA_STORAGE normalised truthy: unknown token '$lower'"
+            ;;
+        esac
+        echo "DATABASE_URL provided: ${MAPPED_DATABASE_URL:+yes}"
+        echo "DJANGO_SECRET_KEY provided: ${MAPPED_DJANGO_SECRET_KEY:+yes}"
+        echo "--- end docker build input debug ---"
+      displayName: Debug Docker build arg inputs
+      env:
+        MAPPED_LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
+        MAPPED_DATABASE_URL: $(DATABASE_URL)
+        MAPPED_DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
     - task: Docker@2
       displayName: Build and push Docker image
       inputs:
