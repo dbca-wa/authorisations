@@ -30,9 +30,6 @@ RUN mkdir -p /tmp/backend/applications /tmp/backend/templates
 COPY backend/applications/models.py /tmp/backend/applications/
 COPY backend/templates/application-pdf-template.html /tmp/backend/templates/
 
-# Run lint before build so code-quality failures fail fast in image build.
-RUN npm run lint
-
 # Build production frontend assets, including hash-free pdf-icons.css.
 RUN npm run build
 

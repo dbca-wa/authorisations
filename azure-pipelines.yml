@@ -59,6 +59,11 @@ stages:
         cd backend
         poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
       displayName: Run backend tests with coverage
+      env:
+        DATABASE_URL: sqlite:///:memory:
+        SECRET_KEY: $(SECRET_KEY)
+        LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
+        PRIVATE_MEDIA_ROOT: $(PRIVATE_MEDIA_ROOT)
     - task: PublishCodeCoverageResults@2
       displayName: Publish backend coverage
       condition: succeededOrFailed()
@@ -80,6 +85,10 @@ stages:
         cd frontend
         npm ci --no-audit --no-fund
       displayName: Install frontend dependencies
+    - script: |
+        cd frontend
+        npm run lint
+      displayName: Run frontend lint
     - script: |
         cd frontend
         npm run test:coverage
