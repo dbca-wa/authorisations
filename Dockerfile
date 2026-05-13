@@ -132,26 +132,6 @@ COPY --from=builder_backend --chown=appuser:appuser /app/.venv /app/.venv
 # Drop privileges before running Django management commands and app process.
 USER appuser
 
-# Debug how LOCAL_MEDIA_STORAGE is represented at image build time.
-RUN echo "--- collectstatic env debug ---" \
-    && echo "LOCAL_MEDIA_STORAGE(raw)='${LOCAL_MEDIA_STORAGE}'" \
-    && python - <<'PY'
-import os
-
-raw = os.getenv("LOCAL_MEDIA_STORAGE", "")
-norm = raw.strip().lower()
-truthy = norm in {"1", "true", "yes", "on"}
-falsy = norm in {"0", "false", "no", "off", ""}
-
-print(f"LOCAL_MEDIA_STORAGE(normalised)='{norm}'")
-if truthy:
-    print("LOCAL_MEDIA_STORAGE(interpreted): truthy")
-elif falsy:
-    print("LOCAL_MEDIA_STORAGE(interpreted): falsy")
-else:
-    print("LOCAL_MEDIA_STORAGE(interpreted): unknown token")
-PY
-
 # Collect static at build time so runtime start is faster and deterministic.
 RUN python manage.py collectstatic --noinput
 
