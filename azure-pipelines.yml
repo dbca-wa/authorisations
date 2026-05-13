@@ -56,24 +56,6 @@ stages:
         poetry install --with dev
       displayName: Install backend dependencies
     - script: |
-        if [ -z "$SECRET_KEY" ]; then
-          echo "ERROR: SECRET_KEY is missing from Library variable group docker-build-variables"
-          exit 1
-        fi
-        if [ -z "$LOCAL_MEDIA_STORAGE" ]; then
-          echo "ERROR: LOCAL_MEDIA_STORAGE is missing from Library variable group docker-build-variables"
-          exit 1
-        fi
-        if [ -z "$PRIVATE_MEDIA_ROOT" ]; then
-          echo "ERROR: PRIVATE_MEDIA_ROOT is missing from Library variable group docker-build-variables"
-          exit 1
-        fi
-      displayName: Validate required Library variables
-      env:
-        SECRET_KEY: $(SECRET_KEY)
-        LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
-        PRIVATE_MEDIA_ROOT: $(PRIVATE_MEDIA_ROOT)
-    - script: |
         cd backend
         poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
       displayName: Run backend tests with coverage
