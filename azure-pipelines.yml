@@ -56,9 +56,14 @@ stages:
         poetry install --with dev
       displayName: Install backend dependencies
     - script: |
-        echo "--- env probe (SECRET_KEY stripping test) ---"
+        echo "--- env probe (key name stripping test) ---"
+        if [ -n "$DJANGO_SECRET_KEY" ]; then
+          echo "DJANGO_SECRET_KEY: SET (length=${#DJANGO_SECRET_KEY})"
+        else
+          echo "DJANGO_SECRET_KEY: EMPTY or missing"
+        fi
         if [ -n "$SECRET_KEY" ]; then
-          echo "SECRET_KEY: SET (length=${#SECRET_KEY})"
+          echo "SECRET_KEY: SET (unexpected in Azure script env)"
         else
           echo "SECRET_KEY: EMPTY or STRIPPED by Azure"
         fi
@@ -73,9 +78,9 @@ stages:
           echo "LOCAL_MEDIA_STORAGE: EMPTY or STRIPPED"
         fi
         echo "--- end probe ---"
-      displayName: Probe whether SECRET_KEY reaches the shell
+      displayName: Probe whether secret key reaches the shell
       env:
-        SECRET_KEY: $(DJANGO_SECRET_KEY)
+        DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
         DATABASE_URL: 'sqlite:///:memory:'
         LOCAL_MEDIA_STORAGE: 'true'
     - script: |
@@ -84,7 +89,7 @@ stages:
       displayName: Run backend tests with coverage
       env:
         DATABASE_URL: 'sqlite:///:memory:'
-        SECRET_KEY: $(DJANGO_SECRET_KEY)
+        DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
         LOCAL_MEDIA_STORAGE: 'true'
         PRIVATE_MEDIA_ROOT: '/tmp/private-media'
     - task: PublishCodeCoverageResults@2

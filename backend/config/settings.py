@@ -32,7 +32,9 @@ env = environ.Env(
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("SECRET_KEY")
+# Prefer DJANGO_SECRET_KEY for CI environments where SECRET_* variable names can
+# be filtered from script environment variables by the pipeline runtime.
+SECRET_KEY = env("DJANGO_SECRET_KEY", default=None) or env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
