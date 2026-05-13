@@ -225,9 +225,21 @@
   - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
 
 ### Frontend Commands
-- Run dev server: `cd frontend && npm run dev`
-- Build: `cd frontend && npm run build`
-- Lint: `cd frontend && npm run lint`
+- Package manager policy:
+  - Use Bun for local development workflows because it is faster and supports npm-compatible scripts.
+  - Use npm for UAT, production, and CI environments to keep deployment/runtime behaviour consistent.
+- Run dev server (local development): `cd frontend && bun run dev`
+- Build (UAT/production/CI): `cd frontend && npm run build`
+- Lint (UAT/production/CI): `cd frontend && npm run lint`
+
+### CI/CD Pipeline Policy
+- Azure Pipelines YAML is hosted in GitHub, so CI and PR trigger behaviour is controlled in `azure-pipelines.yml` rather than Azure Repos branch policies.
+- CI should run on direct pushes to `main`, `uat`, and `feature/*` branches.
+- Pull request triggered pipeline runs are intentionally disabled with `pr: none` to avoid duplicate runs when a feature branch already has push-based CI.
+- Feature branch workflow expectation:
+  - push to `feature/*` runs the full test pipeline once.
+  - opening or updating a PR from that feature branch should not start a second PR-validation pipeline.
+- The Docker build and push steps may still keep a `Build.Reason != PullRequest` condition as a defensive guard, but PR suppression should be enforced primarily by `pr: none`.
 
 ## Notable Files
 - `backend/entrypoint.sh`:
@@ -255,6 +267,10 @@
   - test Django admin changelist.
   - test sortable drag and reorder save.
   - test API list ordering and latest selection.
+- Before changing Azure pipeline triggers:
+  - preserve push-based CI for `feature/*`, `uat`, and `main` unless the workflow itself is being changed.
+  - avoid reintroducing PR-triggered runs unless duplicate CI on feature branches is explicitly desired.
+  - treat `pr: none` as the canonical setting for the current workflow.
 - Before changing serializer contracts:
   - update frontend types and API manager calls in same change set.
 

@@ -9,6 +9,8 @@ trigger:
     - uat
     - feature/*
 
+pr: none
+
 resources:
 - repo: self
 
@@ -35,8 +37,65 @@ variables:
       value: $[replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', ''), '/', '-')]
 
 stages:
+- stage: Test
+  displayName: Test and Coverage
+  jobs:
+  - job: BackendTests
+    displayName: Backend pytest
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: UsePythonVersion@0
+      displayName: Use Python 3.12
+      inputs:
+        versionSpec: '3.12'
+    - script: python -m pip install --upgrade pip poetry
+      displayName: Install Poetry
+    - script: |
+        cd backend
+        poetry install --with dev
+      displayName: Install backend dependencies
+    - script: |
+        cd backend
+        poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
+      displayName: Run backend tests with coverage
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish backend coverage
+      condition: succeededOrFailed()
+      inputs:
+        summaryFileLocation: '$(Build.SourcesDirectory)/backend/coverage.xml'
+        pathToSources: '$(Build.SourcesDirectory)/backend'
+        failIfCoverageEmpty: true
+
+  - job: FrontendTests
+    displayName: Frontend Vitest
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: NodeTool@0
+      displayName: Use Node.js 22
+      inputs:
+        versionSpec: '22.x'
+    - script: |
+        cd frontend
+        npm ci --no-audit --no-fund
+      displayName: Install frontend dependencies
+    - script: |
+        cd frontend
+        npm run test:coverage
+      displayName: Run frontend tests with coverage
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish frontend coverage
+      condition: succeededOrFailed()
+      inputs:
+        summaryFileLocation: '$(Build.SourcesDirectory)/frontend/coverage/cobertura-coverage.xml'
+        pathToSources: '$(Build.SourcesDirectory)/frontend/src'
+        failIfCoverageEmpty: true
+
 - stage: Build
   displayName: Build and Push Docker Image
+  dependsOn: Test
+  condition: succeeded('Test')
   jobs:
   - job: BuildThenPush
     displayName: Build then Push

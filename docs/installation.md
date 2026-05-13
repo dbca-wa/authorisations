@@ -74,6 +74,24 @@ Run the Django development server (within the `backend` directory):
 In another terminal window, navigate to the `frontend` directory and run the Bun development server:
 > bun run dev
 
+## Run the test suites
+
+Backend pytest uses a dedicated Django settings module at `config.test_settings`, backed by SQLite, so you do not need PostgreSQL `CREATEDB` privileges just to run the automated suite locally.
+
+Run the backend tests:
+> cd ../backend \
+> poetry run pytest
+
+Run the backend tests in parallel with coverage:
+> poetry run pytest -n auto --cov --cov-report=term-missing --cov-report=html --cov-report=xml
+
+Run the frontend tests:
+> cd ../frontend \
+> bun run test
+
+Run the frontend tests with coverage:
+> bun run test:coverage
+
 ## Notes
 You can ignore the _"STATICFILES_DIRS setting does not exist"_ warning when running the Django development server. It is needed only when running in the production environment. If it bothers you, you can create an empty directory, which is also git ignored.
 
