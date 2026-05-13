@@ -102,64 +102,38 @@ stages:
         failIfCoverageEmpty: true
 
 - stage: Package
-  displayName: Build Docker Image
+  displayName: Build and Push Docker Image
   dependsOn: Validate
   condition: succeeded('Validate')
   jobs:
-  - job: BuildImage
-    displayName: Build image and publish artifact
+  - job: BuildAndPush
+    displayName: Build then push Docker image
     pool:
       vmImage: ubuntu-latest
     steps:
     - task: Docker@2
-      displayName: Login to Docker registry
+      displayName: Build Docker image
       inputs:
-        command: login
+        command: build
+        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
         containerRegistry: DockerGitHub
-    - script: |
-        docker build \
-          --build-arg DATABASE_URL=$(DATABASE_URL) \
-          --build-arg SECRET_KEY=$(SECRET_KEY) \
-          --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE) \
-          --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT) \
-          -t dbca-wa/authorisations:$(imageTagPrefix) \
-          -t dbca-wa/authorisations:$(imageTagPrefix)-$(tagDate) \
-          -f $(Build.SourcesDirectory)/Dockerfile \
-          $(Build.SourcesDirectory)
-      displayName: Build Docker Image
+        repository: dbca-wa/authorisations
+        tags: |
+          $(imageTagPrefix)
+          $(imageTagPrefix)-$(tagDate)
+        arguments: |
+          --build-arg DATABASE_URL=$(DATABASE_URL)
+          --build-arg SECRET_KEY=$(SECRET_KEY)
+          --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
+          --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
       env:
         DOCKER_BUILDKIT: 1
-    - script: |
-        mkdir -p "$(Build.ArtifactStagingDirectory)"
-        docker save \
-          dbca-wa/authorisations:$(imageTagPrefix) \
-          dbca-wa/authorisations:$(imageTagPrefix)-$(tagDate) \
-          -o "$(Build.ArtifactStagingDirectory)/authorisations-image.tar"
-      displayName: Save Docker image
-    - publish: '$(Build.ArtifactStagingDirectory)/authorisations-image.tar'
-      displayName: Publish Docker image artifact
-      artifact: authorisations-image
-
-- stage: Publish
-  displayName: Push Docker Image
-  dependsOn: Package
-  condition: succeeded('Package')
-  jobs:
-  - job: PushImage
-    displayName: Push image to registry
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - download: current
-      displayName: Download Docker image artifact
-      artifact: authorisations-image
     - task: Docker@2
-      displayName: Login to Docker registry
+      displayName: Push Docker image
       inputs:
-        command: login
+        command: push
         containerRegistry: DockerGitHub
-    - script: |
-        docker load -i "$(Pipeline.Workspace)/authorisations-image/authorisations-image.tar"
-        docker push dbca-wa/authorisations:$(imageTagPrefix)
-        docker push dbca-wa/authorisations:$(imageTagPrefix)-$(tagDate)
-      displayName: Push Docker Image
+        repository: dbca-wa/authorisations
+        tags: |
+          $(imageTagPrefix)
+          $(imageTagPrefix)-$(tagDate)
