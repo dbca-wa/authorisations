@@ -64,13 +64,13 @@ stages:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
         LOCAL_MEDIA_STORAGE: 'true'
         PRIVATE_MEDIA_ROOT: '/tmp/private-media'
-    - task: PublishCodeCoverageResults@2
-      displayName: Publish backend coverage
+    - task: PublishPipelineArtifact@1
+      displayName: Publish backend coverage XML artifact
       condition: succeededOrFailed()
       inputs:
-        summaryFileLocation: '$(Build.SourcesDirectory)/backend/coverage.xml'
-        pathToSources: '$(Build.SourcesDirectory)/backend'
-        failIfCoverageEmpty: true
+        targetPath: '$(Build.SourcesDirectory)/backend/coverage.xml'
+        artifact: 'coverage-backend'
+        publishLocation: 'pipeline'
 
   - job: FrontendTests
     displayName: Frontend quality and tests
@@ -93,12 +93,43 @@ stages:
         cd frontend
         npm run test:coverage
       displayName: Run frontend tests with coverage
-    - task: PublishCodeCoverageResults@2
-      displayName: Publish frontend coverage
+    - task: PublishPipelineArtifact@1
+      displayName: Publish frontend coverage XML artifact
       condition: succeededOrFailed()
       inputs:
-        summaryFileLocation: '$(Build.SourcesDirectory)/frontend/coverage/cobertura-coverage.xml'
-        pathToSources: '$(Build.SourcesDirectory)/frontend/src'
+        targetPath: '$(Build.SourcesDirectory)/frontend/coverage/cobertura-coverage.xml'
+        artifact: 'coverage-frontend'
+        publishLocation: 'pipeline'
+
+  - job: Coverage
+    displayName: Merge and publish coverage
+    dependsOn:
+    - BackendTests
+    - FrontendTests
+    condition: succeededOrFailed()
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download backend coverage XML
+      condition: succeededOrFailed()
+      inputs:
+        artifact: 'coverage-backend'
+        path: '$(Pipeline.Workspace)/coverage-backend'
+    - task: DownloadPipelineArtifact@2
+      displayName: Download frontend coverage XML
+      condition: succeededOrFailed()
+      inputs:
+        artifact: 'coverage-frontend'
+        path: '$(Pipeline.Workspace)/coverage-frontend'
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish merged backend + frontend coverage
+      condition: succeededOrFailed()
+      inputs:
+        summaryFileLocation: |
+          $(Pipeline.Workspace)/coverage-backend/coverage.xml
+          $(Pipeline.Workspace)/coverage-frontend/cobertura-coverage.xml
+        pathToSources: '$(Build.SourcesDirectory)'
         failIfCoverageEmpty: true
 
 - stage: Publish
