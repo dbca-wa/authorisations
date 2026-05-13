@@ -60,7 +60,7 @@ stages:
         poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
       displayName: Run backend tests with coverage
       env:
-        DATABASE_URL: sqlite:///:memory:
+        DATABASE_URL: 'sqlite:///:memory:'
         SECRET_KEY: $(SECRET_KEY)
         LOCAL_MEDIA_STORAGE: $(LOCAL_MEDIA_STORAGE)
         PRIVATE_MEDIA_ROOT: $(PRIVATE_MEDIA_ROOT)
@@ -102,12 +102,12 @@ stages:
         failIfCoverageEmpty: true
 
 - stage: Package
-  displayName: Build and Push Docker Image
+  displayName: Build Docker Image
   dependsOn: Validate
   condition: succeeded('Validate')
   jobs:
-  - job: BuildAndPush
-    displayName: Build then push Docker image
+  - job: BuildImage
+    displayName: Build Docker image
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -121,13 +121,24 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-        arguments: |
+        arguments: >-
           --build-arg DATABASE_URL=$(DATABASE_URL)
           --build-arg SECRET_KEY=$(SECRET_KEY)
           --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
           --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
       env:
         DOCKER_BUILDKIT: 1
+
+- stage: Publish
+  displayName: Push Docker Image
+  dependsOn: Package
+  condition: succeeded('Package')
+  jobs:
+  - job: PushImage
+    displayName: Push Docker image
+    pool:
+      vmImage: ubuntu-latest
+    steps:
     - task: Docker@2
       displayName: Push Docker image
       inputs:
