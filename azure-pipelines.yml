@@ -77,7 +77,7 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - task: NodeTool@0
+    - task: UseNode@1
       displayName: Use Node.js 22
       inputs:
         versionSpec: '22.x'
