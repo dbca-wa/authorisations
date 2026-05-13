@@ -56,15 +56,6 @@ stages:
         poetry install --with dev
       displayName: Install backend dependencies
     - script: |
-        cd backend
-        poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
-      displayName: Run backend tests with coverage
-      env:
-        DATABASE_URL: 'sqlite:///:memory:'
-        SECRET_KEY: $(DJANGO_SECRET_KEY)
-        LOCAL_MEDIA_STORAGE: 'true'
-        PRIVATE_MEDIA_ROOT: '/tmp/private-media'
-    - script: |
         echo "--- env probe (SECRET_KEY stripping test) ---"
         if [ -n "$SECRET_KEY" ]; then
           echo "SECRET_KEY: SET (length=${#SECRET_KEY})"
@@ -87,6 +78,15 @@ stages:
         SECRET_KEY: $(DJANGO_SECRET_KEY)
         DATABASE_URL: 'sqlite:///:memory:'
         LOCAL_MEDIA_STORAGE: 'true'
+    - script: |
+        cd backend
+        poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
+      displayName: Run backend tests with coverage
+      env:
+        DATABASE_URL: 'sqlite:///:memory:'
+        SECRET_KEY: $(DJANGO_SECRET_KEY)
+        LOCAL_MEDIA_STORAGE: 'true'
+        PRIVATE_MEDIA_ROOT: '/tmp/private-media'
     - task: PublishCodeCoverageResults@2
       displayName: Publish backend coverage
       condition: succeededOrFailed()
