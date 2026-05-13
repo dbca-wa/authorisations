@@ -62,12 +62,31 @@ stages:
       env:
         DATABASE_URL: 'sqlite:///:memory:'
         SECRET_KEY: $(DJANGO_SECRET_KEY)
-        # LOCAL_MEDIA_STORAGE must be true in CI so settings.py does not try to
-        # read AZURE_ACCOUNT_NAME/AZURE_CONTAINER/AZURE_SAS_TOKEN (not set in CI).
-        # test_settings.py overrides the storage backend anyway; this just prevents
-        # the settings import from crashing before that override is applied.
         LOCAL_MEDIA_STORAGE: 'true'
         PRIVATE_MEDIA_ROOT: '/tmp/private-media'
+    - script: |
+        echo "--- env probe (SECRET_KEY stripping test) ---"
+        if [ -n "$SECRET_KEY" ]; then
+          echo "SECRET_KEY: SET (length=${#SECRET_KEY})"
+        else
+          echo "SECRET_KEY: EMPTY or STRIPPED by Azure"
+        fi
+        if [ -n "$DATABASE_URL" ]; then
+          echo "DATABASE_URL: SET"
+        else
+          echo "DATABASE_URL: EMPTY or STRIPPED"
+        fi
+        if [ -n "$LOCAL_MEDIA_STORAGE" ]; then
+          echo "LOCAL_MEDIA_STORAGE: SET => $LOCAL_MEDIA_STORAGE"
+        else
+          echo "LOCAL_MEDIA_STORAGE: EMPTY or STRIPPED"
+        fi
+        echo "--- end probe ---"
+      displayName: Probe whether SECRET_KEY reaches the shell
+      env:
+        SECRET_KEY: $(DJANGO_SECRET_KEY)
+        DATABASE_URL: 'sqlite:///:memory:'
+        LOCAL_MEDIA_STORAGE: 'true'
     - task: PublishCodeCoverageResults@2
       displayName: Publish backend coverage
       condition: succeededOrFailed()
