@@ -10,8 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:unit": "vitest run \"src/**/*.test.{ts,tsx}\"",
-    "test:integration": "vitest run \"src/**/*.integration.test.{ts,tsx}\"",
+    "test:unit": "vitest run --exclude=\"src/**/*.integration.test.ts\" --exclude=\"src/**/*.integration.test.tsx\"",
+    "test:integration": "vitest run --include=\"src/**/*.integration.test.ts\" --include=\"src/**/*.integration.test.tsx\"",
     "preview": "vite preview"
   },
   "dependencies": {
