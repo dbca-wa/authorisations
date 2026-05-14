@@ -6,16 +6,19 @@ import { FormLayout } from "../../../../../components/layout/form/FormLayout";
 import { makeApplication, makeQuestionnaire } from "../../../fixtures";
 
 
-const useLoaderDataMock = vi.fn();
-const showSnackbarMock = vi.fn();
-
-const { apiMocks } = vi.hoisted(() => ({
+const {
+  apiMocks,
+  showSnackbarMock,
+  turnstileRenderMock,
+  useLoaderDataMock,
+} = vi.hoisted(() => ({
   apiMocks: {
     updateApplication: vi.fn(),
   },
+  showSnackbarMock: vi.fn(),
+  turnstileRenderMock: vi.fn(),
+  useLoaderDataMock: vi.fn(),
 }));
-
-const turnstileRenderMock = vi.fn();
 
 vi.mock("react-router", async () => {
   const actual = await vi.importActual<typeof import("react-router")>("react-router");
@@ -138,7 +141,7 @@ describe("FormLayout", () => {
     await screen.findByText("Review your answers");
     expect(apiMocks.updateApplication).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole("button", { name: "Applicant details" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Applicant details" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Applicant name/)).toBeInTheDocument();
