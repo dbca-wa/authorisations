@@ -57,8 +57,8 @@ describe("Utils", () => {
 
   it("openNewTab sets noopener safety and focuses new window", () => {
     const focus = vi.fn();
-    const opened = { opener: {} as Window | null, focus } as Window;
-    const openSpy = vi.spyOn(window, "open").mockReturnValue(opened);
+    const opened: Pick<Window, "opener" | "focus"> = { opener: null, focus };
+    const openSpy = vi.spyOn(window, "open").mockReturnValue(opened as unknown as Window);
 
     openNewTab("/a/1", "window-1");
 
