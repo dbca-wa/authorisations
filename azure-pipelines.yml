@@ -154,7 +154,7 @@ stages:
           $(imageTagPrefix)-$(tagDate)
         arguments: >-
           --build-arg DATABASE_URL=$(DATABASE_URL)
-          --build-arg SECRET_KEY=$(DJANGO_SECRET_KEY)
+          --build-arg DJANGO_SECRET_KEY=$(DJANGO_SECRET_KEY)
           --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
           --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
       env:

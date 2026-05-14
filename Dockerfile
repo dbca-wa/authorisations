@@ -67,13 +67,13 @@ FROM python:3.12-slim-bookworm
 
 # Accept non-sensitive build arguments used during collectstatic.
 ARG DATABASE_URL
-ARG SECRET_KEY
+ARG DJANGO_SECRET_KEY
 ARG LOCAL_MEDIA_STORAGE
 ARG PRIVATE_MEDIA_ROOT
 
 # Runtime environment variables consumed by Django settings.
 ENV DATABASE_URL=${DATABASE_URL} \
-    SECRET_KEY=${SECRET_KEY} \
+    DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY} \
     LOCAL_MEDIA_STORAGE=${LOCAL_MEDIA_STORAGE} \
     PRIVATE_MEDIA_ROOT=${PRIVATE_MEDIA_ROOT}
 
