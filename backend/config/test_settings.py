@@ -34,3 +34,13 @@ STORAGES = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Render Vite template tags in tests without requiring a built frontend
+# manifest. This keeps backend view tests isolated from frontend build steps.
+DJANGO_VITE = {
+    "default": {
+        **DJANGO_VITE["default"],  # noqa: F405
+        "dev_mode": True,
+        "manifest_path": None,
+    }
+}
