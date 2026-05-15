@@ -9,6 +9,10 @@
 - Use British English spelling in code comments, docs, command names, and developer guidance.
 - Prefer forms such as `normalise`, `normalisation`, and `authorisation`.
 
+## Testing Documentation
+- Keep this file as the high-level project instruction set.
+- Use `docs/testing.md` as the canonical deep-dive for testing strategy, E2E architecture, CI behaviour, and troubleshooting.
+
 ## Code Comment Conventions
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists.
   - For TypeScript/React: use a `/** ... */` JSDoc block before the function.

@@ -45,18 +45,23 @@ pytest = "^8.4.2"
 pytest-cov = "^7.0.0"
 pytest-django = "^4.11.1"
 pytest-xdist = "^3.8.0"
+playwright = "^1.48.0"
+pytest-playwright = "^0.7.1"
+requests = "^2.33.1"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.test_settings"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 testpaths = ["api", "applications", "processes", "questionnaires", "users"]
-addopts = "--strict-config --strict-markers"
+addopts = "--strict-config --strict-markers -p no:asyncio"
 xfail_strict = true
 markers = [
     "unit: Fast domain and serializer tests with no external boundaries",
     "api: Request-level API tests covering viewsets and responses",
     "security: Access-control and permission regression tests",
     "integration: Cross-component or multi-layer behaviour tests",
+    "e2e: Browser-driven end-to-end functional tests",
+    "browser: Tests that require Playwright browser execution",
     "slow: Long-running tests that are excluded from the default fast loop",
     "smoke: Small confidence set for CI and local pre-push runs",
 ]
