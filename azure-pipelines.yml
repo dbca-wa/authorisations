@@ -136,14 +136,17 @@ stages:
         cd backend
         poetry run playwright install --with-deps chromium
       displayName: Install Playwright Chromium browser
-    - script: mkdir -p backend/test-results
-      displayName: Ensure Playwright artefact directory exists
     - script: |
         cd backend
         poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
       displayName: Run E2E tests
       env:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+    - script: |
+        mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
+        touch "$(Build.SourcesDirectory)/backend/test-results/.keep"
+      displayName: Ensure E2E artefact path exists
+      condition: succeededOrFailed()
     - task: PublishTestResults@2
       displayName: Publish E2E test results
       condition: succeededOrFailed()
