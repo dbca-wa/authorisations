@@ -136,6 +136,8 @@ stages:
         cd backend
         poetry run playwright install --with-deps chromium
       displayName: Install Playwright Chromium browser
+    - script: mkdir -p backend/test-results
+      displayName: Ensure Playwright artefact directory exists
     - script: |
         cd backend
         poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
