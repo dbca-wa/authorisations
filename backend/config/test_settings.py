@@ -33,3 +33,8 @@ STORAGES = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Force django-vite into dev-mode during tests so template rendering does not
+# require a built frontend manifest in CI backend-only jobs.
+DJANGO_VITE["default"]["dev_mode"] = True  # noqa: F405
+DJANGO_VITE["default"]["manifest_path"] = None  # noqa: F405
