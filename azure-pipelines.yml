@@ -109,10 +109,6 @@ stages:
     condition: succeeded()
     pool:
       vmImage: ubuntu-latest
-    env:
-      DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
-      LOCAL_MEDIA_STORAGE: 'true'
-      PRIVATE_MEDIA_ROOT: '/tmp/private-media-e2e'
     steps:
     - task: UsePythonVersion@0
       displayName: Use Python 3.12
@@ -144,6 +140,8 @@ stages:
         cd backend
         poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
       displayName: Run E2E tests
+      env:
+        DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
     - task: PublishTestResults@2
       displayName: Publish E2E test results
       condition: succeededOrFailed()
