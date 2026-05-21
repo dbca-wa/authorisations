@@ -1,0 +1,20 @@
+[
+  {
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "e2e-fixture-user",
+      "first_name": "E2E",
+      "last_name": "Fixture",
+      "email": "e2e-fixture@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]

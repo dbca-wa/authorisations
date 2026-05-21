@@ -101,6 +101,64 @@ stages:
         artifact: 'coverage-frontend'
         publishLocation: 'pipeline'
 
+  - job: E2ETests
+    displayName: End-to-end browser tests
+    dependsOn:
+    - BackendTests
+    - FrontendTests
+    condition: succeeded()
+    pool:
+      vmImage: ubuntu-latest
+    env:
+      DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+      LOCAL_MEDIA_STORAGE: 'true'
+      PRIVATE_MEDIA_ROOT: '/tmp/private-media-e2e'
+    steps:
+    - task: UsePythonVersion@0
+      displayName: Use Python 3.12
+      inputs:
+        versionSpec: '3.12'
+    - task: UseNode@1
+      displayName: Use Node.js 22
+      inputs:
+        version: '22.x'
+    - script: python -m pip install --upgrade pip poetry
+      displayName: Install Poetry
+    - script: |
+        cd backend
+        poetry install --with dev
+      displayName: Install backend dependencies
+    - script: |
+        cd frontend
+        npm ci --no-audit --no-fund
+      displayName: Install frontend dependencies
+    - script: |
+        cd frontend
+        npm run build
+      displayName: Build frontend assets
+    - script: |
+        cd backend
+        poetry run playwright install --with-deps chromium
+      displayName: Install Playwright Chromium browser
+    - script: |
+        cd backend
+        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
+      displayName: Run E2E tests
+    - task: PublishTestResults@2
+      displayName: Publish E2E test results
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'backend/e2e-junit.xml'
+        failTaskOnFailedTests: true
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Playwright test artefacts
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/backend/test-results'
+        artifact: 'e2e-playwright-results'
+        publishLocation: 'pipeline'
+
   - job: Coverage
     displayName: Merge and publish coverage
     dependsOn:
