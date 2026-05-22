@@ -235,3 +235,29 @@ def test_application_put_rejects_document_update_when_not_draft(
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Cannot modify document" in str(response.data)
+
+
+@pytest.mark.django_db
+def test_application_put_rejects_document_with_schema_version_mismatch(
+    api_client,
+    user,
+    application_factory,
+):
+    """Reject document updates when payload schema_version does not match questionnaire schema."""
+    application = application_factory(owner=user, status=ApplicationStatus.DRAFT)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.put(
+        f"/api/applications/{application.key}",
+        {
+            "document": {
+                "schema_version": "1900.01-1",
+                "active_step": 0,
+                "steps": [{"is_valid": True, "answers": {"0-0": "updated"}}],
+            }
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Schema version mismatch" in str(response.data)

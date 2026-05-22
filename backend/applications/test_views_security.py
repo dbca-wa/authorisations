@@ -81,6 +81,19 @@ def test_resume_application_returns_404_for_reviewer_non_owner(
     assert response.status_code == 404
 
 
+def test_resume_application_returns_404_for_unknown_key(client, user):
+    """Return 404 for unknown application keys so callers cannot infer stale or mistyped records."""
+    client.force_login(user)
+    response = client.get(
+        reverse(
+            "resume-application",
+            kwargs={"key": "00000000-0000-0000-0000-000000000000"},
+        )
+    )
+
+    assert response.status_code == 404
+
+
 def test_download_application_returns_404_for_unauthorised_user(client, user, other_user, application):
     """Return 404 for foreign users on /d/<appKey> to prevent existence disclosure."""
     application.owner = other_user
@@ -126,6 +139,19 @@ def test_download_application_returns_200_for_reviewer_with_process_access(clien
     response = client.get(reverse("download-application", kwargs={"appKey": application.key}))
 
     assert response.status_code == 200
+
+
+def test_download_application_returns_404_for_unknown_key(client, user):
+    """Return 404 when download is requested for an application key that does not exist."""
+    client.force_login(user)
+    response = client.get(
+        reverse(
+            "download-application",
+            kwargs={"appKey": "00000000-0000-0000-0000-000000000000"},
+        )
+    )
+
+    assert response.status_code == 404
 
 
 def test_download_attachment_returns_404_for_unauthorised_user(client, user, other_user, application):

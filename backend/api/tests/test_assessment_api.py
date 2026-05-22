@@ -123,6 +123,54 @@ def test_assessment_retrieve_returns_404_for_non_assessor(
 
 
 @pytest.mark.django_db
+def test_assessment_retrieve_returns_200_for_assessor_with_process_access(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Return queue item details when the assessor can review the process and status is in queue."""
+    process = process_factory(slug="assess-retrieve")
+    process.assessor_groups.add(assessor_group)
+    application = application_factory(
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    response = api_client.get(f"/api/assessment/{application.key}")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["key"] == str(application.key)
+
+
+@pytest.mark.django_db
+def test_assessment_retrieve_returns_404_for_unreviewable_process(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Hide queue items that belong to processes outside the assessor's group permissions."""
+    reviewable_process = process_factory(slug="assess-reviewable")
+    reviewable_process.assessor_groups.add(assessor_group)
+    foreign_process = process_factory(slug="assess-foreign")
+    application = application_factory(
+        questionnaire=questionnaire_factory(process=foreign_process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    response = api_client.get(f"/api/assessment/{application.key}")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
 def test_assessment_patch_allows_reviewer_settable_status(
     api_client,
     assessor_user,

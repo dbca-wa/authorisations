@@ -65,7 +65,7 @@ stages:
         LOCAL_MEDIA_STORAGE: 'true'
         PRIVATE_MEDIA_ROOT: '/tmp/private-media'
     - task: PublishPipelineArtifact@1
-      displayName: Publish backend coverage XML artifact
+      displayName: Publish backend coverage XML artefact
       condition: succeededOrFailed()
       inputs:
         targetPath: '$(Build.SourcesDirectory)/backend/coverage.xml'
@@ -94,7 +94,7 @@ stages:
         npm run test:coverage
       displayName: Run frontend tests with coverage
     - task: PublishPipelineArtifact@1
-      displayName: Publish frontend coverage XML artifact
+      displayName: Publish frontend coverage XML artefact
       condition: succeededOrFailed()
       inputs:
         targetPath: '$(Build.SourcesDirectory)/frontend/coverage/cobertura-coverage.xml'
