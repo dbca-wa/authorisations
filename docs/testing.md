@@ -24,6 +24,7 @@ Core principles:
 - Prefer deterministic selectors and explicit waits in browser tests.
 - Keep ownership and permission checks central in security tests.
 - Keep docs, CI, and local commands aligned.
+- Prioritise test quality over quantity by targeting high-risk business outcomes and permission boundaries.
 
 ## What Was Implemented In This Session
 

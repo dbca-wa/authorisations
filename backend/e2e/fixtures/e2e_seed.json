@@ -1,20 +1,261 @@
 [
   {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "e2e-reviewers",
+      "permissions": []
+    }
+  },
+  {
     "model": "users.user",
     "pk": 1,
     "fields": {
       "password": "!",
       "last_login": null,
       "is_superuser": false,
-      "username": "e2e-fixture-user",
+      "username": "e2e-applicant",
       "first_name": "E2E",
-      "last_name": "Fixture",
-      "email": "e2e-fixture@example.com",
+      "last_name": "Applicant",
+      "email": "e2e-applicant@example.com",
       "is_staff": false,
       "is_active": true,
       "date_joined": "2026-01-01T00:00:00Z",
       "groups": [],
       "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "e2e-reviewer",
+      "first_name": "E2E",
+      "last_name": "Reviewer",
+      "email": "e2e-reviewer@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [1],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 3,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "e2e-other-applicant",
+      "first_name": "E2E",
+      "last_name": "Other",
+      "email": "e2e-other@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "processes.authorisationprocess",
+    "pk": 1,
+    "fields": {
+      "slug": "s40",
+      "name": "Section 40",
+      "description": "Section 40 authorisation process",
+      "sort_order": 1,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "processes.authorisationprocess",
+    "pk": 2,
+    "fields": {
+      "slug": "aec",
+      "name": "Animal Ethics",
+      "description": "Animal ethics authorisation process",
+      "sort_order": 2,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "processes.authorisationprocess_assessor_groups",
+    "pk": 1,
+    "fields": {
+      "authorisationprocess": 1,
+      "group": 1
+    }
+  },
+  {
+    "model": "questionnaires.questionnaire",
+    "pk": 1,
+    "fields": {
+      "process": 1,
+      "version": 1,
+      "code": "new-application",
+      "name": "New application",
+      "description": "Old version retained for history.",
+      "document": {
+        "schema_version": "2025.07-1",
+        "steps": [
+          {
+            "title": "Applicant details",
+            "description": "Provide details for assessment.",
+            "sections": [
+              {
+                "title": "Details",
+                "description": "",
+                "questions": [
+                  {
+                    "label": "Applicant full name",
+                    "type": "text",
+                    "is_required": true,
+                    "description": ""
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sort_order": 1,
+      "created_at": "2026-01-01T00:00:00Z",
+      "created_by": 1,
+      "updated_at": "2026-01-01T00:00:00Z",
+      "updated_by": null
+    }
+  },
+  {
+    "model": "questionnaires.questionnaire",
+    "pk": 2,
+    "fields": {
+      "process": 1,
+      "version": 2,
+      "code": "new-application",
+      "name": "New application",
+      "description": "Current section 40 application form.",
+      "document": {
+        "schema_version": "2025.07-1",
+        "steps": [
+          {
+            "title": "Applicant details",
+            "description": "Provide details for assessment.",
+            "sections": [
+              {
+                "title": "Details",
+                "description": "",
+                "questions": [
+                  {
+                    "label": "Applicant full name",
+                    "type": "text",
+                    "is_required": true,
+                    "description": ""
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sort_order": 1,
+      "created_at": "2026-01-01T00:00:00Z",
+      "created_by": 1,
+      "updated_at": "2026-01-01T00:00:00Z",
+      "updated_by": null
+    }
+  },
+  {
+    "model": "questionnaires.questionnaire",
+    "pk": 3,
+    "fields": {
+      "process": 2,
+      "version": 1,
+      "code": "new-application",
+      "name": "New application",
+      "description": "Current animal ethics application form.",
+      "document": {
+        "schema_version": "2025.07-1",
+        "steps": [
+          {
+            "title": "Project details",
+            "description": "Provide project details.",
+            "sections": [
+              {
+                "title": "Details",
+                "description": "",
+                "questions": [
+                  {
+                    "label": "Project title",
+                    "type": "text",
+                    "is_required": true,
+                    "description": ""
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sort_order": 1,
+      "created_at": "2026-01-01T00:00:00Z",
+      "created_by": 1,
+      "updated_at": "2026-01-01T00:00:00Z",
+      "updated_by": null
+    }
+  },
+  {
+    "model": "applications.application",
+    "pk": 1,
+    "fields": {
+      "key": "00000000-0000-4000-8000-000000000001",
+      "owner": 1,
+      "questionnaire": 2,
+      "status": "DRAFT",
+      "document": {
+        "schema_version": "2025.07-1",
+        "active_step": 0,
+        "steps": [
+          {
+            "is_valid": null,
+            "answers": {}
+          }
+        ]
+      },
+      "created_at": "2026-01-02T00:00:00Z",
+      "updated_at": "2026-01-02T00:00:00Z",
+      "submitted_at": null
+    }
+  },
+  {
+    "model": "applications.application",
+    "pk": 2,
+    "fields": {
+      "key": "00000000-0000-4000-8000-000000000002",
+      "owner": 3,
+      "questionnaire": 2,
+      "status": "SUBMITTED",
+      "document": {
+        "schema_version": "2025.07-1",
+        "active_step": 1,
+        "steps": [
+          {
+            "is_valid": true,
+            "answers": {
+              "0-0": "Other applicant"
+            }
+          }
+        ]
+      },
+      "created_at": "2026-01-03T00:00:00Z",
+      "updated_at": "2026-01-03T00:00:00Z",
+      "submitted_at": "2026-01-03T00:00:00Z"
     }
   }
 ]
