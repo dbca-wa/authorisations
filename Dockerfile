@@ -30,9 +30,6 @@ RUN mkdir -p /tmp/backend/applications /tmp/backend/templates
 COPY backend/applications/models.py /tmp/backend/applications/
 COPY backend/templates/application-pdf-template.html /tmp/backend/templates/
 
-# Run lint before build so code-quality failures fail fast in image build.
-RUN npm run lint
-
 # Build production frontend assets, including hash-free pdf-icons.css.
 RUN npm run build
 
@@ -70,13 +67,13 @@ FROM python:3.12-slim-bookworm
 
 # Accept non-sensitive build arguments used during collectstatic.
 ARG DATABASE_URL
-ARG SECRET_KEY
+ARG DJANGO_SECRET_KEY
 ARG LOCAL_MEDIA_STORAGE
 ARG PRIVATE_MEDIA_ROOT
 
 # Runtime environment variables consumed by Django settings.
 ENV DATABASE_URL=${DATABASE_URL} \
-    SECRET_KEY=${SECRET_KEY} \
+    DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY} \
     LOCAL_MEDIA_STORAGE=${LOCAL_MEDIA_STORAGE} \
     PRIVATE_MEDIA_ROOT=${PRIVATE_MEDIA_ROOT}
 

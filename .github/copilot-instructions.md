@@ -9,6 +9,10 @@
 - Use British English spelling in code comments, docs, command names, and developer guidance.
 - Prefer forms such as `normalise`, `normalisation`, and `authorisation`.
 
+## Testing Documentation
+- Keep this file as the high-level project instruction set.
+- Use `docs/testing.md` as the canonical deep-dive for testing strategy, E2E architecture, CI behaviour, and troubleshooting.
+
 ## Code Comment Conventions
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists.
   - For TypeScript/React: use a `/** ... */` JSDoc block before the function.
@@ -213,6 +217,51 @@
 - Operational note:
   - Prefer this command over `manage.py reorder questionnaires.Questionnaire` for this model, because `reorder` uses `Meta.ordering[0]` and may target non-sort fields.
 
+### Azure Pipelines Secret Prefix Filtering
+- Azure Pipelines can filter script environment variable names that begin with reserved prefixes, including `secret` (case-insensitive).
+- Practical impact observed in this project:
+  - `SECRET_KEY` in a script `env:` block arrives empty in bash even when the source pipeline variable is set.
+  - `DJANGO_SECRET_KEY` in the same `env:` block arrives correctly.
+- Safe pattern for this codebase:
+  - Do not map script env keys that begin with `SECRET_`.
+  - Map `DJANGO_SECRET_KEY` in pipeline YAML and read it first in Django settings, with `SECRET_KEY` fallback for local compatibility.
+
+### Docker@2 `buildAndPush` And Build Arguments
+- In this project, `Docker@2` with `command: buildAndPush` did not reliably pass `arguments` (for example `--build-arg LOCAL_MEDIA_STORAGE=...`) to the Docker build.
+- Symptom:
+  - Pipeline debug step shows `LOCAL_MEDIA_STORAGE` is set.
+  - Dockerfile step before `collectstatic` sees `LOCAL_MEDIA_STORAGE(raw)=''`.
+- Safe pattern for this codebase:
+  - Use `Docker@2` `command: build` with `arguments`, followed by `Docker@2` `command: push` in the same job.
+  - Keep build and push in the same job so the local image remains available for push.
+
+### Docker Image Availability Across Jobs
+- Docker images built on Microsoft-hosted agents are not shared across jobs/stages.
+- Symptom:
+  - Push job logs `An image does not exist locally with the tag ...` when build and push are split across different jobs/stages.
+- Safe pattern for this codebase:
+  - Keep Docker build and Docker push in the same job.
+  - If stages must be split, explicitly transfer image artifacts (`docker save` / `docker load`).
+
+### Node Task Migration Gotcha (`UseNode@1`)
+- `NodeTool@0` is deprecated and should be replaced with `UseNode@1`.
+- `UseNode@1` expects input key `version` (not `versionSpec`).
+- Symptom when misconfigured:
+  - Task label says Node 22, but agent installs default Node 10.x.
+  - Frontend `npm ci` fails with dependency-resolution/runtime errors.
+- Safe pattern for this codebase:
+  - Use:
+    - task: `UseNode@1`
+    - inputs: `version: '22.x'`
+
+### Coverage Publish Overwrite Behaviour
+- Publishing backend and frontend coverage independently can lead Azure DevOps Code Coverage tab to show only the last published dataset.
+- Symptom:
+  - Coverage tab shows only frontend (`.tsx`) or only backend files depending on publish order.
+- Safe pattern for this codebase:
+  - Publish raw coverage XML from each test job as pipeline artifacts.
+  - Add a dedicated downstream `Coverage` job that downloads both artifacts and runs a single `PublishCodeCoverageResults@2` step.
+
 ## Development Workflows
 
 ### Backend Commands
@@ -225,9 +274,34 @@
   - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
 
 ### Frontend Commands
-- Run dev server: `cd frontend && npm run dev`
-- Build: `cd frontend && npm run build`
-- Lint: `cd frontend && npm run lint`
+- Package manager policy:
+  - Use Bun for local development workflows because it is faster and supports npm-compatible scripts.
+  - Use npm for UAT, production, and CI environments to keep deployment/runtime behaviour consistent.
+- Run dev server (local development): `cd frontend && bun run dev`
+- Build (UAT/production/CI): `cd frontend && npm run build`
+- Lint (UAT/production/CI): `cd frontend && npm run lint`
+
+### CI/CD Pipeline Policy
+- Azure Pipelines YAML is hosted in GitHub, so CI and PR trigger behaviour is controlled in `azure-pipelines.yml` rather than Azure Repos branch policies.
+- CI should run on direct pushes to `main`, `uat`, and `feature/*` branches.
+- Pull request triggered pipeline runs are intentionally disabled with `pr: none` to avoid duplicate runs when a feature branch already has push-based CI.
+- Feature branch workflow expectation:
+  - push to `feature/*` runs the full test pipeline once.
+  - opening or updating a PR from that feature branch should not start a second PR-validation pipeline.
+- The Docker build and push steps may still keep a `Build.Reason != PullRequest` condition as a defensive guard, but PR suppression should be enforced primarily by `pr: none`.
+- When Docker build arguments are required (for example env used during `collectstatic`), prefer `Docker@2 build` then `Docker@2 push` in one job instead of `buildAndPush`.
+- For script steps, do not use environment variable keys beginning with `SECRET_`; use `DJANGO_SECRET_KEY` and map to Django settings accordingly.
+- For frontend CI Node setup, use `UseNode@1` with `version: '22.x'`.
+- For code coverage, publish once from a dedicated aggregation job rather than publishing separately from backend and frontend jobs.
+
+### CI Test Environment Requirements
+- Backend pytest uses `config.test_settings`, which imports `config.settings` first.
+- Import-time settings evaluation still requires baseline env vars before test overrides apply.
+- Safe pattern for this codebase in CI backend test job:
+  - set `DATABASE_URL` to SQLite (`sqlite:///:memory:`)
+  - pass `DJANGO_SECRET_KEY`
+  - set `LOCAL_MEDIA_STORAGE='true'`
+  - set `PRIVATE_MEDIA_ROOT` to a writable temp path (for example `/tmp/private-media`)
 
 ## Notable Files
 - `backend/entrypoint.sh`:
@@ -255,6 +329,10 @@
   - test Django admin changelist.
   - test sortable drag and reorder save.
   - test API list ordering and latest selection.
+- Before changing Azure pipeline triggers:
+  - preserve push-based CI for `feature/*`, `uat`, and `main` unless the workflow itself is being changed.
+  - avoid reintroducing PR-triggered runs unless duplicate CI on feature branches is explicitly desired.
+  - treat `pr: none` as the canonical setting for the current workflow.
 - Before changing serializer contracts:
   - update frontend types and API manager calls in same change set.
 
