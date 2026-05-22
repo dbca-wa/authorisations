@@ -5,6 +5,9 @@ import { FileInput } from "../../../../components/inputs/file";
 import { makeQuestion, renderWithForm } from "./helpers";
 
 const useDropzoneMock = vi.fn();
+const showSnackbarMock = vi.fn();
+const openFileDialogMock = vi.fn();
+let lastDropzoneOptions: Record<string, unknown> = {};
 
 vi.mock("react-dropzone", () => ({
   useDropzone: (...args: unknown[]) => useDropzoneMock(...args),
@@ -21,7 +24,7 @@ vi.mock("../../../../context/ConfigManager", () => ({
 
 vi.mock("../../../../context/Hooks", () => ({
   useSnackbar: () => ({
-    showSnackbar: vi.fn(),
+    showSnackbar: showSnackbarMock,
   }),
 }));
 
@@ -45,12 +48,23 @@ vi.mock("../../../../components/Common", () => ({
 describe("FileInput", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    lastDropzoneOptions = {};
     useDropzoneMock.mockReturnValue({
       getInputProps: () => ({}),
       getRootProps: (props: Record<string, unknown>) => props,
-      open: vi.fn(),
+      open: openFileDialogMock,
       isDragAccept: false,
       isDragReject: false,
+    });
+    useDropzoneMock.mockImplementation((options: Record<string, unknown>) => {
+      lastDropzoneOptions = options;
+      return {
+        getInputProps: () => ({}),
+        getRootProps: (props: Record<string, unknown>) => props,
+        open: openFileDialogMock,
+        isDragAccept: false,
+        isDragReject: false,
+      };
     });
   });
 
@@ -144,5 +158,60 @@ describe("FileInput", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Delete first attachment" }));
     expect(onAttachmentDeleted).toHaveBeenCalledWith("att-1", expect.any(Object));
+  });
+
+  it("opens the native file picker when the select button is clicked", () => {
+    const question = makeQuestion({
+      type: "file",
+      label: "Upload files",
+      file_max_attachments: 1,
+    });
+
+    renderWithForm({
+      ui: (
+        <FileInput
+          question={question}
+          applicationKey="app-1"
+          attachments={[]}
+          onAttachmentAdded={vi.fn()}
+          onAttachmentDeleted={vi.fn()}
+          onAttachmentUpdated={vi.fn()}
+        />
+      ),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Select from computer" }));
+    expect(openFileDialogMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a validation snackbar when dropzone rejects dropped files", async () => {
+    const question = makeQuestion({
+      type: "file",
+      label: "Upload files",
+      file_max_attachments: 1,
+    });
+
+    renderWithForm({
+      ui: (
+        <FileInput
+          question={question}
+          applicationKey="app-1"
+          attachments={[]}
+          onAttachmentAdded={vi.fn()}
+          onAttachmentDeleted={vi.fn()}
+          onAttachmentUpdated={vi.fn()}
+        />
+      ),
+    });
+
+    const onDrop = lastDropzoneOptions.onDrop as ((accepted: File[], rejected: unknown[]) => Promise<void>) | undefined;
+    expect(onDrop).toBeDefined();
+
+    await onDrop?.([], [{ errors: [{ message: "Rejected" }] }]);
+
+    expect(showSnackbarMock).toHaveBeenCalledWith(
+      "Invalid file type, please ensure it meets the requirements.",
+      "error",
+    );
   });
 });

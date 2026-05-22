@@ -38,4 +38,26 @@ describe("GridInput", () => {
 
     expect(await screen.findByText("At least one record must be provided.")).toBeInTheDocument();
   });
+
+  it("does not show required validation when at least one row already exists", async () => {
+    const question = makeQuestion({
+      type: "grid",
+      label: "Required grid",
+      is_required: true,
+      grid_columns: [{ label: "Species", type: "text" }],
+    });
+
+    renderWithForm({
+      ui: <GridInput question={question} />,
+      defaultValues: {
+        0: {
+          "0-0": [{ Species: "Quokka" }],
+        },
+      },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(screen.queryByText("At least one record must be provided.")).not.toBeInTheDocument();
+  });
 });

@@ -8,12 +8,16 @@ import { makeApplication, makeQuestionnaire } from "../../../fixtures";
 
 const {
   apiMocks,
+  localStorageMocks,
   showSnackbarMock,
   turnstileRenderMock,
   useLoaderDataMock,
 } = vi.hoisted(() => ({
   apiMocks: {
     updateApplication: vi.fn(),
+  },
+  localStorageMocks: {
+    setFormState: vi.fn(),
   },
   showSnackbarMock: vi.fn(),
   turnstileRenderMock: vi.fn(),
@@ -38,6 +42,10 @@ vi.mock("../../../../../context/Hooks", async () => {
 
 vi.mock("../../../../../context/ApiManager", () => ({
   ApiManager: apiMocks,
+}));
+
+vi.mock("../../../../../context/LocalStorage", () => ({
+  LocalStorage: localStorageMocks,
 }));
 
 vi.mock("../../../../../context/TurnstileManager", () => ({
@@ -146,5 +154,45 @@ describe("FormLayout", () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/Applicant name/)).toBeInTheDocument();
     });
+  });
+
+  it("falls back to local storage when API save fails", async () => {
+    apiMocks.updateApplication.mockRejectedValue(new Error("save failed"));
+
+    render(<FormLayout />);
+
+    fireEvent.change(screen.getByLabelText(/Applicant name/), {
+      target: { value: "Jane Doe" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() => {
+      expect(localStorageMocks.setFormState).toHaveBeenCalledTimes(1);
+    });
+    expect(showSnackbarMock).toHaveBeenCalledWith(
+      "Failed to save: save failed",
+      "error",
+    );
+  });
+
+  it("saves to local storage when offline", async () => {
+    Object.defineProperty(window.navigator, "onLine", {
+      configurable: true,
+      value: false,
+    });
+
+    render(<FormLayout />);
+
+    fireEvent.change(screen.getByLabelText(/Applicant name/), {
+      target: { value: "Jane Doe" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() => {
+      expect(localStorageMocks.setFormState).toHaveBeenCalledTimes(1);
+    });
+    expect(apiMocks.updateApplication).not.toHaveBeenCalled();
   });
 });
