@@ -63,17 +63,37 @@ Key points verified:
 - Step progression and navigation round-trip behaviour.
 - Correct semantic querying for MUI components (for example, StepButton role tab).
 
-### E2E Infrastructure (Initial Version)
+### Frontend Shared UI/Context Coverage
+
+Added focused tests in:
+- frontend/src/test/unit/components/common.test.tsx
+- frontend/src/test/unit/context/dialogs-provider.test.tsx
+- frontend/src/test/unit/context/snackbar-provider.test.tsx
+
+Coverage focus:
+- Attachment list rendering and edit-action visibility branches.
+- Attachment delete success/error flows with snackbar and parent callbacks.
+- Attachment rename flow with extension preservation and Enter-key submission.
+- Dialog provider open/close behaviour, callback execution, and action rendering.
+- Snackbar stacking, success/error duration branches, clickaway ignore behaviour, and timeout dismissal.
+
+### E2E Infrastructure (Current Version)
 
 Created E2E scaffolding under:
 - backend/e2e/
 
-Initial implementation included:
-- custom runserver subprocess management,
-- Playwright async context fixture,
-- test user/process/questionnaire fixtures,
-- login helper,
-- initial E2E test files.
+Current implementation includes:
+- in-memory SQLite with migration + fixture loading for deterministic E2E runs,
+- authenticated Playwright request-context helpers with CSRF propagation,
+- role-based fixture users and process/questionnaire/application seed data,
+- request-driven E2E matrix covering routing, ownership, reviewer scope, assessment transitions, and draft lifecycle,
+- resilient CI behaviour independent of PostgreSQL and frontend manifest coupling.
+
+Implemented E2E files:
+- backend/e2e/tests/test_routing_smoke.py
+- backend/e2e/tests/test_api_contracts.py
+- backend/e2e/tests/test_access_and_assessment.py
+- backend/e2e/tests/test_application_lifecycle.py
 
 ## Research Findings And Best Practices
 
@@ -219,9 +239,11 @@ Run focused suites:
 
 Run frontend unit tests:
 - cd frontend && bun run test:unit
+- cd frontend && npm run test:unit
 
 Run frontend coverage:
 - cd frontend && bun run test:coverage
+- cd frontend && npm run test:coverage
 
 ### E2E
 
@@ -271,6 +293,24 @@ Risk: Cross-test data leakage in browser/live-server tests.
 
 Risk: CI blind failures.
 - Mitigation: trace-on-failure and published artefacts.
+
+## Confidence Snapshot (May 2026)
+
+Current confidence level: high for backend business rules and API/security boundaries, medium-high for frontend component logic.
+
+Well-covered areas:
+- Owner versus reviewer access rules (resume, download, assessment queue).
+- Application lifecycle transitions (draft creation constraints, submit/read-only lock).
+- Questionnaire latest-version selection and core API contract boundaries.
+- Frontend form progression and shared dialog/snackbar/attachment interaction branches.
+
+Remaining gaps to acknowledge:
+- Full browser-hydrated E2E UI journeys are not yet the primary regression safety net; current E2E suite is intentionally request-driven for stability.
+- Accessibility audits (keyboard flows, screen-reader announcements) are not yet systematically automated.
+- Cross-browser matrix (beyond Chromium) is not yet part of routine CI validation.
+
+Recommendation:
+- Treat the current suite as release-capable for functional and security confidence, and schedule a dedicated follow-up stream for browser-hydration E2E and accessibility regression coverage.
 
 ## File Map (Testing-Relevant)
 

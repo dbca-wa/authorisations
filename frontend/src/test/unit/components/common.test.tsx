@@ -17,7 +17,7 @@ const {
   hideDialogMock: vi.fn(),
   showDialogMock: vi.fn(),
   showSnackbarMock: vi.fn(),
-  iconMock: vi.fn(() => <span data-testid="file-icon">icon</span>),
+  iconMock: vi.fn((_filename: string) => <span data-testid="file-icon">icon</span>),
 }));
 
 vi.mock("../../../context/ApiManager", () => ({
@@ -37,7 +37,7 @@ vi.mock("../../../context/Utils", async () => {
   const actual = await vi.importActual<typeof import("../../../context/Utils")>("../../../context/Utils");
   return {
     ...actual,
-    getIconFromFilename: (...args: unknown[]) => iconMock(...args),
+    getIconFromFilename: (filename: string) => iconMock(filename),
   };
 });
 
