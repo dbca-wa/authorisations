@@ -13,6 +13,13 @@
 - Keep this file as the high-level project instruction set.
 - Use `docs/testing.md` as the canonical deep-dive for testing strategy, E2E architecture, CI behaviour, and troubleshooting.
 
+## Open Source Release Documents
+- Repository licence text lives in `LICENSE` and repository-level Apache attribution lives in `NOTICE`.
+- Use `THIRD_PARTY_NOTICES.md` for dependency and attribution tracking, with backend and frontend sections kept separate.
+- Use Markdown for contributor-facing policy files such as `CONTRIBUTING.md` and `SECURITY.md` so GitHub renders and discovers them correctly.
+- Keep `LICENSE` and `NOTICE` as extensionless root files because that is the most portable and widely recognised convention for open source tooling.
+- When dependencies change, update `THIRD_PARTY_NOTICES.md` in the same change set where practical.
+
 ## Code Comment Conventions
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists.
   - For TypeScript/React: use a `/** ... */` JSDoc block before the function.
