@@ -18,7 +18,7 @@
 - Use `THIRD_PARTY_NOTICES.md` for dependency and attribution tracking, with backend and frontend sections kept separate.
 - Use Markdown for contributor-facing policy files such as `CONTRIBUTING.md` and `SECURITY.md` so GitHub renders and discovers them correctly.
 - Keep `LICENSE` and `NOTICE` as extensionless root files because that is the most portable and widely recognised convention for open source tooling.
-- When dependencies change, update `THIRD_PARTY_NOTICES.md` in the same change set where practical.
+- When dependencies change, update `THIRD_PARTY_NOTICES.md` in the same change set where practicable.
 
 ## Code Comment Conventions
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists.
@@ -146,7 +146,7 @@
 - Use `dayjs` for dates with `en-au` locale.
 - Prefer React component definitions as `const` (for example `const MyComponent = () => { ... }`) rather than `function` declarations unless there is a clear technical reason to do otherwise.
 - Prefer frontend function expressions assigned to `const` (including hooks and local helpers) rather than `function` declarations unless there is a clear technical reason (for example hoisting requirements).
-- Prefer explicit named exports/imports over default exports/imports for project modules where practical, to make refactoring safer and imports more consistent.
+- Prefer explicit named exports/imports over default exports/imports for project modules where practicable, to make refactoring safer and imports more consistent.
 - Group imports by style with a single blank line separating default imports from named/type imports:
   - First block: default imports (no curly braces), for example `import React from "react"` or `import Box from "@mui/material/Box"`.
   - Second block: named and type imports (with curly braces), for example `import { useState } from "react"` or `import type { AlertColor } from "@mui/material/Alert"`.

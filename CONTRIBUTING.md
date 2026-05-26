@@ -38,7 +38,7 @@ Run any narrower tests needed for the changed area before opening a pull request
 ## Commit and pull request guidance
 
 - Write clear commit messages that describe the functional change.
-- Include tests or explain why tests were not practical.
+- Include tests or explain why tests were not practicable.
 - Update `THIRD_PARTY_NOTICES.md` when adding, removing, or materially changing dependencies.
 - Do not commit secrets, production credentials, or sensitive personal information.
 
