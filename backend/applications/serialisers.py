@@ -1,29 +1,22 @@
 import re
+from mimetypes import guess_file_type
 from os import path
 
-# Because we are stuck with python 3.12 on Ubuntu 22.04
-# The newer guess_file_type is not available to us yet
-# TODO: Explicitly use `guess_file_type` once we upgrade
-try:
-    from mimetypes import guess_file_type
-except ImportError:
-    from mimetypes import guess_type as guess_file_type
-
+import requests
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.template.defaultfilters import filesizeformat
 from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
-import requests
 from rest_framework import exceptions, serializers, status
 
 from .models import (
+    REVIEW_QUEUE_STATUSES,
+    REVIEWER_SETTABLE_STATUSES,
     Application,
     ApplicationAttachment,
     ApplicationStatus,
-    REVIEW_QUEUE_STATUSES,
-    REVIEWER_SETTABLE_STATUSES,
 )
 from .schema import get_answers_schema
 

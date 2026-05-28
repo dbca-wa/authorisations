@@ -1,13 +1,13 @@
 # =================== BASE IMAGE VERSIONS ===================
 # Keep base image tags explicit and on official Docker Hub images.
 # For strict supply-chain control in CI/CD, pin these to immutable digests.
-# NODE_IMAGE:    node:22-bookworm-slim
-# PYTHON_IMAGE:  python:3.12-slim-bookworm
+# NODE_IMAGE:    node:22-trixie-slim
+# PYTHON_IMAGE:  python:3.14-slim-trixie
 # POETRY:        2.1.3
 
 
 # =================== BUILDER FRONTEND ===================
-FROM node:22-bookworm-slim AS builder_frontend
+FROM node:22-trixie-slim AS builder_frontend
 
 # Build frontend assets in an isolated stage.
 WORKDIR /tmp/frontend
@@ -35,7 +35,7 @@ RUN npm run build
 
 
 # =================== BUILDER BACKEND ===================
-FROM python:3.12-slim-bookworm AS builder_backend
+FROM python:3.14-slim-trixie AS builder_backend
 
 # Security-lean Python defaults.
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -63,7 +63,7 @@ RUN poetry install --only main --no-root --no-interaction --no-ansi
 
 
 # =================== RUNTIME ===================
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-trixie
 
 # Accept non-sensitive build arguments used during collectstatic.
 ARG DATABASE_URL
@@ -100,9 +100,9 @@ RUN apt-get update \
     && DEB_FILE=prince_16.2-1.deb \
     && ARCH="$(dpkg --print-architecture)" \
     && if [ "$ARCH" = "arm64" ]; then \
-    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian12_arm64.deb"; \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian13_arm64.deb"; \
     elif [ "$ARCH" = "amd64" ]; then \
-    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian12_amd64.deb"; \
+    PRINCE_URL="https://www.princexml.com/download/prince_16.2-1_debian13_amd64.deb"; \
     else \
     echo "Unsupported architecture for Prince package: $ARCH"; \
     exit 1; \
