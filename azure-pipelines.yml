@@ -46,9 +46,9 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: UsePythonVersion@0
-      displayName: Use Python 3.12
+      displayName: Use Python 3.14
       inputs:
-        versionSpec: '3.12'
+        versionSpec: '3.14'
     - script: python -m pip install --upgrade pip poetry
       displayName: Install Poetry
     - script: |
@@ -111,9 +111,9 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: UsePythonVersion@0
-      displayName: Use Python 3.12
+      displayName: Use Python 3.14
       inputs:
-        versionSpec: '3.12'
+        versionSpec: '3.14'
     - task: UseNode@1
       displayName: Use Node.js 22
       inputs:
