@@ -61,6 +61,10 @@ COPY backend/pyproject.toml backend/poetry.lock backend/poetry.toml /app/
 # Install runtime Python dependencies into in-project .venv.
 RUN poetry install --only main --no-root --no-interaction --no-ansi
 
+# Upgrade pip in the built virtual environment so the runtime image inherits
+# the patched installer version from the copied .venv.
+RUN /app/.venv/bin/python -m pip install --no-cache-dir --upgrade "pip>=26.1"
+
 
 # =================== RUNTIME ===================
 FROM python:3.14-slim-trixie
