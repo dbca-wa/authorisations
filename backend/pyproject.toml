@@ -25,6 +25,7 @@ dependencies = [
     "django-storages[azure] (>=1.14.6,<2.0.0)",
     "django-admin-sortable2 (>=2.3.1,<3.0.0)",
     "requests (>=2.33.1,<3.0.0)",
+    "idna (>=3.15,<4.0.0)",
 ]
 
 
@@ -41,12 +42,12 @@ package-mode = false
 #]
 [tool.poetry.group.dev.dependencies]
 ipython = "^9.2.0"
-pytest = "^8.4.2"
+pytest = "^9.0.3"
 pytest-cov = "^7.0.0"
 pytest-django = "^4.11.1"
 pytest-xdist = "^3.8.0"
 playwright = "^1.48.0"
-pytest-playwright = "^0.7.1"
+pytest-playwright = "^0.8.0"
 requests = "^2.33.1"
 
 [tool.pytest.ini_options]
