@@ -1,20 +1,19 @@
 // Polyfill support for old browsers
 // https://github.com/vitejs/vite/issues/4786
-// @ts-expect-error
+import 'dayjs/locale/en-au';
 import 'vite/modulepreload-polyfill';
+import './index.css';
 
 import { ThemeProvider } from '@emotion/react';
-import { createTheme } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers';
+import { createTheme } from '@mui/material/styles';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import 'dayjs/locale/en-au';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
-import SnackbarProvider from './context/Snackbar';
-import './index.css';
+import { DialogProvider } from './context/Dialogs';
+import { SnackbarProvider } from './context/Snackbar';
 import { router } from './router';
-import DialogProvider from './context/Dialogs';
 
 
 const theme = createTheme({
@@ -24,6 +23,26 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
         },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+    MuiStepIcon: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          '&.Mui-completed': {
+            color: theme.palette.primary.light,
+          },
+          '&.Mui-active': {
+            color: theme.palette.primary.main,
+          },
+          color: theme.palette.grey[400],
+        }),
       },
     },
   },

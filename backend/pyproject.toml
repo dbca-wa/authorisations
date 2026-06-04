@@ -6,14 +6,14 @@ authors = [
     {name = "Ecoinformatics, BCS", email = "ecoinformatics.admin@dbca.wa.gov.au"}
 ]
 readme = "README.md"
-requires-python = "<4,>=3.12"
+requires-python = "<4,>=3.14"
 dependencies = [
-    "Django (>=5.2,<5.3)",
-    "psycopg (>=3.2.6,<4.0.0)",
+    "Django (>=5.2.14,<5.3)",
+    "psycopg[binary,pool] (>=3.2.6,<4.0.0)",
     "django-vite (>=3.1.0,<4.0.0)",
     "whitenoise (>=6.9.0,<7.0.0)",
-    "gunicorn (>=23.0.0,<24.0.0)",
-    "django-environ (>=0.12.0,<0.13.0)",
+    "gunicorn (>=26.0.0,<27.0.0)",
+    "django-environ (>=0.13.0,<0.14.0)",
     "jsonschema (>=4.24.0,<5.0.0)",
     "drf-jsonschema-serializer (>=3.0.0,<4.0.0)",
     "django-jsonform (>=2.23.2,<3.0.0)",
@@ -23,6 +23,9 @@ dependencies = [
     "djangorestframework (>=3.16.0,<4.0.0)",
     "pyfsig (>=1.1.1,<2.0.0)",
     "django-storages[azure] (>=1.14.6,<2.0.0)",
+    "django-admin-sortable2 (>=2.3.1,<3.0.0)",
+    "requests (>=2.33.1,<3.0.0)",
+    "idna (>=3.15,<4.0.0)",
 ]
 
 
@@ -39,4 +42,43 @@ package-mode = false
 #]
 [tool.poetry.group.dev.dependencies]
 ipython = "^9.2.0"
+pytest = "^9.0.3"
+pytest-cov = "^7.0.0"
+pytest-django = "^4.11.1"
+pytest-xdist = "^3.8.0"
+playwright = "^1.48.0"
+pytest-playwright = "^0.8.0"
+requests = "^2.33.1"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.test_settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+testpaths = ["api", "applications", "processes", "questionnaires", "users"]
+addopts = "--strict-config --strict-markers -p no:asyncio"
+xfail_strict = true
+markers = [
+    "unit: Fast domain and serializer tests with no external boundaries",
+    "api: Request-level API tests covering viewsets and responses",
+    "security: Access-control and permission regression tests",
+    "integration: Cross-component or multi-layer behaviour tests",
+    "e2e: Browser-driven end-to-end functional tests",
+    "browser: Tests that require Playwright browser execution",
+    "slow: Long-running tests that are excluded from the default fast loop",
+    "smoke: Small confidence set for CI and local pre-push runs",
+]
+filterwarnings = [
+    "error::DeprecationWarning",
+    "ignore::DeprecationWarning:pkg_resources",
+    "ignore:jsonschema\\.RefResolver is deprecated.*:DeprecationWarning:drf_jsonschema_serializer\\..*",
+]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["api", "applications", "config", "processes", "questionnaires", "users"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+omit = ["manage.py", "*/migrations/*", "*/tests.py", "*/test_*.py", "*/conftest.py"]
 

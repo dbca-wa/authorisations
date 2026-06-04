@@ -5,13 +5,12 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
+import TextField from '@mui/material/TextField';
 import Typography from "@mui/material/Typography";
-import React from 'react';
 
-import { TextField } from '@mui/material';
+import { useRef } from 'react';
 import { ApiManager } from '../context/ApiManager';
-import { useDialog } from '../context/Dialogs';
-import { useSnackbar } from '../context/Snackbar';
+import { useDialog, useSnackbar } from '../context/Hooks';
 import { getIconFromFilename } from "../context/Utils";
 import type { IApplicationAttachment } from "../context/types/Application";
 
@@ -34,15 +33,23 @@ export const FileAttachmentList = ({
     const { showSnackbar } = useSnackbar();
 
     // Ref for the rename input (single ref works since only one dialog open at a time)
-    const renameInputRef = React.useRef<HTMLInputElement>(null);
+    const renameInputRef = useRef<HTMLInputElement>(null);
 
     const deleteAttachment = (attachment: IApplicationAttachment) => {
         showDialog({
             title: "Confirm Deletion",
             content:
-                <Box alignItems="center" justifyContent="center"
-                    display="flex" flexDirection="column" paddingX={4} gap={2}>
-                    <Typography textAlign={"center"}>Are you sure you want to delete the attachment<br />
+                <Box
+                    sx={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        px: 4,
+                        gap: 2,
+                    }}
+                >
+                    <Typography sx={{ textAlign: "center" }}>Are you sure you want to delete the attachment<br />
                         <strong>{attachment.name}</strong> ?
                     </Typography>
                     <Typography>This action cannot be undone.</Typography>
@@ -63,7 +70,7 @@ export const FileAttachmentList = ({
                                 })
                                 .catch((error) => {
                                     console.error("Error deleting attachment:", error);
-                                    const responseData = error.response?.data as any;
+                                    const responseData = error.response?.data as { detail?: string } | undefined;
                                     const message = responseData?.detail ?? error.message;
                                     showSnackbar(`Failed to delete file: ${message}`, "error");
                                 });
@@ -109,7 +116,7 @@ export const FileAttachmentList = ({
             title: "Rename Attachment",
             content:
                 <Box className="w-md items-center justify-center flex flex-col gap-2">
-                    <Box display="flex" alignItems="flex-end" gap={1} width="100%">
+                    <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1, width: "100%" }}>
                         <TextField
                             inputRef={renameInputRef}
                             defaultValue={baseName}

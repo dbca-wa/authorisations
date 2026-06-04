@@ -1,14 +1,17 @@
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
-import { Box, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 export const EmptyStateComponent = () => {
     return (
         <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            height="60vh"
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "60vh",
+            }}
         >
             <SentimentDissatisfiedIcon sx={{ fontSize: 60, mb: 2 }} />
             <Typography variant="h6" component="h2" gutterBottom>

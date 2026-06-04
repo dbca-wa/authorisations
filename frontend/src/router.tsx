@@ -1,4 +1,6 @@
+import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
+import PolicyIcon from '@mui/icons-material/Policy';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TopicIcon from '@mui/icons-material/Topic';
@@ -7,12 +9,40 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { createBrowserRouter } from "react-router";
 import { ErrorPage } from "./components/layout/ErrorPage";
 import { FormLayout } from "./components/layout/form/FormLayout";
+import { ApplicationAssessment } from './components/layout/main/Assessment';
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
+import { PrivacyPolicy } from './components/layout/main/PrivacyPolicy';
 import { ApiManager } from './context/ApiManager';
-import type { IRoute } from "./context/types/Generic";
+import type { IRoute, LoaderData } from "./context/types/Generic";
 import { handleApiError } from './context/Utils';
+
+
+
+/**
+ * Factory that produces a route loader for the main layout.
+ * Awaits processes (needed immediately for the sidebar) and optionally
+ * kicks off questionnaire and/or application fetches as unblocked promises,
+ * so routes that don't need a dataset never trigger its request.
+ */
+const mainLoader = (options: { questionnaires?: boolean; applications?: boolean } = {}) =>
+	async (): Promise<LoaderData> => {
+		const processes = await ApiManager
+			.fetchAuthorisationProcesses()
+			.catch(handleApiError);
+
+		// Only start each fetch when the route has declared it needs the data.
+		const questionnaires = options.questionnaires
+			? ApiManager.fetchQuestionnaires().catch(handleApiError)
+			: undefined;
+
+		const applications = options.applications
+			? ApiManager.fetchApplications().catch(handleApiError)
+			: undefined;
+
+		return { processes, questionnaires, applications };
+	};
 
 // Routes for the application (text, path and icon)
 export const ROUTES: IRoute[] = [
@@ -22,9 +52,7 @@ export const ROUTES: IRoute[] = [
 		icon: <TopicIcon />,
 		divider: false,
 		component: MyApplications,
-		loader: async () => {
-			return await ApiManager.fetchApplications().catch(handleApiError);
-		},
+		loader: mainLoader({ applications: true }),
 	},
 	{
 		label: "New application",
@@ -32,8 +60,25 @@ export const ROUTES: IRoute[] = [
 		icon: <CreateNewFolderIcon />,
 		divider: true,
 		component: NewApplication,
-		loader: async () => {
-			return await ApiManager.fetchQuestionnaires().catch(handleApiError);
+		loader: mainLoader({ questionnaires: true }),
+	},
+	{
+		label: "Assessment",
+		path: "/assessment",
+		icon: <ChecklistRtlIcon />,
+		divider: true,
+		component: ApplicationAssessment,
+		condition: (processes) => processes.some((process) => process.can_review),
+		loader: async (): Promise<LoaderData> => {
+			const processes = await ApiManager
+				.fetchAuthorisationProcesses()
+				.catch(handleApiError);
+
+			const applications = ApiManager
+				.fetchAssessmentApplications()
+				.catch(handleApiError);
+
+			return { processes, applications };
 		},
 	},
 	{
@@ -41,12 +86,25 @@ export const ROUTES: IRoute[] = [
 		path: "/settings",
 		icon: <SettingsIcon />,
 		divider: false,
+		loader: mainLoader(),
+	},
+	{
+		label: "Privacy Policy",
+		path: "/privacy",
+		icon: <PolicyIcon />,
+		divider: false,
+		component: PrivacyPolicy,
+		loader: mainLoader(),
+		sidebar: false,
 	},
 	{
 		label: "Feedback",
-		path: "mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations Application",
+		// Opened directly by the footer via window.open; not registered as a React Router route.
+		path: "mailto:ecoinformatics.admin@dbca.wa.gov.au?subject=Feedback on Authorisations System",
 		icon: <RateReviewIcon />,
 		divider: false,
+		external: true,
+		sidebar: false,
 	},
 ];
 
@@ -56,9 +114,9 @@ const formLayoutLoader = async ({ params }: LoaderFunctionArgs) => {
 		.catch(handleApiError);
 
 	const questionnaire = await ApiManager
-		.getQuestionnaire(app.questionnaire_slug, app.questionnaire_version)
+		.getQuestionnaire(app.questionnaire_id)
 		.catch(handleApiError);
-	
+
 	const attachments = await ApiManager
 		.getApplicationAttachments(params.key!)
 		.catch(handleApiError);
@@ -68,8 +126,9 @@ const formLayoutLoader = async ({ params }: LoaderFunctionArgs) => {
 
 export const router = createBrowserRouter(
 	[
-		// Add routes from ROUTES constant
-		...ROUTES.map(route => ({
+		// Register only internal (non-external) routes with React Router.
+		// External routes (e.g. mailto: links) are handled directly by the sidebar.
+		...ROUTES.filter(route => !route.external).map(route => ({
 			path: route.path,
 			element: <MainLayout route={route} />,
 			loader: route.loader,

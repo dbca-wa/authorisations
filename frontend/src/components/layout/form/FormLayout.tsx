@@ -1,12 +1,11 @@
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import MenuIcon from '@mui/icons-material/Menu';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SaveIcon from '@mui/icons-material/Save';
 import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
+import Link from '@mui/material/Link';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import React from 'react';
@@ -21,8 +20,8 @@ import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
 import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
+import { useSnackbar } from '../../../context/Hooks';
 import { LocalStorage } from '../../../context/LocalStorage';
-import { useSnackbar } from '../../../context/Snackbar';
 import type { IApplicationAttachment, IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
 import type { AsyncVoidAction, NumberedBooleanObj } from '../../../context/types/Generic';
 import type { IQuestionnaire, IQuestionnaireData } from '../../../context/types/Questionnaire';
@@ -56,7 +55,7 @@ export const FormLayout = () => {
 
     // Current active step index (or the review page if not editable)
     const [activeStep, setActiveStep] = React.useState<number>(
-        userCanEdit ? app.document.active_step : questionnaire.document.steps.length
+        userCanEdit ? app.document!.active_step : questionnaire.document.steps.length
     );
 
     const { showSnackbar } = useSnackbar();
@@ -64,7 +63,7 @@ export const FormLayout = () => {
     // Manage completed steps
     const [validatedSteps, setValidSteps] = React.useState<NumberedBooleanObj>(
         // Calculate initial state from application document
-        app.document.steps.reduce((acc, step, index) => {
+        app.document!.steps.reduce((acc, step, index) => {
             if (step.is_valid !== null)
                 acc[index] = step.is_valid;
             return acc;
@@ -74,7 +73,7 @@ export const FormLayout = () => {
     // Form methods
     const formMethods = useForm<IFormAnswers>({
         // Generate default values based on application document
-        defaultValues: app.document.steps.reduce((acc, step, index) => {
+        defaultValues: app.document!.steps.reduce((acc, step, index) => {
             acc[index] = step.answers ?? {};
             return acc;
         }, {} as IFormAnswers),
@@ -98,7 +97,7 @@ export const FormLayout = () => {
         // Convert form answers to document structure
         const answers: IFormAnswers = formMethods.getValues();
         const document: IFormDocument = {
-            schema_version: app.document.schema_version,
+            schema_version: app.document!.schema_version,
             active_step: newActiveStep ?? activeStep,
             steps: questionnaire.document.steps.map((_step, index) => ({
                 // Use the passed-in object first, falling back to the state variable
@@ -146,7 +145,7 @@ export const FormLayout = () => {
             prev.map(atch => atch.key === updatedAttachment.key ? updatedAttachment : atch)
         );
     };
-    
+
 
     /**
      * 
@@ -185,7 +184,8 @@ export const FormLayout = () => {
 
             // We know the errors there, fetch their keys with assertive approach
             const stepKey = _.first(_.keys(errors)) as string;
-            const stepErrors = (errors as any)[stepKey]!;      // assert exists
+            const stepErrors = errors[stepKey as unknown as number];
+            if (!stepErrors || typeof stepErrors !== "object") return;
             const fieldKey = _.first(_.keys(stepErrors)) as string;
             const firstErrorField = `${stepKey}.${fieldKey}`;
             // console.log('fieldKey:', fieldKey)
@@ -206,13 +206,30 @@ export const FormLayout = () => {
         return formMethods.handleSubmit(onValid, onInvalid);
     }
 
-    // Account menu state and handlers
-    const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
-
     // Change page title
     React.useEffect(() => {
         document.title = `${app.questionnaire_name} : DBCA Authorisations`;
     }, [app.questionnaire_name]);
+
+    // Guard against StrictMode double-invocation: only show the notice once per mount.
+    const privacyNoticeShown = React.useRef(false);
+
+    // Notify once on mount that personal information is being collected.
+    React.useEffect(() => {
+        if (privacyNoticeShown.current) return;
+        privacyNoticeShown.current = true;
+        showSnackbar(
+            <>
+                DBCA will collect, use and disclose your personal information in <br />
+                accordance with applicable privacy laws and DBCA's{" "}
+                <Link href="/privacy" target="_blank" rel="noopener" color="inherit" underline="always">
+                    Privacy Policy
+                </Link>.
+            </>,
+            "info",
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Scroll to top when step changes
     React.useEffect(() => scrollToTop(), [activeStep]);
@@ -251,8 +268,6 @@ export const FormLayout = () => {
                         {app.questionnaire_name}
                     </Typography>
                     <AccountMenu
-                        anchorEl={menuAnchorEl}
-                        setAnchorEl={setMenuAnchorEl}
                         isDirty={isDirty}
                         saveAnswers={saveAnswers}
                     />
@@ -318,71 +333,30 @@ const AppBar = styled(MuiAppBar, {
 
 
 const AccountMenu = ({
-    anchorEl, setAnchorEl,
     isDirty,
     saveAnswers,
 }: {
-    anchorEl: null | HTMLElement;
-    setAnchorEl: React.Dispatch<React.SetStateAction<null | HTMLElement>>;
+    anchorEl?: null | HTMLElement;
+    setAnchorEl?: React.Dispatch<React.SetStateAction<null | HTMLElement>>;
     isDirty: boolean;
     saveAnswers: () => Promise<void>;
 }) => {
-    const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
-    const handleClose = () => setAnchorEl(null);
-
     return (
-        <Box sx={{ marginLeft: 'auto' }}>
-            <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenu}
+        <Box sx={{ marginLeft: 'auto', display: 'flex', gap: 1 }}>
+            <Button
                 color="inherit"
-            >
-                <MoreVertIcon />
-            </IconButton>
-            <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
+                startIcon={<SaveIcon />}
+                disabled={!isDirty}
+                onClick={() => saveAnswers()}
+            >Save</Button>
+            <Button
+                color="inherit"
+                startIcon={<ExitToAppIcon />}
+                onClick={() => {
+                    // Assuming we're in a popup window
+                    window.close();
                 }}
-                keepMounted
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-                sx={{
-                    '& .MuiMenuItem-root': { gap: 1.5 }
-                    , '& .MuiSvgIcon-root': { fontSize: 'inherit' }
-                }}
-            >
-                <MenuItem
-                    disabled={!isDirty}
-                    onClick={() => {
-                        saveAnswers();
-                        handleClose();
-                    }}
-                >
-                    <SaveIcon /> Save
-                </MenuItem>
-                <MenuItem
-                    onClick={() => {
-                        // Assuming we're in a popup window
-                        window.close();
-
-                        // If there are unsaved changes and user cancels the closing...
-                        // do nothing.
-                        // if (!window.closed) { }
-                    }}
-                >
-                    <ExitToAppIcon /> Exit
-                </MenuItem>
-            </Menu>
+            >Exit</Button>
         </Box>
     )
 }
@@ -458,7 +432,8 @@ const _doSaveAnswers = async (
             // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
-                const message = (error.response?.data as any)?.document?.[0] ?? error.message;
+                const responseData = error.response?.data as { document?: string[] } | undefined;
+                const message = responseData?.document?.[0] ?? error.message;
                 showSnackbar(`Failed to save: ${message}`, "error");
                 return null;
             });

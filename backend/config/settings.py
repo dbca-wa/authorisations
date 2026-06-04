@@ -22,8 +22,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
-    SECURE_HSTS_SECONDS=(int, 3600 * 24),
-    SECURE_ONLY=(bool, False),
+    SECURE_HSTS_SECONDS=(int, 3600 * 24 * 365),  # 1 year
+    SECURE_ONLY=(bool, True),
     # File storage
     LOCAL_MEDIA_STORAGE=(bool, False),
 )
@@ -32,7 +32,8 @@ env = environ.Env(
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("SECRET_KEY")
+# Uses DJANGO_SECRET_KEY to avoid Azure Pipelines script env filtering of SECRET_* prefix.
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
@@ -76,8 +77,9 @@ CSRF_HEADER_CLIENT = env("CSRF_HEADER_CLIENT", default="X-CsrfToken")
 # Set custom CSRF cookie name (probably the session key as well)
 CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME", default="csrftoken")
 
-# Non-secure redirection cache: 1 minute in debug mode, longer in production
+# Non-secure redirection cache: 1 minute in debug mode, 1 year in production
 SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 if not DEBUG:
     SESSION_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
@@ -91,13 +93,6 @@ if not DEBUG:
     SECURE_ONLY = env("SECURE_ONLY")
     CSRF_COOKIE_SECURE = SECURE_ONLY
     SESSION_COOKIE_SECURE = SECURE_ONLY
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_ONLY
-
-    # Do not redirect 'https://' because the proxy server (nginx) connection
-    # may be unsecure that will cause infinite redirection loop
-    # (if the `SECURE_PROXY_SSL_HEADER` was not set correctly)
-    # SECURE_SSL_REDIRECT = SECURE_ONLY
-    # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
@@ -107,6 +102,7 @@ INSTALLED_APPS = [
     "admin_tools.menu",
     "admin_tools.dashboard",
     "django_vite",
+    "adminsortable2",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -116,6 +112,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_jsonform",
     "users",
+    "processes",
     "questionnaires",
     "applications",
 ]
@@ -130,6 +127,7 @@ MIDDLEWARE = [
     "dbca_utils.middleware.SSOLoginMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "config.cache_control_middleware.GlobalNeverCacheMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -320,3 +318,8 @@ UPLOAD_MIME_TYPES = [
     # "application/vnd.ms-excel", # don't accept old format
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]
+
+
+# Cloudflare Turnstile configuration
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default=None)
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default=None)

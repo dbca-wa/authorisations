@@ -9,6 +9,8 @@ trigger:
     - uat
     - feature/*
 
+pr: none
+
 resources:
 - repo: self
 
@@ -35,16 +37,174 @@ variables:
       value: $[replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', ''), '/', '-')]
 
 stages:
-- stage: Build
-  displayName: Build and Push Docker Image
+- stage: Validate
+  displayName: Validate Code
   jobs:
-  - job: BuildThenPush
-    displayName: Build then Push
+  - job: BackendTests
+    displayName: Backend pytest
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: UsePythonVersion@0
+      displayName: Use Python 3.14
+      inputs:
+        versionSpec: '3.14'
+    - script: python -m pip install --upgrade pip poetry
+      displayName: Install Poetry
+    - script: |
+        cd backend
+        poetry install --with dev
+      displayName: Install backend dependencies
+    - script: |
+        cd backend
+        poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
+      displayName: Run backend tests with coverage
+      env:
+        DATABASE_URL: 'sqlite:///:memory:'
+        DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+        LOCAL_MEDIA_STORAGE: 'true'
+        PRIVATE_MEDIA_ROOT: '/tmp/private-media'
+    - task: PublishPipelineArtifact@1
+      displayName: Publish backend coverage XML artefact
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/backend/coverage.xml'
+        artifact: 'coverage-backend'
+        publishLocation: 'pipeline'
+
+  - job: FrontendTests
+    displayName: Frontend quality and tests
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: UseNode@1
+      displayName: Use Node.js 22
+      inputs:
+        version: '22.x'
+    - script: |
+        cd frontend
+        npm ci --no-audit --no-fund
+      displayName: Install frontend dependencies
+    - script: |
+        cd frontend
+        npm run lint
+      displayName: Run frontend lint
+    - script: |
+        cd frontend
+        npm run test:coverage
+      displayName: Run frontend tests with coverage
+    - task: PublishPipelineArtifact@1
+      displayName: Publish frontend coverage XML artefact
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/frontend/coverage/cobertura-coverage.xml'
+        artifact: 'coverage-frontend'
+        publishLocation: 'pipeline'
+
+  - job: E2ETests
+    displayName: End-to-end browser tests
+    dependsOn:
+    - BackendTests
+    - FrontendTests
+    condition: succeeded()
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: UsePythonVersion@0
+      displayName: Use Python 3.14
+      inputs:
+        versionSpec: '3.14'
+    - task: UseNode@1
+      displayName: Use Node.js 22
+      inputs:
+        version: '22.x'
+    - script: python -m pip install --upgrade pip poetry
+      displayName: Install Poetry
+    - script: |
+        cd backend
+        poetry install --with dev
+      displayName: Install backend dependencies
+    - script: |
+        cd frontend
+        npm ci --no-audit --no-fund
+      displayName: Install frontend dependencies
+    - script: |
+        cd frontend
+        npm run build
+      displayName: Build frontend assets
+    - script: |
+        cd backend
+        poetry run playwright install --with-deps chromium
+      displayName: Install Playwright Chromium browser
+    - script: |
+        cd backend
+        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
+      displayName: Run E2E tests
+      env:
+        DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+    - script: |
+        mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
+        touch "$(Build.SourcesDirectory)/backend/test-results/.keep"
+      displayName: Ensure E2E artefact path exists
+      condition: succeededOrFailed()
+    - task: PublishTestResults@2
+      displayName: Publish E2E test results
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'backend/e2e-junit.xml'
+        failTaskOnFailedTests: true
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Playwright test artefacts
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/backend/test-results'
+        artifact: 'e2e-playwright-results'
+        publishLocation: 'pipeline'
+
+  - job: Coverage
+    displayName: Merge and publish coverage
+    dependsOn:
+    - BackendTests
+    - FrontendTests
+    condition: succeededOrFailed()
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download backend coverage XML
+      condition: succeededOrFailed()
+      inputs:
+        artifact: 'coverage-backend'
+        path: '$(Pipeline.Workspace)/coverage-backend'
+    - task: DownloadPipelineArtifact@2
+      displayName: Download frontend coverage XML
+      condition: succeededOrFailed()
+      inputs:
+        artifact: 'coverage-frontend'
+        path: '$(Pipeline.Workspace)/coverage-frontend'
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish merged backend + frontend coverage
+      condition: succeededOrFailed()
+      inputs:
+        summaryFileLocation: |
+          $(Pipeline.Workspace)/coverage-backend/coverage.xml
+          $(Pipeline.Workspace)/coverage-frontend/cobertura-coverage.xml
+        pathToSources: '$(Build.SourcesDirectory)'
+        failIfCoverageEmpty: true
+
+- stage: Publish
+  displayName: Build And Push Docker Image
+  dependsOn: Validate
+  condition: succeeded('Validate')
+  jobs:
+  - job: PushImage
+    displayName: Build and push Docker image
     pool:
       vmImage: ubuntu-latest
     steps:
     - task: Docker@2
-      displayName: Build Docker Image
+      displayName: Build Docker image
       inputs:
         command: build
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
@@ -53,16 +213,15 @@ stages:
         tags: |
           $(imageTagPrefix)
           $(imageTagPrefix)-$(tagDate)
-        arguments: |
+        arguments: >-
           --build-arg DATABASE_URL=$(DATABASE_URL)
-          --build-arg SECRET_KEY=$(SECRET_KEY)
+          --build-arg DJANGO_SECRET_KEY=$(DJANGO_SECRET_KEY)
           --build-arg LOCAL_MEDIA_STORAGE=$(LOCAL_MEDIA_STORAGE)
           --build-arg PRIVATE_MEDIA_ROOT=$(PRIVATE_MEDIA_ROOT)
       env:
         DOCKER_BUILDKIT: 1
     - task: Docker@2
-      displayName: Push Docker Image
-      condition: succeeded()
+      displayName: Push Docker image
       inputs:
         command: push
         containerRegistry: DockerGitHub

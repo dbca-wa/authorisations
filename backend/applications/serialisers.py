@@ -1,14 +1,8 @@
 import re
+from mimetypes import guess_file_type
 from os import path
 
-# Because we are stuck with python 3.12 on Ubuntu 22.04
-# The newer guess_file_type is not available to us yet
-# TODO: Explicitly use `guess_file_type` once we upgrade
-try:
-    from mimetypes import guess_file_type
-except ImportError:
-    from mimetypes import guess_type as guess_file_type
-
+import requests
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.conf import settings
 from django.db import IntegrityError, transaction
@@ -17,8 +11,59 @@ from pyfsig import find_matches_for_file_header
 from questionnaires.models import Questionnaire
 from rest_framework import exceptions, serializers, status
 
-from .models import Application, ApplicationAttachment, ApplicationStatus
+from .models import (
+    REVIEW_QUEUE_STATUSES,
+    REVIEWER_SETTABLE_STATUSES,
+    Application,
+    ApplicationAttachment,
+    ApplicationStatus,
+)
 from .schema import get_answers_schema
+
+
+def verify_turnstile_token(
+    token: str,
+    remote_ip: str | None = None,
+    idempotency_key: str | None = None,
+) -> bool:
+    """Verify a Turnstile token against Cloudflare Siteverify.
+
+    The application create flow should fail closed: if the service is not
+    configured, the token is missing, or the verification request fails, the
+    token is treated as invalid and application creation is rejected.
+    """
+    secret_key = settings.TURNSTILE_SECRET_KEY
+
+    if not secret_key or not token:
+        return False
+
+    payload = {
+        "secret": secret_key,
+        "response": token,
+    }
+
+    # Include the client IP when available so Siteverify can evaluate the
+    # token in the same request context that produced it.
+    if remote_ip:
+        payload["remoteip"] = remote_ip
+
+    # Reuse the same idempotency key for retry-safe validations of the same
+    # submission attempt.
+    if idempotency_key:
+        payload["idempotency_key"] = idempotency_key
+
+    try:
+        response = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=payload,
+            timeout=5,
+        )
+        response.raise_for_status()
+        response_data = response.json()
+    except (requests.RequestException, ValueError):
+        return False
+
+    return bool(response_data.get("success"))
 
 
 class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializer):
@@ -31,8 +76,23 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
-    questionnaire_slug = serializers.SlugField(
-        source="questionnaire.slug",
+    process_slug = serializers.SlugField(
+        source="questionnaire.process.slug",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_id = serializers.IntegerField(
+        source="questionnaire.id",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_code = serializers.CharField(
+        source="questionnaire.code",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_name = serializers.CharField(
+        source="questionnaire.name",
         required=False,
         read_only=True,
     )
@@ -41,8 +101,16 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
-    questionnaire_name = serializers.CharField(
-        source="questionnaire.name",
+    privacy_consent_agreed = serializers.BooleanField(
+        required=False,
+        write_only=True,
+    )
+    turnstile_token = serializers.CharField(
+        required=False,
+        write_only=True,
+        trim_whitespace=True,
+    )
+    internal_id = serializers.CharField(
         required=False,
         read_only=True,
     )
@@ -54,11 +122,17 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     class Meta:
         model = Application
         fields = (
+            "id",
             "key",
+            "internal_id",
             "owner",
-            "questionnaire_slug",
-            "questionnaire_version",
+            "process_slug",
+            "questionnaire_id",
+            "questionnaire_code",
             "questionnaire_name",
+            "questionnaire_version",
+            "privacy_consent_agreed",
+            "turnstile_token",
             "status",
             "created_at",
             "updated_at",
@@ -77,9 +151,25 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         isPut = request.method == "PUT" if request else False
         isPatch = request.method == "PATCH" if request else False
 
-        # Questionnaire slug is required when first creating
-        fields["questionnaire_slug"].required = isPost
-        fields["questionnaire_slug"].read_only = not isPost
+        # CREATE / POST
+        # Questionnaire ID is required when creating
+        fields["questionnaire_id"].required = isPost
+        fields["questionnaire_id"].read_only = not isPost
+        # Process slug is required when creating (to confirm data integrity)
+        fields["process_slug"].required = isPost
+        fields["process_slug"].read_only = not isPost
+        # Questionnaire code is required when creating (to confirm data integrity)
+        fields["questionnaire_code"].required = isPost
+        fields["questionnaire_code"].read_only = not isPost
+        # Questionnaire version is required when creating (to confirm data integrity)
+        fields["questionnaire_version"].required = isPost
+        fields["questionnaire_version"].read_only = not isPost
+        # Privacy consent acknowledgement is required when creating for auditability.
+        fields["privacy_consent_agreed"].required = isPost
+        fields["privacy_consent_agreed"].read_only = not isPost
+        # Turnstile verification token is required during create and final submit PATCH.
+        fields["turnstile_token"].required = isPost or isPatch
+        fields["turnstile_token"].read_only = not (isPost or isPatch)
 
         # Document field is required only when updating
         fields["document"].required = isPut
@@ -90,6 +180,22 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         fields["status"].read_only = not isPatch
 
         return fields
+
+    def to_representation(self, instance):
+        """Exclude ``document`` from list responses to reduce payload size.
+
+        The ``document`` field is only meaningful on single-record detail views
+        (FormLayout). Including it in list responses wastes bandwidth since no
+        list-consuming component reads it.
+        """
+        data = super().to_representation(instance)
+        # The viewset sets ``action`` on the serialiser context's view; retrieve
+        # is the only action that should include the full document payload.
+        view = self.context.get("view")
+        is_detail = view and getattr(view, "action", None) == "retrieve"
+        if not is_detail:
+            data.pop("document", None)
+        return data
 
     def validate_status(self, value):
         """
@@ -106,6 +212,42 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             f"Invalid status transition from {self.instance.status} to {value}"
         )
 
+    def validate_turnstile_token(self, value: str) -> str:
+        """Validate Turnstile token for create and final submit flows.
+
+        For POST create requests, Turnstile is always required.
+        For PATCH requests, Turnstile is required only for the draft->submitted
+        transition, using application key as idempotency key.
+        """
+        request = self.context.get("request")
+        if request is None:
+            return value
+
+        request_meta = getattr(request, "META", {})
+        remote_ip = request_meta.get("REMOTE_ADDR")
+
+        if request.method == "POST":
+            if not verify_turnstile_token(value, remote_ip):
+                raise exceptions.ValidationError(
+                    "Turnstile verification failed. Please try again."
+                )
+            return value
+
+        if request.method == "PATCH":
+            requested_status = self.initial_data.get("status")
+            if (
+                self.instance is not None
+                and self.instance.status == ApplicationStatus.DRAFT
+                and requested_status == ApplicationStatus.SUBMITTED
+            ):
+                idempotency_key = str(self.instance.key)
+                if not verify_turnstile_token(value, remote_ip, idempotency_key):
+                    raise exceptions.ValidationError(
+                        "Turnstile verification failed. Please try again."
+                    )
+
+        return value
+
     def validate_document(self, value):
         if self.instance.status != ApplicationStatus.DRAFT:
             raise exceptions.ValidationError(
@@ -116,61 +258,106 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         schema = get_answers_schema()
         return self._validate_document(value, schema)
 
-    def validate_questionnaire_slug(self, value):
+    def validate(self, attrs):
         """
-        Validate the questionnaire slug to ensure it exists in the database.
+        Object-level validation to ensure the questionnaire exists and matches the
+        provided process slug, code, and version.
         """
-        questionnaire: Questionnaire = self.context.get("questionnaire", None)
+        # Only creation needs questionnaire identity checks.
+        request = self.context.get("request")
+        if request.method != "POST":
+            return attrs
 
-        # Check if we have been already called and validated the slug before
-        if isinstance(questionnaire, Questionnaire) and questionnaire.slug == value:
-            # Intentionally return the original value
-            return value
+        questionnaire_data = attrs.get("questionnaire") or {}
+        process_data = questionnaire_data.get("process") or {}
 
-        # Try to find with the user provided slug
-        try:
-            questionnaire = Questionnaire.objects.filter(slug=value).latest("version")
-        except Questionnaire.DoesNotExist:
+        process_slug = process_data.get("slug")
+        questionnaire_id = questionnaire_data.get("id")
+        questionnaire_code = questionnaire_data.get("code")
+        questionnaire_version = questionnaire_data.get("version")
+        privacy_consent_agreed = attrs.get("privacy_consent_agreed")
+
+        # Ensure all integrity fields are present.
+        if (
+            not process_slug
+            or not questionnaire_id
+            or not questionnaire_code
+            or not questionnaire_version
+        ):
             raise exceptions.ValidationError(
-                f"Questionnaire with slug '{value}' does not exist."
+                "Process slug, questionnaire id, code and version are required."
             )
 
-        # Add the questionnaire to the context for later use
+        # Creation is allowed only when explicit consent is acknowledged.
+        if privacy_consent_agreed is not True:
+            raise exceptions.ValidationError(
+                {
+                    "privacy_consent_agreed": "This field must be true to create an application."
+                }
+            )
+
+        # Reuse a previously validated questionnaire instance when possible.
+        questionnaire: Questionnaire = self.context.get("questionnaire", None)
+        if (
+            isinstance(questionnaire, Questionnaire)
+            and questionnaire.process.slug == process_slug
+            and questionnaire.id == questionnaire_id
+            and questionnaire.code == questionnaire_code
+            and questionnaire.version == questionnaire_version
+        ):
+            return attrs
+
+        # Otherwise, fetch the questionnaire by the provided identity fields.
+        try:
+            questionnaire = Questionnaire.objects.select_related("process").get(
+                process__slug=process_slug,
+                id=questionnaire_id,
+                code=questionnaire_code,
+                version=questionnaire_version,
+            )
+        except Questionnaire.DoesNotExist:
+            raise exceptions.ValidationError(
+                "Questionnaire with the provided process slug, id, code and version does not exist."
+            )
+
+        # Add the found questionnaire to the context for later use.
         self.context["questionnaire"] = questionnaire
 
-        # Intentionally return the original value
-        return value
+        return attrs
 
     def create(self, validated_data):
         """
         Create a new Application instance.
         """
-        # Add user to validated data
-        validated_data["owner"] = self.context["request"].user
-
         # Make sure we have the questionnaire object
         try:
-            validated_data["questionnaire"] = self.context["questionnaire"]
+            questionnaire = self.context["questionnaire"]
         except KeyError:
-            raise exceptions.ValidationError("'questionnaire_slug' is required")
+            raise exceptions.ValidationError(
+                "Questionnaire not found in context, validation did not run."
+            )
+
+        # Hardcode the version from the current schema
+        schema = get_answers_schema()
 
         # Create a fresh document with questionnaire schema version
-        validated_data["document"] = {
-            "schema_version": None,  # to be set later
+        document = {
+            "schema_version": schema["properties"]["schema_version"]["default"],
             # initially with single step
             "active_step": 0,
             "steps": [{"is_valid": None, "answers": {}}],
         }
 
-        # Hardcode the version from the current schema
-        schema = get_answers_schema()
-        validated_data["document"]["schema_version"] = schema["properties"][
-            "schema_version"
-        ]["default"]
-
         # Validate and return with the JSON schema
-        self._validate_document(validated_data["document"], schema)
-        return super().create(validated_data)
+        self._validate_document(document, schema)
+
+        create_data = {
+            "owner": self.context["request"].user,
+            "questionnaire": questionnaire,
+            "document": document,
+        }
+
+        return super().create(create_data)
 
 
 class FileTooLargeError(exceptions.APIException):
@@ -304,9 +491,9 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         """
         request = self.context.get("request")
         try:
-            application = Application.objects.select_related("questionnaire").get(
-                key=value, owner=request.user
-            )
+            application = Application.objects.select_related(
+                "questionnaire", "questionnaire__process"
+            ).get(key=value, owner=request.user)
         except Application.DoesNotExist:
             raise serializers.ValidationError("Application not found.")
 
@@ -335,7 +522,17 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         """
         Object-level validation: Parse question definition and validate against file_max_attachments.
         This runs after all field validators, guaranteeing access to cached application.
+
+        On PATCH (rename), only `name` is being mutated — application/question context
+        is not sent and not needed, so skip POST-specific validation entirely.
         """
+        request = self.context.get("request")
+        is_post = request.method == "POST" if request else False
+
+        # PATCH updates (rename) only touch `name`; skip creation-only validation.
+        if not is_post:
+            return data
+
         # Get the cached application from field validator
         application = self.context.get("application")
         if application is None:
@@ -447,3 +644,92 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         instance.name = name
         instance.save(update_fields=["name"])
         return instance
+
+
+class AssessmentSerialiser(serializers.ModelSerializer):
+    """
+    Serialiser for the assessment-facing application view.
+
+    All fields are read-only except ``status``, which an assessor may advance
+    via PATCH. Transition validation enforces that:
+      - the current status is a review-queue status (i.e. the application is
+        actually awaiting assessor action), and
+      - the requested status is one an assessor is permitted to set.
+    """
+
+    owner = serializers.CharField(
+        source="owner.username",
+        read_only=True,
+    )
+    process_slug = serializers.SlugField(
+        source="questionnaire.process.slug",
+        read_only=True,
+    )
+    questionnaire_id = serializers.IntegerField(
+        source="questionnaire.id",
+        read_only=True,
+    )
+    questionnaire_name = serializers.CharField(
+        source="questionnaire.name",
+        read_only=True,
+    )
+    questionnaire_version = serializers.IntegerField(
+        source="questionnaire.version",
+        read_only=True,
+    )
+    internal_id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Application
+        fields = (
+            "id",
+            "key",
+            "internal_id",
+            "owner",
+            "process_slug",
+            "questionnaire_id",
+            "questionnaire_name",
+            "questionnaire_version",
+            "status",
+            "created_at",
+            "updated_at",
+            "submitted_at",
+        )
+        # All fields are read-only by default; status is made writable via PATCH in get_fields().
+        read_only_fields = fields
+
+    def get_fields(self, *args, **kwargs):
+        fields = super().get_fields(*args, **kwargs)
+        request = self.context.get("request", None)
+
+        isPatch = request.method == "PATCH" if request else False
+
+        # Status is the only writable field, and only during a PATCH status-advancement request.
+        fields["status"].required = isPatch
+        fields["status"].read_only = not isPatch
+
+        return fields
+
+    def validate_status(self, value: str) -> str:
+        """
+        Validate that the requested status transition is permitted for an assessor.
+
+        Rejects transitions from non-queue statuses (e.g. DRAFT) to prevent
+        assessors from accidentally acting on applications that are not yet in
+        their queue, and rejects attempts to set applicant-only statuses.
+        """
+        current = self.instance.status
+
+        # Guard: the application must actually be in the review queue.
+        if current not in REVIEW_QUEUE_STATUSES:
+            raise exceptions.ValidationError(
+                f"Application with status '{current}' is not in the assessment queue."
+            )
+
+        # Guard: the target status must be one assessors are permitted to set.
+        if value not in REVIEWER_SETTABLE_STATUSES:
+            raise exceptions.ValidationError(
+                f"Status '{value}' cannot be set by an assessor."
+            )
+
+        return value

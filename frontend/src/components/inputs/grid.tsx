@@ -12,12 +12,8 @@ import Typography from "@mui/material/Typography";
 import dayjs from 'dayjs';
 import React from 'react';
 
-import { useController, type ValidateResult } from 'react-hook-form';
-import { v6 as uuidv6 } from 'uuid';
-import { Question } from "../../context/types/Questionnaire";
-import { type PrimitiveType } from "../../context/types/Generic";
-import { assert } from '../../context/Utils';
-
+import { GridActionsCellItem, Toolbar } from '@mui/x-data-grid/components';
+import { DataGrid } from '@mui/x-data-grid/DataGrid';
 import type {
     GridColDef,
     GridRowId,
@@ -25,13 +21,13 @@ import type {
     GridRowModesModel,
     GridRowsProp,
     GridSlotProps
-} from '@mui/x-data-grid';
-import {
-    DataGrid,
-    GridActionsCellItem,
-    GridRowModes,
-    Toolbar,
-} from '@mui/x-data-grid';
+} from '@mui/x-data-grid/models';
+import { GridRowModes } from '@mui/x-data-grid/models';
+import { useController, type ValidateResult } from 'react-hook-form';
+import { v6 as uuidv6 } from 'uuid';
+import { type PrimitiveType } from "../../context/types/Generic";
+import { Question } from "../../context/types/Questionnaire";
+import { assert } from '../../context/Utils';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -54,7 +50,7 @@ const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
     
     // Map over each row and convert date strings to Date objects
     return value.map((row) => {
-        const newRow: Record<string, any> = { _id: uuidv6(), _isNew: false, ...row, };
+        const newRow: Record<string, unknown> = { _id: uuidv6(), _isNew: false, ...row, };
         question.o.grid_columns?.forEach((column) => {
             if (column.type === "date") {
                 assert(
@@ -62,8 +58,9 @@ const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
                     `Expected "${column.label}" to be a string or null, but got ${typeof newRow[column.label]}`
                 );
 
-                if (newRow[column.label]) {
-                    newRow[column.label] = dayjs(newRow[column.label]).toDate();
+                const cellValue = newRow[column.label];
+                if (typeof cellValue === "string" && cellValue) {
+                    newRow[column.label] = dayjs(cellValue).toDate();
                 }
             }
         });
@@ -307,6 +304,19 @@ function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
     question.o.grid_columns?.forEach((column, _) => {
+        // Default to boolean false for checkboxes
+        if (column.type === "checkbox") {
+            row[column.label] = false;
+            return;
+        }
+
+        // Default to not selected for date
+        if (column.type === "date") {
+            row[column.label] = null;
+            return;
+        }
+
+        // Default to empty string for other types
         row[column.label] = '';
     });
     return row;

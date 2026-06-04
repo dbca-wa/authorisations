@@ -178,3 +178,9 @@ cython_debug/
 
 # Private media: uploaded documents
 private-media/
+
+# Media files for test suite run
+test-media/
+
+# Sample data
+data/

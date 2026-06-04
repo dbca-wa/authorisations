@@ -5,6 +5,7 @@ export interface IConfig {
     csrf_header: string;
     csrf_token: string;
     upload_max_size: number; // in bytes
+    turnstile_site_key: string | null;
     // list of allowed mime types for uploaded files
     upload_mime_types: string[];
 }
@@ -30,7 +31,10 @@ export class ConfigManager {
             throw new TypeError("Config data is not an object.");
         }
 
-        console.debug("Config parsed:", this._config)
+        if (import.meta.env.DEV) {
+            console.debug("Config loaded:", this._config);
+        }
+        
         return _.clone(this._config);
     }
 }

@@ -5,7 +5,13 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  {
+    ignores: [
+      'dist',
+      'coverage',
+      'coverage/**',
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -22,6 +28,11 @@ export default tseslint.config(
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
+      ],
+      // Allow intentionally-unused variables/args prefixed with underscore.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^_', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
       // https://mui.com/material-ui/guides/minimizing-bundle-size/#enforce-best-practices-with-eslint
       "no-restricted-imports": [

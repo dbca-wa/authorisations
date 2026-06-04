@@ -1,8 +1,9 @@
-import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import axios from "axios";
+
+import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import { ConfigManager } from "./ConfigManager";
 import type { IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
-import type { IQuestionnaireData } from "./types/Questionnaire";
+import type { IAuthorisationProcess, IQuestionnaireData } from "./types/Questionnaire";
 
 
 export class ApiManager {
@@ -40,15 +41,36 @@ export class ApiManager {
 
     public static async fetchApplications(): Promise<IApplicationData[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching applications...");
         const response = await axios.get<IApplicationData[]>("/applications", requestConfig);
+        // console.debug("Fetched applications:", response.data.length);
 
         return response.data;
     }
 
-    public static async createApplication(questionnaireSlug: string): Promise<IApplicationData> {
+    public static async createApplication({
+        processSlug,
+        questionnaireId,
+        questionnaireCode,
+        questionnaireVersion,
+        privacyConsentAgreed,
+        turnstileToken,
+    }: {
+        processSlug: string;
+        questionnaireId: number;
+        questionnaireCode: string;
+        questionnaireVersion: number;
+        privacyConsentAgreed: boolean;
+        turnstileToken: string;
+    }): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.post<IApplicationData>("/applications", {
-            questionnaire_slug: questionnaireSlug,
+            process_slug: processSlug,
+            questionnaire_id: questionnaireId,
+            questionnaire_code: questionnaireCode,
+            questionnaire_version: questionnaireVersion,
+            privacy_consent_agreed: privacyConsentAgreed,
+            turnstile_token: turnstileToken,
         }, requestConfig);
 
         return response.data;
@@ -62,10 +84,16 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async submitApplication(key: string): Promise<IApplicationData> {
+    public static async submitApplication(key: string, turnstileToken: string): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.patch<IApplicationData>(
-            `/applications/${key}`, { status: "SUBMITTED" }, requestConfig);
+            `/applications/${key}`,
+            {
+                status: "SUBMITTED",
+                turnstile_token: turnstileToken,
+            },
+            requestConfig,
+        );
 
         return response.data;
     }
@@ -126,9 +154,9 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async getQuestionnaire(slug: string, version: number): Promise<IQuestionnaireData> {
+    public static async getQuestionnaire(id: number): Promise<IQuestionnaireData> {
         const requestConfig = ApiManager.getRequestConfig();
-        const url = `/questionnaires/${slug}` + (version ? `?version=${version}` : '');
+        const url = `/questionnaires/${id}`;
         const response = await axios.get<IQuestionnaireData>(url, requestConfig);
 
         return response.data;
@@ -136,7 +164,25 @@ export class ApiManager {
 
     public static async fetchQuestionnaires(): Promise<IQuestionnaireData[]> {
         const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching questionnaires...");
         const response = await axios.get<IQuestionnaireData[]>("/questionnaires", requestConfig);
+        // console.debug("Fetched questionnaires:", response.data.length);
+
+        return response.data;
+    }
+
+    public static async fetchAuthorisationProcesses(): Promise<IAuthorisationProcess[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        // console.debug("Fetching processes...");
+        const response = await axios.get<IAuthorisationProcess[]>("/processes", requestConfig);
+        // console.debug("Fetched processes:", response.data.length);
+
+        return response.data;
+    }
+
+    public static async fetchAssessmentApplications(): Promise<IApplicationData[]> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.get<IApplicationData[]>("/assessment", requestConfig);
 
         return response.data;
     }
