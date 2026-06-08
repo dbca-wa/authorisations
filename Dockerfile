@@ -68,6 +68,7 @@ RUN /app/.venv/bin/python -m pip install --no-cache-dir --upgrade "pip>=26.1"
 
 # =================== RUNTIME ===================
 FROM python:3.14-slim-trixie
+LABEL org.opencontainers.image.source=https://github.com/dbca-wa/authorisations
 
 # Accept non-sensitive build arguments used during collectstatic.
 ARG DATABASE_URL
