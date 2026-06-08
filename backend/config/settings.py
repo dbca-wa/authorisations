@@ -46,15 +46,11 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
 ]
 
-ALLOWED_HOST_UAT = env("ALLOWED_HOST_UAT", default=None)
-if ALLOWED_HOST_UAT:
-    ALLOWED_HOSTS.append(ALLOWED_HOST_UAT)
-    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST_UAT}")
-
-ALLOWED_HOST_PROD = env("ALLOWED_HOST_PROD", default=None)
-if ALLOWED_HOST_PROD:
-    ALLOWED_HOSTS.append(ALLOWED_HOST_PROD)
-    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST_PROD}")
+# Allowed host for UAT and/or production environments
+ALLOWED_HOST = env("ALLOWED_HOST", default=None)
+if ALLOWED_HOST:
+    ALLOWED_HOSTS.append(ALLOWED_HOST)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST}")
 
 # SSL, CSRF and security settings
 
@@ -82,9 +78,6 @@ SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 if not DEBUG:
-    SESSION_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
-    CSRF_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
-
     # Ensure SameSite attribute allows "safe" cross-site requests
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SAMESITE = "Lax"
@@ -249,12 +242,12 @@ DJANGO_VITE = {
     "default": {
         "manifest_path": MANIFEST_PATH,
         "dev_mode": env("DEBUG_FRONTEND", cast=bool, default=False),
-        # If UAT host is set, we need to use it for the dev server URL instead of localhost
-        "dev_server_protocol": "https" if ALLOWED_HOST_UAT else "http",
-        "dev_server_host": ALLOWED_HOST_UAT if ALLOWED_HOST_UAT else "localhost",
+        # If the `DEBUG_FRONTEND` is True, then the plugin will need the below settings
+        "dev_server_host": ALLOWED_HOST if ALLOWED_HOST else "localhost",
+        "dev_server_protocol": "https" if ALLOWED_HOST else "http",
         # The plugin doesn't support stripping the port.
         # `None` will actually add string "None" and will not work
-        "dev_server_port": None if ALLOWED_HOST_UAT else 5173,
+        "dev_server_port": None if ALLOWED_HOST else 5173,
     }
 }
 
