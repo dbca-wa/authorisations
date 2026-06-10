@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+nameSuffix: -uat
+secretGenerator:
+  - name: authorisations-env
+    type: Opaque
+    envs:
+      - .env
+configMapGenerator:
+  - name: prince2-license
+    files:
+      - .prince2-license
+generatorOptions:
+  disableNameSuffixHash: true
+resources:
+  - ../../base
+  - ingress.yaml
+  - pdb.yaml
+labels:
+  - includeSelectors: true
+    pairs:
+      variant: uat
+patches:
+  - path: deployment_patch.yaml
+  - path: deployment_hpa_patch.yaml
+  - path: service_patch.yaml
+images:
+  - name: ghcr.io/dbca-wa/authorisations
+    newTag: uat
