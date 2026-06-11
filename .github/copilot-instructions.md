@@ -57,6 +57,10 @@
   - Docker supported.
   - Backend startup orchestration in `backend/entrypoint.sh` (collectstatic, migrate, gunicorn).
 
+## Kubernetes Kustomize Configuration
+- Kubernetes manifests for Authorisations are managed under `kustomize/` using a base + overlays structure.
+- Primary operator documentation is in `kustomize/README.md`.
+
 ## Business Logic Behind Technical Structure
 
 ### Why `AuthorisationProcess` Exists
