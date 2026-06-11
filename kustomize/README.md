@@ -61,7 +61,22 @@ kustomize build kustomize/overlays/uat/ | less
 # kustomize build kustomize/base/
 ```
 
-### 3. Deploy to Kubernetes
+### 3. Preflight validation
+
+Validate generated manifests before deployment:
+
+```bash
+# 1) Ensure overlay builds successfully
+kustomize build kustomize/overlays/uat/ > /tmp/authorisations-uat.yaml
+
+# 2) Client-side validation (syntax and basic schema checks)
+kubectl apply --dry-run=client --validate=true -f /tmp/authorisations-uat.yaml
+
+# 3) Server-side validation against the target cluster API
+kubectl apply --dry-run=server -f /tmp/authorisations-uat.yaml --namespace authorisations
+```
+
+### 4. Deploy to Kubernetes
 
 Run `kubectl` with the `-k` flag to generate resources for a given overlay:
 
