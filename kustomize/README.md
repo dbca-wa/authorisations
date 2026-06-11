@@ -56,7 +56,7 @@ Run `kubectl` with the `-k` flag to generate resources for a given overlay:
 
 ```bash
 # Dry run
-kubectl apply -k kustomize/overlays/uat/ --namespace authorisation --dry-run=server
+kubectl apply -k kustomize/overlays/uat/ --namespace authorisations --dry-run=server
 
 # Apply
 kubectl apply -k kustomize/overlays/uat/ --namespace authorisations
