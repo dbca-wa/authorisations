@@ -2,6 +2,14 @@
 
 Declarative management of Authorisations Kubernetes resources using Kustomize.
 
+## Important usage rule
+
+Do not apply `kustomize/base` directly.
+
+The base manifests are shared building blocks and are intentionally incomplete for standalone deployment (for example, environment-specific selectors, generated secret/config map names, ingress, and other wiring are provided by overlays).
+
+Always apply an overlay such as `kustomize/overlays/uat`.
+
 ## File structure
 
 ```
@@ -48,6 +56,9 @@ Review the built resource output using `kustomize`:
 ```bash
 # Review UAT configuration
 kustomize build kustomize/overlays/uat/ | less
+
+# Do not build/apply base directly
+# kustomize build kustomize/base/
 ```
 
 ### 3. Deploy to Kubernetes
