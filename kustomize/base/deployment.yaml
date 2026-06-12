@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authorisations
+spec:
+  strategy:
+    type: RollingUpdate
+  template:
+    spec:
+      containers:
+        - name: authorisations
+          image: ghcr.io/dbca-wa/authorisations
+          resources:
+            requests:
+              memory: '200Mi'
+              cpu: '10m'
+            limits:
+              memory: '2Gi'
+              cpu: '1000m'
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 5000
+            privileged: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmpfs-ram
+      volumes:
+        - name: tmpfs-ram
+          emptyDir:
+            medium: 'Memory'
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 180
+      automountServiceAccountToken: false
+      affinity:
+        # Set a pod anti-affinity to spread pods between nodes (preference only).
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: prs-deployment
+                topologyKey: kubernetes.io/hostname
