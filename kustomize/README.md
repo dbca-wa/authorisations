@@ -2,6 +2,14 @@
 
 Declarative management of Authorisations Kubernetes resources using Kustomize.
 
+## Important usage rule
+
+Do not apply `kustomize/base` directly.
+
+The base manifests are shared building blocks and are intentionally incomplete for standalone deployment (for example, environment-specific selectors, generated secret/config map names, ingress, and other wiring are provided by overlays).
+
+Always apply an overlay such as `kustomize/overlays/uat`.
+
 ## File structure
 
 ```
@@ -48,15 +56,33 @@ Review the built resource output using `kustomize`:
 ```bash
 # Review UAT configuration
 kustomize build kustomize/overlays/uat/ | less
+
+# Do not build/apply base directly
+# kustomize build kustomize/base/
 ```
 
-### 3. Deploy to Kubernetes
+### 3. Preflight validation
+
+Validate generated manifests before deployment:
+
+```bash
+# 1) Ensure overlay builds successfully
+kustomize build kustomize/overlays/uat/ > /tmp/authorisations-uat.yaml
+
+# 2) Client-side validation (syntax and basic schema checks)
+kubectl apply --dry-run=client --validate=true -f /tmp/authorisations-uat.yaml
+
+# 3) Server-side validation against the target cluster API
+kubectl apply --dry-run=server -f /tmp/authorisations-uat.yaml --namespace authorisations
+```
+
+### 4. Deploy to Kubernetes
 
 Run `kubectl` with the `-k` flag to generate resources for a given overlay:
 
 ```bash
 # Dry run
-kubectl apply -k kustomize/overlays/uat/ --namespace authorisation --dry-run=server
+kubectl apply -k kustomize/overlays/uat/ --namespace authorisations --dry-run=server
 
 # Apply
 kubectl apply -k kustomize/overlays/uat/ --namespace authorisations
