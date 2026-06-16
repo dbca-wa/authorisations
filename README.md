@@ -9,6 +9,8 @@ Third-party dependency notices are maintained in `THIRD_PARTY_NOTICES.md`, with 
 
 Contributor and security guidance are available in `CONTRIBUTING.md` and `SECURITY.md`.
 
+Release and semantic versioning guidance is documented in [docs/release.md](docs/release.md).
+
 ## Testing
 
 Backend tests now run on `pytest` with categories for `unit`, `api`, `security`, `integration`, `slow`, and `smoke`. Pytest uses [backend/config/test_settings.py](backend/config/test_settings.py) so local and CI runs do not depend on PostgreSQL database-creation privileges.

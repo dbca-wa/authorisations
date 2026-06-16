@@ -13,6 +13,9 @@
 - Keep this file as the high-level project instruction set.
 - Use `docs/testing.md` as the canonical deep-dive for testing strategy, E2E architecture, CI behaviour, and troubleshooting.
 
+## Release Documentation
+- Use `docs/release.md` as the canonical guide for semantic versioning rules and production release steps.
+
 ## Open Source Release Documents
 - Repository licence text lives in `LICENSE` and repository-level Apache attribution lives in `NOTICE`.
 - Use `THIRD_PARTY_NOTICES.md` for dependency and attribution tracking, with backend and frontend sections kept separate.
@@ -304,6 +307,12 @@
 - For script steps, do not use environment variable keys beginning with `SECRET_`; use `DJANGO_SECRET_KEY` and map to Django settings accordingly.
 - For frontend CI Node setup, use `UseNode@1` with `version: '22.x'`.
 - For code coverage, publish once from a dedicated aggregation job rather than publishing separately from backend and frontend jobs.
+
+### Release Versioning Workflow
+- Canonical release version source is root `VERSION` in `vMAJOR.MINOR.PATCH` format.
+- Synchronise production kustomize image tag from `VERSION` using `python3 scripts/sync_version.py`.
+- Validate alignment in CI/local with `python3 scripts/sync_version.py --check`.
+- `main` branch publish job reads `VERSION` and tags production Docker images with that semantic version.
 
 ### CI Test Environment Requirements
 - Backend pytest uses `config.test_settings`, which imports `config.settings` first.

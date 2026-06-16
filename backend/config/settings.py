@@ -16,6 +16,20 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+VERSION_FILE = BASE_DIR.parent / "VERSION"
+
+
+def _read_app_version() -> str:
+    """Read the canonical application version from the repository VERSION file."""
+    # Keep one source of truth for CI tags, deployment manifests, and UI display.
+    if not VERSION_FILE.exists():
+        return "v0.0.0"
+
+    version = VERSION_FILE.read_text(encoding="utf-8").strip()
+    return version if version else "v0.0.0"
+
+
+APP_VERSION = _read_app_version()
 
 # Initialise environment variables
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))

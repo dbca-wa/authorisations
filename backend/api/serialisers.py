@@ -54,6 +54,7 @@ class ClientConfigSerialiser(serializers.Serializer):
     api_base = serializers.CharField(default=ClientConfig.api_base)
     csrf_header = serializers.CharField(default=ClientConfig.csrf_header)
     csrf_token = serializers.CharField(required=False, allow_blank=True)
+    app_version = serializers.CharField(default=settings.APP_VERSION)
     upload_max_size = serializers.IntegerField(default=ClientConfig.upload_max_size)
     turnstile_site_key = serializers.CharField(
         default=settings.TURNSTILE_SITE_KEY,
