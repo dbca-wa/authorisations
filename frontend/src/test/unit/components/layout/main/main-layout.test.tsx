@@ -33,6 +33,14 @@ vi.mock("../../../../../router", () => ({
   ],
 }));
 
+vi.mock("../../../../../context/ConfigManager", () => ({
+  ConfigManager: {
+    get: () => ({
+      app_version: "v1.0.0",
+    }),
+  },
+}));
+
 import { MainLayout } from "../../../../../components/layout/main/MainLayout";
 
 
@@ -78,5 +86,21 @@ describe("MainLayout", () => {
     fireEvent.click(screen.getByLabelText("Privacy Policy"));
 
     expect(navigateMock).toHaveBeenCalledWith("/privacy", { viewTransition: true });
+  });
+
+  it("displays app version in the sidebar footer", () => {
+    render(
+      <MainLayout
+        route={{
+          label: "My applications",
+          path: "/my-applications",
+          icon: <span>Icon</span>,
+          divider: false,
+          component: () => <div>Page Content</div>,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("v1.0.0")).toBeInTheDocument();
   });
 });
