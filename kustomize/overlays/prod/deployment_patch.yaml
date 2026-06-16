@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authorisations
+  labels:
+    app: authorisations-prod
+spec:
+  selector:
+    matchLabels:
+      app: authorisations-prod
+  template:
+    metadata:
+      labels:
+        app: authorisations-prod
+    spec:
+      containers:
+        - name: authorisations
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: authorisations-env-prod
+          volumeMounts:
+            - name: prince2-license-prod
+              mountPath: /usr/lib/prince/license
+              readOnly: true
+      volumes:
+        - name: prince2-license-prod
+          configMap:
+            defaultMode: 440
+            name: prince2-license-prod

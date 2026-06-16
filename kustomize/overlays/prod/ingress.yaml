@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authorisations-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: authorisations.dbca.wa.gov.au
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: authorisations-clusterip-prod
+                port:
+                  number: 8080
