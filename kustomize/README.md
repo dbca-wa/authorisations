@@ -70,10 +70,10 @@ Validate generated manifests before deployment:
 kustomize build kustomize/overlays/uat/ > /tmp/authorisations-uat.yaml
 
 # 2) Client-side validation (syntax and basic schema checks)
-kubectl apply --dry-run=client --validate=true -f /tmp/authorisations-uat.yaml
+kubectl apply -f /tmp/authorisations-uat.yaml --namespace=authorisations --dry-run=client --validate=true
 
 # 3) Server-side validation against the target cluster API
-kubectl apply --dry-run=server -f /tmp/authorisations-uat.yaml --namespace authorisations
+kubectl apply -f /tmp/authorisations-uat.yaml --namespace=authorisations --dry-run=server
 ```
 
 ### 4. Deploy to Kubernetes
@@ -82,10 +82,10 @@ Run `kubectl` with the `-k` flag to generate resources for a given overlay:
 
 ```bash
 # Dry run
-kubectl apply -k kustomize/overlays/uat/ --namespace authorisations --dry-run=server
+kubectl apply -k kustomize/overlays/uat/ --namespace=authorisations --dry-run=server
 
 # Apply
-kubectl apply -k kustomize/overlays/uat/ --namespace authorisations
+kubectl apply -k kustomize/overlays/uat/ --namespace=authorisations
 ```
 
 ## References
