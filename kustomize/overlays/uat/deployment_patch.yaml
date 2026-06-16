@@ -15,6 +15,7 @@ spec:
     spec:
       containers:
         - name: authorisations
+          imagePullPolicy: Always
           envFrom:
             - secretRef:
                 name: authorisations-env-uat
@@ -25,5 +26,5 @@ spec:
       volumes:
         - name: prince2-license-uat
           configMap:
-            defaultMode: 420
+            defaultMode: 440
             name: prince2-license-uat
