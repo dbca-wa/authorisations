@@ -6,10 +6,12 @@ This document describes how semantic versioning works in this repository and the
 
 The application uses semantic versioning in the format `MAJOR.MINOR.PATCH` (for example `1.0.0`).
 
-The same version is consumed by three runtime/deployment touchpoints:
+The same version is consumed by four runtime/deployment touchpoints:
 
 1. Production Docker image tag on `main` branch builds.
-2. Production kustomize image tag in `kustomize/overlays/prod/kustomization.yaml`.
+2. Kubernetes kustomize overlays (both prod and uat):
+   - `kustomize/overlays/prod/kustomization.yaml` — synced to `VERSION` exactly.
+   - `kustomize/overlays/uat/kustomization.yaml` — synced to `VERSION-uat` (pre-release suffix).
 3. Frontend UI display (bottom of the side Drawer), sourced from backend bootstrap config.
 
 ## Single Source Of Truth
@@ -67,20 +69,22 @@ python3 scripts/get_image_tag.py refs/heads/uat     # outputs: 1.0.0-uat
 python3 scripts/get_image_tag.py refs/heads/feature/auth/payments  # outputs: 1.0.0-auth-payments
 ```
 
-### 2. Production kustomize image tag
+### 2. Kubernetes kustomize image tags (prod and uat)
 
-The production overlay must match `VERSION` exactly:
+Both overlays are kept in sync atomically:
 
-- File: `kustomize/overlays/prod/kustomization.yaml`
-- Field: `images[].newTag`
+- Prod overlay (`kustomize/overlays/prod/kustomization.yaml`):
+  - `images[].newTag` must match `VERSION` exactly (e.g. `1.0.0`).
+- UAT overlay (`kustomize/overlays/uat/kustomization.yaml`):
+  - `images[].newTag` must match `VERSION-uat` (pre-release format, e.g. `1.0.0-uat`).
 
-The helper script keeps this aligned:
+The helper script synchronises both overlays together:
 
 - Script: `scripts/sync_version.py`
-- Sync mode (default): updates prod `newTag` to match `VERSION`.
-- Check mode (`--check`): fails if prod `newTag` differs from `VERSION`.
+- Sync mode (default): updates both prod and uat `newTag` fields to match their expected values based on `VERSION`.
+- Check mode (`--check`): validates both overlays match their expected tags, fails if either differs.
 
-CI also runs `python3 scripts/sync_version.py --check` during validation to prevent drift.
+CI runs `python3 scripts/sync_version.py --check` during validation to prevent drift in either overlay.
 
 ### 3. UI version display
 
@@ -92,12 +96,14 @@ This repository includes two Python scripts to manage versioning and tagging:
 
 ### `scripts/sync_version.py`
 
-Synchronises the production kustomize tag to match the canonical `VERSION` file, or validates they are aligned.
+Synchronises both kustomize overlays (prod and uat) to match the canonical `VERSION` file, or validates they are aligned.
 
 **Modes:**
 
-- **Sync mode (default):** reads `VERSION`, updates `kustomize/overlays/prod/kustomization.yaml` newTag to match.
-- **Check mode (`--check`):** reads `VERSION` and kustomize tag, fails if they differ.
+- **Sync mode (default):** reads `VERSION`, updates both overlay newTag fields:
+  - Prod overlay newTag → `VERSION` (e.g. `1.0.0`)
+  - UAT overlay newTag → `VERSION-uat` (e.g. `1.0.0-uat`)
+- **Check mode (`--check`):** validates both overlays match their expected tags based on `VERSION`, fails if either differs.
 
 **Usage:**
 
@@ -150,11 +156,12 @@ cd scripts
 pytest test_scripts.py -v
 ```
 
-The test suite includes 25 tests covering:
+The test suite includes 36 tests covering:
 - VERSION file reading and validation (valid, invalid, missing, edge cases)
 - Kustomize tag reading and writing (preserving structure, handling spacing)
-- Image tag resolution for all branch types (main, uat, feature)
-- Integration workflows (sync + check, end-to-end tagging)
+- Image tag resolution for all branch types (main, uat, feature)- Overlay tag generation (prod and uat target tags)
+- Kustomization path resolution for both overlays
+- Multi-overlay sync and drift detection- Integration workflows (sync + check, end-to-end tagging)
 
 All tests use pytest fixtures and have no external dependencies beyond what is already in the backend's dev environment.
 
@@ -177,13 +184,13 @@ Follow these steps in order when preparing a new production release.
    echo "X.Y.Z" > VERSION
    ```
 
-3. Synchronise production kustomize tag from `VERSION`.
+3. Synchronise both kustomize overlays from `VERSION`.
 
    ```bash
    python3 scripts/sync_version.py
    ```
 
-4. Confirm there is no version drift.
+4. Confirm both overlays are correctly synced.
 
    ```bash
    python3 scripts/sync_version.py --check
@@ -199,7 +206,8 @@ Follow these steps in order when preparing a new production release.
 6. Commit the release changes.
    - At minimum, expect:
      - `VERSION`
-     - `kustomize/overlays/prod/kustomization.yaml`
+     - `kustomize/overlays/prod/kustomization.yaml` (prod overlay tag)
+     - `kustomize/overlays/uat/kustomization.yaml` (uat overlay tag)
    - Include other release-adjacent updates as needed (for example release notes).
 
 7. Open and merge the release PR to `main`.
@@ -214,7 +222,9 @@ Follow these steps in order when preparing a new production release.
 
 ### CI fails with version drift
 
-Cause: `kustomize/overlays/prod/kustomization.yaml` tag does not match `VERSION`.
+Cause: One or both kustomize overlay tags do not match their expected values:
+- Prod overlay tag does not match `VERSION`.
+- UAT overlay tag does not match `VERSION-uat`.
 
 Fix:
 
@@ -223,7 +233,7 @@ python3 scripts/sync_version.py
 python3 scripts/sync_version.py --check
 ```
 
-Commit the updated kustomize file.
+Commit the updated kustomize overlay files (prod and/or uat).
 
 ### CI fails with invalid VERSION format
 
@@ -247,6 +257,7 @@ Fix:
 
 ## Operational Notes
 
-- Do not edit the production `newTag` manually. Always use `scripts/sync_version.py`.
+- Do not edit kustomize overlay `newTag` fields manually. Always use `scripts/sync_version.py`.
 - Keep `VERSION` as the only manual source of release version truth.
+- Both prod and uat overlays are always kept in sync together; you cannot update one independently.
 - If pre-release identifiers (for example `-rc1`) are needed in future, update validation in one place (`scripts/sync_version.py`) and align pipeline checks accordingly.
