@@ -39,8 +39,8 @@ stages:
         poetry install --with dev
       displayName: Install backend dependencies
     - script: |
-        cd scripts
-        poetry run pytest test_scripts.py -v --cov-report=term-missing
+        cd backend
+        poetry run pytest ../scripts/test_scripts.py -v --cov-report=term-missing
       workingDirectory: $(Build.SourcesDirectory)
       displayName: Run versioning script tests
     - script: |
