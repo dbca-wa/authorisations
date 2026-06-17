@@ -40,14 +40,15 @@ The script applies the following tagging logic:
     - `X.Y.Z`
     - `YYYY-MM-DD_HH.mm`
 - On `uat` branch:
-  - Uses the static tag `uat`.
+  - Appends `-uat` suffix to the semantic version for pre-release tracking (e.g. `1.0.0-uat`).
+  - This allows Rancher to distinguish UAT deployments and avoid stale image cache issues.
   - Docker image is pushed with tags:
-    - `uat`
+    - `X.Y.Z-uat`
     - `YYYY-MM-DD_HH.mm`
 - On `feature/*` branches:
-  - Uses the branch name (after `refs/heads/feature/`) with `/` replaced by `-` (e.g. `my-feature` for `refs/heads/feature/my-feature`, or `auth-new-flow` for `refs/heads/feature/auth/new-flow`).
+  - Appends the branch name as a pre-release suffix with `/` replaced by `-` (e.g. `1.0.0-auth-payments` for `refs/heads/feature/auth/payments`, or `1.0.0-experimental` for `refs/heads/feature/experimental`).
   - Docker image is pushed with tags:
-    - `my-feature`
+    - `X.Y.Z-branch-name`
     - `YYYY-MM-DD_HH.mm`
 
 Script: `scripts/get_image_tag.py`
@@ -62,8 +63,8 @@ Example:
 
 ```bash
 python3 scripts/get_image_tag.py refs/heads/main    # outputs: 1.0.0
-python3 scripts/get_image_tag.py refs/heads/uat     # outputs: uat
-python3 scripts/get_image_tag.py refs/heads/feature/new-endpoint  # outputs: new-endpoint
+python3 scripts/get_image_tag.py refs/heads/uat     # outputs: 1.0.0-uat
+python3 scripts/get_image_tag.py refs/heads/feature/auth/payments  # outputs: 1.0.0-auth-payments
 ```
 
 ### 2. Production kustomize image tag

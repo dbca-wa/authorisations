@@ -169,24 +169,39 @@ class TestGetImageTag:
         assert result == "1.2.3"
 
     def test_get_image_tag_uat_branch(self) -> None:
-        """Test that uat branch uses 'uat' tag."""
+        """Test that uat branch appends -uat suffix to version."""
         result = get_image_tag("refs/heads/uat", "1.2.3")
-        assert result == "uat"
+        assert result == "1.2.3-uat"
 
     def test_get_image_tag_feature_branch_simple(self) -> None:
-        """Test that feature branch uses branch name."""
+        """Test that feature branch appends -branch-name suffix to version."""
         result = get_image_tag("refs/heads/feature/new-endpoint", "1.2.3")
-        assert result == "new-endpoint"
+        assert result == "1.2.3-new-endpoint"
 
     def test_get_image_tag_feature_branch_with_slash(self) -> None:
-        """Test that feature branch with nested path replaces '/' with '-'."""
+        """Test that feature branch with nested path replaces '/' with '-' and appends to version."""
         result = get_image_tag("refs/heads/feature/auth/new-flow", "1.2.3")
-        assert result == "auth-new-flow"
+        assert result == "1.2.3-auth-new-flow"
 
     def test_get_image_tag_feature_branch_multiple_slashes(self) -> None:
-        """Test that multiple '/' are all replaced."""
+        """Test that multiple '/' are all replaced and suffixed to version."""
         result = get_image_tag("refs/heads/feature/team/feature/sub", "1.2.3")
-        assert result == "team-feature-sub"
+        assert result == "1.2.3-team-feature-sub"
+
+    def test_get_image_tag_uat_with_version_suffix(self) -> None:
+        """Test that UAT branch creates proper semver pre-release tag."""
+        result = get_image_tag("refs/heads/uat", "2.1.0")
+        assert result == "2.1.0-uat"
+
+    def test_get_image_tag_feature_with_version_suffix(self) -> None:
+        """Test that feature branches create proper semver pre-release tags."""
+        # Simple feature branch name
+        result = get_image_tag("refs/heads/feature/experimental", "1.0.1")
+        assert result == "1.0.1-experimental"
+        
+        # Nested feature branch name
+        result = get_image_tag("refs/heads/feature/auth/payments", "1.0.1")
+        assert result == "1.0.1-auth-payments"
 
     def test_get_image_tag_invalid_branch(self) -> None:
         """Test that unrecognised branches raise ValueError."""
@@ -242,7 +257,7 @@ class TestIntegration:
         assert read_version(version_file) == "2.0.0"
 
     def test_image_tag_for_all_branch_types(self, tmp_path: Path) -> None:
-        """Test image tag resolution for all branch types."""
+        """Test image tag resolution for all branch types with pre-release suffixes."""
         version_file = tmp_path / "VERSION"
         version_file.write_text("1.5.0")
 
@@ -251,9 +266,9 @@ class TestIntegration:
         # Main builds with semantic version
         assert get_image_tag("refs/heads/main", version) == "1.5.0"
 
-        # UAT always uses 'uat'
-        assert get_image_tag("refs/heads/uat", version) == "uat"
+        # UAT appends -uat suffix for pre-release tracking
+        assert get_image_tag("refs/heads/uat", version) == "1.5.0-uat"
 
-        # Feature branches use branch name
-        assert get_image_tag("refs/heads/feature/api-v2", version) == "api-v2"
-        assert get_image_tag("refs/heads/feature/auth/login", version) == "auth-login"
+        # Feature branches append their name as suffix
+        assert get_image_tag("refs/heads/feature/api-v2", version) == "1.5.0-api-v2"
+        assert get_image_tag("refs/heads/feature/auth/login", version) == "1.5.0-auth-login"

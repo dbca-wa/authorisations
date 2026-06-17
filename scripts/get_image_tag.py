@@ -29,16 +29,16 @@ def get_image_tag(branch: str, version: str) -> str:
     """Resolve Docker image tag based on branch and version.
     
     Main branch: use semantic version tag (e.g. 1.0.0).
-    UAT branch: use 'uat'.
-    Feature branches: use branch name with '/' replaced by '-'.
+    UAT branch: append -uat suffix (e.g. 1.0.0-uat).
+    Feature branches: append -branch-name suffix with '/' replaced by '-' (e.g. 1.0.0-auth-payments).
     """
     if branch == "refs/heads/main":
         return version
     elif branch == "refs/heads/uat":
-        return "uat"
+        return f"{version}-uat"
     elif branch.startswith("refs/heads/feature/"):
         feature_name = branch.replace("refs/heads/feature/", "").replace("/", "-")
-        return feature_name
+        return f"{version}-{feature_name}"
     else:
         raise ValueError(f"Unrecognised branch: {branch}")
 
