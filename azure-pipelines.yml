@@ -17,22 +17,7 @@ resources:
 variables:
   - group: docker-build-variables
   - name: tagDate
-    value: $[ format('{0:yyyy}.{0:MM}.{0:dd}.{0:HH}.{0:mm}.{0:ss}', pipeline.startTime) ]
-  
-  # Production branch
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-    - name: imageTagPrefix
-      value: production
-  
-  # UAT branch
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/uat') }}:
-    - name: imageTagPrefix
-      value: uat
-  
-  # Feature branches
-  - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/') }}:
-    - name: imageTagPrefix
-      value: $[replace(replace(variables['Build.SourceBranch'], 'refs/heads/feature/', ''), '/', '-')]
+    value: $[ format('{0:yyyy}-{0:MM}-{0:dd}_{0:HH}.{0:mm}', pipeline.startTime) ]
 
 stages:
 - stage: Validate
@@ -43,9 +28,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - script: |
-        python3 scripts/sync_version.py --check
-      displayName: Validate VERSION and prod kustomize tag alignment
     - task: UsePythonVersion@0
       displayName: Use Python 3.14
       inputs:
@@ -56,6 +38,14 @@ stages:
         cd backend
         poetry install --with dev
       displayName: Install backend dependencies
+    - script: |
+        cd scripts
+        poetry run pytest test_scripts.py -v --cov-report=term-missing
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: Run versioning script tests
+    - script: |
+        python3 scripts/sync_version.py --check
+      displayName: Validate VERSION and prod kustomize tag alignment
     - script: |
         cd backend
         poetry run pytest -n auto --cov --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=term-missing
@@ -205,23 +195,9 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - script: |
-        VERSION_FILE="$(Build.SourcesDirectory)/VERSION"
-        if [ ! -f "$VERSION_FILE" ]; then
-          echo "VERSION file not found: $VERSION_FILE" >&2
-          exit 1
-        fi
-
-        VERSION="$(tr -d '[:space:]' < "$VERSION_FILE")"
-        if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "Invalid VERSION '$VERSION'. Expected format vMAJOR.MINOR.PATCH." >&2
-          exit 1
-        fi
-
-        # Main branch uses semantic version tags; other branches keep branch-derived tags.
-        if [ "$(Build.SourceBranch)" = "refs/heads/main" ]; then
-          echo "##vso[task.setvariable variable=imageTagPrefix]$VERSION"
-        fi
-      displayName: Resolve image tag for publish
+        TAG=$(python3 scripts/get_image_tag.py "$(Build.SourceBranch)")
+        echo "##vso[task.setvariable variable=imageTag]$TAG"
+      displayName: Resolve Docker image tag from VERSION and branch
     - task: Docker@2
       displayName: Build Docker image
       inputs:
@@ -230,8 +206,8 @@ stages:
         containerRegistry: DockerGitHub
         repository: dbca-wa/authorisations
         tags: |
-          $(imageTagPrefix)
-          $(imageTagPrefix)-$(tagDate)
+          $(imageTag)
+          $(tagDate)
         arguments: >-
           --build-arg DATABASE_URL=$(DATABASE_URL)
           --build-arg DJANGO_SECRET_KEY=$(DJANGO_SECRET_KEY)
@@ -246,5 +222,5 @@ stages:
         containerRegistry: DockerGitHub
         repository: dbca-wa/authorisations
         tags: |
-          $(imageTagPrefix)
-          $(imageTagPrefix)-$(tagDate)
+          $(imageTag)
+          $(tagDate)

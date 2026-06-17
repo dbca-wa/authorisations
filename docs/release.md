@@ -30,15 +30,41 @@ The canonical release version is the root `VERSION` file.
 
 ### 1. Production Docker tagging (`main` only)
 
-In `azure-pipelines.yml`, the publish job reads `VERSION` and validates the strict `vMAJOR.MINOR.PATCH` pattern.
+In `azure-pipelines.yml`, the publish job calls `scripts/get_image_tag.py` to resolve the correct image tag based on the git branch and `VERSION` file.
+
+The script applies the following tagging logic:
 
 - On `main` branch:
-  - `imageTagPrefix` is overridden with the semantic version from `VERSION`.
+  - Uses the semantic version from `VERSION` (e.g. `v1.0.0`).
   - Docker image is pushed with tags:
     - `vX.Y.Z`
-    - `vX.Y.Z-YYYY.MM.DD.HH.mm.ss`
-- On `uat` and `feature/*` branches:
-  - Existing branch-based tags are retained.
+    - `YYYY-MM-DD_HH.mm`
+- On `uat` branch:
+  - Uses the static tag `uat`.
+  - Docker image is pushed with tags:
+    - `uat`
+    - `YYYY-MM-DD_HH.mm`
+- On `feature/*` branches:
+  - Uses the branch name (after `refs/heads/feature/`) with `/` replaced by `-` (e.g. `my-feature` for `refs/heads/feature/my-feature`, or `auth-new-flow` for `refs/heads/feature/auth/new-flow`).
+  - Docker image is pushed with tags:
+    - `my-feature`
+    - `YYYY-MM-DD_HH.mm`
+
+Script: `scripts/get_image_tag.py`
+
+Usage:
+
+```bash
+python3 scripts/get_image_tag.py <branch-ref>
+```
+
+Example:
+
+```bash
+python3 scripts/get_image_tag.py refs/heads/main    # outputs: v1.0.0
+python3 scripts/get_image_tag.py refs/heads/uat     # outputs: uat
+python3 scripts/get_image_tag.py refs/heads/feature/new-endpoint  # outputs: new-endpoint
+```
 
 ### 2. Production kustomize image tag
 
@@ -59,7 +85,83 @@ CI also runs `python3 scripts/sync_version.py --check` during validation to prev
 
 The backend reads `VERSION` at startup and exposes it as `APP_VERSION` in Django settings. That value is injected into the client bootstrap config (`ClientConfig`) and rendered in the side Drawer footer in the frontend.
 
-## Release Steps (Checklist)
+## Helper Scripts
+
+This repository includes two Python scripts to manage versioning and tagging:
+
+### `scripts/sync_version.py`
+
+Synchronises the production kustomize tag to match the canonical `VERSION` file, or validates they are aligned.
+
+**Modes:**
+
+- **Sync mode (default):** reads `VERSION`, updates `kustomize/overlays/prod/kustomization.yaml` newTag to match.
+- **Check mode (`--check`):** reads `VERSION` and kustomize tag, fails if they differ.
+
+**Usage:**
+
+```bash
+# Synchronise prod overlay tag to VERSION
+python3 scripts/sync_version.py
+
+# Validate no drift between VERSION and prod overlay
+python3 scripts/sync_version.py --check
+```
+
+### `scripts/get_image_tag.py`
+
+Resolves the Docker image tag for the current build based on git branch and `VERSION`.
+
+**Inputs:**
+
+- Git branch ref (e.g. `refs/heads/main`, `refs/heads/feature/my-feature`).
+- `VERSION` file (read automatically from repo root).
+
+**Outputs:**
+
+- Image tag suitable for Docker push (e.g. `v1.0.0`, `uat`, `my-feature`).
+
+**Usage:**
+
+```bash
+# Get tag for current branch (useful in CI)
+python3 scripts/get_image_tag.py "$(git symbolic-ref --short HEAD)"
+
+# Explicit branch ref
+python3 scripts/get_image_tag.py refs/heads/main
+```
+
+### Testing
+
+Both scripts are covered by a comprehensive test suite: `scripts/test_scripts.py`
+
+Run tests locally with:
+
+```bash
+cd backend
+poetry run pytest ../scripts/test_scripts.py -v
+```
+
+Or from the backend directory without poetry (if dependencies are installed):
+
+```bash
+cd scripts
+pytest test_scripts.py -v
+```
+
+The test suite includes 25 tests covering:
+- VERSION file reading and validation (valid, invalid, missing, edge cases)
+- Kustomize tag reading and writing (preserving structure, handling spacing)
+- Image tag resolution for all branch types (main, uat, feature)
+- Integration workflows (sync + check, end-to-end tagging)
+
+All tests use pytest fixtures and have no external dependencies beyond what is already in the backend's dev environment.
+
+**CI Integration:**
+
+Script tests are automatically run in the Azure Pipelines `BackendTests` job as part of the `Validate` stage, before running the main backend test suite.
+
+
 
 Follow these steps in order when preparing a new production release.
 
