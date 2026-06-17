@@ -16,7 +16,7 @@ vi.mock("react-dropzone", () => ({
 vi.mock("../../../../context/ConfigManager", () => ({
   ConfigManager: {
     get: () => ({
-      app_version: "v1.0.0",
+      app_version: "1.0.0",
       upload_mime_types: ["application/pdf", "image/png"],
       upload_max_size: 10 * 1024 * 1024,
     }),

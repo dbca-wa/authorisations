@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 
-SEMVER_PATTERN = re.compile(r"^v\d+\.\d+\.\d+$")
+SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 
 def read_version(version_file: Path) -> str:
@@ -20,7 +20,7 @@ def read_version(version_file: Path) -> str:
     if not SEMVER_PATTERN.fullmatch(version):
         raise ValueError(
             f"Invalid version '{version}' in {version_file}. "
-            "Expected format vMAJOR.MINOR.PATCH."
+            "Expected format MAJOR.MINOR.PATCH."
         )
     return version
 
@@ -28,7 +28,7 @@ def read_version(version_file: Path) -> str:
 def get_image_tag(branch: str, version: str) -> str:
     """Resolve Docker image tag based on branch and version.
     
-    Main branch: use semantic version tag (e.g. v1.0.0).
+    Main branch: use semantic version tag (e.g. 1.0.0).
     UAT branch: use 'uat'.
     Feature branches: use branch name with '/' replaced by '-'.
     """

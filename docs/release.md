@@ -4,7 +4,7 @@ This document describes how semantic versioning works in this repository and the
 
 ## Overview
 
-The application uses semantic versioning in the format `vMAJOR.MINOR.PATCH` (for example `v1.0.0`).
+The application uses semantic versioning in the format `MAJOR.MINOR.PATCH` (for example `1.0.0`).
 
 The same version is consumed by three runtime/deployment touchpoints:
 
@@ -17,14 +17,14 @@ The same version is consumed by three runtime/deployment touchpoints:
 The canonical release version is the root `VERSION` file.
 
 - File: `VERSION`
-- Required format: `vMAJOR.MINOR.PATCH`
+- Required format: `MAJOR.MINOR.PATCH`
 - Example valid values:
-  - `v1.0.0`
-  - `v1.2.3`
+  - `1.0.0`
+  - `1.2.3`
 - Example invalid values:
-  - `1.0.0` (missing `v`)
-  - `v1.0` (missing patch)
-  - `v1.0.0-rc1` (pre-release suffix currently not supported by validation)
+  - `v1.0.0` (contains `v` prefix)
+  - `1.0` (missing patch)
+  - `1.0.0-rc1` (pre-release suffix currently not supported by validation)
 
 ## How Versioning Is Wired
 
@@ -35,9 +35,9 @@ In `azure-pipelines.yml`, the publish job calls `scripts/get_image_tag.py` to re
 The script applies the following tagging logic:
 
 - On `main` branch:
-  - Uses the semantic version from `VERSION` (e.g. `v1.0.0`).
+  - Uses the semantic version from `VERSION` (e.g. `1.0.0`).
   - Docker image is pushed with tags:
-    - `vX.Y.Z`
+    - `X.Y.Z`
     - `YYYY-MM-DD_HH.mm`
 - On `uat` branch:
   - Uses the static tag `uat`.
@@ -61,7 +61,7 @@ python3 scripts/get_image_tag.py <branch-ref>
 Example:
 
 ```bash
-python3 scripts/get_image_tag.py refs/heads/main    # outputs: v1.0.0
+python3 scripts/get_image_tag.py refs/heads/main    # outputs: 1.0.0
 python3 scripts/get_image_tag.py refs/heads/uat     # outputs: uat
 python3 scripts/get_image_tag.py refs/heads/feature/new-endpoint  # outputs: new-endpoint
 ```
@@ -119,7 +119,7 @@ Resolves the Docker image tag for the current build based on git branch and `VER
 
 **Outputs:**
 
-- Image tag suitable for Docker push (e.g. `v1.0.0`, `uat`, `my-feature`).
+- Image tag suitable for Docker push (e.g. `1.0.0`, `uat`, `my-feature`).
 
 **Usage:**
 
@@ -173,7 +173,7 @@ Follow these steps in order when preparing a new production release.
 2. Update the canonical version.
 
    ```bash
-   echo "vX.Y.Z" > VERSION
+   echo "X.Y.Z" > VERSION
    ```
 
 3. Synchronise production kustomize tag from `VERSION`.
@@ -226,9 +226,9 @@ Commit the updated kustomize file.
 
 ### CI fails with invalid VERSION format
 
-Cause: `VERSION` does not match `vMAJOR.MINOR.PATCH`.
+Cause: `VERSION` does not match `MAJOR.MINOR.PATCH`.
 
-Fix: rewrite `VERSION` using a valid value such as `v1.2.3`.
+Fix: rewrite `VERSION` using a valid value such as `1.2.3`.
 
 ### UI shows unexpected version
 

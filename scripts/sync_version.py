@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-SEMVER_PATTERN = re.compile(r"^v\d+\.\d+\.\d+$")
+SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,7 +37,7 @@ def read_version(version_file: Path) -> str:
     if not SEMVER_PATTERN.fullmatch(version):
         raise ValueError(
             f"Invalid version '{version}' in {version_file}. "
-            "Expected format vMAJOR.MINOR.PATCH."
+            "Expected format MAJOR.MINOR.PATCH."
         )
     return version
 

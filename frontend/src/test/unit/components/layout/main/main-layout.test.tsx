@@ -36,7 +36,7 @@ vi.mock("../../../../../router", () => ({
 vi.mock("../../../../../context/ConfigManager", () => ({
   ConfigManager: {
     get: () => ({
-      app_version: "v1.0.0",
+      app_version: "1.0.0",
     }),
   },
 }));
@@ -101,6 +101,6 @@ describe("MainLayout", () => {
       />,
     );
 
-    expect(screen.getByText("v1.0.0")).toBeInTheDocument();
+    expect(screen.getByText("1.0.0")).toBeInTheDocument();
   });
 });
