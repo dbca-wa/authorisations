@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synchronise the canonical VERSION tag into the production kustomize overlay."""
+"""Synchronise the canonical VERSION tag into kustomize overlays."""
 
 from __future__ import annotations
 
@@ -16,14 +16,14 @@ def parse_args() -> argparse.Namespace:
     """Parse command-line arguments for sync and drift-check modes."""
     parser = argparse.ArgumentParser(
         description=(
-            "Synchronise VERSION into the production kustomize overlay, or "
-            "check for drift."
+            "Synchronise VERSION into both kustomize overlays (prod and uat) "
+            "atomically, or check for version drift."
         )
     )
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Validate prod kustomize tag matches VERSION without modifying files.",
+        help="Validate kustomize tags match VERSION without modifying files.",
     )
     return parser.parse_args()
 
@@ -40,6 +40,27 @@ def read_version(version_file: Path) -> str:
             "Expected format MAJOR.MINOR.PATCH."
         )
     return version
+
+
+def get_kustomization_path(root_dir: Path, overlay: str) -> Path:
+    """Return the kustomization.yaml path for the given overlay."""
+    if overlay not in ("prod", "uat"):
+        raise ValueError(f"Unknown overlay: {overlay}")
+    return root_dir / "kustomize" / "overlays" / overlay / "kustomization.yaml"
+
+
+def get_target_tag(overlay: str, version: str) -> str:
+    """Generate the target image tag for the given overlay and version.
+    
+    Prod overlays use the base version (e.g. 1.0.0).
+    UAT overlays append the -uat pre-release suffix (e.g. 1.0.0-uat).
+    """
+    if overlay == "prod":
+        return version
+    elif overlay == "uat":
+        return f"{version}-uat"
+    else:
+        raise ValueError(f"Unknown overlay: {overlay}")
 
 
 def read_kustomize_tag(kustomization_file: Path) -> str:
@@ -77,41 +98,53 @@ def write_kustomize_tag(kustomization_file: Path, version: str) -> None:
 
 
 def main() -> int:
-    """Run sync or check mode based on command-line arguments."""
+    """Run sync or check mode based on command-line arguments.
+    
+    Always processes both prod and uat overlays atomically to maintain
+    version consistency across all environments.
+    """
     args = parse_args()
 
     root_dir = Path(__file__).resolve().parents[1]
     version_file = root_dir / "VERSION"
-    kustomization_file = root_dir / "kustomize" / "overlays" / "prod" / "kustomization.yaml"
 
     try:
         canonical_version = read_version(version_file)
-        current_tag = read_kustomize_tag(kustomization_file)
+        any_drift = False
+
+        # Always process both overlays atomically
+        for overlay in ("prod", "uat"):
+            kustomization_file = get_kustomization_path(root_dir, overlay)
+            target_tag = get_target_tag(overlay, canonical_version)
+            current_tag = read_kustomize_tag(kustomization_file)
+
+            if args.check:
+                if current_tag != target_tag:
+                    print(
+                        (
+                            f"Version drift in {overlay} overlay: "
+                            f"{kustomization_file} has '{current_tag}', "
+                            f"expected '{target_tag}'."
+                        ),
+                        file=sys.stderr,
+                    )
+                    any_drift = True
+                else:
+                    print(f"✓ {overlay}: {target_tag}")
+
+            else:  # sync mode
+                if current_tag == target_tag:
+                    print(f"✓ {overlay}: already {target_tag}")
+                else:
+                    write_kustomize_tag(kustomization_file, target_tag)
+                    print(f"✓ {overlay}: updated to {target_tag}")
 
         if args.check:
-            if current_tag != canonical_version:
-                print(
-                    (
-                        "Version drift detected: "
-                        f"{kustomization_file} has '{current_tag}', "
-                        f"expected '{canonical_version}'."
-                    ),
-                    file=sys.stderr,
-                )
+            if any_drift:
                 return 1
-
             print(f"Version check passed: {canonical_version}")
             return 0
 
-        if current_tag == canonical_version:
-            print(
-                "No changes needed: "
-                f"{kustomization_file} already uses {canonical_version}"
-            )
-            return 0
-
-        write_kustomize_tag(kustomization_file, canonical_version)
-        print(f"Updated {kustomization_file} to newTag: {canonical_version}")
         return 0
 
     except (FileNotFoundError, ValueError) as error:
