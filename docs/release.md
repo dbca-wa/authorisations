@@ -23,10 +23,15 @@ The canonical release version is the root `VERSION` file.
 - Example valid values:
   - `1.0.0`
   - `1.2.3`
+  - `1.0.0-uat` (pre-release suffix for UAT environment)
+  - `1.0.0-feature-name` (pre-release suffix for feature branch builds)
 - Example invalid values:
   - `v1.0.0` (contains `v` prefix)
   - `1.0` (missing patch)
-  - `1.0.0-rc1` (pre-release suffix currently not supported by validation)
+  - `1.0.0.0` (too many version segments)
+  - `uat-1.0.0` (suffix must come after version, not before)
+  - `1-0-0` (must use dots, not dashes, as separators)
+  - `release-1.0.0` (custom suffixes not allowed; use scripts for pre-release tagging)
 
 ## How Versioning Is Wired
 
@@ -260,4 +265,4 @@ Fix:
 - Do not edit kustomize overlay `newTag` fields manually. Always use `scripts/sync_version.py`.
 - Keep `VERSION` as the only manual source of release version truth.
 - Both prod and uat overlays are always kept in sync together; you cannot update one independently.
-- If pre-release identifiers (for example `-rc1`) are needed in future, update validation in one place (`scripts/sync_version.py`) and align pipeline checks accordingly.
+- Pre-release suffixes are reserved for environment-specific tagging: `-uat` for UAT overlays, and `-branch-name` for feature builds. Do not use `-rc`, `-alpha`, `-beta`, or other pre-release identifiers in the `VERSION` file itself.

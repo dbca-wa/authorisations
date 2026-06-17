@@ -12,7 +12,12 @@ SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 
 def read_version(version_file: Path) -> str:
-    """Read and validate the canonical semantic version from VERSION."""
+    """Read and validate the canonical semantic version from VERSION.
+    
+    VERSION must be in MAJOR.MINOR.PATCH format (e.g. 1.0.0).
+    Pre-release suffixes (-uat, -branch-name) are added dynamically by this
+    script based on git branch, not stored in the VERSION file.
+    """
     if not version_file.is_file():
         raise FileNotFoundError(f"VERSION file not found: {version_file}")
 

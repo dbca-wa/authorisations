@@ -20,7 +20,12 @@ VERSION_FILE = BASE_DIR.parent / "VERSION"
 
 
 def _read_app_version() -> str:
-    """Read the canonical application version from the repository VERSION file."""
+    """Read the canonical application version from the repository VERSION file.
+    
+    VERSION must be in MAJOR.MINOR.PATCH format (e.g. 1.0.0).
+    Pre-release suffixes (-uat, -branch-name) are added dynamically by scripts,
+    not stored in the VERSION file itself.
+    """
     # Keep one source of truth for CI tags, deployment manifests, and UI display.
     if not VERSION_FILE.exists():
         return "0.0.0"
