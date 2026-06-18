@@ -309,8 +309,8 @@
 - For code coverage, publish once from a dedicated aggregation job rather than publishing separately from backend and frontend jobs.
 
 ### Release Versioning Workflow
-- Canonical release version source is root `VERSION` in `vMAJOR.MINOR.PATCH` format.
-- Synchronise production kustomize image tag from `VERSION` using `python3 scripts/sync_version.py`.
+- Canonical release version source is root `VERSION` in `MAJOR.MINOR.PATCH` format.
+- Synchronise UAT and production kustomize image tag from `VERSION` using `python3 scripts/sync_version.py`.
 - Validate alignment in CI/local with `python3 scripts/sync_version.py --check`.
 - `main` branch publish job reads `VERSION` and tags production Docker images with that semantic version.
 
