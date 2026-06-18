@@ -26,4 +26,4 @@ patches:
   - path: service_patch.yaml
 images:
   - name: ghcr.io/dbca-wa/authorisations
-    newTag: production
+    newTag: 1.0.0
