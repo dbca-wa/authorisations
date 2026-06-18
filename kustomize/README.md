@@ -57,6 +57,9 @@ Review the built resource output using `kustomize`:
 # Review UAT configuration
 kustomize build kustomize/overlays/uat/ | less
 
+# Review production configuration
+kustomize build kustomize/overlays/prod/ | less
+
 # Do not build/apply base directly
 # kustomize build kustomize/base/
 ```
@@ -64,6 +67,8 @@ kustomize build kustomize/overlays/uat/ | less
 ### 3. Preflight validation
 
 Validate generated manifests before deployment:
+
+#### UAT
 
 ```bash
 # 1) Ensure overlay builds successfully
@@ -76,9 +81,24 @@ kubectl apply -f /tmp/authorisations-uat.yaml --namespace=authorisations --dry-r
 kubectl apply -f /tmp/authorisations-uat.yaml --namespace=authorisations --dry-run=server
 ```
 
+#### Production
+
+```bash
+# 1) Ensure overlay builds successfully
+kustomize build kustomize/overlays/prod/ > /tmp/authorisations-prod.yaml
+
+# 2) Client-side validation (syntax and basic schema checks)
+kubectl apply -f /tmp/authorisations-prod.yaml --namespace=authorisations --dry-run=client --validate=true
+
+# 3) Server-side validation against the target cluster API
+kubectl apply -f /tmp/authorisations-prod.yaml --namespace=authorisations --dry-run=server
+```
+
 ### 4. Deploy to Kubernetes
 
 Run `kubectl` with the `-k` flag to generate resources for a given overlay:
+
+#### UAT
 
 ```bash
 # Dry run
@@ -86,6 +106,21 @@ kubectl apply -k kustomize/overlays/uat/ --namespace=authorisations --dry-run=se
 
 # Apply
 kubectl apply -k kustomize/overlays/uat/ --namespace=authorisations
+```
+
+#### Production
+
+**Ensure you are connected to the correct production cluster context before running these commands.**
+
+```bash
+# Verify you are connected to production
+kubectl config current-context
+
+# Dry run
+kubectl apply -k kustomize/overlays/prod/ --namespace=authorisations --dry-run=server
+
+# Apply
+kubectl apply -k kustomize/overlays/prod/ --namespace=authorisations
 ```
 
 ## References
