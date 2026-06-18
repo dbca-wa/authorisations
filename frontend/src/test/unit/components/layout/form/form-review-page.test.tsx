@@ -12,10 +12,12 @@ const {
   submitApplicationMock,
   showSnackbarMock,
   turnstileRenderMock,
+  fireConfettiEffectMock,
 } = vi.hoisted(() => ({
   submitApplicationMock: vi.fn(),
   showSnackbarMock: vi.fn(),
   turnstileRenderMock: vi.fn(),
+  fireConfettiEffectMock: vi.fn(),
 }));
 
 vi.mock("../../../../../context/ApiManager", () => ({
@@ -32,6 +34,10 @@ vi.mock("../../../../../context/TurnstileManager", () => ({
   TurnstileManager: {
     render: turnstileRenderMock,
   },
+}));
+
+vi.mock("../../../../../context/Confetti", () => ({
+  fireConfettiEffect: fireConfettiEffectMock,
 }));
 
 vi.mock("../../../../../components/Common", () => ({
