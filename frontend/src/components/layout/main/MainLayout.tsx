@@ -20,6 +20,7 @@ import { DRAWER_WIDTH } from '../../../context/Constants';
 import type { IRoute, LoaderData } from "../../../context/types/Generic";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { ROUTES } from '../../../router';
+import { Confetti } from '../../../context/Confetti';
 
 
 export const MainLayout = ({
@@ -161,11 +162,7 @@ const Sidebar = ({
                     }
                 </List>
             </Box>
-            <Box sx={{ px: 2, mb: 8, textAlign: 'center' }}>
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {appVersion}
-                </Typography>
-            </Box>
+            <Confetti celebrate={10}>{appVersion}</Confetti>
         </Drawer>
     );
 }

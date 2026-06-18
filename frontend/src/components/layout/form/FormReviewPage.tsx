@@ -18,6 +18,7 @@ import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } fr
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
 import { FileAttachmentList } from '../../Common';
+import { fireConfettiEffect } from '../../../context/Confetti';
 
 const getStepPrefix = (stepIndex: number) => `${stepIndex + 1}.`;
 const getSectionPrefix = (sectionIndex: number) => `${String.fromCharCode(65 + sectionIndex)})`;
@@ -121,6 +122,7 @@ export function FormReviewPage({
             .then((resp) => {
                 showSnackbar("Application has been successfully submitted and is read-only now.", "success");
                 setUserCanEdit(false);
+                fireConfettiEffect(5);
                 return resp;
             })
             // Display the error message to user and log to console
