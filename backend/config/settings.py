@@ -16,7 +16,11 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-VERSION_FILE = BASE_DIR.parent / "VERSION"
+
+# VERSION file lookup with fallback: production Docker first, then dev/CI repo root.
+VERSION_FILE = BASE_DIR / "VERSION"
+if not VERSION_FILE.exists():
+    VERSION_FILE = BASE_DIR.parent / "VERSION"
 
 
 def _read_app_version() -> str:
