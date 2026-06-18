@@ -13,6 +13,7 @@ class ClientConfig:
     api_base: str = "/api"
     csrf_header: str = settings.CSRF_HEADER_CLIENT
     csrf_token: str = None
+    app_version: str = settings.APP_VERSION
     upload_max_size: int = settings.UPLOAD_MAX_SIZE
     turnstile_site_key: Optional[str] = settings.TURNSTILE_SITE_KEY
     # Use a default_factory so we don't bind a mutable list at class-level.

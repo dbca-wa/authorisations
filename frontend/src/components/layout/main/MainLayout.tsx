@@ -15,10 +15,12 @@ import Typography from '@mui/material/Typography';
 
 import { useEffect, useMemo } from 'react';
 import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
+import { ConfigManager } from '../../../context/ConfigManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import type { IRoute, LoaderData } from "../../../context/types/Generic";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { ROUTES } from '../../../router';
+import { Confetti } from '../../../context/Confetti';
 
 
 export const MainLayout = ({
@@ -115,6 +117,7 @@ const Sidebar = ({
     const currentPath = window.location.pathname;
     const navOptions: NavigateOptions = { viewTransition: true };
     const navigate: NavigateFunction = useNavigate();
+    const appVersion = ConfigManager.get().app_version;
 
     const visibleRoutes = useMemo(
         () => ROUTES.filter((route) => route.sidebar !== false && (!route.condition || route.condition(processes))),
@@ -127,11 +130,16 @@ const Sidebar = ({
             sx={{
                 width: DRAWER_WIDTH,
                 flexShrink: 0,
-                [`& .MuiDrawer-paper`]: { width: DRAWER_WIDTH, boxSizing: 'border-box' },
+                [`& .MuiDrawer-paper`]: {
+                    width: DRAWER_WIDTH,
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    flexDirection: 'column',
+                },
             }}
         >
             <Toolbar />
-            <Box sx={{ overflow: 'auto' }}>
+            <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
                 <List>
                     {
                         visibleRoutes.map((route) => {
@@ -154,6 +162,7 @@ const Sidebar = ({
                     }
                 </List>
             </Box>
+            <Confetti celebrate={10}>{appVersion}</Confetti>
         </Drawer>
     );
 }

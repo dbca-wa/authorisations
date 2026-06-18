@@ -13,6 +13,16 @@
 - Keep this file as the high-level project instruction set.
 - Use `docs/testing.md` as the canonical deep-dive for testing strategy, E2E architecture, CI behaviour, and troubleshooting.
 
+## Release Documentation
+- Use `docs/release.md` as the canonical guide for semantic versioning rules and production release steps.
+
+## Open Source Release Documents
+- Repository licence text lives in `LICENSE` and repository-level Apache attribution lives in `NOTICE`.
+- Use `THIRD_PARTY_NOTICES.md` for dependency and attribution tracking, with backend and frontend sections kept separate.
+- Use Markdown for contributor-facing policy files such as `CONTRIBUTING.md` and `SECURITY.md` so GitHub renders and discovers them correctly.
+- Keep `LICENSE` and `NOTICE` as extensionless root files because that is the most portable and widely recognised convention for open source tooling.
+- When dependencies change, update `THIRD_PARTY_NOTICES.md` in the same change set where practicable.
+
 ## Code Comment Conventions
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists.
   - For TypeScript/React: use a `/** ... */` JSDoc block before the function.
@@ -49,6 +59,10 @@
 - Deployment/runtime:
   - Docker supported.
   - Backend startup orchestration in `backend/entrypoint.sh` (collectstatic, migrate, gunicorn).
+
+## Kubernetes Kustomize Configuration
+- Kubernetes manifests for Authorisations are managed under `kustomize/` using a base + overlays structure.
+- Primary operator documentation is in `kustomize/README.md`.
 
 ## Business Logic Behind Technical Structure
 
@@ -139,7 +153,7 @@
 - Use `dayjs` for dates with `en-au` locale.
 - Prefer React component definitions as `const` (for example `const MyComponent = () => { ... }`) rather than `function` declarations unless there is a clear technical reason to do otherwise.
 - Prefer frontend function expressions assigned to `const` (including hooks and local helpers) rather than `function` declarations unless there is a clear technical reason (for example hoisting requirements).
-- Prefer explicit named exports/imports over default exports/imports for project modules where practical, to make refactoring safer and imports more consistent.
+- Prefer explicit named exports/imports over default exports/imports for project modules where practicable, to make refactoring safer and imports more consistent.
 - Group imports by style with a single blank line separating default imports from named/type imports:
   - First block: default imports (no curly braces), for example `import React from "react"` or `import Box from "@mui/material/Box"`.
   - Second block: named and type imports (with curly braces), for example `import { useState } from "react"` or `import type { AlertColor } from "@mui/material/Alert"`.
@@ -293,6 +307,12 @@
 - For script steps, do not use environment variable keys beginning with `SECRET_`; use `DJANGO_SECRET_KEY` and map to Django settings accordingly.
 - For frontend CI Node setup, use `UseNode@1` with `version: '22.x'`.
 - For code coverage, publish once from a dedicated aggregation job rather than publishing separately from backend and frontend jobs.
+
+### Release Versioning Workflow
+- Canonical release version source is root `VERSION` in `MAJOR.MINOR.PATCH` format.
+- Synchronise UAT and production kustomize image tag from `VERSION` using `python3 scripts/sync_version.py`.
+- Validate alignment in CI/local with `python3 scripts/sync_version.py --check`.
+- `main` branch publish job reads `VERSION` and tags production Docker images with that semantic version.
 
 ### CI Test Environment Requirements
 - Backend pytest uses `config.test_settings`, which imports `config.settings` first.

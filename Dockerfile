@@ -68,6 +68,7 @@ RUN /app/.venv/bin/python -m pip install --no-cache-dir --upgrade "pip>=26.1"
 
 # =================== RUNTIME ===================
 FROM python:3.14-slim-trixie
+LABEL org.opencontainers.image.source=https://github.com/dbca-wa/authorisations
 
 # Accept non-sensitive build arguments used during collectstatic.
 ARG DATABASE_URL
@@ -126,8 +127,9 @@ RUN groupadd -g 5000 appuser \
 
 WORKDIR /app
 
-# Copy backend source code and built frontend assets.
+# Copy backend source code, built frontend assets, and version file.
 COPY --chown=appuser:appuser backend /app/
+COPY --chown=appuser:appuser VERSION /app/
 COPY --from=builder_frontend --chown=appuser:appuser /tmp/frontend/dist /app/assets
 
 # Copy the prepared virtual environment from backend builder stage.

@@ -17,6 +17,29 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# VERSION file lookup with fallback: production Docker first, then dev/CI repo root.
+VERSION_FILE = BASE_DIR / "VERSION"
+if not VERSION_FILE.exists():
+    VERSION_FILE = BASE_DIR.parent / "VERSION"
+
+
+def _read_app_version() -> str:
+    """Read the canonical application version from the repository VERSION file.
+    
+    VERSION must be in MAJOR.MINOR.PATCH format (e.g. 1.0.0).
+    Pre-release suffixes (-uat, -branch-name) are added dynamically by scripts,
+    not stored in the VERSION file itself.
+    """
+    # Keep one source of truth for CI tags, deployment manifests, and UI display.
+    if not VERSION_FILE.exists():
+        return "0.0.0"
+
+    version = VERSION_FILE.read_text(encoding="utf-8").strip()
+    return version if version else "0.0.0"
+
+
+APP_VERSION = _read_app_version()
+
 # Initialise environment variables
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env(
@@ -46,15 +69,11 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
 ]
 
-ALLOWED_HOST_UAT = env("ALLOWED_HOST_UAT", default=None)
-if ALLOWED_HOST_UAT:
-    ALLOWED_HOSTS.append(ALLOWED_HOST_UAT)
-    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST_UAT}")
-
-ALLOWED_HOST_PROD = env("ALLOWED_HOST_PROD", default=None)
-if ALLOWED_HOST_PROD:
-    ALLOWED_HOSTS.append(ALLOWED_HOST_PROD)
-    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST_PROD}")
+# Allowed host for UAT and/or production environments
+ALLOWED_HOST = env("ALLOWED_HOST", default=None)
+if ALLOWED_HOST:
+    ALLOWED_HOSTS.append(ALLOWED_HOST)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{ALLOWED_HOST}")
 
 # SSL, CSRF and security settings
 
@@ -82,9 +101,6 @@ SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 if not DEBUG:
-    SESSION_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
-    CSRF_COOKIE_DOMAIN = env("SECURE_DOMAIN", default=None)
-
     # Ensure SameSite attribute allows "safe" cross-site requests
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SAMESITE = "Lax"
@@ -249,12 +265,12 @@ DJANGO_VITE = {
     "default": {
         "manifest_path": MANIFEST_PATH,
         "dev_mode": env("DEBUG_FRONTEND", cast=bool, default=False),
-        # If UAT host is set, we need to use it for the dev server URL instead of localhost
-        "dev_server_protocol": "https" if ALLOWED_HOST_UAT else "http",
-        "dev_server_host": ALLOWED_HOST_UAT if ALLOWED_HOST_UAT else "localhost",
+        # If the `DEBUG_FRONTEND` is True, then the plugin will need the below settings
+        "dev_server_host": ALLOWED_HOST if ALLOWED_HOST else "localhost",
+        "dev_server_protocol": "https" if ALLOWED_HOST else "http",
         # The plugin doesn't support stripping the port.
         # `None` will actually add string "None" and will not work
-        "dev_server_port": None if ALLOWED_HOST_UAT else 5173,
+        "dev_server_port": None if ALLOWED_HOST else 5173,
     }
 }
 

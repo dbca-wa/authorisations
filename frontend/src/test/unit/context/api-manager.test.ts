@@ -22,6 +22,7 @@ describe("ApiManager", () => {
       api_base: "/api",
       csrf_header: "X-CsrfToken",
       csrf_token: "csrf-token",
+      app_version: "1.0.0",
       upload_max_size: 1000,
       turnstile_site_key: "site-key",
       upload_mime_types: ["application/pdf"],
