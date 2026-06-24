@@ -7,9 +7,9 @@ secretGenerator:
     envs:
       - .env
 configMapGenerator:
-  - name: prince2-license
+  - name: prince-license
     files:
-      - .prince2-license
+      - license.dat=.prince-license
 generatorOptions:
   disableNameSuffixHash: true
 resources:
