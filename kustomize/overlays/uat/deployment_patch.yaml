@@ -20,11 +20,11 @@ spec:
             - secretRef:
                 name: authorisations-env-uat
           volumeMounts:
-            - name: prince2-license-uat
+            - name: prince-license-uat
               mountPath: /usr/lib/prince/license
               readOnly: true
       volumes:
-        - name: prince2-license-uat
+        - name: prince-license-uat
           configMap:
-            defaultMode: 440
-            name: prince2-license-uat
+            defaultMode: 0444
+            name: prince-license-uat

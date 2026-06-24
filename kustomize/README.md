@@ -47,7 +47,7 @@ DEBUG=False
 # ... see backend/.env.template for full list
 ```
 
-Also create a `.prince2-license` file containing XML license content. This will be mounted in running pods as a ConfigMap during deployment.
+Also create a `.prince-license` file containing XML license content. This will be mounted in running pods as a ConfigMap during deployment. The file is renamed to `license.dat` in the ConfigMap key and on the mounted filesystem.
 
 ### 2. Review configuration
 
