@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.db import transaction
 from django.db.models import F, Max, Window
 from django.db.models.functions import RowNumber
+from django.http import Http404
 
 from questionnaires.forms import QuestionnaireForm
 from questionnaires.models import (
@@ -60,6 +61,20 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
     def sort_order_int(self, obj):
         return obj.sort_order
 
+    def _is_latest_version(self, obj):
+        """
+        Check if the given questionnaire object is the latest version in its lineage.
+        Returns True if this is the highest version for (process, code).
+        """
+        max_version = (
+            Questionnaire.objects.filter(
+                process_id=obj.process_id,
+                code=obj.code,
+            ).aggregate(max_version=Max("version"))["max_version"]
+            or 0
+        )
+        return obj.version == max_version
+
     def has_add_permission(self, request, obj=None):
         return request.user.is_superuser
 
@@ -70,6 +85,29 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         return False
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
+        """
+        Override to prevent editing of non-latest questionnaire versions.
+        Raises Http404 if attempting to edit an older version.
+        """
+        # Check if this is the latest version before allowing edit access
+        try:
+            obj = self.get_object(request, object_id)
+        except self.model.DoesNotExist:
+            raise Http404(self.model._meta.object_name)
+
+        if not self._is_latest_version(obj):
+            latest_version = (
+                Questionnaire.objects.filter(
+                    process_id=obj.process_id,
+                    code=obj.code,
+                ).aggregate(max_version=Max("version"))["max_version"]
+                or 0
+            )
+            raise Http404(
+                f"Cannot edit historical version. "
+                f"Latest version of '{obj.name}' is version {latest_version}."
+            )
+
         extra_context = extra_context or {}
         extra_context["show_save_and_add_another"] = False
         extra_context["show_save_and_continue"] = False
@@ -127,6 +165,15 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
         # Lock the current database row so concurrent edits cannot race
         # between the read below and any subsequent writes in this block.
         original = Questionnaire.objects.select_for_update().get(pk=obj.pk)
+
+        # Safety check: ensure we're still editing the latest version.
+        # change_view already enforces this, but this provides defence-in-depth
+        # against any direct save_model calls.
+        if not self._is_latest_version(original):
+            raise Http404(
+                "Cannot save changes to historical version. "
+                "Please edit the latest version instead."
+            )
 
         # Determine what kind of edit was submitted.
         lineage_or_name_changed = (
