@@ -216,11 +216,17 @@ class QuestionnaireAdmin(SortableAdminMixin, admin.ModelAdmin):
             )
             # Clear the pk so Django performs an INSERT rather than UPDATE,
             # creating a new row while leaving all previous versions intact.
+            # Preserve sort_order from the previous version so the new version
+            # maintains the same position in the visible list.
             obj.version = max_version + 1
+            obj.sort_order = original.sort_order
             obj.pk = None
             obj.created_by = request.user
             obj.updated_by = request.user
-            return super().save_model(request, obj, form, False)
+            # Save directly to bypass SortableAdminMixin's auto-increment logic
+            # which would otherwise assign a new sort_order when change=False.
+            obj.save()
+            return
 
         # ----------------------------------------------------------------
         # Path 3: metadata-only edit — update the existing row in place.

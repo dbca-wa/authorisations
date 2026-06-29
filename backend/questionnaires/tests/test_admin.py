@@ -127,3 +127,67 @@ def test_is_latest_version_with_single_version(db, process, user):
 
     admin = QuestionnaireAdmin(Questionnaire, admin_site=None)
     assert admin._is_latest_version(qnaire) is True
+
+
+def test_new_version_inherits_sort_order_from_previous_version(
+    db, staff_user, process, user
+):
+    """
+    When a new version is created (document changed), it should inherit
+    the sort_order from the previous version, not get a new/different value.
+    This preserves the questionnaire's position in the admin list.
+    """
+    from unittest.mock import MagicMock
+
+    from django.test import RequestFactory
+
+    # Create v1 with sort_order=3
+    v1 = Questionnaire.objects.create(
+        process=process,
+        code="versioned-qnaire",
+        name="Versioned Questionnaire",
+        description="Version 1",
+        version=1,
+        document=_document(),
+        sort_order=3,
+        created_by=user,
+    )
+
+    # Prepare updated document for form submission
+    updated_document = _document()
+    updated_document["steps"][0]["title"] = "Updated Step"
+
+    # Create a mock form that tracks what changed
+    # IMPORTANT: v1_for_edit will have the original document, but the form
+    # will claim a document change (updated_document is different)
+    v1_for_edit = Questionnaire.objects.get(pk=v1.pk)
+
+    mock_form = MagicMock()
+    mock_form.changed_data = ["document", "description"]
+    # This is the NEW document and description that the form is submitting
+    mock_form.cleaned_data = {
+        "document": updated_document,
+        "description": "Version 2 with document change",
+    }
+    mock_form.instance = v1_for_edit
+
+    # Create a mock request with staff user
+    factory = RequestFactory()
+    request = factory.post("/admin/questionnaires/questionnaire/")
+    request.user = staff_user
+
+    # Manually update the instance with new values (simulating form submission)
+    v1_for_edit.description = "Version 2 with document change"
+
+    # Trigger save_model (simulating an edit that creates new version)
+    admin = QuestionnaireAdmin(Questionnaire, admin_site=None)
+    admin.save_model(request, v1_for_edit, mock_form, change=True)
+
+    # Verify v2 was created with inherited sort_order from v1
+    v2 = Questionnaire.objects.get(process=process, code=v1.code, version=2)
+    assert v2.sort_order == 3, (
+        f"New version should inherit sort_order from previous version. "
+        f"Expected sort_order={v1.sort_order}, got {v2.sort_order}"
+    )
+    assert v2.version == 2
+    assert v2.description == "Version 2 with document change"
