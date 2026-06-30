@@ -40,7 +40,7 @@ export const fireConfettiEffect = (celebrate: number = 3, particleCount: number 
             confetti({
                 particleCount: adjustedParticleCount,
                 spread: adjustedSpread,
-                startVelocity: 45,
+                startVelocity: 60,
                 origin: { y: 0.85 },
                 zIndex: 2500,
             });
@@ -138,7 +138,7 @@ export const Confetti = ({
             }}
             aria-label="Confetti trigger"
         >
-            <Typography variant="caption" sx={{ color: 'text.disabled', cursor: 'inherit', userSelect: 'none' }}>
+            <Typography variant="caption" sx={{ color: 'text.disabled', cursor: 'pointer', userSelect: 'none' }}>
                 {children}
             </Typography>
         </Box>
