@@ -196,7 +196,7 @@ const Questionnaire = ({
     inProgress: boolean;
     setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-    const localDate = formatDate(questionnaire.created_at)
+    const localDate = formatDate(questionnaire.updated_at)
     const navigate: NavigateFunction = useNavigate();
     const { showDialog, hideDialog } = useDialog();
     const { showSnackbar } = useSnackbar();

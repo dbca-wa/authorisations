@@ -26,6 +26,7 @@ export interface IQuestionnaireData {
     version: number;
     description: string;
     created_at: string;
+    updated_at: string;
     document: IQuestionnaire;
 }
 

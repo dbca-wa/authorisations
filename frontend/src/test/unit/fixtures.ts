@@ -48,6 +48,7 @@ export const makeQuestionnaire = (
   version: 1,
   description: "Create a new application",
   created_at: "2026-05-01T00:00:00Z",
+  updated_at: "2026-05-10T00:00:00Z",
   document: {
     schema_version: "2025.07-1",
     steps: [
