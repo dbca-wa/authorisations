@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevented editing of older questionnaire versions in admin workflows.
 - Changed the mouse cursor to pointer on the version string for easier discoverability.
 - Reorganised and tidied up the documentation.
+- Removed the old Dockerfile.
 
 ### Fixed
 
