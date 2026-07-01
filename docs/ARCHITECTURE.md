@@ -10,7 +10,7 @@ This system supports DBCA authorisation workflows, including Animal Ethics and S
 
 ### Backend
 - Django 5.2, Django REST Framework, PostgreSQL
-- Modular apps under `backend/`: `applications`, `questionnaires`, `processes`, `api`, `users`, `dbnow`
+- Modular apps under `backend/`: `applications`, `questionnaires`, `processes`, `api`, `users`
 
 ### Frontend
 - React + TypeScript + Vite + MUI + Tailwind
