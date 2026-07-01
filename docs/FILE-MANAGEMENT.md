@@ -101,3 +101,7 @@ All endpoints use `{key}` (the application's UUID) for lookups:
 ## Summary
 
 This design provides a robust, auditable, and maintainable solution for file attachments in the application system, balancing efficient DB lookups, secure file storage, and flexible API usage. All references and lookups use UUIDs for security and consistency, while integer PKs ensure DB performance. The approach is extensible for future requirements and easy to review and maintain.
+
+---
+
+**See [README.md](README.md) for the documentation index.**

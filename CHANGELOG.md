@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.0.1 - (Unreleased)
+## 1.0.1 - 2026-07-01
 
 ### Added
 
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated questionnaire admin behaviour so new questionnaire versions inherit `sort_order`.
 - Prevented editing of older questionnaire versions in admin workflows.
 - Changed the mouse cursor to pointer on the version string for easier discoverability.
+- Reorganised and tidied up the documentation.
 
 ### Fixed
 

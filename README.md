@@ -1,46 +1,55 @@
 # DBCA Authorisations
+
 Animal Ethics & Section 40/45 approval process
 
-## Open source release documents
+## Quick start
 
-This repository is licensed under the Apache License 2.0. See `LICENSE` for the full licence text and `NOTICE` for repository-level attribution.
+**Documentation is located in [docs/](docs/README.md).**
 
-Third-party dependency notices are maintained in `THIRD_PARTY_NOTICES.md`, with separate backend and frontend sections to reflect the two build ecosystems used by this application.
+For setup and development instructions, start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-Contributor and security guidance are available in `CONTRIBUTING.md` and `SECURITY.md`.
+For testing, see the testing section in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) or the comprehensive guide at [docs/TESTING.md](docs/TESTING.md).
 
-Release and semantic versioning guidance is documented in [docs/release.md](docs/release.md).
+## Open source
 
-## Testing
+This repository is licensed under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
 
-Backend tests now run on `pytest` with categories for `unit`, `api`, `security`, `integration`, `slow`, and `smoke`. Pytest uses [backend/config/test_settings.py](backend/config/test_settings.py) so local and CI runs do not depend on PostgreSQL database-creation privileges.
+Third-party dependency notices are maintained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), with separate backend and frontend sections.
 
-Run the fast backend suite:
+- **Contributing:** See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+- **Security:** See [docs/SECURITY.md](docs/SECURITY.md)
+- **Releases:** See [docs/RELEASE.md](docs/RELEASE.md)
 
-```bash
-cd backend
-poetry run pytest
-```
+## Purpose and domain
 
-Run backend tests in parallel with coverage:
+This system supports DBCA authorisation workflows, including Animal Ethics and Section 40/45 style application pathways. The platform is designed for versioned, process-driven forms where applicants submit applications backed by a questionnaire definition. A single authorisation process can include multiple questionnaire types (for example: New Application, Renewal) and each questionnaire type can have multiple versions over time.
 
-```bash
-cd backend
-poetry run pytest -n auto --cov --cov-report=term-missing --cov-report=html --cov-report=xml
-```
+## Overview
 
-Run the frontend suite with Vitest:
+**Architecture & Design:** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for data model, terminology, and design decisions.
 
-```bash
-cd frontend
-bun run test
-```
+**Backend Development:** See [docs/BACKEND-CONVENTIONS.md](docs/BACKEND-CONVENTIONS.md) for API layer, security, and ordering conventions.
 
-Run frontend coverage:
+**Frontend Development:** See [docs/FRONTEND-CONVENTIONS.md](docs/FRONTEND-CONVENTIONS.md) for React, TypeScript, and component guidelines.
 
-```bash
-cd frontend
-bun run test:coverage
-```
+**Application Flows:** See [docs/APPLICATION-FLOWS.md](docs/APPLICATION-FLOWS.md) for user journeys, routes, and workflows.
 
-Azure Pipelines now runs backend and frontend tests before the Docker build, and publishes coverage for both stacks.
+**File Management:** See [docs/FILE-MANAGEMENT.md](docs/FILE-MANAGEMENT.md) for attachment design and implementation.
+
+**Deployment:** See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes and kustomize configuration.
+
+## Writing style
+
+- Use British English spelling in code comments, docs, command names, and developer guidance.
+- Prefer forms such as `normalise`, `normalisation`, and `authorisation`.
+
+## Notable files
+
+- `backend/entrypoint.sh` — Production startup sequence
+- `backend/config/settings.py` — Environment and security configuration
+- `backend/api/views.py` — Core DRF viewsets and queryset behaviour
+- `backend/questionnaires/models.py` — Questionnaire data model and versioning
+- `backend/questionnaires/admin.py` — Version clone-on-edit behaviour
+- `backend/processes/models.py` — Process parent object and ordering
+- `frontend/src/router.tsx` — Route definitions
+- `frontend/src/context/ApiManager.ts` — API abstraction
