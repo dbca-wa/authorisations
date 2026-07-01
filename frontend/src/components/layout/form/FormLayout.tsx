@@ -1,5 +1,6 @@
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import MenuIcon from '@mui/icons-material/Menu';
+import NumbersIcon from '@mui/icons-material/Numbers';
 import SaveIcon from '@mui/icons-material/Save';
 import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -264,11 +265,38 @@ export const FormLayout = () => {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div" sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        {questionnaire.process_name}
-                        <Typography variant="h6" sx={{ opacity: 0.5 }}>/</Typography>
-                        {app.questionnaire_name}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Typography variant="h6" noWrap component="div" sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                            {questionnaire.process_name}
+                            <Typography variant="h6" sx={{ opacity: 0.5 }}>/</Typography>
+                            {app.questionnaire_name}
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{
+                                display: 'flex',
+                                gap: 0.5,
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                                opacity: 0.7,
+                                '&:hover': {
+                                    opacity: 1,
+                                },
+                            }}
+                            onClick={() => {
+                                navigator.clipboard.writeText(app.internal_id).then(() => {
+                                    showSnackbar('Application ID copied to clipboard', 'success');
+                                }).catch(() => {
+                                    showSnackbar('Failed to copy to clipboard', 'error');
+                                });
+                            }}
+                            title="Click to copy application ID"
+                        >
+                            <NumbersIcon sx={{ fontSize: 'inherit' }} />
+                            {app.internal_id}
+                        </Typography>
+                    </Box>
                     <AccountMenu
                         isDirty={isDirty}
                         saveAnswers={saveAnswers}

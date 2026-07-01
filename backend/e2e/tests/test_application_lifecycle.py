@@ -106,6 +106,8 @@ def test_create_application_with_valid_payload_succeeds(
     assert payload["owner"] == "e2e-applicant"
     assert payload["process_slug"] == "aec"
     assert payload["status"] == "DRAFT"
+    assert "internal_id" in payload
+    assert payload["internal_id"]  # Ensure it's not empty
 
 
 @pytest.mark.e2e
