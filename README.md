@@ -1,6 +1,6 @@
 # DBCA Authorisations
 
-Animal Ethics & Section 40/45 approval process
+Streamline DBCA authorisation workflows - from Animal Ethics to Section 40/45 - with versioned, process-driven digital forms built for regulatory compliance.
 
 ## Quick start
 

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added this `CHANGELOG.md` file using Keep a Changelog structure.
+- One sentence project definition / description.
 
 ### Changed
 
