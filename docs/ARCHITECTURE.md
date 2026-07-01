@@ -80,6 +80,31 @@ This system supports DBCA authorisation workflows, including Animal Ethics and S
 - Third-party admin drag-and-drop integration (`django-admin-sortable2`) expects the primary sortable field to be a concrete local model attribute
 - Relation traversals in model `Meta.ordering` (for example `process__sort_order`) may be valid in Django ORM, but can break plugin internals that do `getattr(obj, field_name)`
 
+### Internal ID structure and purpose
+
+The `internal_id` property generates a human-readable unique identifier for each application using the format:
+
+```
+{process_slug}-{questionnaire_code}-{application_id}[/{submission_year}-{submission_month}]
+```
+
+For example:
+- Draft application: `s40-new-1234`
+- Submitted application: `s40-new-1234/26-07`
+
+**Components and rationale:**
+- **process_slug**: Identifies the authorisation process (e.g. `s40`, `ae`) — ensures the ID immediately conveys the context
+- **questionnaire_code**: Identifies the questionnaire type within the process (e.g. `new`, `renew`) — clarifies the application category
+- **application_id**: The database primary key — guarantees uniqueness within the combination
+- **submission_year-month suffix**: Only added when the application is submitted (has `submitted_at` timestamp) — provides temporal context and helps staff quickly understand when an application was submitted
+
+**Usage and audience:**
+- Designed for technical officers and administration staff who review applications
+- Provides immediate context about the process, questionnaire type, and submission stage
+- Used in communications, documents, and audit trails
+- Self-explanatory without requiring database lookups
+- The suffix distinguishes between draft (no suffix) and submitted (with suffix) applications at a glance
+
 ## Integration contracts
 
 ### Frontend <-> Backend

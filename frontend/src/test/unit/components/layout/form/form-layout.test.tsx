@@ -222,12 +222,12 @@ describe("FormLayout", () => {
     // Click the internal ID to copy
     fireEvent.click(internalIdText);
 
-    // Verify clipboard API was called with correct value
+    // Verify clipboard API was called with correct value (including # prefix)
     await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith("s40-new-1/26-05");
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith("#s40-new-1/26-05");
     });
 
     // Verify snackbar feedback
-    expect(showSnackbarMock).toHaveBeenCalledWith("Application ID copied to clipboard", "success");
+    expect(showSnackbarMock).toHaveBeenCalledWith("Application ID copied to clipboard", "info");
   });
 });

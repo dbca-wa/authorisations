@@ -1,6 +1,5 @@
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import MenuIcon from '@mui/icons-material/Menu';
-import NumbersIcon from '@mui/icons-material/Numbers';
 import SaveIcon from '@mui/icons-material/Save';
 import MuiAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -19,6 +18,7 @@ import type { AxiosError } from 'axios';
 import type { ControllerRenderProps, FieldErrors, FieldValues, SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
+import { ApplicationIdDisplay } from '../../Common';
 import { ApiManager } from '../../../context/ApiManager';
 import { DRAWER_WIDTH } from '../../../context/Constants';
 import { useSnackbar } from '../../../context/Hooks';
@@ -271,31 +271,7 @@ export const FormLayout = () => {
                             <Typography variant="h6" sx={{ opacity: 0.5 }}>/</Typography>
                             {app.questionnaire_name}
                         </Typography>
-                        <Typography
-                            variant="caption"
-                            component="div"
-                            sx={{
-                                display: 'flex',
-                                gap: 0.5,
-                                alignItems: 'center',
-                                cursor: 'pointer',
-                                opacity: 0.7,
-                                '&:hover': {
-                                    opacity: 1,
-                                },
-                            }}
-                            onClick={() => {
-                                navigator.clipboard.writeText(app.internal_id).then(() => {
-                                    showSnackbar('Application ID copied to clipboard', 'success');
-                                }).catch(() => {
-                                    showSnackbar('Failed to copy to clipboard', 'error');
-                                });
-                            }}
-                            title="Click to copy application ID"
-                        >
-                            <NumbersIcon sx={{ fontSize: 'inherit' }} />
-                            {app.internal_id}
-                        </Typography>
+                        <ApplicationIdDisplay internalId={app.internal_id} variant="caption" />
                     </Box>
                     <AccountMenu
                         isDirty={isDirty}

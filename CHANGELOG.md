@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added this `CHANGELOG.md` file using Keep a Changelog structure.
 - One sentence project definition / description.
-- Added `process_name` field to questionnaire API responses for form editor display, and made application internal ID clickable in the app bar to copy to clipboard.
+- Added `process_name` field to questionnaire API responses for form editor display.
+- Added reusable `ApplicationIdDisplay` component for internal ID display with copy-to-clipboard functionality.
 
 ### Changed
 
