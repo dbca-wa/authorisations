@@ -27,6 +27,9 @@ def test_questionnaire_list_returns_latest_versions_only(
     assert identifiers == {("s40", "new-application"), ("aec", "new-application")}
     assert all(item["version"] >= 1 for item in payload)
     assert not any(item["process_slug"] == "s40" and item["version"] == 1 for item in payload)
+    # Verify process_name is included in the response
+    assert all("process_name" in item for item in payload)
+    assert all(item["process_name"] for item in payload)  # Ensure it's not empty
 
 
 @pytest.mark.e2e

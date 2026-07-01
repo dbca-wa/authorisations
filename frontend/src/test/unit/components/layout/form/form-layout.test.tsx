@@ -195,4 +195,13 @@ describe("FormLayout", () => {
     });
     expect(apiMocks.updateApplication).not.toHaveBeenCalled();
   });
+
+  it("displays both process name and questionnaire name in the app bar", () => {
+    render(<FormLayout />);
+
+    // Both process name and questionnaire name should be in the document
+    const appBar = screen.getByRole("banner");
+    expect(appBar).toHaveTextContent("Section 40");
+    expect(appBar).toHaveTextContent("New application");
+  });
 });

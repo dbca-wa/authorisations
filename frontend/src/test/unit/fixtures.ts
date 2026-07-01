@@ -42,6 +42,7 @@ export const makeQuestionnaire = (
   overrides: Partial<IQuestionnaireData> = {},
 ): IQuestionnaireData => ({
   process_slug: "s40",
+  process_name: "Section 40",
   id: 1,
   code: "new",
   name: "New application",

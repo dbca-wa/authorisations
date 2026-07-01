@@ -20,6 +20,7 @@ export interface IAuthorisationProcess {
  */
 export interface IQuestionnaireData {
     process_slug: string;
+    process_name: string;
     id: number;
     code: string;
     name: string;

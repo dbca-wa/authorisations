@@ -264,7 +264,9 @@ export const FormLayout = () => {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div">
+                    <Typography variant="h6" noWrap component="div" sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        {questionnaire.process_name}
+                        <Typography variant="h6" sx={{ opacity: 0.5 }}>/</Typography>
                         {app.questionnaire_name}
                     </Typography>
                     <AccountMenu
