@@ -155,15 +155,16 @@ export function FormReviewPage({
                             <h2 className="m-0 text-base font-bold text-white">
                                 {getStepPrefix(stepIdx)} {step.title}
                             </h2>
-                            <IconButton
-                                size="small"
-                                aria-label="edit step"
-                                onClick={handleSubmit(stepIdx)}
-                                disabled={!userCanEdit}
-                                className="text-white! disabled:text-gray-300!"
-                            >
-                                <EditIcon fontSize="small" />
-                            </IconButton>
+                            {userCanEdit &&
+                                <IconButton
+                                    size="small"
+                                    aria-label="edit step"
+                                    onClick={handleSubmit(stepIdx)}
+                                    className="text-white! disabled:text-gray-300!"
+                                >
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                            }
                         </div>
 
                         <div className="space-y-3 p-3">
