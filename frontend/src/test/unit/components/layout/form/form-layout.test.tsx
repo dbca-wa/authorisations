@@ -230,4 +230,10 @@ describe("FormLayout", () => {
     // Verify snackbar feedback
     expect(showSnackbarMock).toHaveBeenCalledWith("Application ID copied to clipboard", "info");
   });
+
+  it("sets the page title to 'process_name / questionnaire_name : DBCA Authorisations'", () => {
+    render(<FormLayout />);
+
+    expect(document.title).toBe("Section 40 / New application : DBCA Authorisations");
+  });
 });

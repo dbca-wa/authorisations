@@ -209,7 +209,7 @@ export const FormLayout = () => {
 
     // Change page title
     React.useEffect(() => {
-        document.title = `${app.questionnaire_name} : DBCA Authorisations`;
+        document.title = `${questionnaire.process_name} / ${app.questionnaire_name} : DBCA Authorisations`;
     }, [app.questionnaire_name]);
 
     // Guard against StrictMode double-invocation: only show the notice once per mount.
