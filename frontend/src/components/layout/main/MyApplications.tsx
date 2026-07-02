@@ -136,8 +136,8 @@ export const MyApplications = () => {
     }, [applications, processBySlug, sortOrder]);
 
     return (
-        <Box className="p-8 min-w-4xl max-w-7xl">
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Box className="p-8 min-w-3xl max-w-5xl">
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography variant="h4" gutterBottom>
                     My Applications
                 </Typography>
@@ -173,7 +173,9 @@ export const MyApplications = () => {
                     </FormControl>
                 }
             </Box>
-            <p>Here you can view and manage your applications.</p>
+            <Typography color="textSecondary" sx={{ mb: 4 }}>
+                Here you can view and manage your applications.
+            </Typography>
 
             {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
                 applications.length === 0 ? <EmptyStateComponent /> :

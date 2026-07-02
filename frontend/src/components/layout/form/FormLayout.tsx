@@ -19,8 +19,8 @@ import type { ControllerRenderProps, FieldErrors, FieldValues, SubmitErrorHandle
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
 import { ApplicationIdDisplay } from '../../Common';
+import { openDrawerOffsetMixin } from '../StyledDrawer';
 import { ApiManager } from '../../../context/ApiManager';
-import { DRAWER_WIDTH } from '../../../context/Constants';
 import { useSnackbar } from '../../../context/Hooks';
 import { LocalStorage } from '../../../context/LocalStorage';
 import type { IApplicationAttachment, IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
@@ -210,7 +210,7 @@ export const FormLayout = () => {
     // Change page title
     React.useEffect(() => {
         document.title = `${questionnaire.process_name} / ${app.questionnaire_name} : DBCA Authorisations`;
-    }, [app.questionnaire_name]);
+    }, [questionnaire.process_name, app.questionnaire_name]);
 
     // Guard against StrictMode double-invocation: only show the notice once per mount.
     const privacyNoticeShown = React.useRef(false);
@@ -326,8 +326,7 @@ const AppBar = styled(MuiAppBar, {
         {
             props: ({ open }) => open,
             style: {
-                marginLeft: DRAWER_WIDTH,
-                width: `calc(100% - ${DRAWER_WIDTH}px)`,
+                ...openDrawerOffsetMixin(theme),
                 transition: theme.transitions.create(['width', 'margin'], {
                     easing: theme.transitions.easing.sharp,
                     duration: theme.transitions.duration.enteringScreen,

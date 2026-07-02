@@ -14,11 +14,11 @@ import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
 import { useSnackbar } from '../../../context/Hooks';
 import { TurnstileManager } from '../../../context/TurnstileManager';
+import { fireConfettiEffect } from '../../../context/confettiEffect';
 import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } from "../../../context/types/Application";
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
 import { FileAttachmentList } from '../../Common';
-import { fireConfettiEffect } from '../../../context/Confetti';
 
 const getStepPrefix = (stepIndex: number) => `${stepIndex + 1}.`;
 const getSectionPrefix = (sectionIndex: number) => `${String.fromCharCode(65 + sectionIndex)})`;
@@ -141,8 +141,8 @@ export function FormReviewPage({
     };
 
     return (
-        <div className="mx-auto min-w-3xl max-w-7xl bg-[#d1d5db] p-8 font-sans text-[#111]">
-            <p className="mb-2 text-3xl font-bold text-[#111]">
+        <div className="bg-gray-300 p-8 w-full lg:w-3xl xl:w-4xl 2xl:w-5xl">
+            <p className="mb-2 text-3xl font-bold">
                 Review your answers
             </p>
             <p className="mb-8 leading-6 text-[#4b5563]">
