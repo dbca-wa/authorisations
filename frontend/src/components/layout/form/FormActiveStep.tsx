@@ -40,7 +40,7 @@ export const FormActiveStep = ({
 }) => {
 
     return (
-        <Box className="bg-gray-300 p-8 min-w-4xl max-w-7xl">
+        <Box className="bg-gray-300 p-8 w-full lg:w-3xl xl:w-4xl 2xl:w-5xl">
             <form onSubmit={handleSubmit((prev) => prev + 1)} onKeyDown={onKeyDown}>
                 {currentStep.sections.map((section, sectionIndex) => {
                     return <Section

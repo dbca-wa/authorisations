@@ -168,9 +168,12 @@ export const NewApplication = () => {
     const [inProgress, setInProgress] = React.useState<boolean>(false);
 
     return (
-        <Box className="p-8 min-w-4xl max-w-7xl">
+        <Box className="p-8 min-w-3xl max-w-5xl">
             <Typography variant="h4" gutterBottom>
                 Start a New Application
+            </Typography>
+            <Typography color="textSecondary" sx={{ mb: 4 }}>
+                Here you can start a new application for an authorisation process.
             </Typography>
             {isQuestionnairesLoading ? <Typography>Loading questionnaires...</Typography> :
                 processGroups.length === 0 ? <EmptyStateComponent /> :
@@ -196,7 +199,7 @@ const Questionnaire = ({
     inProgress: boolean;
     setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-    const localDate = formatDate(questionnaire.created_at)
+    const localDate = formatDate(questionnaire.updated_at)
     const navigate: NavigateFunction = useNavigate();
     const { showDialog, hideDialog } = useDialog();
     const { showSnackbar } = useSnackbar();

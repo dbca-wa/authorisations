@@ -2,8 +2,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import confetti from 'canvas-confetti';
 import { debounce } from 'underscore';
+import { fireConfettiEffect } from './confettiEffect';
 
 /**
  * Number of rapid clicks required to trigger the confetti effect.
@@ -18,35 +18,6 @@ const CLICK_TARGET = 10;
  * requiring deliberate, focused interaction. If the user pauses longer, the click count resets.
  */
 const WINDOW_MS = 1800;
-
-/**
- * Fires a confetti sequence with customizable parameters and repetition count.
- *
- * @param celebrate - Number of successive confetti bursts to fire (default: 3).
- * @param particleCount - Base number of particles per burst (default: 90).
- * @param spread - Spread angle in degrees (default: 120).
- *   Particle count decreases with each burst (cascading effect from 100% down to 20% minimum).
- *   Spread increases with each burst (expanding from original up to 150%) for a widening celebration.
- *   Bursts are staggered 250ms apart to create visual rhythm. Example: celebrate=10 fires 10 bursts over 2.25 seconds.
- */
-export const fireConfettiEffect = (celebrate: number = 3, particleCount: number = 90, spread: number = 120) => {
-    for (let i = 0; i < celebrate; i++) {
-        window.setTimeout(() => {
-            // Reduce particles with each burst for a fading cascade effect.
-            const adjustedParticleCount = Math.round(particleCount * Math.max(0.2, 1 - (i / celebrate) * 0.8));
-            // Increase spread with each burst to create expanding celebration effect.
-            const adjustedSpread = spread * (1 + (i / celebrate) * 0.5);
-
-            confetti({
-                particleCount: adjustedParticleCount,
-                spread: adjustedSpread,
-                startVelocity: 45,
-                origin: { y: 0.85 },
-                zIndex: 2500,
-            });
-        }, i * 250);
-    }
-};
 
 /**
  * Renders an interactive element that triggers a confetti effect after rapid repeated clicks.
@@ -138,7 +109,7 @@ export const Confetti = ({
             }}
             aria-label="Confetti trigger"
         >
-            <Typography variant="caption" sx={{ color: 'text.disabled', cursor: 'inherit', userSelect: 'none' }}>
+            <Typography variant="caption" sx={{ color: 'text.disabled', cursor: 'pointer', userSelect: 'none' }}>
                 {children}
             </Typography>
         </Box>

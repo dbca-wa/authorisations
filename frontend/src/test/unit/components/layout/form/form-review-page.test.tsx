@@ -36,7 +36,7 @@ vi.mock("../../../../../context/TurnstileManager", () => ({
   },
 }));
 
-vi.mock("../../../../../context/Confetti", () => ({
+vi.mock("../../../../../context/confettiEffect", () => ({
   fireConfettiEffect: fireConfettiEffectMock,
 }));
 

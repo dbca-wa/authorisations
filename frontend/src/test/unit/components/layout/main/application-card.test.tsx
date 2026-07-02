@@ -5,6 +5,18 @@ import { ApplicationCard } from "../../../../../components/layout/main/Applicati
 import * as UtilsModule from "../../../../../context/Utils";
 import { makeApplication, makeProcess } from "../../../fixtures";
 
+const { showSnackbarMock } = vi.hoisted(() => ({
+  showSnackbarMock: vi.fn(),
+}));
+
+vi.mock("../../../../../context/Hooks", async () => {
+  const actual = await vi.importActual<typeof import("../../../../../context/Hooks")>("../../../../../context/Hooks");
+  return {
+    ...actual,
+    useSnackbar: () => ({ showSnackbar: showSnackbarMock }),
+  };
+});
+
 
 describe("ApplicationCard", () => {
   beforeEach(() => {

@@ -18,8 +18,9 @@ import type { AxiosError } from 'axios';
 import type { ControllerRenderProps, FieldErrors, FieldValues, SubmitErrorHandler, SubmitHandler, UseFormProps } from 'react-hook-form';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
+import { ApplicationIdDisplay } from '../../Common';
+import { openDrawerOffsetMixin } from '../StyledDrawer';
 import { ApiManager } from '../../../context/ApiManager';
-import { DRAWER_WIDTH } from '../../../context/Constants';
 import { useSnackbar } from '../../../context/Hooks';
 import { LocalStorage } from '../../../context/LocalStorage';
 import type { IApplicationAttachment, IApplicationData, IFormAnswers, IFormDocument } from '../../../context/types/Application';
@@ -208,8 +209,8 @@ export const FormLayout = () => {
 
     // Change page title
     React.useEffect(() => {
-        document.title = `${app.questionnaire_name} : DBCA Authorisations`;
-    }, [app.questionnaire_name]);
+        document.title = `${questionnaire.process_name} / ${app.questionnaire_name} : DBCA Authorisations`;
+    }, [questionnaire.process_name, app.questionnaire_name]);
 
     // Guard against StrictMode double-invocation: only show the notice once per mount.
     const privacyNoticeShown = React.useRef(false);
@@ -264,9 +265,14 @@ export const FormLayout = () => {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div">
-                        {app.questionnaire_name}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Typography variant="h6" noWrap component="div" sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                            {questionnaire.process_name}
+                            <Typography variant="h6" sx={{ opacity: 0.5 }}>/</Typography>
+                            {app.questionnaire_name}
+                        </Typography>
+                        <ApplicationIdDisplay internalId={app.internal_id} variant="caption" />
+                    </Box>
                     <AccountMenu
                         isDirty={isDirty}
                         saveAnswers={saveAnswers}
@@ -320,8 +326,7 @@ const AppBar = styled(MuiAppBar, {
         {
             props: ({ open }) => open,
             style: {
-                marginLeft: DRAWER_WIDTH,
-                width: `calc(100% - ${DRAWER_WIDTH}px)`,
+                ...openDrawerOffsetMixin(theme),
                 transition: theme.transitions.create(['width', 'margin'], {
                     easing: theme.transitions.easing.sharp,
                     duration: theme.transitions.duration.enteringScreen,

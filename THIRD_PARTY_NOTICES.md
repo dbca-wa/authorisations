@@ -25,13 +25,13 @@ attribution obligations, those obligations continue to apply.
 | django-vite | 3.1.0 | Apache-2.0 |
 | whitenoise | 6.12.0 | MIT |
 | gunicorn | 26.0.0 | MIT |
-| django-environ | 0.13.0 | MIT |
+| django-environ | 0.14.0 | MIT |
 | jsonschema | 4.26.0 | MIT |
 | drf-jsonschema-serializer | 3.0.0 | BSD-3-Clause |
 | django-jsonform | 2.23.2 | BSD-3-Clause |
 | django-admin-tools | 0.9.3 | MIT |
 | frozendict | 2.4.7 | LGPL-3.0-only |
-| dbca-utils | 2.1.5 | Apache-2.0 |
+| dbca-utils | 3.0.3 | Apache-2.0 |
 | djangorestframework | 3.17.1 | BSD-3-Clause |
 | pyfsig | 1.1.1 | MIT |
 | django-storages | 1.14.6 | BSD-3-Clause |
@@ -49,21 +49,21 @@ attribution obligations, those obligations continue to apply.
 | --- | --- | --- |
 | @emotion/react | 11.14.0 | MIT |
 | @emotion/styled | 11.14.1 | MIT |
-| @mui/icons-material | 9.0.0 | MIT |
-| @mui/material | 9.0.0 | MIT |
-| @mui/x-data-grid | 9.0.4 | MIT |
-| @mui/x-date-pickers | 9.0.4 | MIT |
-| @tailwindcss/vite | 4.2.4 | MIT |
-| axios | 1.16.0 | MIT |
-| dayjs | 1.11.20 | MIT |
-| react | 19.2.5 | MIT |
-| react-dom | 19.2.5 | MIT |
+| @mui/icons-material | 9.1.1 | MIT |
+| @mui/material | 9.1.2 | MIT |
+| @mui/x-data-grid | 9.7.0 | MIT |
+| @mui/x-date-pickers | 9.7.0 | MIT |
+| @tailwindcss/vite | 4.3.2 | MIT |
+| axios | 1.18.1 | MIT |
+| dayjs | 1.11.21 | MIT |
+| react | 19.2.7 | MIT |
+| react-dom | 19.2.7 | MIT |
 | react-dropzone | 15.0.0 | MIT |
-| react-hook-form | 7.75.0 | MIT |
-| react-router | 7.14.2 | MIT |
-| tailwindcss | 4.2.4 | MIT |
+| react-hook-form | 7.80.0 | MIT |
+| react-router | 7.18.1 | MIT |
+| tailwindcss | 4.3.2 | MIT |
 | underscore | 1.13.8 | MIT |
-| uuid | 14.0.0 | MIT |
+| uuid | 14.0.1 | MIT |
 
 ### Frontend transitive licence notes
 

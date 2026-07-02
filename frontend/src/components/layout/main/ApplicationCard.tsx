@@ -1,4 +1,3 @@
-import NumbersIcon from '@mui/icons-material/Numbers';
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import Box from "@mui/material/Box";
@@ -10,13 +9,13 @@ import ListItem from "@mui/material/ListItem";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
-import Typography from "@mui/material/Typography";
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
 
+import { ApplicationIdDisplay } from '../../Common';
+import { openNewTab } from '../../../context/Utils';
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
-import { openNewTab } from '../../../context/Utils';
 
 const applicationSteps = [
     "Application",
@@ -73,9 +72,7 @@ export const ApplicationCard = ({
     return (
         <ListItem sx={{ marginBottom: 2 }}>
             <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
-                <Typography variant="h6">
-                    <NumbersIcon></NumbersIcon>{application.internal_id}
-                </Typography>
+                <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
 
                 <Box sx={{ display: "flex", gap: 1, my: 2, flexWrap: "wrap", justifyContent: "space-around" }} className="max-w-min min-w-1/1 mx-auto">
                     <Chip label={processName} size="small" variant="outlined" />

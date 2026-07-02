@@ -37,3 +37,7 @@ The maintainers will aim to:
 - provide a responsible disclosure path where appropriate
 
 If you are unsure whether an issue is security-sensitive, report it privately first.
+
+---
+
+**See [README.md](README.md) for the documentation index.**

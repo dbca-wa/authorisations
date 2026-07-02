@@ -62,6 +62,25 @@ def test_questionnaire_model_serialiser_exposes_process_slug(process, user):
     assert data["code"] == "new"
 
 
+def test_questionnaire_model_serialiser_exposes_process_name(process, user):
+    """Expose process_name so clients can display the process name without additional API calls."""
+    questionnaire = Questionnaire.objects.create(
+        process=process,
+        code="new",
+        name="New application",
+        description="Description",
+        version=1,
+        document=_document(),
+        sort_order=1,
+        created_by=user,
+    )
+
+    data = QuestionnaireSerialiser(questionnaire).data
+
+    assert data["process_name"] == process.name
+    assert data["process_slug"] == process.slug
+
+
 def test_question_serialiser_defaults_is_required_to_false():
     """Default optional questions to is_required=False to avoid null boolean schema values."""
     serialiser = QuestionSerialiser(
