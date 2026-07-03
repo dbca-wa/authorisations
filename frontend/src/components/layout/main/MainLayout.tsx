@@ -3,7 +3,6 @@ import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
-import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -16,11 +15,11 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useMemo } from 'react';
 import { useLoaderData, useNavigate, type NavigateFunction, type NavigateOptions } from 'react-router';
 import { ConfigManager } from '../../../context/ConfigManager';
-import { DRAWER_WIDTH } from '../../../context/Constants';
 import type { IRoute, LoaderData } from "../../../context/types/Generic";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { ROUTES } from '../../../router';
 import { Confetti } from '../../../context/Confetti';
+import { ResponsivePermanentDrawer } from '../StyledDrawer';
 
 
 export const MainLayout = ({
@@ -125,16 +124,11 @@ const Sidebar = ({
     );
 
     return (
-        <Drawer
+        <ResponsivePermanentDrawer
             variant="permanent"
             sx={{
-                width: DRAWER_WIDTH,
-                flexShrink: 0,
                 [`& .MuiDrawer-paper`]: {
-                    width: DRAWER_WIDTH,
-                    boxSizing: 'border-box',
-                    display: 'flex',
-                    flexDirection: 'column',
+                    backgroundColor: 'transparent',
                 },
             }}
         >
@@ -163,6 +157,6 @@ const Sidebar = ({
                 </List>
             </Box>
             <Confetti celebrate={10}>{appVersion}</Confetti>
-        </Drawer>
+        </ResponsivePermanentDrawer>
     );
 }

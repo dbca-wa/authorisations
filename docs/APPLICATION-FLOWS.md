@@ -155,3 +155,7 @@ Reviewer: Navigate to /assessment
 - **Reviewers** (group-based): Can view assessment queue for assigned processes, update application status
 - **Ownership**: Each application tied to `owner` (User who created it)
 - **Group-Based Access**: Process has `assessor_groups` M2M; users in these groups can review that process
+
+---
+
+**See [README.md](README.md) for the documentation index.**

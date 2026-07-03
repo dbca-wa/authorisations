@@ -134,3 +134,29 @@ def test_questionnaires_retrieve_unknown_id_returns_404(api_client, user):
     response = api_client.get("/api/questionnaires/999999")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_questionnaires_list_includes_process_metadata(
+    api_client,
+    user,
+    process_factory,
+    questionnaire_factory,
+):
+    """Verify that questionnaire responses include process slug and name metadata."""
+    process = process_factory(slug="s40", name="Section 40")
+    questionnaire = questionnaire_factory(
+        process=process,
+        code="new",
+        name="New application",
+    )
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/questionnaires")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    data = response.data[0]
+    assert data["process_slug"] == "s40"
+    assert data["process_name"] == "Section 40"
+    assert data["id"] == questionnaire.id

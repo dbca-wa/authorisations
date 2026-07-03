@@ -329,9 +329,9 @@ CI:
 - azure-pipelines.yml
 
 Project docs:
-- docs/testing.md (this document)
-- docs/installation.md
-- .github/copilot-instructions.md
+- docs/TESTING.md (this document)
+- docs/DEVELOPMENT.md
+- ../README.md
 
 ## Maintenance Policy
 

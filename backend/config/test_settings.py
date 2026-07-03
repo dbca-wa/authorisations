@@ -29,7 +29,9 @@ STORAGES = {
             "location": BASE_DIR / "test-media",  # noqa: F405
         },
     },
-    "staticfiles": STORAGES["staticfiles"],  # noqa: F405
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

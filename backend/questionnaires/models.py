@@ -102,10 +102,17 @@ class QuestionnaireSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerial
         read_only=True,
     )
 
+    process_name = serializers.CharField(
+        source="process.name",
+        required=False,
+        read_only=True,
+    )
+
     class Meta:
         model = Questionnaire
         fields = (
             "process_slug",
+            "process_name",
             "id",
             "code",
             "name",
