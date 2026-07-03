@@ -7,9 +7,9 @@ secretGenerator:
     envs:
       - .env
 configMapGenerator:
-  - name: prince2-license
+  - name: prince-license
     files:
-      - .prince2-license
+      - license.dat=.prince-license
 generatorOptions:
   disableNameSuffixHash: true
 resources:
@@ -26,4 +26,4 @@ patches:
   - path: service_patch.yaml
 images:
   - name: ghcr.io/dbca-wa/authorisations
-    newTag: 1.0.0-uat
+    newTag: 1.0.1-uat

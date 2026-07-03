@@ -1,46 +1,55 @@
 # DBCA Authorisations
-Animal Ethics & Section 40/45 approval process
 
-## Open source release documents
+Streamline DBCA authorisation workflows - from Animal Ethics to Section 40/45 - with versioned, process-driven digital forms built for regulatory compliance.
 
-This repository is licensed under the Apache License 2.0. See `LICENSE` for the full licence text and `NOTICE` for repository-level attribution.
+## Quick start
 
-Third-party dependency notices are maintained in `THIRD_PARTY_NOTICES.md`, with separate backend and frontend sections to reflect the two build ecosystems used by this application.
+**Documentation is located in [docs/](docs/README.md).**
 
-Contributor and security guidance are available in `CONTRIBUTING.md` and `SECURITY.md`.
+For setup and development instructions, start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-Release and semantic versioning guidance is documented in [docs/release.md](docs/release.md).
+For testing, see the testing section in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) or the comprehensive guide at [docs/TESTING.md](docs/TESTING.md).
 
-## Testing
+## Open source
 
-Backend tests now run on `pytest` with categories for `unit`, `api`, `security`, `integration`, `slow`, and `smoke`. Pytest uses [backend/config/test_settings.py](backend/config/test_settings.py) so local and CI runs do not depend on PostgreSQL database-creation privileges.
+This repository is licensed under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
 
-Run the fast backend suite:
+Third-party dependency notices are maintained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), with separate backend and frontend sections.
 
-```bash
-cd backend
-poetry run pytest
-```
+- **Contributing:** See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+- **Security:** See [docs/SECURITY.md](docs/SECURITY.md)
+- **Releases:** See [docs/RELEASE.md](docs/RELEASE.md)
 
-Run backend tests in parallel with coverage:
+## Purpose and domain
 
-```bash
-cd backend
-poetry run pytest -n auto --cov --cov-report=term-missing --cov-report=html --cov-report=xml
-```
+This system supports DBCA authorisation workflows, including Animal Ethics and Section 40/45 style application pathways. The platform is designed for versioned, process-driven forms where applicants submit applications backed by a questionnaire definition. A single authorisation process can include multiple questionnaire types (for example: New Application, Renewal) and each questionnaire type can have multiple versions over time.
 
-Run the frontend suite with Vitest:
+## Overview
 
-```bash
-cd frontend
-bun run test
-```
+**Architecture & Design:** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for data model, terminology, and design decisions.
 
-Run frontend coverage:
+**Backend Development:** See [docs/BACKEND-CONVENTIONS.md](docs/BACKEND-CONVENTIONS.md) for API layer, security, and ordering conventions.
 
-```bash
-cd frontend
-bun run test:coverage
-```
+**Frontend Development:** See [docs/FRONTEND-CONVENTIONS.md](docs/FRONTEND-CONVENTIONS.md) for React, TypeScript, and component guidelines.
 
-Azure Pipelines now runs backend and frontend tests before the Docker build, and publishes coverage for both stacks.
+**Application Flows:** See [docs/APPLICATION-FLOWS.md](docs/APPLICATION-FLOWS.md) for user journeys, routes, and workflows.
+
+**File Management:** See [docs/FILE-MANAGEMENT.md](docs/FILE-MANAGEMENT.md) for attachment design and implementation.
+
+**Deployment:** See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes and kustomize configuration.
+
+## Writing style
+
+- Use British English spelling in code comments, docs, command names, and developer guidance.
+- Prefer forms such as `normalise`, `normalisation`, and `authorisation`.
+
+## Notable files
+
+- `backend/entrypoint.sh` — Production startup sequence
+- `backend/config/settings.py` — Environment and security configuration
+- `backend/api/views.py` — Core DRF viewsets and queryset behaviour
+- `backend/questionnaires/models.py` — Questionnaire data model and versioning
+- `backend/questionnaires/admin.py` — Version clone-on-edit behaviour
+- `backend/processes/models.py` — Process parent object and ordering
+- `frontend/src/router.tsx` — Route definitions
+- `frontend/src/context/ApiManager.ts` — API abstraction

@@ -47,11 +47,13 @@ export const ApplicationAssessment = () => {
     }, [applications]);
 
     return (
-        <Box className="p-8 min-w-4xl max-w-7xl">
+        <Box className="p-8 min-w-3xl max-w-5xl">
             <Typography variant="h4" gutterBottom>
-                Application Assessment 
+                Application Assessment
             </Typography>
-            <p>Here you can assess and action applications assigned to your assessment stream.</p>
+            <Typography color="textSecondary" sx={{ mb: 4 }}>
+                Here you can assess and action applications assigned to your assessment stream.
+            </Typography>
 
             {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
                 sortedAssessmentApplications.length === 0 ? <EmptyStateComponent /> :

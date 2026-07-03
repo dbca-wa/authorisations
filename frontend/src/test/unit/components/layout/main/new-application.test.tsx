@@ -177,4 +177,27 @@ describe("NewApplication", () => {
       expect(showDialogMock).not.toHaveBeenCalled();
     });
   });
+
+  it("displays the updated_at date in the Last updated field, not created_at", () => {
+    const createdDate = "2026-05-01T00:00:00Z";
+    const updatedDate = "2026-05-10T00:00:00Z";
+
+    useResolvedPromiseMock.mockReturnValue([
+      [
+        makeQuestionnaire({
+          process_slug: "s40",
+          name: "New application",
+          created_at: createdDate,
+          updated_at: updatedDate,
+        }),
+      ],
+      false,
+    ]);
+
+    render(<NewApplication />);
+
+    // The updated_at date should be formatted as 5/10/2026 (US locale from new Date)
+    const expectedDateString = new Date(updatedDate).toLocaleDateString();
+    expect(screen.getByText(`Last updated: ${expectedDateString} (v1)`)).toBeInTheDocument();
+  });
 });

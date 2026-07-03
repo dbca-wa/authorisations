@@ -1,5 +1,6 @@
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import NumbersIcon from '@mui/icons-material/Numbers';
 import Box from "@mui/material/Box";
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
@@ -8,11 +9,12 @@ import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from "@mui/material/Typography";
 
+import type { TypographyProps } from "@mui/material/Typography";
 import { useRef } from 'react';
 import { ApiManager } from '../context/ApiManager';
 import { useDialog, useSnackbar } from '../context/Hooks';
-import { getIconFromFilename } from "../context/Utils";
 import type { IApplicationAttachment } from "../context/types/Application";
+import { getIconFromFilename } from "../context/Utils";
 
 
 export const FileAttachmentList = ({
@@ -197,5 +199,58 @@ export const FileAttachmentList = ({
                 ))}
             </Grid>
         </Box>
+    );
+};
+
+
+/**
+ * Displays an application internal ID with copy-to-clipboard functionality.
+ * Shows icon + ID and provides hover feedback and snackbar notifications.
+ * Adapts styling based on the variant for use in different contexts.
+ */
+export const ApplicationIdDisplay = ({
+    internalId,
+    variant = "caption",
+}: {
+    internalId: string;
+    variant?: TypographyProps['variant'];
+}) => {
+    const { showSnackbar } = useSnackbar();
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(`#${internalId}`)
+            .then(() => {
+                showSnackbar('Application ID copied to clipboard', 'info');
+            })
+            .catch(() => {
+                showSnackbar('Failed to copy to clipboard', 'error');
+            });
+    };
+
+    // Determine styling based on variant
+    const isSmallVariant = variant === 'caption' || variant === 'body2';
+
+    return (
+        <Typography
+            variant={variant}
+            component="div"
+            sx={{
+                display: 'flex',
+                // gap: isSmallVariant ? 0.5 : 1,
+                alignItems: 'center',
+                width: 'fit-content',
+                cursor: 'pointer',
+                opacity: isSmallVariant ? 0.7 : 1,
+                transition: 'opacity 0.2s ease-in-out',
+                '&:hover': {
+                    opacity: 1,
+                },
+            }}
+            onClick={handleCopy}
+            title="Click to copy application ID"
+        >
+            <NumbersIcon sx={{ fontSize: 'inherit' }} />
+            {internalId}
+        </Typography>
     );
 };

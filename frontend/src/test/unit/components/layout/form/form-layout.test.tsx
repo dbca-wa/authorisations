@@ -195,4 +195,45 @@ describe("FormLayout", () => {
     });
     expect(apiMocks.updateApplication).not.toHaveBeenCalled();
   });
+
+  it("displays both process name and questionnaire name in the app bar", () => {
+    render(<FormLayout />);
+
+    // Both process name and questionnaire name should be in the document
+    const appBar = screen.getByRole("banner");
+    expect(appBar).toHaveTextContent("Section 40");
+    expect(appBar).toHaveTextContent("New application");
+  });
+
+  it("displays internal_id in the app bar and is clickable to copy", async () => {
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn(() => Promise.resolve()),
+      },
+    });
+
+    render(<FormLayout />);
+
+    // Internal ID should be in the app bar
+    const appBar = screen.getByRole("banner");
+    const internalIdText = screen.getByText("s40-new-1/26-05");
+    expect(appBar).toContainElement(internalIdText);
+
+    // Click the internal ID to copy
+    fireEvent.click(internalIdText);
+
+    // Verify clipboard API was called with correct value (including # prefix)
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith("#s40-new-1/26-05");
+    });
+
+    // Verify snackbar feedback
+    expect(showSnackbarMock).toHaveBeenCalledWith("Application ID copied to clipboard", "info");
+  });
+
+  it("sets the page title to 'process_name / questionnaire_name : DBCA Authorisations'", () => {
+    render(<FormLayout />);
+
+    expect(document.title).toBe("Section 40 / New application : DBCA Authorisations");
+  });
 });
