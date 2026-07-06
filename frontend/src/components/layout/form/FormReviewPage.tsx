@@ -141,7 +141,7 @@ export function FormReviewPage({
     };
 
     return (
-        <div className="bg-gray-300 p-8 w-full lg:w-3xl xl:w-4xl 2xl:w-5xl">
+        <div className="bg-gray-300 p-8 w-full min-w-3xl lg:w-3xl xl:w-4xl 2xl:w-6xl">
             <p className="mb-2 text-3xl font-bold">
                 Review your answers
             </p>

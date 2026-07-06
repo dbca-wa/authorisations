@@ -136,7 +136,7 @@ export const MyApplications = () => {
     }, [applications, processBySlug, sortOrder]);
 
     return (
-        <Box className="p-8 min-w-3xl max-w-5xl">
+        <Box className="p-8 w-full min-w-2xl lg:w-3xl xl:w-4xl">
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography variant="h4" gutterBottom>
                     My Applications

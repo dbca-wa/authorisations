@@ -47,7 +47,7 @@ export const ApplicationAssessment = () => {
     }, [applications]);
 
     return (
-        <Box className="p-8 min-w-3xl max-w-5xl">
+        <Box className="p-8 w-full min-w-2xl lg:w-3xl xl:w-4xl">
             <Typography variant="h4" gutterBottom>
                 Application Assessment
             </Typography>

@@ -168,7 +168,7 @@ export const NewApplication = () => {
     const [inProgress, setInProgress] = React.useState<boolean>(false);
 
     return (
-        <Box className="p-8 min-w-3xl max-w-5xl">
+        <Box className="p-8 w-full min-w-4xl lg:w-4xl xl:w-5xl 2xl:w-6xl">
             <Typography variant="h4" gutterBottom>
                 Start a New Application
             </Typography>
