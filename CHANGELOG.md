@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
+
+## 1.0.2 - Unreleased
+
+### Changed
+
+- Tweaked the content widths to be "responsive fixed" for wide screens.
+- Updated all input component error messages to use Material-UI Alert component for improved visibility and user feedback.
+- Updated all input compenent descriptions below the field for consistency.
+- Removed the "Actions" column name for the grid inputs for simplicity.
+
 ## 1.0.1 - 2026-07-03
 
 ### Added

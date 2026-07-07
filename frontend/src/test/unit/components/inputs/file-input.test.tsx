@@ -1,7 +1,8 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FileInput } from "../../../../components/inputs/file";
+import { ERROR_MSG } from "../../../../context/Constants";
 import { makeQuestion, renderWithForm } from "./helpers";
 
 const useDropzoneMock = vi.fn();
@@ -214,5 +215,34 @@ describe("FileInput", () => {
       "Invalid file type, please ensure it meets the requirements.",
       "error",
     );
+  });
+
+  it("shows required error in Alert when no files are attached", async () => {
+    const question = makeQuestion({
+      type: "file",
+      label: "Required file",
+      is_required: true,
+    });
+
+    renderWithForm({
+      ui: (
+        <FileInput
+          question={question}
+          applicationKey="app-1"
+          attachments={[]}
+          onAttachmentAdded={vi.fn()}
+          onAttachmentDeleted={vi.fn()}
+          onAttachmentUpdated={vi.fn()}
+        />
+      ),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    await waitFor(() => {
+      const alert = screen.getByRole("alert");
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveTextContent(ERROR_MSG.required);
+    });
   });
 });
