@@ -22,8 +22,8 @@ vi.mock("../../../../../context/Hooks", async () => {
   };
 });
 
-vi.mock("../../../../../components/layout/main/ApplicationCard", () => ({
-  ApplicationCard: ({ application }: { application: { internal_id: string } }) => (
+vi.mock("../../../../../components/layout/main/AssessmentCard", () => ({
+  AssessmentCard: ({ application }: { application: { internal_id: string } }) => (
     <div data-testid="assessment-card">{application.internal_id}</div>
   ),
 }));

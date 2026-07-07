@@ -1,5 +1,5 @@
 import DownloadIcon from '@mui/icons-material/Download';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import SearchIcon from '@mui/icons-material/Search';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -23,12 +23,11 @@ import {
     terminatedStatuses,
 } from './applicationCardUtils';
 
-
 /**
- * Renders an application summary card for applicants.
- * Displays process metadata, application status, and action buttons (continue, download).
+ * Renders an application summary card for technical officers in the assessment queue.
+ * Displays process metadata, application status, and review/download action buttons.
  */
-export const ApplicationCard = ({
+export const AssessmentCard = ({
     process,
     application,
 }: {
@@ -42,7 +41,6 @@ export const ApplicationCard = ({
 
     const isTerminated = terminatedStatuses.has(application.status);
     const isDownloadable = downloadableStatuses.has(application.status);
-    const isEditable = application.status === "DRAFT" || application.status === "ACTION_REQUIRED";
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -112,26 +110,23 @@ export const ApplicationCard = ({
                         </Link>
                     )}
 
-                    {/* Render the continue action only for editable applications. */}
-                    {isEditable && (
-                        <Link
-                            target="_blank"
-                            rel="noopener"
-                            aria-label="Continue application"
-                            onClick={() => openNewTab(`/a/${application.key}`, application.key)}
+                    <Link
+                        target="_blank"
+                        rel="noopener"
+                        aria-label="Review application"
+                        onClick={() => openNewTab(`/a/${application.key}`, application.key)}
+                    >
+                        <Button
+                            variant="contained"
+                            color="info"
+                            loadingPosition='start'
+                            loading={false}
+                            disabled={Boolean(false)}
+                            startIcon={<SearchIcon />}
                         >
-                            <Button
-                                variant="contained"
-                                color="success"
-                                loadingPosition='start'
-                                loading={false}
-                                disabled={Boolean(false)}
-                                startIcon={<PlayArrowRoundedIcon />}
-                            >
-                                Continue
-                            </Button>
-                        </Link>
-                    )}
+                            Review
+                        </Button>
+                    </Link>
                 </Box>
             </Card>
         </ListItem>

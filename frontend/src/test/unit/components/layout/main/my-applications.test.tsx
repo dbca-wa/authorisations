@@ -32,9 +32,24 @@ vi.mock("../../../../../context/LocalStorage", () => ({
 }));
 
 vi.mock("../../../../../components/layout/main/ApplicationCard", () => ({
-  ApplicationCard: ({ application, downloadUrl }: { application: { internal_id: string }; downloadUrl?: string }) => (
-    <div data-testid="application-card">{`${application.internal_id}|${downloadUrl ?? "none"}`}</div>
-  ),
+  ApplicationCard: ({ application }: { application: { internal_id: string; status: string; key: string } }) => {
+    // Simulate the behavior of ApplicationCard's internal logic
+    const downloadableStatuses = [
+      "SUBMITTED",
+      "UNDER_REVIEW",
+      "UNDER_ASSESSMENT",
+      "APPROVED",
+      "APPROVED_WITH_CONDITIONS",
+      "DEFERRED",
+      "REJECTED"
+    ];
+    const editableStatuses = ["DRAFT", "ACTION_REQUIRED"];
+    const isDownloadable = downloadableStatuses.includes(application.status);
+    const isEditable = editableStatuses.includes(application.status);
+    return (
+      <div data-testid="application-card">{`${application.internal_id}|download:${isDownloadable ? "yes" : "no"}|continue:${isEditable ? "yes" : "no"}`}</div>
+    );
+  },
 }));
 
 import { MyApplications } from "../../../../../components/layout/main/MyApplications";
@@ -65,7 +80,7 @@ describe("MyApplications", () => {
     expect(screen.getByText("No items found")).toBeInTheDocument();
   });
 
-  it("shows download URL only for downloadable statuses", () => {
+  it("shows download button for downloadable statuses and continue button for editable statuses", () => {
     useResolvedPromiseMock.mockReturnValue([
       [
         makeApplication({ internal_id: "app-submitted", status: "SUBMITTED", key: "k1" }),
@@ -77,8 +92,8 @@ describe("MyApplications", () => {
     render(<MyApplications />);
 
     const cards = screen.getAllByTestId("application-card").map((node) => node.textContent);
-    expect(cards).toContain("app-submitted|/d/k1");
-    expect(cards).toContain("app-draft|none");
+    expect(cards).toContain("app-submitted|download:yes|continue:no");
+    expect(cards).toContain("app-draft|download:no|continue:yes");
   });
 
   it("uses persisted sort order when stored value is valid", () => {

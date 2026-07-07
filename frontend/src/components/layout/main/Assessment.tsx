@@ -7,7 +7,7 @@ import { useLoaderData } from "react-router";
 import { useResolvedPromise } from "../../../context/Hooks";
 import type { IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
-import { ApplicationCard } from "./ApplicationCard";
+import { AssessmentCard } from "./AssessmentCard";
 import { EmptyStateComponent } from "./EmptyState";
 
 const assessmentRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", "UNDER_ASSESSMENT"] as const;
@@ -60,12 +60,10 @@ export const ApplicationAssessment = () => {
                     <List>
                         {sortedAssessmentApplications.map((application) => {
                             const process = processBySlug.get(application.process_slug);
-                            return <ApplicationCard
+                            return <AssessmentCard
                                 key={application.key}
                                 application={application}
                                 process={process}
-                                downloadUrl={`/d/${application.key}`}
-                                displayContinue={false}
                             />;
                         })}
                     </List>
