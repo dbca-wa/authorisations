@@ -3,7 +3,6 @@ import CancelIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SaveIcon from '@mui/icons-material/Save';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -290,8 +289,8 @@ function getHeaders({
     columns.push({
         type: "actions",
         field: "actions",
-        // headerName: "Actions",
-        renderHeader: () => <MoreVertIcon fontSize="small" />,
+        // No header name for the actions column
+        headerName: "",
         flex: 0.5,
         getActions: ({ id }) => getEditActions({
             id,
