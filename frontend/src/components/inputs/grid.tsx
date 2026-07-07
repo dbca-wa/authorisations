@@ -4,6 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import SaveIcon from '@mui/icons-material/Save';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from "@mui/material/Button";
 import FormHelperText from '@mui/material/FormHelperText';
@@ -47,7 +48,7 @@ const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
     if (!Array.isArray(value)) {
         return [];
     }
-    
+
     // Map over each row and convert date strings to Date objects
     return value.map((row) => {
         const newRow: Record<string, unknown> = { _id: uuidv6(), _isNew: false, ...row, };
@@ -179,8 +180,6 @@ export function GridInput({
             <Typography variant="h6">
                 {question.labelText}
             </Typography>
-            {question.o.description && <p>{question.o.description}</p>}
-
             <DataGrid
                 getRowId={(row) => row._id}
                 rows={rows}
@@ -210,8 +209,13 @@ export function GridInput({
                 sx={{ display: 'grid' }}
             />
             {fieldState.invalid &&
-                <FormHelperText error>
+                <Alert severity="error" sx={{ mt: 1 }}>
                     {fieldState.error?.message}
+                </Alert>
+            }
+            {question.o.description &&
+                <FormHelperText>
+                    {question.o.description}
                 </FormHelperText>
             }
         </Box>

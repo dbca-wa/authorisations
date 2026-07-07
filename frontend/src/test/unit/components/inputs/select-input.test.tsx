@@ -21,7 +21,7 @@ describe("SelectInput", () => {
     expect(screen.getByRole("option", { name: "Monitoring" })).toBeInTheDocument();
   });
 
-  it("shows required error if nothing selected", async () => {
+  it("shows required error in Alert if nothing selected", async () => {
     const question = makeQuestion({
       type: "select",
       label: "Required select",
@@ -33,6 +33,8 @@ describe("SelectInput", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Submit" }));
 
-    expect(await screen.findByText(ERROR_MSG.required)).toBeInTheDocument();
+    const alert = await screen.findByRole("alert");
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent(ERROR_MSG.required);
   });
 });

@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -30,9 +31,9 @@ export function CheckboxInput({
                     label={question.labelText}
                 />
                 {fieldState.invalid &&
-                    <FormHelperText error>
+                    <Alert severity="error" sx={{ mt: 1 }}>
                         {fieldState.error?.message}
-                    </FormHelperText>
+                    </Alert>
                 }
                 {question.o.description &&
                     <FormHelperText>

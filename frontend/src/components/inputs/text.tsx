@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import FormHelperText from "@mui/material/FormHelperText";
 import TextField from "@mui/material/TextField";
@@ -38,8 +39,6 @@ export function TextInput({
 
                     type={question.o.type === "number" ? "number" : "text"}
                     label={question.labelText}
-                    helperText={fieldState.invalid
-                        ? fieldState.error?.message : question.o.description}
                     error={fieldState.invalid}
                     variant="outlined"
                     className="w-full"
@@ -57,11 +56,16 @@ export function TextInput({
                     // Spread the conditional props here
                     {...textAreaProps}
                 />
-                {fieldState.invalid && question.o.description && (
+                {fieldState.invalid &&
+                    <Alert severity="error" sx={{ mt: 1 }}>
+                        {fieldState.error?.message}
+                    </Alert>
+                }
+                {question.o.description &&
                     <FormHelperText>
                         {question.o.description}
                     </FormHelperText>
-                )}
+                }
             </Box>
         )}
     />

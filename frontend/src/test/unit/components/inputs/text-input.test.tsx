@@ -28,13 +28,15 @@ describe("TextInput", () => {
     expect(input.value).toBe("padded value");
   });
 
-  it("shows required error on submit when empty", async () => {
+  it("shows required error in Alert on submit when empty", async () => {
     const question = makeQuestion({ label: "Required field", is_required: true });
 
     renderWithForm({ ui: <TextInput question={question} /> });
 
     fireEvent.click(screen.getByRole("button", { name: "Submit" }));
 
-    expect(await screen.findByText(ERROR_MSG.required)).toBeInTheDocument();
+    const alert = await screen.findByRole("alert");
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent(ERROR_MSG.required);
   });
 });
