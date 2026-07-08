@@ -53,7 +53,8 @@ describe("ApplicationAssessment", () => {
 
     render(<ApplicationAssessment />);
 
-    expect(screen.getByText("No items found")).toBeInTheDocument();
+    expect(screen.getByText("Nothing to see here")).toBeInTheDocument();
+    expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
   it("orders queue by workflow priority then created_at ascending within same status", () => {

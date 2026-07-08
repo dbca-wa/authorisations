@@ -77,7 +77,8 @@ describe("MyApplications", () => {
 
     render(<MyApplications />);
 
-    expect(screen.getByText("No items found")).toBeInTheDocument();
+    expect(screen.getByText("Nothing to see here")).toBeInTheDocument();
+    expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
   it("shows download button for downloadable statuses and continue button for editable statuses", () => {
