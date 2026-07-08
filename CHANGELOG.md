@@ -9,11 +9,15 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ## 1.0.2 - Unreleased
 
+### Added
+
+- Added attachments dialog for technical officers to view and download application files directly from the assessment queue.
+
 ### Changed
 
 - Tweaked the content widths to be "responsive fixed" for wide screens.
-- Updated all input component error messages to use Material-UI Alert component for improved visibility and user feedback.
-- Updated all input compenent descriptions below the field for consistency.
+- Updated all input component error messages for improved visibility and user feedback.
+- Moved all input compenent descriptions below the field for consistency.
 - Removed the "Actions" column name for the grid inputs for simplicity.
 
 ## 1.0.1 - 2026-07-03

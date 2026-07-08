@@ -4,15 +4,20 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
 import Link from '@mui/material/Link';
 import ListItem from "@mui/material/ListItem";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
 
-import type { IApplicationData } from "../../../context/types/Application";
+import { useState } from 'react';
+import { ApiManager } from '../../../context/ApiManager';
+import { useDialog, useResolvedPromise } from '../../../context/Hooks';
+import type { IApplicationData, IApplicationAttachment } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
-import { ApplicationIdDisplay } from '../../Common';
+import { ApplicationIdDisplay, FileAttachmentList } from '../../Common';
+import { EmptyStateComponent } from './EmptyState';
 import {
     applicationSteps,
     downloadableStatuses,
@@ -21,6 +26,46 @@ import {
     statusToActiveStep,
     terminatedStatuses,
 } from './applicationCardUtils';
+
+/**
+ * Dialog content component for displaying application attachments.
+ * Fetches attachments on mount and displays them in a grid with download functionality.
+ * Shows loading state while fetching and empty state if no attachments are available.
+ */
+const AttachmentsDialogContent = ({
+    application,
+}: {
+    application: IApplicationData;
+}) => {
+    const attachmentsPromise = useState(() =>
+        ApiManager.getApplicationAttachments(application.key)
+    )[0];
+    const [attachments, isLoading] = useResolvedPromise<IApplicationAttachment[]>(
+        attachmentsPromise,
+        []
+    );
+
+    if (isLoading) {
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "200px",
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (attachments.length === 0) {
+        return <EmptyStateComponent />;
+    }
+
+    return <FileAttachmentList attachments={attachments} canEdit={false} />;
+};
 
 /**
  * Renders an application summary card for technical officers in the assessment queue.
@@ -33,6 +78,8 @@ export const AssessmentCard = ({
     process?: IAuthorisationProcess;
     application: IApplicationData;
 }) => {
+    const { showDialog } = useDialog();
+
     const processName = process?.name ?? `Unknown process (${application.process_slug})`;
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
     const statusCapitalised = formatStatusLabel(application.status);
@@ -40,6 +87,13 @@ export const AssessmentCard = ({
 
     const isTerminated = terminatedStatuses.has(application.status);
     const isDownloadable = downloadableStatuses.has(application.status);
+
+    const handleFilesClick = () => {
+        showDialog({
+            title: `Attachments for #${application.internal_id}`,
+            content: <AttachmentsDialogContent application={application} />,
+        });
+    };
 
     return (
         <ListItem sx={{ marginBottom: 2 }}>
@@ -88,23 +142,17 @@ export const AssessmentCard = ({
                     </Stepper>
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
-                    <Link
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="Download attachment files"
-                        onClick={() => {}}
+                    <Button
+                        variant="outlined"
+                        color="secondary"
+                        loadingPosition='start'
+                        loading={false}
+                        disabled={false}
+                        startIcon={<AttachFileIcon />}
+                        onClick={handleFilesClick}
                     >
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={false}
-                            startIcon={<AttachFileIcon />}
-                        >
-                            Files
-                        </Button>
-                    </Link>
+                        Files
+                    </Button>
 
                     {/* Render the PDF action only for downloadable statuses. */}
                     {isDownloadable && (

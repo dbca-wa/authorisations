@@ -1,12 +1,14 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AssessmentCard } from "../../../../../components/layout/main/AssessmentCard";
-import * as UtilsModule from "../../../../../context/Utils";
+import * as ApiManagerModule from "../../../../../context/ApiManager";
 import { makeApplication, makeProcess } from "../../../fixtures";
 
-const { showSnackbarMock } = vi.hoisted(() => ({
+const { showSnackbarMock, showDialogMock, hideDialogMock } = vi.hoisted(() => ({
   showSnackbarMock: vi.fn(),
+  showDialogMock: vi.fn(),
+  hideDialogMock: vi.fn(),
 }));
 
 vi.mock("../../../../../context/Hooks", async () => {
@@ -14,13 +16,17 @@ vi.mock("../../../../../context/Hooks", async () => {
   return {
     ...actual,
     useSnackbar: () => ({ showSnackbar: showSnackbarMock }),
+    useDialog: () => ({ showDialog: showDialogMock, hideDialog: hideDialogMock }),
   };
 });
+
+vi.mock("../../../../../context/ApiManager");
 
 
 describe("AssessmentCard", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.mocked(ApiManagerModule.ApiManager.getApplicationAttachments).mockResolvedValue([]);
   });
 
   it("renders identifiers and process metadata", () => {
@@ -36,7 +42,7 @@ describe("AssessmentCard", () => {
     expect(screen.getByText("New application (v1)")).toBeInTheDocument();
   });
 
-  it("always displays the review button", () => {
+  it("displays the files button", () => {
     render(
       <AssessmentCard
         process={makeProcess()}
@@ -44,12 +50,11 @@ describe("AssessmentCard", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Files" })).toBeInTheDocument();
   });
 
-  it("opens application in new tab when review is clicked", () => {
-    const openNewTabSpy = vi.spyOn(UtilsModule, "openNewTab").mockImplementation(() => undefined);
-    const application = makeApplication({ key: "app-key-1" });
+  it("opens attachments dialog when files button is clicked", async () => {
+    const application = makeApplication({ internal_id: "test-app-1" });
 
     render(
       <AssessmentCard
@@ -58,9 +63,16 @@ describe("AssessmentCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Files" }));
 
-    expect(openNewTabSpy).toHaveBeenCalledWith("/a/app-key-1", "app-key-1");
+    await waitFor(() => {
+      expect(showDialogMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: `Attachments for #${application.internal_id}`,
+          content: expect.anything(),
+        })
+      );
+    });
   });
 
   it("shows download button for downloadable statuses", () => {
