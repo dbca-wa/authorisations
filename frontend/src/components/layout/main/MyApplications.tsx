@@ -12,6 +12,7 @@ import { useResolvedPromise } from "../../../context/Hooks";
 import { LocalStorage } from "../../../context/LocalStorage";
 import type { IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
+import { LoadingState } from "./LoadingState";
 import { ApplicationCard } from "./ApplicationCard";
 import { EmptyStateComponent } from "./EmptyState";
 
@@ -130,7 +131,7 @@ export const MyApplications = () => {
                 <Typography variant="h4" gutterBottom>
                     My Applications
                 </Typography>
-                {!isApplicationsLoading && applications.length > 0 &&
+                {!isApplicationsLoading && applications.length > 1 &&
                     <FormControl size="small">
                         <Select
                             id="my-applications-sort"
@@ -166,7 +167,7 @@ export const MyApplications = () => {
                 Here you can view and manage your applications.
             </Typography>
 
-            {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
+            {isApplicationsLoading ? <LoadingState /> :
                 applications.length === 0 ? <EmptyStateComponent /> :
                     <List>
                         {sortedApplications.map((a) => {

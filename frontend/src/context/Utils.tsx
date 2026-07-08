@@ -55,6 +55,15 @@ export const openNewTab = (url: string, name: string = "_blank") => {
 
 export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+/**
+ * Helper function to add a delay to a promise. Useful for simulating network latency in development.
+ * Currently unused but retained for future testing scenarios.
+ */
+export const _withDelay = <T,>(promise: Promise<T>, seconds: number): Promise<T> => {
+    return promise.then(result => 
+        new Promise(resolve => setTimeout(() => resolve(result), seconds * 1000))
+    );
+};
 
 export const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',

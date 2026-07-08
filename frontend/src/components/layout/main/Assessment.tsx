@@ -7,6 +7,7 @@ import { useLoaderData } from "react-router";
 import { useResolvedPromise } from "../../../context/Hooks";
 import type { IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
+import { LoadingState } from "./LoadingState";
 import { AssessmentCard } from "./AssessmentCard";
 import { EmptyStateComponent } from "./EmptyState";
 
@@ -55,7 +56,7 @@ export const ApplicationAssessment = () => {
                 Here you can assess and action applications assigned to your assessment stream.
             </Typography>
 
-            {isApplicationsLoading ? <Typography>Loading applications...</Typography> :
+            {isApplicationsLoading ? <LoadingState /> :
                 sortedAssessmentApplications.length === 0 ? <EmptyStateComponent /> :
                     <List>
                         {sortedAssessmentApplications.map((application) => {

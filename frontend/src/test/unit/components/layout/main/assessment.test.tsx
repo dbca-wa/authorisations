@@ -45,7 +45,7 @@ describe("ApplicationAssessment", () => {
 
     render(<ApplicationAssessment />);
 
-    expect(screen.getByText("Loading applications...")).toBeInTheDocument();
+    expect(screen.getByText("One moment while we fetch that for you...")).toBeInTheDocument();
   });
 
   it("renders empty state when no assessment applications exist", () => {

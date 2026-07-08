@@ -12,6 +12,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 ### Added
 
 - Added attachments dialog for technical officers to view and download application files directly from the assessment queue.
+- Added reusable `LoadingState` component with animated spinner for consistent loading states across all main pages.
 
 ### Changed
 

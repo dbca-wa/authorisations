@@ -70,7 +70,7 @@ describe("NewApplication", () => {
 
     render(<NewApplication />);
 
-    expect(screen.getByText("Loading questionnaires...")).toBeInTheDocument();
+    expect(screen.getByText("One moment while we fetch that for you...")).toBeInTheDocument();
   });
 
   it("renders empty state when no process has questionnaires", () => {
