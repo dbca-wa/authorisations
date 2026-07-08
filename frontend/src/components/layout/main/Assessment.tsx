@@ -53,7 +53,7 @@ export const ApplicationAssessment = () => {
                 Application Assessment
             </Typography>
             <Typography color="textSecondary" sx={{ mb: 4 }}>
-                Here you can assess and action applications assigned to your assessment stream.
+                Assess and action applications in your queue.
             </Typography>
 
             {isApplicationsLoading ? <LoadingState /> :

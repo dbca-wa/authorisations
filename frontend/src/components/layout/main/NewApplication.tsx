@@ -174,7 +174,7 @@ export const NewApplication = () => {
                 Start a New Application
             </Typography>
             <Typography color="textSecondary" sx={{ mb: 4 }}>
-                Here you can start a new application for an authorisation process.
+                Create a new application for an authorisation process.
             </Typography>
             {isQuestionnairesLoading ? <LoadingState /> :
                 processGroups.length === 0 ? <EmptyStateComponent /> :

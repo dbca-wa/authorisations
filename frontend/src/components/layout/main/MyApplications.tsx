@@ -164,7 +164,7 @@ export const MyApplications = () => {
                 }
             </Box>
             <Typography color="textSecondary" sx={{ mb: 4 }}>
-                Here you can view and manage your applications.
+                View and manage your submitted and draft applications.
             </Typography>
 
             {isApplicationsLoading ? <LoadingState /> :
