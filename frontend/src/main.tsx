@@ -52,11 +52,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-au">
-        <DialogProvider>
-          <SnackbarProvider>
+        <SnackbarProvider>
+          <DialogProvider>
             <RouterProvider router={router} />
-          </SnackbarProvider>
-        </DialogProvider>
+          </DialogProvider>
+        </SnackbarProvider>
       </LocalizationProvider>
     </ThemeProvider>
   </StrictMode>

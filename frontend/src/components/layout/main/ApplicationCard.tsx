@@ -104,7 +104,7 @@ export const ApplicationCard = ({
                                 color="primary"
                                 loadingPosition='start'
                                 loading={false}
-                                disabled={Boolean(false)}
+                                disabled={false}
                                 startIcon={<DownloadIcon />}
                             >
                                 Download
@@ -125,7 +125,7 @@ export const ApplicationCard = ({
                                 color="success"
                                 loadingPosition='start'
                                 loading={false}
-                                disabled={Boolean(false)}
+                                disabled={false}
                                 startIcon={<PlayArrowRoundedIcon />}
                             >
                                 Continue

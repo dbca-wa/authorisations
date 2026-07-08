@@ -1,5 +1,5 @@
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import DownloadIcon from '@mui/icons-material/Download';
-import SearchIcon from '@mui/icons-material/Search';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -10,15 +10,14 @@ import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
 
-import { openNewTab } from '../../../context/Utils';
 import type { IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { ApplicationIdDisplay } from '../../Common';
 import {
     applicationSteps,
     downloadableStatuses,
-    formatStatusLabel,
     formatRelativeDates,
+    formatStatusLabel,
     statusToActiveStep,
     terminatedStatuses,
 } from './applicationCardUtils';
@@ -89,6 +88,24 @@ export const AssessmentCard = ({
                     </Stepper>
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
+                    <Link
+                        target="_blank"
+                        rel="noopener"
+                        aria-label="Download attachment files"
+                        onClick={() => {}}
+                    >
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            loadingPosition='start'
+                            loading={false}
+                            disabled={false}
+                            startIcon={<AttachFileIcon />}
+                        >
+                            Files
+                        </Button>
+                    </Link>
+
                     {/* Render the PDF action only for downloadable statuses. */}
                     {isDownloadable && (
                         <Link
@@ -102,31 +119,13 @@ export const AssessmentCard = ({
                                 color="primary"
                                 loadingPosition='start'
                                 loading={false}
-                                disabled={Boolean(false)}
+                                disabled={false}
                                 startIcon={<DownloadIcon />}
                             >
-                                Download
+                                PDF
                             </Button>
                         </Link>
                     )}
-
-                    <Link
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="Review application"
-                        onClick={() => openNewTab(`/a/${application.key}`, application.key)}
-                    >
-                        <Button
-                            variant="contained"
-                            color="info"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={Boolean(false)}
-                            startIcon={<SearchIcon />}
-                        >
-                            Review
-                        </Button>
-                    </Link>
                 </Box>
             </Card>
         </ListItem>
