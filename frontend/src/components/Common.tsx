@@ -41,16 +41,7 @@ export const FileAttachmentList = ({
         showDialog({
             title: "Confirm Deletion",
             content:
-                <Box
-                    sx={{
-                        alignItems: "center",
-                        justifyContent: "center",
-                        display: "flex",
-                        flexDirection: "column",
-                        px: 4,
-                        gap: 2,
-                    }}
-                >
+                <Box className="flex flex-col items-center justify-center px-4 gap-2">
                     <Typography sx={{ textAlign: "center" }}>Are you sure you want to delete the attachment<br />
                         <strong>{attachment.name}</strong> ?
                     </Typography>
@@ -118,7 +109,7 @@ export const FileAttachmentList = ({
             title: "Rename Attachment",
             content:
                 <Box className="w-md items-center justify-center flex flex-col gap-2">
-                    <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1, width: "100%" }}>
+                    <Box className="flex items-end gap-1 w-full">
                         <TextField
                             inputRef={renameInputRef}
                             defaultValue={baseName}
@@ -156,18 +147,20 @@ export const FileAttachmentList = ({
         });
     }
 
+    const cardJustifyClass = canEdit ? 'justify-between' : 'justify-center';
+
     return (
         <Box className="p-4 border border-gray-300 rounded-md">
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ alignItems: 'stretch', justifyContent: 'space-around' }}>
                 {attachments.map((attachment) => (
                     <Grid key={attachment.key} size={{ md: 3, lg: 2.4, xl: 2 }}>
-                        <Box className="border border-gray-300 rounded-lg h-56 px-4 py-4 flex flex-col items-center">
+                        <Box className={`border border-gray-300 rounded-lg px-8 py-4 flex flex-col items-center min-h-40 h-full ${cardJustifyClass}`}>
                             <Link
                                 href={attachment.download_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 underline="none"
-                                className="flex flex-col items-center gap-2 h-full"
+                                className="flex flex-col items-center gap-2"
                             >
                                 {getIconFromFilename(attachment.name)}
                                 <Typography variant="body2" className="text-center w-28 line-clamp-3">
@@ -234,17 +227,9 @@ export const ApplicationIdDisplay = ({
         <Typography
             variant={variant}
             component="div"
+            className="flex items-center w-fit cursor-pointer transition-opacity duration-200 ease-in-out hover:opacity-100"
             sx={{
-                display: 'flex',
-                // gap: isSmallVariant ? 0.5 : 1,
-                alignItems: 'center',
-                width: 'fit-content',
-                cursor: 'pointer',
                 opacity: isSmallVariant ? 0.7 : 1,
-                transition: 'opacity 0.2s ease-in-out',
-                '&:hover': {
-                    opacity: 1,
-                },
             }}
             onClick={handleCopy}
             title="Click to copy application ID"

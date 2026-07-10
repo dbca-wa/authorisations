@@ -47,7 +47,6 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
                 <BootstrapDialog
                     onClose={hideDialog}
                     open={!!options}
-                    // fullWidth
                     maxWidth="lg"
                     aria-labelledby="customised-dialog-title"
                 >
@@ -66,7 +65,7 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
                         {options.content}
                     </DialogContent>
                     {options.actions && (
-                        <DialogActions style={{ justifyContent: "space-between" }}>
+                        <DialogActions className="justify-between!">
                             {options.actions}
                         </DialogActions>
                     )}
@@ -82,5 +81,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     },
     '& .MuiDialogActions-root': {
         padding: theme.spacing(1),
+    },
+    '& .MuiDialogActions-root > :only-child': {
+        marginLeft: 'auto',
     },
 }));
