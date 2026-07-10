@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
  */
 export const EmptyStateComponent = () => {
     return (
-        <Box className="flex flex-col items-center justify-center w-full min-w-2xl gap-4 py-32">
+        <Box className="flex flex-col items-center justify-center w-full min-w-2xl min-h-96 gap-4">
             <SentimentNeutralIcon sx={{ fontSize: 96, color: "text.secondary" }} />
             <Typography variant="h5" color="textSecondary" sx={{ mt: 2 }}>
                 Nothing to see here

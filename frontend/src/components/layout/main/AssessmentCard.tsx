@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
 import Link from '@mui/material/Link';
 import ListItem from "@mui/material/ListItem";
 import Step from "@mui/material/Step";
@@ -14,10 +13,9 @@ import Stepper from "@mui/material/Stepper";
 import { useState } from 'react';
 import { ApiManager } from '../../../context/ApiManager';
 import { useDialog, useResolvedPromise } from '../../../context/Hooks';
-import type { IApplicationData, IApplicationAttachment } from "../../../context/types/Application";
+import type { IApplicationAttachment, IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { ApplicationIdDisplay, FileAttachmentList } from '../../Common';
-import { EmptyStateComponent } from './EmptyState';
 import {
     applicationSteps,
     downloadableStatuses,
@@ -26,6 +24,8 @@ import {
     statusToActiveStep,
     terminatedStatuses,
 } from './applicationCardUtils';
+import { EmptyStateComponent } from './EmptyState';
+import { LoadingState } from './LoadingState';
 
 /**
  * Dialog content component for displaying application attachments.
@@ -44,20 +44,9 @@ const AttachmentsDialogContent = ({
         attachmentsPromise,
         []
     );
-
+    
     if (isLoading) {
-        return (
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "200px",
-                }}
-            >
-                <CircularProgress />
-            </Box>
-        );
+        return <LoadingState />;
     }
 
     if (attachments.length === 0) {

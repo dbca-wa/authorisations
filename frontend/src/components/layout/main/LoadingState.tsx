@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography";
  */
 export const LoadingState = () => {
     return (
-        <Box className="flex flex-col items-center justify-center w-full gap-6 py-64">
+        <Box className="flex flex-col items-center justify-center w-full min-w-2xl min-h-96 gap-6">
             <CircularProgress enableTrackSlot size={64} />
             <Typography variant="body1" color="textSecondary">
                 One moment while we fetch that for you...
