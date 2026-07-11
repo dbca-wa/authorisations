@@ -125,6 +125,14 @@ stages:
       displayName: Build frontend assets
     - script: |
         cd backend
+        poetry run python manage.py collectstatic --noinput
+      displayName: Collect static assets
+      env:
+        DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+        LOCAL_MEDIA_STORAGE: 'true'
+        PRIVATE_MEDIA_ROOT: '/tmp/private-media'
+    - script: |
+        cd backend
         poetry run playwright install --with-deps chromium
       displayName: Install Playwright Chromium browser
     - script: |
