@@ -40,6 +40,15 @@ def _append_capped(buffer: list[dict[str, str]], payload: dict[str, str], *, max
     buffer.append(payload)
 
 
+def _as_error_text(failure) -> str:
+    """Normalise Playwright request failure payloads to text."""
+    if isinstance(failure, dict):
+        return str(failure.get("errorText", ""))
+    if failure is None:
+        return ""
+    return str(failure)
+
+
 def _ensure_page_debug_store(request, page):
     """Return the mutable debug store for a page on the current test node."""
     store = getattr(request.node, "_e2e_page_debug", {})
@@ -57,7 +66,7 @@ def _ensure_page_debug_store(request, page):
 
 def _attach_page_debug_listeners(request, page):
     """Attach console/page/network debug listeners for per-page diagnostics."""
-    key, page_debug = _ensure_page_debug_store(request, page)
+    _, page_debug = _ensure_page_debug_store(request, page)
 
     def _on_console(message):
         message_type = message.type
@@ -86,13 +95,6 @@ def _attach_page_debug_listeners(request, page):
         )
 
     def _on_request_failed(request_obj):
-        failure = request_obj.failure
-        if isinstance(failure, dict):
-            error_text = str(failure.get("errorText", ""))
-        elif failure is None:
-            error_text = ""
-        else:
-            error_text = str(failure)
         _append_capped(
             page_debug["request_failures"],
             {
@@ -100,7 +102,7 @@ def _attach_page_debug_listeners(request, page):
                 "url": request_obj.url,
                 "method": request_obj.method,
                 "resource_type": request_obj.resource_type,
-                "error_text": error_text,
+                "error_text": _as_error_text(request_obj.failure),
             },
         )
 
@@ -125,10 +127,37 @@ def _attach_page_debug_listeners(request, page):
     page.on("requestfailed", _on_request_failed)
     page.on("response", _on_response)
 
-    # Keep a page key map so failure hooks can resolve debug buffers quickly.
-    page_keys = getattr(request.node, "_e2e_page_debug_keys", {})
-    page_keys[str(id(page))] = key
-    setattr(request.node, "_e2e_page_debug_keys", page_keys)
+
+def _capture_failed_page(page, page_prefix: str, nodeid: str, page_debug: dict, artefacts_dir: Path, log_file):
+    """Capture screenshot, HTML, debug JSON, and video for a failed page."""
+    screenshot_path = artefacts_dir / f"{page_prefix}.png"
+    html_path = artefacts_dir / f"{page_prefix}.html"
+    debug_path = artefacts_dir / f"{page_prefix}-debug.json"
+
+    debug_payload = {
+        "nodeid": nodeid,
+        "captured_at": _timestamp(),
+        "page_url": page.url,
+        "page_title": page.title(),
+        "console": page_debug.get("console", []),
+        "page_errors": page_debug.get("page_errors", []),
+        "request_failures": page_debug.get("request_failures", []),
+        "http_errors": page_debug.get("http_errors", []),
+    }
+    debug_path.write_text(json.dumps(debug_payload, indent=2), encoding="utf-8")
+
+    page.screenshot(path=str(screenshot_path), full_page=True)
+    html_path.write_text(page.content(), encoding="utf-8")
+    # Close the page so Playwright finalises any video file.
+    page.close()
+    log_file.write(f"Captured {screenshot_path.name}, {html_path.name}, and {debug_path.name}\n")
+
+    if page.video:
+        video_path = Path(page.video.path())
+        if video_path.exists():
+            copied_video_path = artefacts_dir / f"{page_prefix}{video_path.suffix or '.webm'}"
+            shutil.copy(video_path, copied_video_path)
+            log_file.write(f"Copied video {copied_video_path.name}\n")
 
 
 @pytest.fixture(scope="session")
@@ -279,7 +308,12 @@ def authenticated_browser_context_factory(browser, live_server, client, request)
     """Create browser contexts authenticated as a chosen user for SPA interactions."""
     def _factory(user: User):
         session_cookie = _get_session_cookie_value(client, user)
-        context = browser.new_context(base_url=live_server.url)
+        video_dir = Path(settings.BASE_DIR) / "test-results" / "videos"
+        video_dir.mkdir(parents=True, exist_ok=True)
+        context = browser.new_context(
+            base_url=live_server.url,
+            record_video_dir=str(video_dir),
+        )
         context.add_cookies([
             {
                 "name": settings.SESSION_COOKIE_NAME,
@@ -342,46 +376,22 @@ def pytest_runtest_makereport(item, call):
         for context_index, context in enumerate(contexts):
             for page_index, page in enumerate(context.pages):
                 page_prefix = f"context-{context_index}-page-{page_index}"
-                screenshot_path = artefacts_dir / f"{page_prefix}.png"
-                html_path = artefacts_dir / f"{page_prefix}.html"
-                debug_path = artefacts_dir / f"{page_prefix}-debug.json"
 
                 try:
                     if not page.is_closed():
                         page_debug = page_debug_store.get(str(id(page)), {})
-                        debug_payload = {
-                            "nodeid": item.nodeid,
-                            "captured_at": _timestamp(),
-                            "page_url": page.url,
-                            "page_title": page.title(),
-                            "console": page_debug.get("console", []),
-                            "page_errors": page_debug.get("page_errors", []),
-                            "request_failures": page_debug.get("request_failures", []),
-                            "http_errors": page_debug.get("http_errors", []),
-                        }
-                        debug_path.write_text(json.dumps(debug_payload, indent=2), encoding="utf-8")
-
-                        page.screenshot(path=str(screenshot_path), full_page=True)
-                        html_path.write_text(page.content(), encoding="utf-8")
-                        # Close the page so Playwright finalises any video file.
-                        page.close()
-                        log_file.write(
-                            f"Captured {screenshot_path.name}, {html_path.name}, and {debug_path.name}\n"
+                        _capture_failed_page(
+                            page=page,
+                            page_prefix=page_prefix,
+                            nodeid=item.nodeid,
+                            page_debug=page_debug,
+                            artefacts_dir=artefacts_dir,
+                            log_file=log_file,
                         )
                     else:
                         log_file.write(f"Skipped closed page: {page_prefix}\n")
                 except Exception as exc:  # pragma: no cover - best-effort diagnostics
                     log_file.write(f"Failed capture for {page_prefix}: {exc}\n")
-
-                try:
-                    if page.video:
-                        video_path = Path(page.video.path())
-                        if video_path.exists():
-                            copied_video_path = artefacts_dir / f"{page_prefix}{video_path.suffix or '.webm'}"
-                            shutil.copy(video_path, copied_video_path)
-                            log_file.write(f"Copied video {copied_video_path.name}\n")
-                except Exception as exc:  # pragma: no cover - best-effort diagnostics
-                    log_file.write(f"Failed video copy for {page_prefix}: {exc}\n")
 
 
 @pytest.fixture(autouse=True)

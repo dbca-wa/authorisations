@@ -168,36 +168,10 @@ stages:
         DJANGO_VITE_TEST_DEV_MODE: 'false'
         DJANGO_VITE_TEST_MANIFEST_PATH: 'static/manifest.json'
     - script: |
-        set -eu
-        DEBUG_DIR="$(Build.ArtifactStagingDirectory)/e2e-debug"
-        OUTPUT_DIR="$DEBUG_DIR/files"
-        mkdir -p "$OUTPUT_DIR"
-
-        # Copy only relevant E2E debug artefacts from known result folders.
-        for src in \
-          "$(Build.SourcesDirectory)/backend/test-results" \
-          "$(Build.SourcesDirectory)/backend/playwright-report" \
-          "$(Build.SourcesDirectory)/backend/.pytest_playwright"
-        do
-          if [ -d "$src" ]; then
-            while IFS= read -r -d '' file; do
-              rel="${file#$(Build.SourcesDirectory)/backend/}"
-              dest="$OUTPUT_DIR/$rel"
-              mkdir -p "$(dirname "$dest")"
-              cp "$file" "$dest"
-            done < <(find "$src" -type f \( \
-              -name '*.log' -o -name '*.txt' -o -name '*.json' -o -name '*.html' -o \
-              -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o \
-              -name '*.webm' -o -name '*.mp4' -o -name '*.trace' -o -name '*.zip' \
-            \) -print0)
-          fi
-        done
-
-        if [ -f "$(Build.SourcesDirectory)/backend/e2e-junit.xml" ]; then
-          cp "$(Build.SourcesDirectory)/backend/e2e-junit.xml" "$OUTPUT_DIR/e2e-junit.xml"
-        fi
-
-        find "$DEBUG_DIR" -type f | sort > "$DEBUG_DIR/logs/artifact-file-list.txt"
+        python scripts/collect_e2e_failure_artifacts.py \
+          --backend-root "$(Build.SourcesDirectory)/backend" \
+          --debug-dir "$(Build.ArtifactStagingDirectory)/e2e-debug" \
+          --junit "$(Build.SourcesDirectory)/backend/e2e-junit.xml"
       displayName: Collect E2E failure artefacts
       condition: eq(variables['E2E_TESTS_FAILED'], 'true')
     - task: PublishTestResults@2
