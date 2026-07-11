@@ -142,32 +142,48 @@ stages:
         poetry run playwright install --with-deps chromium
       displayName: Install Playwright Chromium browser
     - script: |
+        # Run E2E tests; on failure, collect Playwright screenshots/videos/traces into backend/test-results
         cd backend
         poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
-      displayName: Run E2E tests
+        pytest_exit=$?
+        if [ "$pytest_exit" -ne 0 ]; then
+          echo "E2E tests failed (exit=$pytest_exit) — collecting Playwright artifacts"
+          mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
+          # Prefer report/artifact dirs in repo root first
+          if [ -d ".pytest_playwright" ]; then
+            cp -r .pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
+          fi
+          if [ -d "playwright-report" ]; then
+            cp -r playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
+          fi
+          # Also check backend-scoped locations
+          if [ -d "backend/.pytest_playwright" ]; then
+            cp -r backend/.pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
+          fi
+          if [ -d "backend/playwright-report" ]; then
+            cp -r backend/playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
+          fi
+          # Copy junit xml if present
+          if [ -f "backend/e2e-junit.xml" ]; then
+            cp backend/e2e-junit.xml "$(Build.SourcesDirectory)/backend/test-results/" || true
+          fi
+          if [ -f "e2e-junit.xml" ]; then
+            cp e2e-junit.xml "$(Build.SourcesDirectory)/backend/test-results/" || true
+          fi
+          # Copy screenshots/videos/traces under those report dirs
+          find . -type f \( -path "./.pytest_playwright/*" -o -path "./playwright-report/*" -o -path "./backend/.pytest_playwright/*" -o -path "./backend/playwright-report/*" \) \( -iname '*.png' -o -iname '*.webm' -o -iname '*.trace' -o -iname '*.zip' -o -iname '*.html' \) -print0 \
+            | xargs -0 -I{} cp --parents {} "$(Build.SourcesDirectory)/backend/test-results/" || true
+          # Zip to keep artifact upload compact (best-effort)
+          if [ -d "$(Build.SourcesDirectory)/backend/test-results" ]; then
+            (cd "$(Build.SourcesDirectory)/backend/test-results" && zip -r e2e-playwright-results.zip .) || true
+          fi
+        else
+          echo "E2E tests passed (exit=0) — skipping artifact collection"
+        fi
+        exit $pytest_exit
+      displayName: Run E2E tests and collect Playwright artifacts on failure
       env:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
-    - script: |
-        echo "Collecting Playwright artifacts into $(Build.SourcesDirectory)/backend/test-results"
-        mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
-        # Copy Playwright pytest plugin outputs if present (backend or repo-root)
-        if [ -d "backend/.pytest_playwright" ]; then
-          cp -r backend/.pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
-        fi
-        if [ -d "backend/playwright-report" ]; then
-          cp -r backend/playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
-        fi
-        if [ -d ".pytest_playwright" ]; then
-          cp -r .pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
-        fi
-        if [ -d "playwright-report" ]; then
-          cp -r playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
-        fi
-        # Also copy any screenshots, videos or traces found under backend or repo root
-        find backend . -type f \( -iname '*.png' -o -iname '*.webm' -o -iname '*.trace' -o -iname '*.zip' -o -iname '*.html' \) -print0 \
-          | xargs -0 -I{} cp --parents {} "$(Build.SourcesDirectory)/backend/test-results/" || true
-      displayName: Collect Playwright artifacts
-      condition: succeededOrFailed()
     - script: |
         mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
         touch "$(Build.SourcesDirectory)/backend/test-results/.keep"
@@ -182,7 +198,7 @@ stages:
         failTaskOnFailedTests: true
     - task: PublishPipelineArtifact@1
       displayName: Publish Playwright test artefacts
-      condition: succeededOrFailed()
+      condition: failed()
       inputs:
         targetPath: '$(Build.SourcesDirectory)/backend/test-results'
         artifact: 'e2e-playwright-results'
