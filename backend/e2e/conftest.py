@@ -86,7 +86,13 @@ def _attach_page_debug_listeners(request, page):
         )
 
     def _on_request_failed(request_obj):
-        failure = request_obj.failure or {}
+        failure = request_obj.failure
+        if isinstance(failure, dict):
+            error_text = str(failure.get("errorText", ""))
+        elif failure is None:
+            error_text = ""
+        else:
+            error_text = str(failure)
         _append_capped(
             page_debug["request_failures"],
             {
@@ -94,7 +100,7 @@ def _attach_page_debug_listeners(request, page):
                 "url": request_obj.url,
                 "method": request_obj.method,
                 "resource_type": request_obj.resource_type,
-                "error_text": str(failure.get("errorText", "")),
+                "error_text": error_text,
             },
         )
 

@@ -5,6 +5,8 @@ PostgreSQL role with database-creation privileges. Keep overrides focused on
 test speed, determinism, and isolation.
 """
 
+from pathlib import Path
+
 from .settings import *  # noqa: F403
 
 
@@ -36,7 +38,18 @@ STORAGES = {
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
-# Force django-vite into dev-mode during tests so template rendering does not
-# require a built frontend manifest in CI backend-only jobs.
-DJANGO_VITE["default"]["dev_mode"] = True  # noqa: F405
-DJANGO_VITE["default"]["manifest_path"] = None  # noqa: F405
+# Keep django-vite in dev-mode by default for backend-only test jobs, while
+# allowing E2E jobs to force static/manifest mode via environment variables.
+DJANGO_VITE_TEST_DEV_MODE = env("DJANGO_VITE_TEST_DEV_MODE", cast=bool, default=True)  # noqa: F405
+DJANGO_VITE_TEST_MANIFEST_PATH = env("DJANGO_VITE_TEST_MANIFEST_PATH", default=None)  # noqa: F405
+
+DJANGO_VITE["default"]["dev_mode"] = DJANGO_VITE_TEST_DEV_MODE  # noqa: F405
+if DJANGO_VITE_TEST_MANIFEST_PATH:
+    manifest_path = Path(DJANGO_VITE_TEST_MANIFEST_PATH)
+    if not manifest_path.is_absolute():
+        manifest_path = BASE_DIR / manifest_path  # noqa: F405
+    DJANGO_VITE["default"]["manifest_path"] = str(manifest_path)  # noqa: F405
+elif DJANGO_VITE_TEST_DEV_MODE:
+    DJANGO_VITE["default"]["manifest_path"] = None  # noqa: F405
+else:
+    DJANGO_VITE["default"]["manifest_path"] = str(BASE_DIR / "static" / "manifest.json")  # noqa: F405

@@ -165,6 +165,8 @@ stages:
       displayName: Run E2E tests
       env:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+        DJANGO_VITE_TEST_DEV_MODE: 'false'
+        DJANGO_VITE_TEST_MANIFEST_PATH: 'static/manifest.json'
     - script: |
         set -eu
         DEBUG_DIR="$(Build.ArtifactStagingDirectory)/e2e-debug"
