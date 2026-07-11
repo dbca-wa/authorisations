@@ -184,7 +184,7 @@ stages:
               mkdir -p "$(dirname "$dest")"
               cp "$file" "$dest"
             done < <(find "$src" -type f \( \
-              -name '*.log' -o -name '*.txt' -o -name '*.html' -o \
+              -name '*.log' -o -name '*.txt' -o -name '*.json' -o -name '*.html' -o \
               -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o \
               -name '*.webm' -o -name '*.mp4' -o -name '*.trace' -o -name '*.zip' \
             \) -print0)
