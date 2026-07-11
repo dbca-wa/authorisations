@@ -6,10 +6,12 @@ database, running migrations, and loading local fixture data at test startup.
 
 from pathlib import Path
 import base64
+from datetime import UTC, datetime
 import io
 import json
 import os
 import re
+import shutil
 from typing import Callable
 
 import pytest
@@ -24,6 +26,103 @@ from users.models import User
 # Playwright's sync runner may keep an event loop active in the test thread.
 # Allow controlled sync DB access for pytest-django lifecycle hooks.
 os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
+
+def _timestamp() -> str:
+    """Return an ISO-8601 UTC timestamp for debug events."""
+    return datetime.now(UTC).isoformat()
+
+
+def _append_capped(buffer: list[dict[str, str]], payload: dict[str, str], *, max_items: int = 500):
+    """Append to a debug buffer while keeping its size bounded."""
+    if len(buffer) >= max_items:
+        return
+    buffer.append(payload)
+
+
+def _ensure_page_debug_store(request, page):
+    """Return the mutable debug store for a page on the current test node."""
+    store = getattr(request.node, "_e2e_page_debug", {})
+    key = str(id(page))
+    if key not in store:
+        store[key] = {
+            "console": [],
+            "page_errors": [],
+            "request_failures": [],
+            "http_errors": [],
+        }
+    setattr(request.node, "_e2e_page_debug", store)
+    return key, store[key]
+
+
+def _attach_page_debug_listeners(request, page):
+    """Attach console/page/network debug listeners for per-page diagnostics."""
+    key, page_debug = _ensure_page_debug_store(request, page)
+
+    def _on_console(message):
+        message_type = message.type
+        if message_type not in {"error", "warning"}:
+            return
+        location = message.location or {}
+        _append_capped(
+            page_debug["console"],
+            {
+                "timestamp": _timestamp(),
+                "type": message_type,
+                "text": message.text,
+                "url": str(location.get("url", "")),
+                "line": str(location.get("lineNumber", "")),
+                "column": str(location.get("columnNumber", "")),
+            },
+        )
+
+    def _on_page_error(error):
+        _append_capped(
+            page_debug["page_errors"],
+            {
+                "timestamp": _timestamp(),
+                "message": str(error),
+            },
+        )
+
+    def _on_request_failed(request_obj):
+        failure = request_obj.failure or {}
+        _append_capped(
+            page_debug["request_failures"],
+            {
+                "timestamp": _timestamp(),
+                "url": request_obj.url,
+                "method": request_obj.method,
+                "resource_type": request_obj.resource_type,
+                "error_text": str(failure.get("errorText", "")),
+            },
+        )
+
+    def _on_response(response):
+        status_code = response.status
+        if status_code < 400:
+            return
+        req = response.request
+        _append_capped(
+            page_debug["http_errors"],
+            {
+                "timestamp": _timestamp(),
+                "url": response.url,
+                "status": str(status_code),
+                "method": req.method,
+                "resource_type": req.resource_type,
+            },
+        )
+
+    page.on("console", _on_console)
+    page.on("pageerror", _on_page_error)
+    page.on("requestfailed", _on_request_failed)
+    page.on("response", _on_response)
+
+    # Keep a page key map so failure hooks can resolve debug buffers quickly.
+    page_keys = getattr(request.node, "_e2e_page_debug_keys", {})
+    page_keys[str(id(page))] = key
+    setattr(request.node, "_e2e_page_debug_keys", page_keys)
 
 
 @pytest.fixture(scope="session")
@@ -170,7 +269,7 @@ def authenticated_request_context_factory(playwright, live_server, client):
 
 
 @pytest.fixture
-def authenticated_browser_context_factory(browser, live_server, client):
+def authenticated_browser_context_factory(browser, live_server, client, request):
     """Create browser contexts authenticated as a chosen user for SPA interactions."""
     def _factory(user: User):
         session_cookie = _get_session_cookie_value(client, user)
@@ -183,9 +282,100 @@ def authenticated_browser_context_factory(browser, live_server, client):
                 "httpOnly": True,
             }
         ])
+
+        def _on_new_page(page):
+            _attach_page_debug_listeners(request, page)
+
+        context.on("page", _on_new_page)
+
+        # Register listeners for pages that may already exist on the context.
+        for existing_page in context.pages:
+            _attach_page_debug_listeners(request, existing_page)
+
+        # Tests in this suite often use custom contexts/pages instead of the
+        # built-in pytest-playwright page fixture, so track contexts to allow
+        # forced failure artefact capture in pytest hooks.
+        tracked_contexts = getattr(request.node, "_e2e_browser_contexts", [])
+        tracked_contexts.append(context)
+        setattr(request.node, "_e2e_browser_contexts", tracked_contexts)
         return context
 
     return _factory
+
+
+def _failure_artifacts_dir(nodeid: str) -> Path:
+    """Return a deterministic per-test artefact directory under test-results."""
+    safe_id = re.sub(r"[^A-Za-z0-9_.-]", "_", nodeid)
+    target_dir = Path(settings.BASE_DIR) / "test-results" / "forced-failures" / safe_id
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Capture screenshots/HTML when browser E2E tests fail.
+
+    This guarantees diagnostically useful artefacts for failures involving
+    custom contexts/pages, which pytest-playwright does not always capture.
+    """
+    outcome = yield
+    report = outcome.get_result()
+    if report.when != "call" or not report.failed:
+        return
+
+    contexts = getattr(item, "_e2e_browser_contexts", [])
+    if not contexts:
+        return
+
+    page_debug_store = getattr(item, "_e2e_page_debug", {})
+
+    artefacts_dir = _failure_artifacts_dir(item.nodeid)
+    capture_log = artefacts_dir / "capture.log"
+
+    with capture_log.open("w", encoding="utf-8") as log_file:
+        for context_index, context in enumerate(contexts):
+            for page_index, page in enumerate(context.pages):
+                page_prefix = f"context-{context_index}-page-{page_index}"
+                screenshot_path = artefacts_dir / f"{page_prefix}.png"
+                html_path = artefacts_dir / f"{page_prefix}.html"
+                debug_path = artefacts_dir / f"{page_prefix}-debug.json"
+
+                try:
+                    if not page.is_closed():
+                        page_debug = page_debug_store.get(str(id(page)), {})
+                        debug_payload = {
+                            "nodeid": item.nodeid,
+                            "captured_at": _timestamp(),
+                            "page_url": page.url,
+                            "page_title": page.title(),
+                            "console": page_debug.get("console", []),
+                            "page_errors": page_debug.get("page_errors", []),
+                            "request_failures": page_debug.get("request_failures", []),
+                            "http_errors": page_debug.get("http_errors", []),
+                        }
+                        debug_path.write_text(json.dumps(debug_payload, indent=2), encoding="utf-8")
+
+                        page.screenshot(path=str(screenshot_path), full_page=True)
+                        html_path.write_text(page.content(), encoding="utf-8")
+                        # Close the page so Playwright finalises any video file.
+                        page.close()
+                        log_file.write(
+                            f"Captured {screenshot_path.name}, {html_path.name}, and {debug_path.name}\n"
+                        )
+                    else:
+                        log_file.write(f"Skipped closed page: {page_prefix}\n")
+                except Exception as exc:  # pragma: no cover - best-effort diagnostics
+                    log_file.write(f"Failed capture for {page_prefix}: {exc}\n")
+
+                try:
+                    if page.video:
+                        video_path = Path(page.video.path())
+                        if video_path.exists():
+                            copied_video_path = artefacts_dir / f"{page_prefix}{video_path.suffix or '.webm'}"
+                            shutil.copy(video_path, copied_video_path)
+                            log_file.write(f"Copied video {copied_video_path.name}\n")
+                except Exception as exc:  # pragma: no cover - best-effort diagnostics
+                    log_file.write(f"Failed video copy for {page_prefix}: {exc}\n")
 
 
 @pytest.fixture(autouse=True)
