@@ -32,7 +32,7 @@ import { LoadingState } from './LoadingState';
  * Fetches attachments on mount and displays them in a grid with download functionality.
  * Shows loading state while fetching and empty state if no attachments are available.
  */
-const AttachmentsDialogContent = ({
+export const AttachmentsDialogContent = ({
     application,
 }: {
     application: IApplicationData;

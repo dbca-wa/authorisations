@@ -22,6 +22,10 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Moved all input compenent descriptions below the field for consistency.
 - Removed the "Actions" column name for the grid inputs for simplicity.
 
+### Fixed
+
+- Fixed attachment listing permissions so reviewers can see attachments for applications in processes they are authorised to review (fixes access control bug).
+
 ## 1.0.1 - 2026-07-03
 
 ### Added
