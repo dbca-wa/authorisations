@@ -148,6 +148,27 @@ stages:
       env:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
     - script: |
+        echo "Collecting Playwright artifacts into $(Build.SourcesDirectory)/backend/test-results"
+        mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
+        # Copy Playwright pytest plugin outputs if present (backend or repo-root)
+        if [ -d "backend/.pytest_playwright" ]; then
+          cp -r backend/.pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
+        fi
+        if [ -d "backend/playwright-report" ]; then
+          cp -r backend/playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
+        fi
+        if [ -d ".pytest_playwright" ]; then
+          cp -r .pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
+        fi
+        if [ -d "playwright-report" ]; then
+          cp -r playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
+        fi
+        # Also copy any screenshots, videos or traces found under backend or repo root
+        find backend . -type f \( -iname '*.png' -o -iname '*.webm' -o -iname '*.trace' -o -iname '*.zip' -o -iname '*.html' \) -print0 \
+          | xargs -0 -I{} cp --parents {} "$(Build.SourcesDirectory)/backend/test-results/" || true
+      displayName: Collect Playwright artifacts
+      condition: succeededOrFailed()
+    - script: |
         mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
         touch "$(Build.SourcesDirectory)/backend/test-results/.keep"
       displayName: Ensure E2E artefact path exists
