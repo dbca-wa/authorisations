@@ -127,6 +127,29 @@ Why:
 Anti-pattern to avoid:
 - Assuming db transaction rollback from ordinary db fixtures will isolate state written through an independently running server process.
 
+Note on static assets for browser tests:
+
+- When running E2E tests that use an actual browser context (Playwright `browser`),
+  the SPA static assets must be available to Django so the browser can load the
+  front-end shell. In CI this means building the frontend and running
+  `collectstatic` before executing Playwright tests. See the CI E2E job for an
+  example of the required steps.
+
+Example local commands to prepare assets for browser E2E:
+
+```bash
+# from the repository root
+cd frontend
+npm ci
+npm run build
+
+cd ../backend
+poetry run python manage.py collectstatic --noinput
+
+# then run E2E (chromium example)
+poetry run pytest e2e/tests -v --browser chromium
+```
+
 ### 3) Database Isolation In Browser Tests
 
 Key rule:

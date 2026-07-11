@@ -124,6 +124,12 @@ stages:
         npm run build
       displayName: Build frontend assets
     - script: |
+        # Ensure backend/assets exists and copy built frontend files so Django
+        # can pick up `manifest.json` from STATICFILES_DIRS during collectstatic.
+        mkdir -p backend/assets
+        cp -r frontend/dist/* backend/assets/ || true
+      displayName: Copy frontend build into backend/assets
+    - script: |
         cd backend
         poetry run python manage.py collectstatic --noinput
       displayName: Collect static assets
