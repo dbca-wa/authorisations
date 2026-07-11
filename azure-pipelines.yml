@@ -120,18 +120,28 @@ stages:
         npm ci --no-audit --no-fund
       displayName: Install frontend dependencies
     - script: |
+        echo "##vso[task.setvariable variable=E2E_TESTS_FAILED]false"
+        mkdir -p "$(Build.ArtifactStagingDirectory)/e2e-debug/logs"
+      displayName: Initialise E2E debug capture
+    - script: |
         cd frontend
-        npm run build
+        npm run build \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/frontend-build.log"
+        exit ${PIPESTATUS[0]}
       displayName: Build frontend assets
     - script: |
         # Ensure backend/assets exists and copy built frontend files so Django
         # can pick up `manifest.json` from STATICFILES_DIRS during collectstatic.
         mkdir -p backend/assets
-        cp -r frontend/dist/* backend/assets/ || true
+        cp -r frontend/dist/* backend/assets/ \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/copy-dist.log"
+        exit ${PIPESTATUS[0]}
       displayName: Copy frontend build into backend/assets
     - script: |
         cd backend
-        poetry run python manage.py collectstatic --noinput
+        poetry run python manage.py collectstatic --noinput \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/collectstatic.log"
+        exit ${PIPESTATUS[0]}
       displayName: Collect static assets
       env:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
@@ -139,56 +149,55 @@ stages:
         PRIVATE_MEDIA_ROOT: '/tmp/private-media'
     - script: |
         cd backend
-        poetry run playwright install --with-deps chromium
+        poetry run playwright install --with-deps chromium \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/playwright-install.log"
+        exit ${PIPESTATUS[0]}
       displayName: Install Playwright Chromium browser
     - script: |
-        # Run E2E tests; on failure, collect Playwright screenshots/videos/traces into backend/test-results
         cd backend
-        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
-        pytest_exit=$?
-        if [ "$pytest_exit" -ne 0 ]; then
-          echo "E2E tests failed (exit=$pytest_exit) — collecting Playwright artifacts"
-          mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
-          # Prefer report/artifact dirs in repo root first
-          if [ -d ".pytest_playwright" ]; then
-            cp -r .pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
-          fi
-          if [ -d "playwright-report" ]; then
-            cp -r playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
-          fi
-          # Also check backend-scoped locations
-          if [ -d "backend/.pytest_playwright" ]; then
-            cp -r backend/.pytest_playwright "$(Build.SourcesDirectory)/backend/test-results/" || true
-          fi
-          if [ -d "backend/playwright-report" ]; then
-            cp -r backend/playwright-report "$(Build.SourcesDirectory)/backend/test-results/" || true
-          fi
-          # Copy junit xml if present
-          if [ -f "backend/e2e-junit.xml" ]; then
-            cp backend/e2e-junit.xml "$(Build.SourcesDirectory)/backend/test-results/" || true
-          fi
-          if [ -f "e2e-junit.xml" ]; then
-            cp e2e-junit.xml "$(Build.SourcesDirectory)/backend/test-results/" || true
-          fi
-          # Copy screenshots/videos/traces under those report dirs
-          find . -type f \( -path "./.pytest_playwright/*" -o -path "./playwright-report/*" -o -path "./backend/.pytest_playwright/*" -o -path "./backend/playwright-report/*" \) \( -iname '*.png' -o -iname '*.webm' -o -iname '*.trace' -o -iname '*.zip' -o -iname '*.html' \) -print0 \
-            | xargs -0 -I{} cp --parents {} "$(Build.SourcesDirectory)/backend/test-results/" || true
-          # Zip to keep artifact upload compact (best-effort)
-          if [ -d "$(Build.SourcesDirectory)/backend/test-results" ]; then
-            (cd "$(Build.SourcesDirectory)/backend/test-results" && zip -r e2e-playwright-results.zip .) || true
-          fi
-        else
-          echo "E2E tests passed (exit=0) — skipping artifact collection"
+        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/pytest-e2e.log"
+        status=${PIPESTATUS[0]}
+        if [ "$status" -ne 0 ]; then
+          echo "##vso[task.setvariable variable=E2E_TESTS_FAILED]true"
         fi
-        exit $pytest_exit
-      displayName: Run E2E tests and collect Playwright artifacts on failure
+        exit "$status"
+      displayName: Run E2E tests
       env:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
     - script: |
-        mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
-        touch "$(Build.SourcesDirectory)/backend/test-results/.keep"
-      displayName: Ensure E2E artefact path exists
-      condition: succeededOrFailed()
+        set -eu
+        DEBUG_DIR="$(Build.ArtifactStagingDirectory)/e2e-debug"
+        OUTPUT_DIR="$DEBUG_DIR/files"
+        mkdir -p "$OUTPUT_DIR"
+
+        # Copy only relevant E2E debug artefacts from known result folders.
+        for src in \
+          "$(Build.SourcesDirectory)/backend/test-results" \
+          "$(Build.SourcesDirectory)/backend/playwright-report" \
+          "$(Build.SourcesDirectory)/backend/.pytest_playwright"
+        do
+          if [ -d "$src" ]; then
+            while IFS= read -r -d '' file; do
+              rel="${file#$(Build.SourcesDirectory)/backend/}"
+              dest="$OUTPUT_DIR/$rel"
+              mkdir -p "$(dirname "$dest")"
+              cp "$file" "$dest"
+            done < <(find "$src" -type f \( \
+              -name '*.log' -o -name '*.txt' -o -name '*.html' -o \
+              -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o \
+              -name '*.webm' -o -name '*.mp4' -o -name '*.trace' -o -name '*.zip' \
+            \) -print0)
+          fi
+        done
+
+        if [ -f "$(Build.SourcesDirectory)/backend/e2e-junit.xml" ]; then
+          cp "$(Build.SourcesDirectory)/backend/e2e-junit.xml" "$OUTPUT_DIR/e2e-junit.xml"
+        fi
+
+        find "$DEBUG_DIR" -type f | sort > "$DEBUG_DIR/logs/artifact-file-list.txt"
+      displayName: Collect E2E failure artefacts
+      condition: eq(variables['E2E_TESTS_FAILED'], 'true')
     - task: PublishTestResults@2
       displayName: Publish E2E test results
       condition: succeededOrFailed()
@@ -197,11 +206,11 @@ stages:
         testResultsFiles: 'backend/e2e-junit.xml'
         failTaskOnFailedTests: true
     - task: PublishPipelineArtifact@1
-      displayName: Publish Playwright test artefacts
-      condition: failed()
+      displayName: Publish E2E failure artefacts
+      condition: eq(variables['E2E_TESTS_FAILED'], 'true')
       inputs:
-        targetPath: '$(Build.SourcesDirectory)/backend/test-results'
-        artifact: 'e2e-playwright-results'
+        targetPath: '$(Build.ArtifactStagingDirectory)/e2e-debug'
+        artifact: 'e2e-failure-debug'
         publishLocation: 'pipeline'
 
   - job: Coverage
