@@ -273,9 +273,9 @@ def _extract_client_config(response_text: str) -> dict[str, str]:
 def e2e_users(db):
     """Expose deterministic seed users for E2E role-based scenarios."""
     return {
-        "applicant": User.objects.get(username="e2e-applicant"),
-        "reviewer": User.objects.get(username="e2e-reviewer"),
-        "other": User.objects.get(username="e2e-other-applicant"),
+        "applicant": User.objects.get(username="e2e-applicant@example.com"),
+        "reviewer": User.objects.get(username="e2e-reviewer@example.com"),
+        "other": User.objects.get(username="e2e-other@example.com"),
     }
 
 
