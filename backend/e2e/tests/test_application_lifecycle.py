@@ -103,7 +103,7 @@ def test_create_application_with_valid_payload_succeeds(
         request_context.dispose()
 
     assert status == 201
-    assert payload["owner"] == "e2e-applicant"
+    assert payload["owner_email"] == "e2e-applicant"
     assert payload["process_slug"] == "aec"
     assert payload["status"] == "DRAFT"
     assert "internal_id" in payload
