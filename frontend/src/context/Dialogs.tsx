@@ -50,13 +50,13 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
                     maxWidth="lg"
                     aria-labelledby="customised-dialog-title"
                 >
-                    <DialogTitle sx={{ m: 0, p: 2 }} id="customised-dialog-title">
+                    <DialogTitle sx={{ m: 0, pr: 6 }} id="customised-dialog-title">
                         {options.title}
                         <IconButton
                             aria-label="close"
                             disabled={false}
                             onClick={hideDialog}
-                            sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
+                            sx={{ position: 'absolute', right: 8, top: 12, color: (theme) => theme.palette.grey[500] }}
                         >
                             <CloseIcon />
                         </IconButton>

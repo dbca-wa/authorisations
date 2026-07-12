@@ -501,6 +501,16 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         self.context["application"] = application
         return value
 
+    def validate_name(self, value):
+        """
+        Validate and normalise the attachment name by trimming whitespace.
+        Ensure the name is not empty after trimming.
+        """
+        name = value.strip() if value else ""
+        if not name:
+            raise serializers.ValidationError("Name cannot be empty or contain only whitespace.")
+        return name
+
     def validate_question(self, value):
         """
         Validate the question index format (does not parse definition here).

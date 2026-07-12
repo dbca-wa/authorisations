@@ -53,7 +53,7 @@ export const AttachmentsDialogContent = ({
         return <EmptyStateComponent />;
     }
 
-    return <FileAttachmentList attachments={attachments} canEdit={false} />;
+    return <FileAttachmentList attachments={attachments} canEdit={false} fullWidth={true} />;
 };
 
 /**

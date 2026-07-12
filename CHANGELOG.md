@@ -14,6 +14,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added attachments dialog for technical officers to view and download application files directly from the assessment queue.
 - Added reusable `LoadingState` component with animated spinner for consistent loading states across all main pages.
 - Added Settings page placeholder with under-construction message for future implementation.
+- Added comprehensive E2E tests for assessment page attachment dialog functionality.
 
 ### Changed
 
@@ -21,10 +22,12 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Updated all input component error messages for improved visibility and user feedback.
 - Moved all input compenent descriptions below the field for consistency.
 - Removed the "Actions" column name for the grid inputs for simplicity.
+- Made attachment grid display more responsive and visually consistent across different resolutions.
 
 ### Fixed
 
 - Fixed attachment listing permissions so reviewers can see attachments for applications in processes they are authorised to review (fixes access control bug).
+- Fixed attachment renaming to trim leading and trailing whitespace from filenames backend and frontend.
 
 ## 1.0.1 - 2026-07-03
 
