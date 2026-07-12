@@ -25,6 +25,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Removed the "Actions" column name for the grid inputs for simplicity.
 - Made attachment grid display more responsive and visually consistent across different resolutions.
 - Renamed `owner` field to `owner_email` in application API endpoints (`/api/applications` and `/api/assessment`) for clarity.
+- Redesigned assessment card to display applicant information (name, email with copy-to-clipboard, submission date) instead of application status progression.
 
 ### Fixed
 
