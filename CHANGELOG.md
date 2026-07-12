@@ -15,6 +15,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added reusable `LoadingState` component with animated spinner for consistent loading states across all main pages.
 - Added Settings page placeholder with under-construction message for future implementation.
 - Added comprehensive E2E tests for assessment page attachment dialog functionality.
+- Added `owner_fullname` field to application API responses (combines User's first_name and last_name).
 
 ### Changed
 
@@ -23,6 +24,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Moved all input compenent descriptions below the field for consistency.
 - Removed the "Actions" column name for the grid inputs for simplicity.
 - Made attachment grid display more responsive and visually consistent across different resolutions.
+- Renamed `owner` field to `owner_email` in application API endpoints (`/api/applications` and `/api/assessment`) for clarity.
 
 ### Fixed
 

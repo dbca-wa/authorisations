@@ -71,10 +71,15 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     Serializer for the Application model.
     """
 
-    owner = serializers.CharField(
+    owner_email = serializers.CharField(
         source="owner.username",
         required=False,
         read_only=True,
+    )
+    owner_fullname = serializers.SerializerMethodField(
+        required=False,
+        read_only=True,
+        method_name="get_owner_fullname",
     )
     process_slug = serializers.SlugField(
         source="questionnaire.process.slug",
@@ -125,7 +130,8 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             "id",
             "key",
             "internal_id",
-            "owner",
+            "owner_email",
+            "owner_fullname",
             "process_slug",
             "questionnaire_id",
             "questionnaire_code",
@@ -141,6 +147,16 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         )
         # All fields are read-only by default (see `.get_fields()` method).
         read_only_fields = fields
+
+    def get_owner_fullname(self, obj: Application) -> str:
+        """Return the owner's full name (first_name + last_name)."""
+        owner = getattr(obj, "owner", None)
+        if owner is None:
+            return ""
+        first_name = getattr(owner, "first_name", "").strip()
+        last_name = getattr(owner, "last_name", "").strip()
+        fullname = f"{first_name} {last_name}".strip()
+        return fullname or getattr(owner, "username", "")
 
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
@@ -667,9 +683,14 @@ class AssessmentSerialiser(serializers.ModelSerializer):
       - the requested status is one an assessor is permitted to set.
     """
 
-    owner = serializers.CharField(
+    owner_email = serializers.CharField(
         source="owner.username",
         read_only=True,
+    )
+    owner_fullname = serializers.SerializerMethodField(
+        required=False,
+        read_only=True,
+        method_name="get_owner_fullname",
     )
     process_slug = serializers.SlugField(
         source="questionnaire.process.slug",
@@ -695,7 +716,8 @@ class AssessmentSerialiser(serializers.ModelSerializer):
             "id",
             "key",
             "internal_id",
-            "owner",
+            "owner_email",
+            "owner_fullname",
             "process_slug",
             "questionnaire_id",
             "questionnaire_name",
@@ -707,6 +729,16 @@ class AssessmentSerialiser(serializers.ModelSerializer):
         )
         # All fields are read-only by default; status is made writable via PATCH in get_fields().
         read_only_fields = fields
+
+    def get_owner_fullname(self, obj: Application) -> str:
+        """Return the owner's full name (first_name + last_name)."""
+        owner = getattr(obj, "owner", None)
+        if owner is None:
+            return ""
+        first_name = getattr(owner, "first_name", "").strip()
+        last_name = getattr(owner, "last_name", "").strip()
+        fullname = f"{first_name} {last_name}".strip()
+        return fullname or getattr(owner, "username", "")
 
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)

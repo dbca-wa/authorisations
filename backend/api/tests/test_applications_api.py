@@ -261,3 +261,70 @@ def test_application_put_rejects_document_with_schema_version_mismatch(
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Schema version mismatch" in str(response.data)
+
+
+@pytest.mark.django_db
+def test_application_list_includes_owner_email_and_fullname(
+    api_client,
+    user,
+    application_factory,
+):
+    """Verify that application list responses include owner_email and owner_fullname fields."""
+    user.first_name = "John"
+    user.last_name = "Doe"
+    user.save()
+    
+    application = application_factory(owner=user)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/applications")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    data = response.data[0]
+    assert data["owner_email"] == user.username
+    assert data["owner_fullname"] == "John Doe"
+
+
+@pytest.mark.django_db
+def test_application_retrieve_includes_owner_email_and_fullname(
+    api_client,
+    user,
+    application_factory,
+):
+    """Verify that application retrieve responses include owner_email and owner_fullname fields."""
+    user.first_name = "Jane"
+    user.last_name = "Smith"
+    user.save()
+    
+    application = application_factory(owner=user)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get(f"/api/applications/{application.key}")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.data
+    assert data["owner_email"] == user.username
+    assert data["owner_fullname"] == "Jane Smith"
+
+
+@pytest.mark.django_db
+def test_application_owner_fullname_falls_back_to_username_when_empty(
+    api_client,
+    user,
+    application_factory,
+):
+    """Fallback to username when first_name and last_name are both empty."""
+    user.first_name = ""
+    user.last_name = ""
+    user.save()
+    
+    application = application_factory(owner=user)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get(f"/api/applications/{application.key}")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.data
+    assert data["owner_email"] == user.username
+    assert data["owner_fullname"] == user.username

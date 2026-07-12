@@ -32,7 +32,8 @@ export interface IApplicationData {
     id: number;
     key: string;
     internal_id: string;
-    owner: string;
+    owner_email: string;
+    owner_fullname: string;
     process_slug: string;
     questionnaire_id: number;
     questionnaire_code: string;

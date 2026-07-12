@@ -290,3 +290,115 @@ def test_assessment_patch_non_status_fields_are_not_persisted(
     assert response.status_code == status.HTTP_200_OK
     assert application.status == ApplicationStatus.UNDER_REVIEW
     assert application.document == original_document
+
+
+@pytest.mark.django_db
+def test_assessment_list_includes_owner_email_and_fullname(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Verify that assessment list responses include owner_email and owner_fullname fields."""
+    applicant_user = application_factory(
+        questionnaire=questionnaire_factory(
+            process=process_factory(slug="test-process", sort_order=1)
+        ),
+        status=ApplicationStatus.SUBMITTED,
+    ).owner
+    applicant_user.first_name = "Alice"
+    applicant_user.last_name = "Wonder"
+    applicant_user.save()
+    
+    process = process_factory(slug="assessment-process", sort_order=2)
+    process.assessor_groups.add(assessor_group)
+    application = application_factory(
+        owner=applicant_user,
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    response = api_client.get("/api/assessment")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    data = response.data[0]
+    assert data["owner_email"] == applicant_user.username
+    assert data["owner_fullname"] == "Alice Wonder"
+
+
+@pytest.mark.django_db
+def test_assessment_retrieve_includes_owner_email_and_fullname(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Verify that assessment retrieve responses include owner_email and owner_fullname fields."""
+    applicant_user = application_factory(
+        questionnaire=questionnaire_factory(
+            process=process_factory(slug="test-process-2", sort_order=3)
+        ),
+        status=ApplicationStatus.SUBMITTED,
+    ).owner
+    applicant_user.first_name = "Bob"
+    applicant_user.last_name = "Builder"
+    applicant_user.save()
+    
+    process = process_factory(slug="retrieve-process", sort_order=4)
+    process.assessor_groups.add(assessor_group)
+    application = application_factory(
+        owner=applicant_user,
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    response = api_client.get(f"/api/assessment/{application.key}")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.data
+    assert data["owner_email"] == applicant_user.username
+    assert data["owner_fullname"] == "Bob Builder"
+
+
+@pytest.mark.django_db
+def test_assessment_owner_fullname_falls_back_to_username_when_empty(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Fallback to username when first_name and last_name are both empty in assessment."""
+    applicant_user = application_factory(
+        questionnaire=questionnaire_factory(
+            process=process_factory(slug="test-process-3", sort_order=5)
+        ),
+        status=ApplicationStatus.SUBMITTED,
+    ).owner
+    applicant_user.first_name = ""
+    applicant_user.last_name = ""
+    applicant_user.save()
+    
+    process = process_factory(slug="fallback-process", sort_order=6)
+    process.assessor_groups.add(assessor_group)
+    application = application_factory(
+        owner=applicant_user,
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    response = api_client.get(f"/api/assessment/{application.key}")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.data
+    assert data["owner_email"] == applicant_user.username
+    assert data["owner_fullname"] == applicant_user.username
