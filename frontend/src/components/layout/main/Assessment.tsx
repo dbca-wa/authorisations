@@ -2,56 +2,64 @@ import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLoaderData } from "react-router";
 import { useResolvedPromise } from "../../../context/Hooks";
+import { LocalStorage } from "../../../context/LocalStorage";
 import type { IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
 import { LoadingState } from "./LoadingState";
 import { AssessmentCard } from "./AssessmentCard";
 import { EmptyStateComponent } from "./EmptyState";
+import {
+    ApplicationSortControl,
+    getInitialSortOrder,
+    sortApplications,
+    type SortOrderOption,
+} from './applicationUtils';
 
-const assessmentRelevantStatuses = ["SUBMITTED", "UNDER_REVIEW", "ACTION_REQUIRED", "UNDER_ASSESSMENT"] as const;
+const assessmentSortOrderStorageKey = "assessment-sort-order";
 
 /**
  * Displays applications in the assessment queue for technical officers.
- * This page resolves deferred loader data and prioritises active assessment statuses.
+ * Applies reusable sorting controls and respects user preferences.
  */
 export const ApplicationAssessment = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
     const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
+
+    const [sortOrder, setSortOrder] = useState<SortOrderOption>(() =>
+        getInitialSortOrder(assessmentSortOrderStorageKey)
+    );
+
+    useEffect(() => {
+        LocalStorage.setValue<SortOrderOption>(assessmentSortOrderStorageKey, sortOrder);
+    }, [sortOrder]);
 
     const processBySlug = useMemo(
         () => new Map(processes.map((process) => [process.slug, process])),
         [processes]
     );
 
-    /**
-     * Orders the assessment queue with actively progressing statuses first, then most recently updated.
-     * This helps technical officers focus on currently actionable work.
-     */
-    const sortedAssessmentApplications = useMemo(() => {
-        const assessmentStatusRank = new Map(assessmentRelevantStatuses.map((status, index) => [status, index]));
-
-        return [...applications].sort((a, b) => {
-            const statusRankA = assessmentStatusRank.get(a.status as (typeof assessmentRelevantStatuses)[number]) ?? Number.MAX_SAFE_INTEGER;
-            const statusRankB = assessmentStatusRank.get(b.status as (typeof assessmentRelevantStatuses)[number]) ?? Number.MAX_SAFE_INTEGER;
-
-            // First sort by assessment workflow priority.
-            if (statusRankA !== statusRankB) {
-                return statusRankA - statusRankB;
-            }
-
-            // Then sort by arrival order within each status bucket — oldest first (FIFO queue).
-            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        });
-    }, [applications]);
+    const sortedAssessmentApplications = useMemo(
+        () => sortApplications(applications, sortOrder, processBySlug),
+        [applications, sortOrder, processBySlug]
+    );
 
     return (
         <Box className="p-8 w-full min-w-2xl lg:w-3xl xl:w-4xl">
-            <Typography variant="h4" gutterBottom>
-                Application Assessment
-            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Typography variant="h4" gutterBottom>
+                    Application Assessment
+                </Typography>
+                {!isApplicationsLoading && sortedAssessmentApplications.length > 1 &&
+                    <ApplicationSortControl
+                        value={sortOrder}
+                        onChange={setSortOrder}
+                        controlId="assessment-sort"
+                    />
+                }
+            </Box>
             <Typography color="textSecondary" sx={{ mb: 4 }}>
                 Assess and action applications in your queue.
             </Typography>
