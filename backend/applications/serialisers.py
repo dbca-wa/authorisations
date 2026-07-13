@@ -86,6 +86,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
+    process_sort_order = serializers.IntegerField(
+        source="questionnaire.process.sort_order",
+        required=False,
+        read_only=True,
+    )
     questionnaire_id = serializers.IntegerField(
         source="questionnaire.id",
         required=False,
@@ -103,6 +108,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     )
     questionnaire_version = serializers.IntegerField(
         source="questionnaire.version",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_sort_order = serializers.IntegerField(
+        source="questionnaire.sort_order",
         required=False,
         read_only=True,
     )
@@ -133,10 +143,12 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             "owner_email",
             "owner_fullname",
             "process_slug",
+            "process_sort_order",
             "questionnaire_id",
             "questionnaire_code",
             "questionnaire_name",
             "questionnaire_version",
+            "questionnaire_sort_order",
             "privacy_consent_agreed",
             "turnstile_token",
             "status",
@@ -696,6 +708,10 @@ class AssessmentSerialiser(serializers.ModelSerializer):
         source="questionnaire.process.slug",
         read_only=True,
     )
+    process_sort_order = serializers.IntegerField(
+        source="questionnaire.process.sort_order",
+        read_only=True,
+    )
     questionnaire_id = serializers.IntegerField(
         source="questionnaire.id",
         read_only=True,
@@ -706,6 +722,10 @@ class AssessmentSerialiser(serializers.ModelSerializer):
     )
     questionnaire_version = serializers.IntegerField(
         source="questionnaire.version",
+        read_only=True,
+    )
+    questionnaire_sort_order = serializers.IntegerField(
+        source="questionnaire.sort_order",
         read_only=True,
     )
     internal_id = serializers.CharField(read_only=True)
@@ -719,9 +739,11 @@ class AssessmentSerialiser(serializers.ModelSerializer):
             "owner_email",
             "owner_fullname",
             "process_slug",
+            "process_sort_order",
             "questionnaire_id",
             "questionnaire_name",
             "questionnaire_version",
+            "questionnaire_sort_order",
             "status",
             "created_at",
             "updated_at",

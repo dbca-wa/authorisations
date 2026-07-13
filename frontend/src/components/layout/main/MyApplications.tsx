@@ -42,8 +42,8 @@ export const MyApplications = () => {
     // applications.length = 0;
 
     const sortedApplications = useMemo(
-        () => sortApplications(applications, sortOrder, processBySlug),
-        [applications, sortOrder, processBySlug]
+        () => sortApplications(applications, sortOrder),
+        [applications, sortOrder]
     );
 
     return (

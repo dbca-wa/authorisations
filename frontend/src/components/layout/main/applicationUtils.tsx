@@ -5,7 +5,6 @@ import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
-import type { IAuthorisationProcess } from "../../../context/types/Questionnaire";
 import { LocalStorage } from "../../../context/LocalStorage";
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -55,7 +54,7 @@ export const downloadableStatuses = new Set<ApplicationStatus>([
 // ============================================================================
 
 export const sortOrderOptions = [
-    "authorisation",
+    "application_type",
     "newest",
     "oldest",
     "recently_updated",
@@ -67,7 +66,7 @@ export type SortOrderOption = typeof sortOrderOptions[number];
 export const defaultSortOrder: SortOrderOption = "newest";
 
 export const sortOrderLabels: Record<SortOrderOption, string> = {
-    authorisation: "Authorisation",
+    application_type: "Application type",
     newest: "Newest",
     oldest: "Oldest",
     recently_updated: "Recently updated",
@@ -98,33 +97,28 @@ export const getInitialSortOrder = (storageKey: string): SortOrderOption => {
 
 /**
  * Efficiently sorts applications by the specified order.
- * Uses a Map for O(1) process lookups to minimise render overhead.
+ * No longer requires processBySlug Map since sort orders are now in the application data.
  * 
  * @param applications - Applications to sort
  * @param sortOrder - Sort order preference
- * @param processBySlug - Pre-built Map of processes by slug for efficient lookups
  * @returns Sorted copy of applications
  */
 export const sortApplications = (
     applications: IApplicationData[],
     sortOrder: SortOrderOption,
-    processBySlug: Map<string, IAuthorisationProcess>
 ): IApplicationData[] => {
     const sorted = [...applications];
 
-    if (sortOrder === "authorisation") {
-        // Group by process display order, then by slug for stable ordering.
+    if (sortOrder === "application_type") {
+        // Sort by process order (primary), then questionnaire sort order (secondary).
+        // This groups applications by process type, with questionnaires ordered consistently.
         sorted.sort((a, b) => {
-            const processA = processBySlug.get(a.process_slug);
-            const processB = processBySlug.get(b.process_slug);
-            const processOrderA = processA?.sort_order ?? Number.MAX_SAFE_INTEGER;
-            const processOrderB = processB?.sort_order ?? Number.MAX_SAFE_INTEGER;
-
-            if (processOrderA !== processOrderB) {
-                return processOrderA - processOrderB;
+            if (a.process_sort_order !== b.process_sort_order) {
+                return a.process_sort_order - b.process_sort_order;
             }
 
-            return a.process_slug.localeCompare(b.process_slug);
+            // Same process: sort by questionnaire sort order
+            return a.questionnaire_sort_order - b.questionnaire_sort_order;
         });
         return sorted;
     }

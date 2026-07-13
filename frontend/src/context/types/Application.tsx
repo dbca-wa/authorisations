@@ -35,10 +35,12 @@ export interface IApplicationData {
     owner_email: string;
     owner_fullname: string;
     process_slug: string;
+    process_sort_order: number;
     questionnaire_id: number;
     questionnaire_code: string;
     questionnaire_name: string;
     questionnaire_version: number;
+    questionnaire_sort_order: number;
     status: ApplicationStatus;
     created_at: string;
     updated_at: string;

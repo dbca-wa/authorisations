@@ -44,6 +44,20 @@ Development patterns and best practices for the frontend codebase.
 - Build (UAT/production/CI): `cd frontend && npm run build`
 - Lint (UAT/production/CI): `cd frontend && npm run lint`
 
+## Application sorting patterns
+
+### Reusable sorting utilities
+- Application list pages (`MyApplications`, `Assessment`) use a reusable sorting system through `src/components/layout/main/applicationUtils.tsx`
+- Sort options (type: `SortOrderOption`): `"application_type"`, `"newest"`, `"oldest"`, `"recently_updated"`, `"least_recently_updated"`
+- Hierarchical sorting: `"application_type"` sorts by `process_sort_order` (primary) then `questionnaire_sort_order` (secondary)
+- The `sortApplications(applications, sortOrder)` utility function is self-contained and requires no external lookups
+- All sort preference persistence is handled via `localStorage` using page-specific keys (for example `"my-applications-sort-order"`, `"assessment-sort-order"`)
+
+### ApplicationSortControl component
+- Reusable dropdown component for selecting sort order on any application list page
+- Props: `sortOrder` (current selection), `onSortChange` (callback), `disabled` (optional)
+- Component automatically displays sort options with user-friendly labels and visibility is typically controlled via conditional rendering based on application count (show only when multiple applications exist)
+
 ---
 
 **See [README.md](README.md) for the documentation index.**

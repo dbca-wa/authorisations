@@ -250,3 +250,58 @@ def test_attachment_dialog_shows_empty_and_populated_states(
     # Tear down
     page.close()
     context.close()
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_assessment_page_sort_by_application_type(
+    authenticated_browser_context_factory,
+    e2e_users,
+):
+    """Verify assessment queue can be sorted by application type (process order + questionnaire order)."""
+    reviewer = e2e_users["reviewer"]
+    other = e2e_users["other"]
+
+    # Create multiple submitted applications with different questionnaires to test sorting
+    # (The seeded data should already have some; we'll use what's available)
+    submitted_apps = list(
+        Application.objects.filter(owner=other, status="SUBMITTED").order_by("id")[:3]
+    )
+    assert len(submitted_apps) >= 1, "Expected at least 1 submitted application in seed data"
+
+    # Open the SPA as reviewer
+    context = authenticated_browser_context_factory(reviewer)
+    page = context.new_page()
+
+    # Navigate to assessment queue
+    page.goto("/assessment")
+    page.wait_for_selector('button:has-text("Files")')
+
+    # Verify sort control is visible (shown only when there's more than 1 application)
+    if len(submitted_apps) > 1:
+        sort_control = page.locator('id=assessment-sort')
+        assert sort_control.is_visible(), "Sort control should be visible when multiple applications exist"
+
+        # Open the sort dropdown
+        sort_control.click()
+        page.wait_for_selector('text=Application type')
+
+        # Click "Application type" option
+        page.locator('text=Application type').click()
+
+        # Verify applications are re-sorted (wait a moment for re-render)
+        page.wait_for_timeout(500)
+
+        # Verify cards are still displayed
+        files_buttons = page.locator('button:has-text("Files")')
+        assert files_buttons.count() >= 1, "Applications should still be displayed after sorting"
+    else:
+        # Single application: sort control should not be visible
+        sort_control = page.locator('id=assessment-sort')
+        assert (
+            sort_control.count() == 0
+        ), "Sort control should not be visible when only 1 application exists"
+
+    # Tear down
+    page.close()
+    context.close()

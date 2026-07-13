@@ -16,6 +16,8 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added Settings page placeholder with under-construction message for future implementation.
 - Added comprehensive E2E tests for assessment page attachment dialog functionality.
 - Added `owner_fullname` field to application API responses (combines User's first_name and last_name).
+- Added "Application type" sort option to both My Applications and Assessment pages using hierarchical sort by process and questionnaire order.
+- Added `process_sort_order` field to application API responses for frontend application type sorting without additional lookups.
 
 ### Changed
 
@@ -26,6 +28,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Made attachment grid display more responsive and visually consistent across different resolutions.
 - Renamed `owner` field to `owner_email` in application API endpoints (`/api/applications` and `/api/assessment`) for clarity.
 - Redesigned assessment card to display applicant information (name, email with copy-to-clipboard, submission date) instead of application status progression.
+- Made application sorting logic reusable across all application listing pages through extracted utilities and reusable components.
 
 ### Fixed
 

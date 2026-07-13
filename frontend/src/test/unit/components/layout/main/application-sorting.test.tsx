@@ -2,12 +2,12 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { ApplicationSortControl, sortApplications, isSortOrderOption, sortOrderLabels, sortOrderOptions } from "../../../../../components/layout/main/applicationUtils";
-import { makeApplication, makeProcess } from "../../../fixtures";
+import { makeApplication } from "../../../fixtures";
 
 describe("Application Sorting Utilities", () => {
     describe("isSortOrderOption", () => {
         it("returns true for valid sort order options", () => {
-            expect(isSortOrderOption("authorisation")).toBe(true);
+            expect(isSortOrderOption("application_type")).toBe(true);
             expect(isSortOrderOption("newest")).toBe(true);
             expect(isSortOrderOption("oldest")).toBe(true);
             expect(isSortOrderOption("recently_updated")).toBe(true);
@@ -31,7 +31,7 @@ describe("Application Sorting Utilities", () => {
         });
 
         it("has consistent label formatting", () => {
-            expect(sortOrderLabels.authorisation).toBe("Authorisation");
+            expect(sortOrderLabels.application_type).toBe("Application type");
             expect(sortOrderLabels.newest).toBe("Newest");
             expect(sortOrderLabels.oldest).toBe("Oldest");
             expect(sortOrderLabels.recently_updated).toBe("Recently updated");
@@ -46,82 +46,69 @@ describe("Application Sorting Utilities", () => {
             created_at: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
             updated_at: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
             process_slug: "s40",
+            process_sort_order: 1,
+            questionnaire_sort_order: 2,
         });
         const app2 = makeApplication({
             key: "k2",
             created_at: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
             updated_at: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
             process_slug: "animal-ethics",
+            process_sort_order: 2,
+            questionnaire_sort_order: 1,
         });
         const app3 = makeApplication({
             key: "k3",
             created_at: baseDate.toISOString(),
             updated_at: baseDate.toISOString(),
             process_slug: "s40",
+            process_sort_order: 1,
+            questionnaire_sort_order: 1,
         });
 
-        const processes = [
-            makeProcess({ slug: "s40", sort_order: 1 }),
-            makeProcess({ slug: "animal-ethics", sort_order: 2 }),
-        ];
-        const processBySlug = new Map(processes.map((p) => [p.slug, p]));
-
         it("sorts by 'newest' (most recent created_at first)", () => {
-            const sorted = sortApplications([app1, app2, app3], "newest", processBySlug);
+            const sorted = sortApplications([app1, app2, app3], "newest");
             expect(sorted.map((a) => a.key)).toEqual(["k3", "k2", "k1"]);
         });
 
         it("sorts by 'oldest' (oldest created_at first)", () => {
-            const sorted = sortApplications([app3, app1, app2], "oldest", processBySlug);
+            const sorted = sortApplications([app3, app1, app2], "oldest");
             expect(sorted.map((a) => a.key)).toEqual(["k1", "k2", "k3"]);
         });
 
         it("sorts by 'recently_updated' (most recent updated_at first)", () => {
-            const sorted = sortApplications([app1, app3, app2], "recently_updated", processBySlug);
+            const sorted = sortApplications([app1, app3, app2], "recently_updated");
             expect(sorted.map((a) => a.key)).toEqual(["k3", "k2", "k1"]);
         });
 
         it("sorts by 'least_recently_updated' (oldest updated_at first)", () => {
-            const sorted = sortApplications([app3, app2, app1], "least_recently_updated", processBySlug);
+            const sorted = sortApplications([app3, app2, app1], "least_recently_updated");
             expect(sorted.map((a) => a.key)).toEqual(["k1", "k2", "k3"]);
         });
 
-        it("sorts by 'authorisation' (process sort_order then slug)", () => {
-            // When sorted by authorisation, it groups by process sort_order, then by slug within groups
-            const sorted = sortApplications([app2, app3, app1], "authorisation", processBySlug);
-            // s40 (sort_order: 1) comes first with k1 and k3
-            // animal-ethics (sort_order: 2) comes second with k2
-            const keys = sorted.map((a) => a.key);
-            expect(keys.indexOf("k1")).toBeLessThan(keys.indexOf("k2"));
-            expect(keys.indexOf("k3")).toBeLessThan(keys.indexOf("k2"));
+        it("sorts by 'application_type' (process sort_order then questionnaire sort_order)", () => {
+            // s40 (process_sort_order: 1) comes first
+            // Within s40: questionnaire_sort_order 1 (k3) before 2 (k1)
+            // animal-ethics (process_sort_order: 2) comes last (k2)
+            const sorted = sortApplications([app2, app3, app1], "application_type");
+            expect(sorted.map((a) => a.key)).toEqual(["k3", "k1", "k2"]);
         });
 
         it("returns a new array without modifying the original", () => {
             const original = [app1, app2, app3];
             const originalCopy = JSON.stringify(original.map(a => a.key));
-            sortApplications(original, "newest", processBySlug);
+            sortApplications(original, "newest");
             expect(JSON.stringify(original.map(a => a.key))).toBe(originalCopy);
         });
 
         it("handles empty applications array", () => {
-            const sorted = sortApplications([], "newest", processBySlug);
+            const sorted = sortApplications([], "newest");
             expect(sorted).toEqual([]);
         });
 
         it("handles single application", () => {
-            const sorted = sortApplications([app1], "newest", processBySlug);
+            const sorted = sortApplications([app1], "newest");
             expect(sorted).toEqual([app1]);
-        });
-
-        it("handles processes not in the processBySlug map", () => {
-            const appUnknownProcess = makeApplication({
-                key: "k-unknown",
-                process_slug: "unknown-process",
-            });
-            const sorted = sortApplications([app1, appUnknownProcess], "authorisation", processBySlug);
-            // Unknown processes get MAX_SAFE_INTEGER, so they come last
-            expect(sorted[0].key).toEqual("k1");
-            expect(sorted[1].key).toEqual("k-unknown");
         });
     });
 });
@@ -181,7 +168,7 @@ describe("ApplicationSortControl Component", () => {
         const select = screen.getByRole("combobox", { name: "Sort applications" });
         fireEvent.mouseDown(select);
 
-        expect(screen.getByText(sortOrderLabels.authorisation)).toBeInTheDocument();
+        expect(screen.getByText(sortOrderLabels.application_type)).toBeInTheDocument();
     });
 
     it("can be disabled", () => {

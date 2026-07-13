@@ -328,3 +328,50 @@ def test_application_owner_fullname_falls_back_to_username_when_empty(
     data = response.data
     assert data["owner_email"] == user.username
     assert data["owner_fullname"] == user.username
+
+
+@pytest.mark.django_db
+def test_applications_list_includes_questionnaire_sort_order(
+    api_client,
+    user,
+    questionnaire_factory,
+    process_factory,
+    application_factory,
+):
+    """Verify questionnaire_sort_order and process_sort_order fields are included in application list response."""
+    process = process_factory(slug="sort-list-test", sort_order=1)
+    questionnaire = questionnaire_factory(process=process, sort_order=4)
+    application = application_factory(owner=user, questionnaire=questionnaire)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/applications")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    assert "questionnaire_sort_order" in response.data[0]
+    assert response.data[0]["questionnaire_sort_order"] == 4
+    assert "process_sort_order" in response.data[0]
+    assert response.data[0]["process_sort_order"] == 1
+
+
+@pytest.mark.django_db
+def test_applications_retrieve_includes_questionnaire_sort_order(
+    api_client,
+    user,
+    questionnaire_factory,
+    process_factory,
+    application_factory,
+):
+    """Verify questionnaire_sort_order and process_sort_order fields are included in application retrieve response."""
+    process = process_factory(slug="sort-retrieve-test", sort_order=2)
+    questionnaire = questionnaire_factory(process=process, sort_order=7)
+    application = application_factory(owner=user, questionnaire=questionnaire)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get(f"/api/applications/{application.key}")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert "questionnaire_sort_order" in response.data
+    assert response.data["questionnaire_sort_order"] == 7
+    assert "process_sort_order" in response.data
+    assert response.data["process_sort_order"] == 2

@@ -35,6 +35,7 @@ This system supports DBCA authorisation workflows, including Animal Ethics and S
 
 ### Application
 - User-owned submitted/draft record tied to one specific questionnaire version
+- Exposes `process_sort_order` and `questionnaire_sort_order` to frontend via API response for hierarchical sorting of applications by type and questionnaire within that type
 
 ### ApplicationAttachment
 - File metadata linked to an application, soft deletable

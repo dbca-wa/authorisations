@@ -402,3 +402,60 @@ def test_assessment_owner_fullname_falls_back_to_username_when_empty(
     data = response.data
     assert data["owner_email"] == applicant_user.username
     assert data["owner_fullname"] == applicant_user.username
+
+
+@pytest.mark.django_db
+def test_assessment_response_includes_questionnaire_sort_order(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Verify questionnaire_sort_order and process_sort_order fields are included in assessment response for sorting."""
+    process = process_factory(slug="sort-test", sort_order=1)
+    process.assessor_groups.add(assessor_group)
+    questionnaire = questionnaire_factory(process=process, sort_order=5)
+    application = application_factory(
+        questionnaire=questionnaire,
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    response = api_client.get(f"/api/assessment/{application.key}")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert "questionnaire_sort_order" in response.data
+    assert response.data["questionnaire_sort_order"] == 5
+    assert "process_sort_order" in response.data
+    assert response.data["process_sort_order"] == 1
+
+
+@pytest.mark.django_db
+def test_assessment_list_includes_questionnaire_sort_order(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Verify questionnaire_sort_order and process_sort_order are included in assessment list response."""
+    process = process_factory(slug="list-sort-test", sort_order=1)
+    process.assessor_groups.add(assessor_group)
+    questionnaire = questionnaire_factory(process=process, sort_order=3)
+    application = application_factory(
+        questionnaire=questionnaire,
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    response = api_client.get("/api/assessment")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    assert "questionnaire_sort_order" in response.data[0]
+    assert response.data[0]["questionnaire_sort_order"] == 3
+    assert "process_sort_order" in response.data[0]
+    assert response.data[0]["process_sort_order"] == 1

@@ -57,7 +57,7 @@ describe("ApplicationAssessment", () => {
     expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
-  it("orders queue by workflow priority then created_at ascending within same status", () => {
+  it("orders queue by newest created_at (default sort order)", () => {
     useResolvedPromiseMock.mockReturnValue([
       [
         makeApplication({ internal_id: "under-review", status: "UNDER_REVIEW", created_at: "2026-05-11T00:00:00Z" }),
@@ -70,6 +70,7 @@ describe("ApplicationAssessment", () => {
     render(<ApplicationAssessment />);
 
     const ordered = screen.getAllByTestId("assessment-card").map((node) => node.textContent);
-    expect(ordered).toEqual(["submitted-earlier", "submitted-later", "under-review"]);
+    // Default sort is "newest", so most recent created_at comes first
+    expect(ordered).toEqual(["submitted-later", "under-review", "submitted-earlier"]);
   });
 });
