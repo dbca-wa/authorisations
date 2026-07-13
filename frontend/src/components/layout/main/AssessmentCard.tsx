@@ -93,26 +93,26 @@ export const AssessmentCard = ({
     };
 
     return (
-        <ListItem sx={{ marginBottom: 2 }}>
-            <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
+        <ListItem className="mb-4">
+            <Card className="p-8 w-full rounded-lg!" elevation={4}>
                 <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
 
-                <Box sx={{ display: "flex", gap: 1, my: 2, flexWrap: "wrap", justifyContent: "space-around" }} className="max-w-min min-w-1/1 mx-auto">
+                <Box className="flex gap-2 my-4 flex-wrap justify-around">
                     <Chip label={processName} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
 
                     {/* Force a wrapped row break between identifier chips and status/date chips. */}
-                    <Box sx={{ flexBasis: "100%", height: 0 }} />
+                    <Box className="basis-full h-0" />
 
                     <Chip label={`${statusCapitalised}`} size="small" variant="outlined" />
                     <Chip label={`Created ${createdAtRelative}`} size="small" variant="outlined" />
                     <Chip label={`Updated ${updatedAtRelative}`} size="small" variant="outlined" />
                 </Box>
 
-                <Box sx={{ mt: 4, mb: 2 }} className="w-4/5 mx-auto">
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Box className="my-8 w-fit ml-16">
+                    <Box className="flex flex-col gap-2">
                         {/* Applicant Name */}
-                        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+                        <Box className="flex gap-1.5 items-center">
                             <PersonIcon fontSize="small" sx={{ color: 'action.active' }} />
                             <Typography variant="body2">
                                 {application.owner_fullname || "Unknown applicant"}
@@ -121,27 +121,18 @@ export const AssessmentCard = ({
 
                         {/* Email - Clickable for copy to clipboard */}
                         <Box
-                            sx={{
-                                display: "flex",
-                                gap: 1.5,
-                                alignItems: "center",
-                                cursor: "pointer",
-                                transition: "opacity 0.2s ease-in-out",
-                                "&:hover": {
-                                    opacity: 0.7,
-                                },
-                            }}
+                            className="flex gap-1.5 items-center cursor-pointer hover:opacity-70 transition-opacity duration-200 ease-in-out"
                             onClick={handleEmailClick}
                             title="Click to copy email address"
                         >
                             <EmailIcon fontSize="small" sx={{ color: 'action.active' }} />
-                            <Typography variant="body2" sx={{ opacity: 0.85 }}>
+                            <Typography variant="body2" className="opacity-80">
                                 {application.owner_email}
                             </Typography>
                         </Box>
 
                         {/* Submission Date */}
-                        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+                        <Box className="flex gap-1.5 items-center">
                             <HistoryIcon fontSize="small" sx={{ color: 'action.active' }} />
                             <Typography variant="body2">
                                 Submitted {createdAtRelative}
@@ -149,7 +140,7 @@ export const AssessmentCard = ({
                         </Box>
                     </Box>
                 </Box>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
+                <Box className="flex justify-end gap-1 mt-2">
                     <Button
                         variant="outlined"
                         color="secondary"

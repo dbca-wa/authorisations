@@ -68,23 +68,23 @@ export const ApplicationCard = ({
     const isEditable = application.status === "DRAFT" || application.status === "ACTION_REQUIRED";
 
     return (
-        <ListItem sx={{ marginBottom: 2 }}>
-            <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
+        <ListItem className="mb-4">
+            <Card className="p-8 w-full rounded-lg!" elevation={4}>
                 <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
 
-                <Box sx={{ display: "flex", gap: 1, my: 2, flexWrap: "wrap", justifyContent: "space-around" }} className="max-w-min min-w-1/1 mx-auto">
+                <Box className="flex gap-2 my-4 flex-wrap justify-around">
                     <Chip label={processName} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
 
                     {/* Force a wrapped row break between identifier chips and status/date chips. */}
-                    <Box sx={{ flexBasis: "100%", height: 0 }} />
+                    <Box className="basis-full h-0" />
 
                     <Chip label={`${statusCapitalised}`} size="small" variant="outlined" />
                     <Chip label={`Created ${createdAtRelative}`} size="small" variant="outlined" />
                     <Chip label={`Updated ${updatedAtRelative}`} size="small" variant="outlined" />
                 </Box>
 
-                <Box sx={{ mt: 4, mb: 1 }} className="w-4/5 mx-auto">
+                <Box className="my-8 w-9/10 mx-auto">
                     <Stepper
                         activeStep={statusToActiveStep[application.status]}
                         alternativeLabel
@@ -113,7 +113,7 @@ export const ApplicationCard = ({
                         ))}
                     </Stepper>
                 </Box>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
+                <Box className="flex justify-end gap-1 mt-2">
                     {/* Render the PDF action only for downloadable statuses. */}
                     {isDownloadable && (
                         <Link
