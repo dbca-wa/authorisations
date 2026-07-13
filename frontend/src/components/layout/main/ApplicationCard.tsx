@@ -11,17 +11,40 @@ import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
 
 import { openNewTab } from '../../../context/Utils';
-import type { IApplicationData } from "../../../context/types/Application";
+import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { ApplicationIdDisplay } from '../../Common';
 import {
-    applicationSteps,
     downloadableStatuses,
     formatStatusLabel,
     formatRelativeDates,
-    statusToActiveStep,
-    terminatedStatuses,
-} from './applicationCardUtils';
+} from './applicationUtils';
+
+// Card-specific constants for application status progression display
+const applicationSteps = [
+    "Application",
+    "Submitted",
+    "Review",
+    "Assessment",
+    "Decision",
+] as const;
+
+const statusToActiveStep: Record<ApplicationStatus, number> = {
+    DRAFT: 0,
+    DISCARDED: 0,           // Terminated during drafting — never submitted.
+    ACTION_REQUIRED: 0,
+    SUBMITTED: 1,
+    WITHDRAWN: 2,           // Terminated after submission — reached review stage.
+    UNDER_REVIEW: 2,
+    UNDER_ASSESSMENT: 3,
+    APPROVED: 4,
+    APPROVED_WITH_CONDITIONS: 4,
+    DEFERRED: 4,            // Decision deferred — may resume; shown at decision step.
+    REJECTED: 4,
+};
+
+/** Statuses that represent a terminal negative outcome at their respective step. */
+const terminatedStatuses = new Set<ApplicationStatus>(["DISCARDED", "WITHDRAWN"]);
 
 
 /**

@@ -21,7 +21,7 @@ import {
     downloadableStatuses,
     formatRelativeDates,
     formatStatusLabel,
-} from './applicationCardUtils';
+} from './applicationUtils';
 import { EmptyStateComponent } from './EmptyState';
 import { LoadingState } from './LoadingState';
 
@@ -42,7 +42,7 @@ export const AttachmentsDialogContent = ({
         attachmentsPromise,
         []
     );
-    
+
     if (isLoading) {
         return <LoadingState />;
     }
@@ -80,6 +80,16 @@ export const AssessmentCard = ({
             title: `Attachments for #${application.internal_id}`,
             content: <AttachmentsDialogContent application={application} />,
         });
+    };
+
+    const handleEmailClick = () => {
+        navigator.clipboard.writeText(application.owner_email)
+            .then(() => {
+                showSnackbar('Email address copied to clipboard', 'info');
+            })
+            .catch(() => {
+                showSnackbar('Failed to copy email to clipboard', 'error');
+            });
     };
 
     return (
@@ -121,15 +131,7 @@ export const AssessmentCard = ({
                                     opacity: 0.7,
                                 },
                             }}
-                            onClick={() => {
-                                navigator.clipboard.writeText(application.owner_email)
-                                    .then(() => {
-                                        showSnackbar('Email address copied to clipboard', 'info');
-                                    })
-                                    .catch(() => {
-                                        showSnackbar('Failed to copy email to clipboard', 'error');
-                                    });
-                            }}
+                            onClick={handleEmailClick}
                             title="Click to copy email address"
                         >
                             <EmailIcon fontSize="small" sx={{ color: 'action.active' }} />
