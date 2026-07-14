@@ -230,8 +230,9 @@ def test_attachment_dialog_shows_empty_and_populated_states(
     # Expect at least two files buttons (one for existing submitted app, one for our new app)
     assert files_buttons.count() >= 2
 
-    # Click the first Files button -> should correspond to the existing (older) submitted app with no attachments
-    files_buttons.nth(0).click()
+    # Find the card for the app_empty application using its internal_id and click its Files button
+    # The card contains the internal_id text, so we find the closest Files button to it
+    page.locator(f'text={app_empty.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]//button[contains(text(), "Files")]').click()
     page.wait_for_selector('role=dialog')
     # Empty-state message displayed in the dialog
     assert page.locator('text=Nothing to see here').count() >= 1
@@ -239,8 +240,8 @@ def test_attachment_dialog_shows_empty_and_populated_states(
     # Close dialog
     page.get_by_label('close').click()
 
-    # Click the second Files button -> our app with attachments
-    files_buttons.nth(1).click()
+    # Find the card for the app_with_attachments application using its internal_id and click its Files button
+    page.locator(f'text={app_with_attachments.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]//button[contains(text(), "Files")]').click()
     page.wait_for_selector('role=dialog')
 
     # Verify both attachments names are present in the dialog
