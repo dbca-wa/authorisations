@@ -57,12 +57,12 @@ describe("ApplicationAssessment", () => {
     expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
-  it("orders queue by newest created_at (default sort order)", () => {
+  it("orders queue by submitted_oldest (default sort order for assessment)", () => {
     useResolvedPromiseMock.mockReturnValue([
       [
-        makeApplication({ internal_id: "under-review", status: "UNDER_REVIEW", created_at: "2026-05-11T00:00:00Z" }),
-        makeApplication({ key: "22222222-2222-2222-2222-222222222222", internal_id: "submitted-later", status: "SUBMITTED", created_at: "2026-05-12T00:00:00Z" }),
-        makeApplication({ key: "33333333-3333-3333-3333-333333333333", internal_id: "submitted-earlier", status: "SUBMITTED", created_at: "2026-05-10T00:00:00Z" }),
+        makeApplication({ internal_id: "app1", status: "SUBMITTED", submitted_at: "2026-05-12T00:00:00Z" }),
+        makeApplication({ key: "22222222-2222-2222-2222-222222222222", internal_id: "app2", status: "SUBMITTED", submitted_at: "2026-05-10T00:00:00Z" }),
+        makeApplication({ key: "33333333-3333-3333-3333-333333333333", internal_id: "app3", status: "SUBMITTED", submitted_at: "2026-05-11T00:00:00Z" }),
       ],
       false,
     ]);
@@ -70,7 +70,23 @@ describe("ApplicationAssessment", () => {
     render(<ApplicationAssessment />);
 
     const ordered = screen.getAllByTestId("assessment-card").map((node) => node.textContent);
-    // Default sort is "created_newest", so most recent created_at comes first
-    expect(ordered).toEqual(["submitted-later", "under-review", "submitted-earlier"]);
+    // Default sort for assessment is "submitted_oldest", so oldest submitted_at comes first
+    expect(ordered).toEqual(["app2", "app3", "app1"]);
+  });
+
+  it("renders sort control with submitted options when applications have submitted_at", () => {
+    useResolvedPromiseMock.mockReturnValue([
+      [
+        makeApplication({ submitted_at: "2026-05-10T00:00:00Z" }),
+        makeApplication({ key: "22222222-2222-2222-2222-222222222222", submitted_at: "2026-05-11T00:00:00Z" }),
+      ],
+      false,
+    ]);
+
+    render(<ApplicationAssessment />);
+
+    // Sort control should be visible with submitted options
+    expect(screen.getByRole("combobox", { name: "Sort applications" })).toBeInTheDocument();
+    expect(screen.getByText("Submitted: Oldest")).toBeInTheDocument();
   });
 });

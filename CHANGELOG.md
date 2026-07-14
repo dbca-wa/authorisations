@@ -18,6 +18,9 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added `owner_fullname` field to application API responses (combines User's first_name and last_name).
 - Added "Application type" sort option to both My Applications and Assessment pages using hierarchical sort by process and questionnaire order.
 - Added `process_sort_order` field to application API responses for frontend application type sorting without additional lookups.
+- Added "Submitted: Newest" and "Submitted: Oldest" sort options for applications, conditionally visible only when applications have been submitted (with `submitted_at` values). Unsubmitted applications sort to the end in submitted-date sorts.
+- Added helper utilities `hasSubmittedApplications()` and `getAvailableSortOptions()` for conditional sort option visibility based on application data state.
+- Added parameter-driven defaults to `getInitialSortOrder()` allowing different default sorts per page: "Updated: Newest" for My Applications, "Submitted: Oldest" for Assessment queue.
 
 ### Changed
 
@@ -30,6 +33,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Redesigned assessment card to display applicant information (name, email with copy-to-clipboard, submission date) instead of application status progression.
 - Renamed application sort options to be more explicit: `newest`→`created_newest`, `oldest`→`created_oldest`, `recently_updated`→`updated_newest`, `least_recently_updated`→`updated_oldest`.
 - Made application sorting logic reusable across all application listing pages through extracted utilities and reusable components.
+- Add strict type checking to frontend TypeScript codebase for improved type safety and maintainability.
 
 ### Fixed
 

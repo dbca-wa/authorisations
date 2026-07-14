@@ -14,6 +14,7 @@ import { EmptyStateComponent } from "./EmptyState";
 import {
     ApplicationSortControl,
     getInitialSortOrder,
+    getAvailableSortOptions,
     sortApplications,
     type SortOrderOption,
 } from './applicationUtils';
@@ -26,7 +27,7 @@ export const MyApplications = () => {
     const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
 
     const [sortOrder, setSortOrder] = useState<SortOrderOption>(() =>
-        getInitialSortOrder(myApplicationsSortOrderStorageKey)
+        getInitialSortOrder(myApplicationsSortOrderStorageKey, "updated_newest")
     );
 
     useEffect(() => {
@@ -57,6 +58,7 @@ export const MyApplications = () => {
                         value={sortOrder}
                         onChange={setSortOrder}
                         controlId="my-applications-sort"
+                        availableOptions={getAvailableSortOptions(applications)}
                     />
                 }
             </Box>

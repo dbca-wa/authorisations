@@ -4,10 +4,12 @@ import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
-import { LocalStorage } from "../../../context/LocalStorage";
-import dayjs from 'dayjs';
+import _ from "underscore";
+import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+
+import { LocalStorage } from "../../../context/LocalStorage";
+import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 
 // Enable relative date labels like "2 days ago" for card metadata.
 dayjs.extend(relativeTime);
@@ -55,6 +57,8 @@ export const downloadableStatuses = new Set<ApplicationStatus>([
 
 export const sortOrderOptions = [
     "application_type",
+    "submitted_newest",
+    "submitted_oldest",
     "created_newest",
     "created_oldest",
     "updated_newest",
@@ -63,10 +67,10 @@ export const sortOrderOptions = [
 
 export type SortOrderOption = typeof sortOrderOptions[number];
 
-export const defaultSortOrder: SortOrderOption = "created_newest";
-
 export const sortOrderLabels: Record<SortOrderOption, string> = {
     application_type: "Application Type",
+    submitted_newest: "Submitted: Newest",
+    submitted_oldest: "Submitted: Oldest",
     created_newest: "Created: Newest",
     created_oldest: "Created: Oldest",
     updated_newest: "Updated: Newest",
@@ -74,20 +78,25 @@ export const sortOrderLabels: Record<SortOrderOption, string> = {
 };
 
 /**
- * Type guard to validate if a value is a valid SortOrderOption.
+ * Check if any applications have submitted_at values.
+ * Used to conditionally show submission date sort options.
  */
+export const hasSubmittedApplications = (applications: IApplicationData[]): boolean => {
+    return _.some(applications, (app) => app.submitted_at !== null);
+};
 export const isSortOrderOption = (value: string): value is SortOrderOption => {
     return sortOrderOptions.includes(value as SortOrderOption);
 };
 
 /**
- * Retrieves the initial sort order from localStorage, falling back to the default.
+ * Retrieves the initial sort order from localStorage, falling back to the provided default.
  * Use this to initialise sort state with persisted user preferences.
  * 
  * @param storageKey - LocalStorage key where the sort preference is stored
- * @returns The stored sort order if valid, otherwise the default sort order
+ * @param defaultSortOrder - Default sort order to use if no valid stored value exists
+ * @returns The stored sort order if valid, otherwise the provided default sort order
  */
-export const getInitialSortOrder = (storageKey: string): SortOrderOption => {
+export const getInitialSortOrder = (storageKey: string, defaultSortOrder: SortOrderOption): SortOrderOption => {
     const storedValue = LocalStorage.getValue<string>(storageKey);
     if (storedValue && isSortOrderOption(storedValue)) {
         return storedValue;
@@ -108,6 +117,28 @@ export const sortApplications = (
     sortOrder: SortOrderOption,
 ): IApplicationData[] => {
     const sorted = [...applications];
+
+    if (sortOrder === "submitted_newest") {
+        // Sort by submitted_at descending, placing unsubmitted applications at the end
+        sorted.sort((a, b) => {
+            if (a.submitted_at === null && b.submitted_at === null) return 0;
+            if (a.submitted_at === null) return 1; // unsubmitted goes last
+            if (b.submitted_at === null) return -1; // unsubmitted goes last
+            return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
+        });
+        return sorted;
+    }
+
+    if (sortOrder === "submitted_oldest") {
+        // Sort by submitted_at ascending, placing unsubmitted applications at the end
+        sorted.sort((a, b) => {
+            if (a.submitted_at === null && b.submitted_at === null) return 0;
+            if (a.submitted_at === null) return 1; // unsubmitted goes last
+            if (b.submitted_at === null) return -1; // unsubmitted goes last
+            return new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime();
+        });
+        return sorted;
+    }
 
     if (sortOrder === "application_type") {
         // Sort by process order (primary), then questionnaire sort order (secondary).
@@ -143,15 +174,25 @@ export const sortApplications = (
     return sorted;
 };
 
-// ============================================================================
-// Application Sort Control Component
-// ============================================================================
+/**
+ * Get available sort options based on whether applications are submitted.
+ * Submitted sorting options (submitted_newest, submitted_oldest) only appear
+ * when there are submitted applications in the list.
+ */
+export const getAvailableSortOptions = (applications: IApplicationData[]): SortOrderOption[] => {
+    if (hasSubmittedApplications(applications)) {
+        return [...sortOrderOptions];
+    }
+    // Filter out submitted sort options for lists without submitted applications
+    return sortOrderOptions.filter((option) => option !== "submitted_newest" && option !== "submitted_oldest");
+};
 
 interface ApplicationSortControlProps {
     value: SortOrderOption;
     onChange: (sortOrder: SortOrderOption) => void;
     isDisabled?: boolean;
     controlId?: string;
+    availableOptions?: readonly SortOrderOption[];
 }
 
 /**
@@ -162,12 +203,14 @@ interface ApplicationSortControlProps {
  * @param onChange - Callback when sort order changes
  * @param isDisabled - Whether the control is disabled
  * @param controlId - HTML id for the select control (optional, defaults to 'applications-sort')
+ * @param availableOptions - Optional list of sort options to display (defaults to all sortOrderOptions)
  */
 export const ApplicationSortControl = ({
     value,
     onChange,
     isDisabled = false,
     controlId = 'applications-sort',
+    availableOptions = sortOrderOptions,
 }: ApplicationSortControlProps) => {
     return (
         <FormControl size="small" disabled={isDisabled}>
@@ -192,7 +235,7 @@ export const ApplicationSortControl = ({
                     );
                 }}
             >
-                {sortOrderOptions.map((option) => (
+                {availableOptions.map((option) => (
                     <MenuItem key={option} value={option}>
                         {sortOrderLabels[option]}
                     </MenuItem>

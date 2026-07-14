@@ -1,13 +1,89 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApplicationSortControl, sortApplications, isSortOrderOption, sortOrderLabels, sortOrderOptions } from "../../../../../components/layout/main/applicationUtils";
+import { ApplicationSortControl, sortApplications, isSortOrderOption, sortOrderLabels, sortOrderOptions, getInitialSortOrder, getAvailableSortOptions, hasSubmittedApplications } from "../../../../../components/layout/main/applicationUtils";
 import { makeApplication } from "../../../fixtures";
+import { LocalStorage } from "../../../../../context/LocalStorage";
+
+describe("Helper Functions", () => {
+    describe("hasSubmittedApplications", () => {
+        it("returns true when at least one application is submitted", () => {
+            const apps = [
+                makeApplication({ submitted_at: null }),
+                makeApplication({ submitted_at: "2026-05-10T00:00:00Z" }),
+            ];
+            expect(hasSubmittedApplications(apps)).toBe(true);
+        });
+
+        it("returns false when no applications are submitted", () => {
+            const apps = [
+                makeApplication({ submitted_at: null }),
+                makeApplication({ submitted_at: null }),
+            ];
+            expect(hasSubmittedApplications(apps)).toBe(false);
+        });
+
+        it("returns false for empty array", () => {
+            expect(hasSubmittedApplications([])).toBe(false);
+        });
+    });
+
+    describe("getAvailableSortOptions", () => {
+        it("includes submitted sort options when applications are submitted", () => {
+            const apps = [makeApplication({ submitted_at: "2026-05-10T00:00:00Z" })];
+            const available = getAvailableSortOptions(apps);
+            expect(available).toContain("submitted_newest");
+            expect(available).toContain("submitted_oldest");
+        });
+
+        it("excludes submitted sort options when no applications are submitted", () => {
+            const apps = [makeApplication({ submitted_at: null })];
+            const available = getAvailableSortOptions(apps);
+            expect(available).not.toContain("submitted_newest");
+            expect(available).not.toContain("submitted_oldest");
+        });
+
+        it("includes all other sort options regardless of submission status", () => {
+            const apps = [makeApplication({ submitted_at: null })];
+            const available = getAvailableSortOptions(apps);
+            expect(available).toContain("application_type");
+            expect(available).toContain("created_newest");
+            expect(available).toContain("created_oldest");
+            expect(available).toContain("updated_newest");
+            expect(available).toContain("updated_oldest");
+        });
+    });
+
+    describe("getInitialSortOrder", () => {
+        afterEach(() => {
+            LocalStorage.removeValue("test-sort-key");
+        });
+
+        it("returns stored sort order when valid", () => {
+            LocalStorage.setValue("test-sort-key", "created_oldest");
+            const sortOrder = getInitialSortOrder("test-sort-key", "updated_newest");
+            expect(sortOrder).toBe("created_oldest");
+        });
+
+        it("returns default sort order when no stored value", () => {
+            const sortOrder = getInitialSortOrder("test-sort-key", "updated_newest");
+            expect(sortOrder).toBe("updated_newest");
+        });
+
+        it("returns default sort order when stored value is invalid", () => {
+            LocalStorage.setValue("test-sort-key", "invalid_sort_option");
+            const sortOrder = getInitialSortOrder("test-sort-key", "submitted_oldest");
+            expect(sortOrder).toBe("submitted_oldest");
+        });
+    });
+});
 
 describe("Application Sorting Utilities", () => {
     describe("isSortOrderOption", () => {
         it("returns true for valid sort order options", () => {
             expect(isSortOrderOption("application_type")).toBe(true);
+            expect(isSortOrderOption("submitted_newest")).toBe(true);
+            expect(isSortOrderOption("submitted_oldest")).toBe(true);
             expect(isSortOrderOption("created_newest")).toBe(true);
             expect(isSortOrderOption("created_oldest")).toBe(true);
             expect(isSortOrderOption("updated_newest")).toBe(true);
@@ -32,6 +108,8 @@ describe("Application Sorting Utilities", () => {
 
         it("has consistent label formatting", () => {
             expect(sortOrderLabels.application_type).toBe("Application Type");
+            expect(sortOrderLabels.submitted_newest).toBe("Submitted: Newest");
+            expect(sortOrderLabels.submitted_oldest).toBe("Submitted: Oldest");
             expect(sortOrderLabels.created_newest).toBe("Created: Newest");
             expect(sortOrderLabels.created_oldest).toBe("Created: Oldest");
             expect(sortOrderLabels.updated_newest).toBe("Updated: Newest");
@@ -64,6 +142,42 @@ describe("Application Sorting Utilities", () => {
             process_slug: "s40",
             process_sort_order: 1,
             questionnaire_sort_order: 1,
+        });
+
+        it("sorts by 'submitted_newest' (most recent submitted_at first)", () => {
+            const submitted1 = makeApplication({
+                key: "k1",
+                submitted_at: "2026-05-10T00:00:00Z",
+            });
+            const submitted2 = makeApplication({
+                key: "k2",
+                submitted_at: "2026-05-12T00:00:00Z",
+            });
+            const draft = makeApplication({
+                key: "k3",
+                submitted_at: null,
+            });
+
+            const sorted = sortApplications([submitted1, draft, submitted2], "submitted_newest");
+            expect(sorted.map((a) => a.key)).toEqual(["k2", "k1", "k3"]);
+        });
+
+        it("sorts by 'submitted_oldest' (oldest submitted_at first)", () => {
+            const submitted1 = makeApplication({
+                key: "k1",
+                submitted_at: "2026-05-10T00:00:00Z",
+            });
+            const submitted2 = makeApplication({
+                key: "k2",
+                submitted_at: "2026-05-12T00:00:00Z",
+            });
+            const draft = makeApplication({
+                key: "k3",
+                submitted_at: null,
+            });
+
+            const sorted = sortApplications([submitted2, draft, submitted1], "submitted_oldest");
+            expect(sorted.map((a) => a.key)).toEqual(["k1", "k2", "k3"]);
         });
 
         it("sorts by 'created_newest' (most recent created_at first)", () => {
