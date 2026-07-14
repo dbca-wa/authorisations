@@ -70,7 +70,7 @@ describe("ApplicationAssessment", () => {
     render(<ApplicationAssessment />);
 
     const ordered = screen.getAllByTestId("assessment-card").map((node) => node.textContent);
-    // Default sort is "newest", so most recent created_at comes first
+    // Default sort is "created_newest", so most recent created_at comes first
     expect(ordered).toEqual(["submitted-later", "under-review", "submitted-earlier"]);
   });
 });

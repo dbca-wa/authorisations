@@ -8,10 +8,10 @@ describe("Application Sorting Utilities", () => {
     describe("isSortOrderOption", () => {
         it("returns true for valid sort order options", () => {
             expect(isSortOrderOption("application_type")).toBe(true);
-            expect(isSortOrderOption("newest")).toBe(true);
-            expect(isSortOrderOption("oldest")).toBe(true);
-            expect(isSortOrderOption("recently_updated")).toBe(true);
-            expect(isSortOrderOption("least_recently_updated")).toBe(true);
+            expect(isSortOrderOption("created_newest")).toBe(true);
+            expect(isSortOrderOption("created_oldest")).toBe(true);
+            expect(isSortOrderOption("updated_newest")).toBe(true);
+            expect(isSortOrderOption("updated_oldest")).toBe(true);
         });
 
         it("returns false for invalid sort order options", () => {
@@ -31,11 +31,11 @@ describe("Application Sorting Utilities", () => {
         });
 
         it("has consistent label formatting", () => {
-            expect(sortOrderLabels.application_type).toBe("Application type");
-            expect(sortOrderLabels.newest).toBe("Newest");
-            expect(sortOrderLabels.oldest).toBe("Oldest");
-            expect(sortOrderLabels.recently_updated).toBe("Recently updated");
-            expect(sortOrderLabels.least_recently_updated).toBe("Least recently updated");
+            expect(sortOrderLabels.application_type).toBe("Application Type");
+            expect(sortOrderLabels.created_newest).toBe("Created: Newest");
+            expect(sortOrderLabels.created_oldest).toBe("Created: Oldest");
+            expect(sortOrderLabels.updated_newest).toBe("Updated: Newest");
+            expect(sortOrderLabels.updated_oldest).toBe("Updated: Oldest");
         });
     });
 
@@ -66,23 +66,23 @@ describe("Application Sorting Utilities", () => {
             questionnaire_sort_order: 1,
         });
 
-        it("sorts by 'newest' (most recent created_at first)", () => {
-            const sorted = sortApplications([app1, app2, app3], "newest");
+        it("sorts by 'created_newest' (most recent created_at first)", () => {
+            const sorted = sortApplications([app1, app2, app3], "created_newest");
             expect(sorted.map((a) => a.key)).toEqual(["k3", "k2", "k1"]);
         });
 
-        it("sorts by 'oldest' (oldest created_at first)", () => {
-            const sorted = sortApplications([app3, app1, app2], "oldest");
+        it("sorts by 'created_oldest' (oldest created_at first)", () => {
+            const sorted = sortApplications([app3, app1, app2], "created_oldest");
             expect(sorted.map((a) => a.key)).toEqual(["k1", "k2", "k3"]);
         });
 
-        it("sorts by 'recently_updated' (most recent updated_at first)", () => {
-            const sorted = sortApplications([app1, app3, app2], "recently_updated");
+        it("sorts by 'updated_newest' (most recent updated_at first)", () => {
+            const sorted = sortApplications([app1, app3, app2], "updated_newest");
             expect(sorted.map((a) => a.key)).toEqual(["k3", "k2", "k1"]);
         });
 
-        it("sorts by 'least_recently_updated' (oldest updated_at first)", () => {
-            const sorted = sortApplications([app3, app2, app1], "least_recently_updated");
+        it("sorts by 'updated_oldest' (oldest updated_at first)", () => {
+            const sorted = sortApplications([app3, app2, app1], "updated_oldest");
             expect(sorted.map((a) => a.key)).toEqual(["k1", "k2", "k3"]);
         });
 
@@ -97,17 +97,17 @@ describe("Application Sorting Utilities", () => {
         it("returns a new array without modifying the original", () => {
             const original = [app1, app2, app3];
             const originalCopy = JSON.stringify(original.map(a => a.key));
-            sortApplications(original, "newest");
+            sortApplications(original, "created_newest");
             expect(JSON.stringify(original.map(a => a.key))).toBe(originalCopy);
         });
 
         it("handles empty applications array", () => {
-            const sorted = sortApplications([], "newest");
+            const sorted = sortApplications([], "created_newest");
             expect(sorted).toEqual([]);
         });
 
         it("handles single application", () => {
-            const sorted = sortApplications([app1], "newest");
+            const sorted = sortApplications([app1], "created_newest");
             expect(sorted).toEqual([app1]);
         });
     });
@@ -118,7 +118,7 @@ describe("ApplicationSortControl Component", () => {
         const handleChange = vi.fn();
         render(
             <ApplicationSortControl
-                value="newest"
+                value="created_newest"
                 onChange={handleChange}
             />
         );
@@ -131,36 +131,36 @@ describe("ApplicationSortControl Component", () => {
         const handleChange = vi.fn();
         render(
             <ApplicationSortControl
-                value="oldest"
+                value="created_oldest"
                 onChange={handleChange}
             />
         );
 
-        expect(screen.getByText("Oldest")).toBeInTheDocument();
+        expect(screen.getByText("Created: Oldest")).toBeInTheDocument();
     });
 
     it("calls onChange when a different sort option is selected", () => {
         const handleChange = vi.fn();
         render(
             <ApplicationSortControl
-                value="newest"
+                value="created_newest"
                 onChange={handleChange}
             />
         );
 
         const select = screen.getByRole("combobox", { name: "Sort applications" });
         fireEvent.mouseDown(select);
-        const recentlyUpdatedOption = screen.getByText("Recently updated");
-        fireEvent.click(recentlyUpdatedOption);
+        const updatedNewestOption = screen.getByText("Updated: Newest");
+        fireEvent.click(updatedNewestOption);
 
-        expect(handleChange).toHaveBeenCalledWith("recently_updated");
+        expect(handleChange).toHaveBeenCalledWith("updated_newest");
     });
 
     it("renders all sort order options in the menu", () => {
         const handleChange = vi.fn();
         render(
             <ApplicationSortControl
-                value="newest"
+                value="created_newest"
                 onChange={handleChange}
             />
         );
@@ -175,7 +175,7 @@ describe("ApplicationSortControl Component", () => {
         const handleChange = vi.fn();
         render(
             <ApplicationSortControl
-                value="newest"
+                value="created_newest"
                 onChange={handleChange}
                 isDisabled={true}
             />
@@ -189,7 +189,7 @@ describe("ApplicationSortControl Component", () => {
         const handleChange = vi.fn();
         render(
             <ApplicationSortControl
-                value="newest"
+                value="created_newest"
                 onChange={handleChange}
                 controlId="custom-sort-id"
             />
@@ -203,7 +203,7 @@ describe("ApplicationSortControl Component", () => {
         const handleChange = vi.fn();
         render(
             <ApplicationSortControl
-                value="newest"
+                value="created_newest"
                 onChange={handleChange}
             />
         );

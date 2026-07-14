@@ -98,12 +98,12 @@ describe("MyApplications", () => {
   });
 
   it("uses persisted sort order when stored value is valid", () => {
-    localStorageGetMock.mockReturnValue("oldest");
+    localStorageGetMock.mockReturnValue("created_oldest");
     useResolvedPromiseMock.mockReturnValue([[makeApplication()], false]);
 
     render(<MyApplications />);
 
     expect(localStorageGetMock).toHaveBeenCalledWith("my-applications-sort-order");
-    expect(localStorageSetMock).toHaveBeenCalledWith("my-applications-sort-order", "oldest");
+    expect(localStorageSetMock).toHaveBeenCalledWith("my-applications-sort-order", "created_oldest");
   });
 });

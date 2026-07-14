@@ -55,22 +55,22 @@ export const downloadableStatuses = new Set<ApplicationStatus>([
 
 export const sortOrderOptions = [
     "application_type",
-    "newest",
-    "oldest",
-    "recently_updated",
-    "least_recently_updated",
+    "created_newest",
+    "created_oldest",
+    "updated_newest",
+    "updated_oldest",
 ] as const;
 
 export type SortOrderOption = typeof sortOrderOptions[number];
 
-export const defaultSortOrder: SortOrderOption = "newest";
+export const defaultSortOrder: SortOrderOption = "created_newest";
 
 export const sortOrderLabels: Record<SortOrderOption, string> = {
-    application_type: "Application type",
-    newest: "Newest",
-    oldest: "Oldest",
-    recently_updated: "Recently updated",
-    least_recently_updated: "Least recently updated",
+    application_type: "Application Type",
+    created_newest: "Created: Newest",
+    created_oldest: "Created: Oldest",
+    updated_newest: "Updated: Newest",
+    updated_oldest: "Updated: Oldest",
 };
 
 /**
@@ -123,22 +123,22 @@ export const sortApplications = (
         return sorted;
     }
 
-    if (sortOrder === "newest") {
+    if (sortOrder === "created_newest") {
         sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         return sorted;
     }
 
-    if (sortOrder === "oldest") {
+    if (sortOrder === "created_oldest") {
         sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         return sorted;
     }
 
-    if (sortOrder === "recently_updated") {
+    if (sortOrder === "updated_newest") {
         sorted.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
         return sorted;
     }
 
-    // Default: "least_recently_updated"
+    // Default: "updated_oldest"
     sorted.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime());
     return sorted;
 };

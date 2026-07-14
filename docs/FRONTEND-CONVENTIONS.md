@@ -48,8 +48,9 @@ Development patterns and best practices for the frontend codebase.
 
 ### Reusable sorting utilities
 - Application list pages (`MyApplications`, `Assessment`) use a reusable sorting system through `src/components/layout/main/applicationUtils.tsx`
-- Sort options (type: `SortOrderOption`): `"application_type"`, `"newest"`, `"oldest"`, `"recently_updated"`, `"least_recently_updated"`
+- Sort options (type: `SortOrderOption`): `"application_type"` (Application Type), `"created_newest"` (Created: Newest), `"created_oldest"` (Created: Oldest), `"updated_newest"` (Updated: Newest), `"updated_oldest"` (Updated: Oldest)
 - Hierarchical sorting: `"application_type"` sorts by `process_sort_order` (primary) then `questionnaire_sort_order` (secondary)
+- Date-based sorting: `"created_newest"`/`"created_oldest"` sort by creation date; `"updated_newest"`/`"updated_oldest"` sort by modification date
 - The `sortApplications(applications, sortOrder)` utility function is self-contained and requires no external lookups
 - All sort preference persistence is handled via `localStorage` using page-specific keys (for example `"my-applications-sort-order"`, `"assessment-sort-order"`)
 
