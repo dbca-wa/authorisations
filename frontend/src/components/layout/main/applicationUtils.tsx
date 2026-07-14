@@ -32,11 +32,13 @@ export const formatStatusLabel = (status: ApplicationStatus): string => {
 /**
  * Formats application metadata dates into relative format.
  * Returns strings like "2 days ago", "just now", etc.
+ * Returns null for submittedAtRelative if the application hasn't been submitted.
  */
 export const formatRelativeDates = (application: IApplicationData) => {
     return {
         createdAtRelative: dayjs(application.created_at).fromNow(),
         updatedAtRelative: dayjs(application.updated_at).fromNow(),
+        submittedAtRelative: application.submitted_at ? dayjs(application.submitted_at).fromNow() : null,
     };
 };
 

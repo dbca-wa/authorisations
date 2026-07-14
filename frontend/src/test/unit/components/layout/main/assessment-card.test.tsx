@@ -182,17 +182,6 @@ describe("AssessmentCard", () => {
       );
     });
 
-    it("displays submission date with relative time format", () => {
-      render(
-        <AssessmentCard
-          process={makeProcess()}
-          application={makeApplication({ status: "SUBMITTED" })}
-        />,
-      );
-
-      expect(screen.getByText(/Submitted.*ago/)).toBeInTheDocument();
-    });
-
     it("has accessible tooltip on email box for click-to-copy hint", () => {
       render(
         <AssessmentCard
@@ -203,6 +192,52 @@ describe("AssessmentCard", () => {
 
       const emailBox = screen.getByText("jane@example.com").closest("div");
       expect(emailBox).toHaveAttribute("title", "Click to copy email address");
+    });
+  });
+
+  describe("submission date display", () => {
+    it("displays submission date with relative time format", () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() - 5);
+      const submittedDate = futureDate.toISOString();
+
+      render(
+        <AssessmentCard
+          process={makeProcess()}
+          application={makeApplication({ status: "SUBMITTED", submitted_at: submittedDate })}  />,
+      );
+
+      expect(screen.getByText(/Submitted.*ago/)).toBeInTheDocument();
+    });
+
+    it("displays 'pending' when application has not been submitted", () => {
+      render(
+        <AssessmentCard
+          process={makeProcess()}
+          application={makeApplication({ status: "DRAFT", submitted_at: null })}  />,
+      );
+
+      expect(screen.getByText(/Submitted pending/)).toBeInTheDocument();
+    });
+
+    it("does not display submission date for applications that are not submitted", () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 3);
+      const createdDate = pastDate.toISOString();
+
+      render(
+        <AssessmentCard
+          process={makeProcess()}
+          application={makeApplication({ 
+            status: "UNDER_REVIEW",
+            created_at: createdDate,
+            submitted_at: null  // Explicitly null - not submitted
+          })}
+        />,
+      );
+
+      // Should show "Submitted pending", NOT "Submitted 3 days ago"
+      expect(screen.getByText(/Submitted pending/)).toBeInTheDocument();
     });
   });
 
