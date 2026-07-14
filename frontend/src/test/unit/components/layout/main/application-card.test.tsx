@@ -27,27 +27,56 @@ describe("ApplicationCard", () => {
     render(
       <ApplicationCard
         process={makeProcess({ name: "Section 40" })}
-        application={makeApplication({ internal_id: "s40-new-1/26-05" })}
-        downloadUrl="/d/key-1"
-        displayContinue={true}
+        application={makeApplication({ internal_id: "s40-new-1/26-05", status: "SUBMITTED" })}
       />,
     );
 
     expect(screen.getByText("s40-new-1/26-05")).toBeInTheDocument();
     expect(screen.getByText("Section 40")).toBeInTheDocument();
     expect(screen.getByText("New application (v1)")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Download application PDF" })).toHaveAttribute("href", "/d/key-1");
+  });
+
+  it("shows continue button for editable statuses", () => {
+    render(
+      <ApplicationCard
+        process={makeProcess()}
+        application={makeApplication({ status: "DRAFT" })}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
+  });
+
+  it("shows continue button for ACTION_REQUIRED status", () => {
+    render(
+      <ApplicationCard
+        process={makeProcess()}
+        application={makeApplication({ status: "ACTION_REQUIRED" })}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
+  });
+
+  it("hides continue button for non-editable statuses", () => {
+    render(
+      <ApplicationCard
+        process={makeProcess()}
+        application={makeApplication({ status: "SUBMITTED" })}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });
 
   it("opens form in new tab when continue is clicked", () => {
     const openNewTabSpy = vi.spyOn(UtilsModule, "openNewTab").mockImplementation(() => undefined);
-    const application = makeApplication({ key: "app-key-1" });
+    const application = makeApplication({ key: "app-key-1", status: "DRAFT" });
 
     render(
       <ApplicationCard
         process={makeProcess()}
         application={application}
-        displayContinue={true}
       />,
     );
 
@@ -56,15 +85,39 @@ describe("ApplicationCard", () => {
     expect(openNewTabSpy).toHaveBeenCalledWith("/a/app-key-1", "app-key-1");
   });
 
-  it("hides continue action when displayContinue is false", () => {
+  it("shows download button for downloadable statuses", () => {
+    const application = makeApplication({ status: "SUBMITTED", key: "app-key-123" });
+    
     render(
       <ApplicationCard
         process={makeProcess()}
-        application={makeApplication()}
-        displayContinue={false}
+        application={application}
       />,
     );
 
-    expect(screen.queryByRole("link", { name: "Continue application" })).not.toBeInTheDocument();
+    const downloadLink = screen.getByRole("link", { name: "Download application PDF" });
+    expect(downloadLink).toHaveAttribute("href", `/d/${application.key}`);
+  });
+
+  it("hides download button for non-downloadable statuses", () => {
+    render(
+      <ApplicationCard
+        process={makeProcess()}
+        application={makeApplication({ status: "DRAFT" })}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Download application PDF" })).not.toBeInTheDocument();
+  });
+
+  it("does not display review button", () => {
+    render(
+      <ApplicationCard
+        process={makeProcess()}
+        application={makeApplication({ status: "SUBMITTED" })}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Review" })).not.toBeInTheDocument();
   });
 });

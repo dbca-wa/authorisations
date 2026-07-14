@@ -65,10 +65,14 @@
   - Body: `process_slug`, `questionnaire_id`, `questionnaire_code`, `questionnaire_version`
 - PUT (update): Full replacement of document answers
 - PATCH (partial update): Update status to SUBMITTED (triggers `submitted_at` timestamp)
-- Response includes: key, internal_id, questionnaire_id, process_slug, status, document, created_at, updated_at, owner
+- Response includes: key, internal_id, questionnaire_id, questionnaire_code, questionnaire_name, questionnaire_version, process_slug, process_sort_order, questionnaire_sort_order, status, document, created_at, updated_at, owner, owner_email, owner_fullname
+- Sort fields: `process_sort_order` (integer) represents ordering of process types; `questionnaire_sort_order` (integer) represents ordering of questionnaire types within each process, enabling hierarchical application sorting
 
 #### 4. **Attachments** - `/attachments`
-- GET (list filtered): By `application_key` query param, ownership checked
+- GET (list filtered): By `application_key` query param. Returns non-deleted
+  attachments for the application. For reviewers, this endpoint also returns
+  attachments for applications that belong to processes the user is authorised
+  to review (group-based reviewer membership).
 - GET (detail by key): Single attachment (soft-deleted = False, ownership checked)
 - POST (create): Upload file with metadata
   - Multipart form-data: application_key, name, question, file

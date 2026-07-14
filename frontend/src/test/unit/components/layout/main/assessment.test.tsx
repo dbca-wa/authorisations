@@ -22,8 +22,8 @@ vi.mock("../../../../../context/Hooks", async () => {
   };
 });
 
-vi.mock("../../../../../components/layout/main/ApplicationCard", () => ({
-  ApplicationCard: ({ application }: { application: { internal_id: string } }) => (
+vi.mock("../../../../../components/layout/main/AssessmentCard", () => ({
+  AssessmentCard: ({ application }: { application: { internal_id: string } }) => (
     <div data-testid="assessment-card">{application.internal_id}</div>
   ),
 }));
@@ -45,7 +45,7 @@ describe("ApplicationAssessment", () => {
 
     render(<ApplicationAssessment />);
 
-    expect(screen.getByText("Loading applications...")).toBeInTheDocument();
+    expect(screen.getByText("One moment while we fetch that for you...")).toBeInTheDocument();
   });
 
   it("renders empty state when no assessment applications exist", () => {
@@ -53,15 +53,16 @@ describe("ApplicationAssessment", () => {
 
     render(<ApplicationAssessment />);
 
-    expect(screen.getByText("No items found")).toBeInTheDocument();
+    expect(screen.getByText("Nothing to see here")).toBeInTheDocument();
+    expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
-  it("orders queue by workflow priority then created_at ascending within same status", () => {
+  it("orders queue by submitted_oldest (default sort order for assessment)", () => {
     useResolvedPromiseMock.mockReturnValue([
       [
-        makeApplication({ internal_id: "under-review", status: "UNDER_REVIEW", created_at: "2026-05-11T00:00:00Z" }),
-        makeApplication({ key: "22222222-2222-2222-2222-222222222222", internal_id: "submitted-later", status: "SUBMITTED", created_at: "2026-05-12T00:00:00Z" }),
-        makeApplication({ key: "33333333-3333-3333-3333-333333333333", internal_id: "submitted-earlier", status: "SUBMITTED", created_at: "2026-05-10T00:00:00Z" }),
+        makeApplication({ internal_id: "app1", status: "SUBMITTED", submitted_at: "2026-05-12T00:00:00Z" }),
+        makeApplication({ key: "22222222-2222-2222-2222-222222222222", internal_id: "app2", status: "SUBMITTED", submitted_at: "2026-05-10T00:00:00Z" }),
+        makeApplication({ key: "33333333-3333-3333-3333-333333333333", internal_id: "app3", status: "SUBMITTED", submitted_at: "2026-05-11T00:00:00Z" }),
       ],
       false,
     ]);
@@ -69,6 +70,23 @@ describe("ApplicationAssessment", () => {
     render(<ApplicationAssessment />);
 
     const ordered = screen.getAllByTestId("assessment-card").map((node) => node.textContent);
-    expect(ordered).toEqual(["submitted-earlier", "submitted-later", "under-review"]);
+    // Default sort for assessment is "submitted_oldest", so oldest submitted_at comes first
+    expect(ordered).toEqual(["app2", "app3", "app1"]);
+  });
+
+  it("renders sort control with submitted options when applications have submitted_at", () => {
+    useResolvedPromiseMock.mockReturnValue([
+      [
+        makeApplication({ submitted_at: "2026-05-10T00:00:00Z" }),
+        makeApplication({ key: "22222222-2222-2222-2222-222222222222", submitted_at: "2026-05-11T00:00:00Z" }),
+      ],
+      false,
+    ]);
+
+    render(<ApplicationAssessment />);
+
+    // Sort control should be visible with submitted options
+    expect(screen.getByRole("combobox", { name: "Sort applications" })).toBeInTheDocument();
+    expect(screen.getByText("Submitted: Oldest")).toBeInTheDocument();
   });
 });

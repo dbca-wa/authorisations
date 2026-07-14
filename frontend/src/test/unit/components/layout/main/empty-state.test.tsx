@@ -8,7 +8,7 @@ describe("EmptyStateComponent", () => {
   it("renders empty-state title and guidance message", () => {
     render(<EmptyStateComponent />);
 
-    expect(screen.getByText("No items found")).toBeInTheDocument();
-    expect(screen.getByText("It looks like there's nothing here yet.")).toBeInTheDocument();
+    expect(screen.getByText("Nothing to see here")).toBeInTheDocument();
+    expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 });

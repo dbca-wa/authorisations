@@ -120,24 +120,60 @@ stages:
         npm ci --no-audit --no-fund
       displayName: Install frontend dependencies
     - script: |
+        echo "##vso[task.setvariable variable=E2E_TESTS_FAILED]false"
+        mkdir -p "$(Build.ArtifactStagingDirectory)/e2e-debug/logs"
+      displayName: Initialise E2E debug capture
+    - script: |
         cd frontend
-        npm run build
+        npm run build \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/frontend-build.log"
+        exit ${PIPESTATUS[0]}
       displayName: Build frontend assets
     - script: |
+        # Ensure backend/assets exists and copy built frontend files so Django
+        # can pick up `manifest.json` from STATICFILES_DIRS during collectstatic.
+        mkdir -p backend/assets
+        cp -r frontend/dist/* backend/assets/ \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/copy-dist.log"
+        exit ${PIPESTATUS[0]}
+      displayName: Copy frontend build into backend/assets
+    - script: |
         cd backend
-        poetry run playwright install --with-deps chromium
+        poetry run python manage.py collectstatic --noinput \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/collectstatic.log"
+        exit ${PIPESTATUS[0]}
+      displayName: Collect static assets
+      env:
+        DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+        LOCAL_MEDIA_STORAGE: 'true'
+        PRIVATE_MEDIA_ROOT: '/tmp/private-media'
+    - script: |
+        cd backend
+        poetry run playwright install --with-deps chromium \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/playwright-install.log"
+        exit ${PIPESTATUS[0]}
       displayName: Install Playwright Chromium browser
     - script: |
         cd backend
-        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure
+        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure \
+          2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/pytest-e2e.log"
+        status=${PIPESTATUS[0]}
+        if [ "$status" -ne 0 ]; then
+          echo "##vso[task.setvariable variable=E2E_TESTS_FAILED]true"
+        fi
+        exit "$status"
       displayName: Run E2E tests
       env:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
+        DJANGO_VITE_TEST_DEV_MODE: 'false'
+        DJANGO_VITE_TEST_MANIFEST_PATH: 'static/manifest.json'
     - script: |
-        mkdir -p "$(Build.SourcesDirectory)/backend/test-results"
-        touch "$(Build.SourcesDirectory)/backend/test-results/.keep"
-      displayName: Ensure E2E artefact path exists
-      condition: succeededOrFailed()
+        python scripts/collect_e2e_failure_artifacts.py \
+          --backend-root "$(Build.SourcesDirectory)/backend" \
+          --debug-dir "$(Build.ArtifactStagingDirectory)/e2e-debug" \
+          --junit "$(Build.SourcesDirectory)/backend/e2e-junit.xml"
+      displayName: Collect E2E failure artefacts
+      condition: eq(variables['E2E_TESTS_FAILED'], 'true')
     - task: PublishTestResults@2
       displayName: Publish E2E test results
       condition: succeededOrFailed()
@@ -146,11 +182,11 @@ stages:
         testResultsFiles: 'backend/e2e-junit.xml'
         failTaskOnFailedTests: true
     - task: PublishPipelineArtifact@1
-      displayName: Publish Playwright test artefacts
-      condition: succeededOrFailed()
+      displayName: Publish E2E failure artefacts
+      condition: eq(variables['E2E_TESTS_FAILED'], 'true')
       inputs:
-        targetPath: '$(Build.SourcesDirectory)/backend/test-results'
-        artifact: 'e2e-playwright-results'
+        targetPath: '$(Build.ArtifactStagingDirectory)/e2e-debug'
+        artifact: 'e2e-failure-debug'
         publishLocation: 'pipeline'
 
   - job: Coverage

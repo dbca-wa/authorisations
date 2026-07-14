@@ -2,7 +2,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DialogProvider } from "../../../context/Dialogs";
-import { useDialog } from "../../../context/Hooks";
+import { useDialog, useSnackbar } from "../../../context/Hooks";
+import { SnackbarProvider } from "../../../context/Snackbar";
 
 const DialogTrigger = ({
   onOpen,
@@ -35,6 +36,14 @@ const DialogTrigger = ({
         Open dialog
       </button>
     </>
+  );
+};
+
+const SnackbarDialogContent = () => {
+  const { showSnackbar } = useSnackbar();
+
+  return (
+    <button type="button" onClick={() => showSnackbar("Saved")}>Show snackbar</button>
   );
 };
 
@@ -109,5 +118,38 @@ describe("DialogProvider", () => {
       expect(onClose).not.toHaveBeenCalled();
       expect(screen.queryByText("Dialog content")).not.toBeInTheDocument();
     });
+  });
+
+  it("renders dialog content that can use the snackbar provider", async () => {
+    const DialogOpenButton = () => {
+      const { showDialog } = useDialog();
+
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            showDialog({
+              title: "Dialog title",
+              content: <SnackbarDialogContent />,
+            });
+          }}
+        >
+          Open dialog
+        </button>
+      );
+    };
+
+    render(
+      <SnackbarProvider>
+        <DialogProvider>
+          <DialogOpenButton />
+        </DialogProvider>
+      </SnackbarProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open dialog" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show snackbar" }));
+
+    expect(await screen.findByText("Saved")).toBeInTheDocument();
   });
 });

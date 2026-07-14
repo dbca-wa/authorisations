@@ -47,17 +47,16 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
                 <BootstrapDialog
                     onClose={hideDialog}
                     open={!!options}
-                    // fullWidth
                     maxWidth="lg"
                     aria-labelledby="customised-dialog-title"
                 >
-                    <DialogTitle sx={{ m: 0, p: 2 }} id="customised-dialog-title">
+                    <DialogTitle sx={{ m: 0, pr: 6 }} id="customised-dialog-title">
                         {options.title}
                         <IconButton
                             aria-label="close"
                             disabled={false}
                             onClick={hideDialog}
-                            sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
+                            sx={{ position: 'absolute', right: 8, top: 12, color: (theme) => theme.palette.grey[500] }}
                         >
                             <CloseIcon />
                         </IconButton>
@@ -66,7 +65,7 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
                         {options.content}
                     </DialogContent>
                     {options.actions && (
-                        <DialogActions style={{ justifyContent: "space-between" }}>
+                        <DialogActions className="justify-between!">
                             {options.actions}
                         </DialogActions>
                     )}
@@ -82,5 +81,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     },
     '& .MuiDialogActions-root': {
         padding: theme.spacing(1),
+    },
+    '& .MuiDialogActions-root > :only-child': {
+        marginLeft: 'auto',
     },
 }));

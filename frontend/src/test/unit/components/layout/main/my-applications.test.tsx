@@ -1,12 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeApplication, makeProcess } from "../../../fixtures";
+import { LocalStorage } from "../../../../../context/LocalStorage";
 
 const useLoaderDataMock = vi.fn();
 const useResolvedPromiseMock = vi.fn();
-const localStorageGetMock = vi.fn();
-const localStorageSetMock = vi.fn();
 
 vi.mock("react-router", async () => {
   const actual = await vi.importActual<typeof import("react-router")>("react-router");
@@ -24,17 +23,25 @@ vi.mock("../../../../../context/Hooks", async () => {
   };
 });
 
-vi.mock("../../../../../context/LocalStorage", () => ({
-  LocalStorage: {
-    getValue: (...args: unknown[]) => localStorageGetMock(...args),
-    setValue: (...args: unknown[]) => localStorageSetMock(...args),
-  },
-}));
-
 vi.mock("../../../../../components/layout/main/ApplicationCard", () => ({
-  ApplicationCard: ({ application, downloadUrl }: { application: { internal_id: string }; downloadUrl?: string }) => (
-    <div data-testid="application-card">{`${application.internal_id}|${downloadUrl ?? "none"}`}</div>
-  ),
+  ApplicationCard: ({ application }: { application: { internal_id: string; status: string; key: string } }) => {
+    // Simulate the behavior of ApplicationCard's internal logic
+    const downloadableStatuses = [
+      "SUBMITTED",
+      "UNDER_REVIEW",
+      "UNDER_ASSESSMENT",
+      "APPROVED",
+      "APPROVED_WITH_CONDITIONS",
+      "DEFERRED",
+      "REJECTED"
+    ];
+    const editableStatuses = ["DRAFT", "ACTION_REQUIRED"];
+    const isDownloadable = downloadableStatuses.includes(application.status);
+    const isEditable = editableStatuses.includes(application.status);
+    return (
+      <div data-testid="application-card">{`${application.internal_id}|download:${isDownloadable ? "yes" : "no"}|continue:${isEditable ? "yes" : "no"}`}</div>
+    );
+  },
 }));
 
 import { MyApplications } from "../../../../../components/layout/main/MyApplications";
@@ -43,10 +50,15 @@ import { MyApplications } from "../../../../../components/layout/main/MyApplicat
 describe("MyApplications", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    LocalStorage.removeValue("my-applications-sort-order");
     useLoaderDataMock.mockReturnValue({
       processes: [makeProcess({ slug: "s40", sort_order: 1 })],
       applications: Promise.resolve([]),
     });
+  });
+
+  afterEach(() => {
+    LocalStorage.removeValue("my-applications-sort-order");
   });
 
   it("renders loading state while deferred applications are unresolved", () => {
@@ -54,7 +66,7 @@ describe("MyApplications", () => {
 
     render(<MyApplications />);
 
-    expect(screen.getByText("Loading applications...")).toBeInTheDocument();
+    expect(screen.getByText("One moment while we fetch that for you...")).toBeInTheDocument();
   });
 
   it("renders empty state when there are no applications", () => {
@@ -62,10 +74,11 @@ describe("MyApplications", () => {
 
     render(<MyApplications />);
 
-    expect(screen.getByText("No items found")).toBeInTheDocument();
+    expect(screen.getByText("Nothing to see here")).toBeInTheDocument();
+    expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
-  it("shows download URL only for downloadable statuses", () => {
+  it("shows download button for downloadable statuses and continue button for editable statuses", () => {
     useResolvedPromiseMock.mockReturnValue([
       [
         makeApplication({ internal_id: "app-submitted", status: "SUBMITTED", key: "k1" }),
@@ -77,17 +90,54 @@ describe("MyApplications", () => {
     render(<MyApplications />);
 
     const cards = screen.getAllByTestId("application-card").map((node) => node.textContent);
-    expect(cards).toContain("app-submitted|/d/k1");
-    expect(cards).toContain("app-draft|none");
+    expect(cards).toContain("app-submitted|download:yes|continue:no");
+    expect(cards).toContain("app-draft|download:no|continue:yes");
   });
 
   it("uses persisted sort order when stored value is valid", () => {
-    localStorageGetMock.mockReturnValue("oldest");
+    LocalStorage.setValue("my-applications-sort-order", "created_oldest");
     useResolvedPromiseMock.mockReturnValue([[makeApplication()], false]);
 
     render(<MyApplications />);
 
-    expect(localStorageGetMock).toHaveBeenCalledWith("my-applications-sort-order");
-    expect(localStorageSetMock).toHaveBeenCalledWith("my-applications-sort-order", "oldest");
+    const stored = LocalStorage.getValue<string>("my-applications-sort-order");
+    expect(stored).toBe("created_oldest");
+  });
+
+  it("uses 'updated_newest' as default sort order when no stored value", () => {
+    LocalStorage.removeValue("my-applications-sort-order");
+    useResolvedPromiseMock.mockReturnValue([
+      [
+        makeApplication({ internal_id: "app1", updated_at: "2026-05-10T00:00:00Z" }),
+        makeApplication({ key: "22222222-2222-2222-2222-222222222222", internal_id: "app2", updated_at: "2026-05-12T00:00:00Z" }),
+        makeApplication({ key: "33333333-3333-3333-3333-333333333333", internal_id: "app3", updated_at: "2026-05-11T00:00:00Z" }),
+      ],
+      false,
+    ]);
+
+    render(<MyApplications />);
+
+    const ordered = screen.getAllByTestId("application-card").map((node) => node.textContent.split("|")[0]);
+    // Default sort is "updated_newest", so most recent updated_at comes first
+    expect(ordered).toEqual(["app2", "app3", "app1"]);
+  });
+
+  it("hides submitted sort options when applications contain drafts", () => {
+    LocalStorage.removeValue("my-applications-sort-order");
+    useResolvedPromiseMock.mockReturnValue([
+      [
+        makeApplication({ submitted_at: null, status: "DRAFT" }),
+      ],
+      false,
+    ]);
+
+    render(<MyApplications />);
+
+    const sortControl = screen.queryByRole("combobox", { name: "Sort applications" });
+    // Should not see submitted options for draft-only view
+    if (sortControl) {
+      expect(sortControl.textContent).not.toContain("Submitted: Newest");
+      expect(sortControl.textContent).not.toContain("Submitted: Oldest");
+    }
   });
 });

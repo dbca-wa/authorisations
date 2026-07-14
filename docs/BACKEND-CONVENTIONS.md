@@ -12,6 +12,10 @@ Development patterns, rules, and best practices for the backend codebase.
 
 - Application and attachment querysets must always enforce owner scoping
 - Attachment deletions are soft-delete and must include ownership checks
+ - Application querysets must always enforce owner scoping for write/modify paths.
+ - Attachment listing endpoints may return results to reviewers for applications
+   in processes they are authorised to assess; deletion and mutation remain
+   owner-only and must include ownership checks.
 - CSRF behaviour includes project-specific configuration and has known interactions with third-party admin endpoints
 
 ### Read access vs write access (`has_access` vs owner check)

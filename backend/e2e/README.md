@@ -11,6 +11,24 @@ poetry install --with dev
 poetry run playwright install chromium
 ```
 
+### Build frontend assets for browser tests
+
+When running Playwright tests that open a real browser, the SPA static assets
+must be available to Django so the pages render correctly. Build the frontend
+and collect static files into `STATIC_ROOT` before running browser tests:
+
+```bash
+cd frontend
+npm ci
+npm run build
+
+cd ../backend
+poetry run python manage.py collectstatic --noinput
+
+# then run E2E (chromium example)
+poetry run pytest e2e/tests -v --browser chromium
+```
+
 ## Run E2E Tests
 
 ```bash
