@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
@@ -42,9 +43,9 @@ export function SelectInput({
                     ))}
                 </Select>
                 {fieldState.invalid &&
-                    <FormHelperText error>
+                    <Alert severity="error" sx={{ mt: 1 }}>
                         {fieldState.error?.message}
-                    </FormHelperText>
+                    </Alert>
                 }
                 {question.o.description &&
                     <FormHelperText>

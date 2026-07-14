@@ -51,7 +51,8 @@ def test_applications_list_is_owner_scoped(
 
     assert status == 200
     assert len(payload) == 1
-    assert payload[0]["owner"] == "e2e-applicant"
+    assert payload[0]["owner_email"] == "e2e-applicant@example.com"
+    assert payload[0]["owner_fullname"] == "E2E Applicant"
     assert payload[0]["status"] == "DRAFT"
 
 

@@ -23,6 +23,10 @@ export class LocalStorage {
         this.setItem(this.getKey(key), value as unknown as object);
     }
 
+    public static removeValue(key: string): void {
+        localStorage.removeItem(this.getKey(key));
+    }
+
     public static getFormState(applicationKey: string): IFormDocument | null {
         // console.log("Getting answers for application:", applicationKey);
         const key = this.getKey(applicationKey);

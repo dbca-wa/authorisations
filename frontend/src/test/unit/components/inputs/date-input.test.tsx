@@ -3,18 +3,19 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { DateInput } from "../../../../components/inputs/date";
+import { ERROR_MSG } from "../../../../context/Constants";
 import { makeQuestion, renderWithForm } from "./helpers";
 
 vi.mock("@mui/x-date-pickers/DatePicker", () => ({
   DatePicker: ({ label, onChange, slotProps }: {
     label: string;
     onChange: (value: ReturnType<typeof dayjs> | null) => void;
-    slotProps: { textField?: { helperText?: string } };
+    slotProps: { textField?: { helperText?: string; error?: boolean } };
   }) => (
     <div>
       <button type="button" onClick={() => onChange(dayjs("2026-05-14"))}>Pick date</button>
       <span>{label}</span>
-      <span>{slotProps?.textField?.helperText}</span>
+      {slotProps?.textField?.helperText && <span>{slotProps?.textField?.helperText}</span>}
     </div>
   ),
 }));
@@ -42,5 +43,17 @@ describe("DateInput", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     const submitted = onSubmit.mock.calls[0][0];
     expect(JSON.stringify(submitted)).toContain("2026-05-14");
+  });
+
+  it("shows required error in Alert when required field is not set", async () => {
+    const question = makeQuestion({ type: "date", label: "Required date", is_required: true });
+
+    renderWithForm({ ui: <DateInput question={question} /> });
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent(ERROR_MSG.required);
   });
 });

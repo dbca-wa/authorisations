@@ -12,7 +12,7 @@ from applications.serialisers import (
     AttachmentSerialiser,
     AssessmentSerialiser,
 )
-from django.db.models import BooleanField, Exists, F, OuterRef, Value, Window
+from django.db.models import BooleanField, Exists, F, OuterRef, Value, Window, Q
 from django.db.models.functions import RowNumber
 from processes.models import AuthorisationProcess
 from processes.serialisers import AuthorisationProcessSerialiser
@@ -122,15 +122,32 @@ class AttachmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Only allow access to attachments of applications:
-            * owned by the user
-            * not deleted
+        Return attachments visible to the current user.
+
+        The queryset includes attachments that:
+            * belong to applications owned by `request.user`, OR
+            * belong to applications whose questionnaire process the user
+              is authorised to review via their group memberships.
+
+        Soft-deleted attachments are excluded (`is_deleted=False`).
         """
+        # Resolve which process IDs this user may review via the M2M through table.
+        reviewable_process_ids = (
+            AuthorisationProcess.assessor_groups.through.objects.filter(
+                group_id__in=self.request.user.groups.values("id")
+            ).values("authorisationprocess_id")
+        )
+
+        # Allow attachments that either belong to applications owned by the
+        # current user or belong to applications in processes the user may
+        # review. Always exclude soft-deleted records.
         return ApplicationAttachment.objects.select_related(
-            "application", "application__owner"
+            "application", "application__owner", "application__questionnaire__process"
         ).filter(
-            application__owner=self.request.user,
             is_deleted=False,
+        ).filter(
+            Q(application__owner=self.request.user)
+            | Q(application__questionnaire__process_id__in=reviewable_process_ids)
         )
 
     def perform_destroy(self, instance: ApplicationAttachment):

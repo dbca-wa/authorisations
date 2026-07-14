@@ -17,7 +17,9 @@ COPY frontend/package.json ./
 
 # Install frontend dependencies.
 # `npm ci` is preferred when package-lock.json exists; this project currently tracks bun.lock,
-# so `npm install` is used for compatibility while keeping flags conservative.
+# so `npm install` is used for compatibility while keeping flags conservative:
+# - `--no-audit`: skip npm's advisory audit during image builds to avoid extra network work and log noise.
+# - `--no-fund`: suppress funding notices so CI/CD logs stay focused on actionable output.
 RUN npm install --no-audit --no-fund
 
 # Copy frontend source after dependency install to preserve cache efficiency.

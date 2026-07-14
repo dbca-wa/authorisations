@@ -1,6 +1,7 @@
 import BlockIcon from '@mui/icons-material/Block';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import FormHelperText from "@mui/material/FormHelperText";
@@ -86,9 +87,6 @@ export const FileInput = ({
             <Typography variant="h6">
                 {question.labelText}
             </Typography>
-            <Typography variant="subtitle1">
-                {question.o.description}
-            </Typography>
             {/* Display the tiled attachment list if there are attachments */}
             {attachments.length > 0 &&
                 <FileAttachmentList
@@ -109,8 +107,13 @@ export const FileInput = ({
                 />
             }
             {fieldState.invalid &&
-                <FormHelperText error>
+                <Alert severity="error" sx={{ mt: 1 }}>
                     {fieldState.error?.message}
+                </Alert>
+            }
+            {question.o.description &&
+                <FormHelperText>
+                    {question.o.description}
                 </FormHelperText>
             }
         </Box>

@@ -14,6 +14,7 @@ import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
 import { PrivacyPolicy } from './components/layout/main/PrivacyPolicy';
+import { UserSettings } from './components/layout/main/UserSettings';
 import { ApiManager } from './context/ApiManager';
 import type { IRoute, LoaderData } from "./context/types/Generic";
 import { handleApiError } from './context/Utils';
@@ -86,6 +87,7 @@ export const ROUTES: IRoute[] = [
 		path: "/settings",
 		icon: <SettingsIcon />,
 		divider: false,
+		component: UserSettings,
 		loader: mainLoader(),
 	},
 	{

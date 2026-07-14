@@ -71,13 +71,23 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     Serializer for the Application model.
     """
 
-    owner = serializers.CharField(
+    owner_email = serializers.CharField(
         source="owner.username",
         required=False,
         read_only=True,
     )
+    owner_fullname = serializers.SerializerMethodField(
+        required=False,
+        read_only=True,
+        method_name="get_owner_fullname",
+    )
     process_slug = serializers.SlugField(
         source="questionnaire.process.slug",
+        required=False,
+        read_only=True,
+    )
+    process_sort_order = serializers.IntegerField(
+        source="questionnaire.process.sort_order",
         required=False,
         read_only=True,
     )
@@ -98,6 +108,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
     )
     questionnaire_version = serializers.IntegerField(
         source="questionnaire.version",
+        required=False,
+        read_only=True,
+    )
+    questionnaire_sort_order = serializers.IntegerField(
+        source="questionnaire.sort_order",
         required=False,
         read_only=True,
     )
@@ -125,12 +140,15 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             "id",
             "key",
             "internal_id",
-            "owner",
+            "owner_email",
+            "owner_fullname",
             "process_slug",
+            "process_sort_order",
             "questionnaire_id",
             "questionnaire_code",
             "questionnaire_name",
             "questionnaire_version",
+            "questionnaire_sort_order",
             "privacy_consent_agreed",
             "turnstile_token",
             "status",
@@ -141,6 +159,16 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         )
         # All fields are read-only by default (see `.get_fields()` method).
         read_only_fields = fields
+
+    def get_owner_fullname(self, obj: Application) -> str:
+        """Return the owner's full name (first_name + last_name)."""
+        owner = getattr(obj, "owner", None)
+        if owner is None:
+            return ""
+        first_name = getattr(owner, "first_name", "").strip()
+        last_name = getattr(owner, "last_name", "").strip()
+        fullname = f"{first_name} {last_name}".strip()
+        return fullname or getattr(owner, "username", "")
 
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
@@ -501,6 +529,16 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         self.context["application"] = application
         return value
 
+    def validate_name(self, value):
+        """
+        Validate and normalise the attachment name by trimming whitespace.
+        Ensure the name is not empty after trimming.
+        """
+        name = value.strip() if value else ""
+        if not name:
+            raise serializers.ValidationError("Name cannot be empty or contain only whitespace.")
+        return name
+
     def validate_question(self, value):
         """
         Validate the question index format (does not parse definition here).
@@ -657,12 +695,21 @@ class AssessmentSerialiser(serializers.ModelSerializer):
       - the requested status is one an assessor is permitted to set.
     """
 
-    owner = serializers.CharField(
+    owner_email = serializers.CharField(
         source="owner.username",
         read_only=True,
     )
+    owner_fullname = serializers.SerializerMethodField(
+        required=False,
+        read_only=True,
+        method_name="get_owner_fullname",
+    )
     process_slug = serializers.SlugField(
         source="questionnaire.process.slug",
+        read_only=True,
+    )
+    process_sort_order = serializers.IntegerField(
+        source="questionnaire.process.sort_order",
         read_only=True,
     )
     questionnaire_id = serializers.IntegerField(
@@ -677,6 +724,10 @@ class AssessmentSerialiser(serializers.ModelSerializer):
         source="questionnaire.version",
         read_only=True,
     )
+    questionnaire_sort_order = serializers.IntegerField(
+        source="questionnaire.sort_order",
+        read_only=True,
+    )
     internal_id = serializers.CharField(read_only=True)
 
     class Meta:
@@ -685,11 +736,14 @@ class AssessmentSerialiser(serializers.ModelSerializer):
             "id",
             "key",
             "internal_id",
-            "owner",
+            "owner_email",
+            "owner_fullname",
             "process_slug",
+            "process_sort_order",
             "questionnaire_id",
             "questionnaire_name",
             "questionnaire_version",
+            "questionnaire_sort_order",
             "status",
             "created_at",
             "updated_at",
@@ -697,6 +751,16 @@ class AssessmentSerialiser(serializers.ModelSerializer):
         )
         # All fields are read-only by default; status is made writable via PATCH in get_fields().
         read_only_fields = fields
+
+    def get_owner_fullname(self, obj: Application) -> str:
+        """Return the owner's full name (first_name + last_name)."""
+        owner = getattr(obj, "owner", None)
+        if owner is None:
+            return ""
+        first_name = getattr(owner, "first_name", "").strip()
+        last_name = getattr(owner, "last_name", "").strip()
+        fullname = f"{first_name} {last_name}".strip()
+        return fullname or getattr(owner, "username", "")
 
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)

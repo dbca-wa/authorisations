@@ -85,7 +85,7 @@ describe("FileAttachmentList", () => {
 
     fireEvent.click(screen.getByTitle("Delete: report.pdf"));
 
-    expect(showDialogMock).toHaveBeenCalledWith(expect.objectContaining({ title: "Confirm Deletion" }));
+    expect(showDialogMock).toHaveBeenCalledWith(expect.objectContaining({ title: "Confirm deletion" }));
     const dialogOptions = showDialogMock.mock.calls[0][0];
 
     render(<>{dialogOptions.actions}</>);
@@ -134,7 +134,7 @@ describe("FileAttachmentList", () => {
 
     fireEvent.click(screen.getByTitle("Rename: report-v1.pdf"));
 
-    expect(showDialogMock).toHaveBeenCalledWith(expect.objectContaining({ title: "Rename Attachment" }));
+    expect(showDialogMock).toHaveBeenCalledWith(expect.objectContaining({ title: "Rename attachment" }));
     const dialogOptions = showDialogMock.mock.calls[0][0];
 
     render(<>{dialogOptions.content}</>);

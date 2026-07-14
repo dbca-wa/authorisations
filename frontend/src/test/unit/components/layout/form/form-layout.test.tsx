@@ -8,7 +8,7 @@ import { makeApplication, makeQuestionnaire } from "../../../fixtures";
 
 const {
   apiMocks,
-  localStorageMocks,
+  setFormStateMock,
   showSnackbarMock,
   turnstileRenderMock,
   useLoaderDataMock,
@@ -16,9 +16,7 @@ const {
   apiMocks: {
     updateApplication: vi.fn(),
   },
-  localStorageMocks: {
-    setFormState: vi.fn(),
-  },
+  setFormStateMock: vi.fn(),
   showSnackbarMock: vi.fn(),
   turnstileRenderMock: vi.fn(),
   useLoaderDataMock: vi.fn(),
@@ -44,9 +42,16 @@ vi.mock("../../../../../context/ApiManager", () => ({
   ApiManager: apiMocks,
 }));
 
-vi.mock("../../../../../context/LocalStorage", () => ({
-  LocalStorage: localStorageMocks,
-}));
+vi.mock("../../../../../context/LocalStorage", async () => {
+  const actual = await vi.importActual<typeof import("../../../../../context/LocalStorage")>("../../../../../context/LocalStorage");
+  return {
+    ...actual,
+    LocalStorage: {
+      ...actual.LocalStorage,
+      setFormState: setFormStateMock,
+    },
+  };
+});
 
 vi.mock("../../../../../context/TurnstileManager", () => ({
   TurnstileManager: {
@@ -168,7 +173,7 @@ describe("FormLayout", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => {
-      expect(localStorageMocks.setFormState).toHaveBeenCalledTimes(1);
+      expect(setFormStateMock).toHaveBeenCalledTimes(1);
     });
     expect(showSnackbarMock).toHaveBeenCalledWith(
       "Failed to save: save failed",
@@ -191,7 +196,7 @@ describe("FormLayout", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => {
-      expect(localStorageMocks.setFormState).toHaveBeenCalledTimes(1);
+      expect(setFormStateMock).toHaveBeenCalledTimes(1);
     });
     expect(apiMocks.updateApplication).not.toHaveBeenCalled();
   });

@@ -9,17 +9,21 @@ import ListItem from "@mui/material/ListItem";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
-import dayjs from 'dayjs';
-import relativeTime from "dayjs/plugin/relativeTime";
 
-import { ApplicationIdDisplay } from '../../Common';
 import { openNewTab } from '../../../context/Utils';
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
+import { ApplicationIdDisplay } from '../../Common';
+import {
+    downloadableStatuses,
+    formatStatusLabel,
+    formatRelativeDates,
+} from './applicationUtils';
 
+// Card-specific constants for application status progression display
 const applicationSteps = [
     "Application",
-    "Submit",
+    "Submitted",
     "Review",
     "Assessment",
     "Decision",
@@ -44,49 +48,43 @@ const terminatedStatuses = new Set<ApplicationStatus>(["DISCARDED", "WITHDRAWN"]
 
 
 /**
- * Renders a reusable application summary card for both applicant and reviewer list pages.
- * It standardises status chips, timeline, and the continue action in one shared place.
+ * Renders an application summary card for applicants.
+ * Displays process metadata, application status, and action buttons (continue, download).
  */
 export const ApplicationCard = ({
     process,
     application,
-    downloadUrl,
-    displayContinue,
 }: {
     process?: IAuthorisationProcess;
     application: IApplicationData;
-    downloadUrl?: string;
-    displayContinue?: boolean;
 }) => {
-    // Enable relative date labels like "2 days ago" for card metadata.
-    dayjs.extend(relativeTime);
-
     const processName = process?.name ?? `Unknown process (${application.process_slug})`;
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
-    const statusCapitalised = application.status.split("_").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ");
-    const createdAtRelative = dayjs(application.created_at).fromNow();
-    const updatedAtRelative = dayjs(application.updated_at).fromNow();
+    const statusCapitalised = formatStatusLabel(application.status);
+    const { createdAtRelative, updatedAtRelative } = formatRelativeDates(application);
 
     const isTerminated = terminatedStatuses.has(application.status);
+    const isDownloadable = downloadableStatuses.has(application.status);
+    const isEditable = application.status === "DRAFT" || application.status === "ACTION_REQUIRED";
 
     return (
-        <ListItem sx={{ marginBottom: 2 }}>
-            <Card className="p-8 w-full" elevation={4} sx={{ borderRadius: 2 }}>
+        <ListItem className="mb-4">
+            <Card className="p-8 w-full rounded-lg!" elevation={4}>
                 <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
 
-                <Box sx={{ display: "flex", gap: 1, my: 2, flexWrap: "wrap", justifyContent: "space-around" }} className="max-w-min min-w-1/1 mx-auto">
+                <Box className="flex gap-2 my-4 flex-wrap justify-around">
                     <Chip label={processName} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
 
                     {/* Force a wrapped row break between identifier chips and status/date chips. */}
-                    <Box sx={{ flexBasis: "100%", height: 0 }} />
+                    <Box className="basis-full h-0" />
 
                     <Chip label={`${statusCapitalised}`} size="small" variant="outlined" />
                     <Chip label={`Created ${createdAtRelative}`} size="small" variant="outlined" />
                     <Chip label={`Updated ${updatedAtRelative}`} size="small" variant="outlined" />
                 </Box>
 
-                <Box sx={{ mt: 4, mb: 1 }} className="w-4/5 mx-auto">
+                <Box className="my-8 w-9/10 mx-auto">
                     <Stepper
                         activeStep={statusToActiveStep[application.status]}
                         alternativeLabel
@@ -115,21 +113,21 @@ export const ApplicationCard = ({
                         ))}
                     </Stepper>
                 </Box>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
-                    {/* Render the PDF action only when explicitly enabled and a designated URL is provided. */}
-                    {downloadUrl && (
+                <Box className="flex justify-end gap-1 mt-2">
+                    {/* Render the PDF action only for downloadable statuses. */}
+                    {isDownloadable && (
                         <Link
                             target="_blank"
                             rel="noopener"
                             aria-label="Download application PDF"
-                            href={downloadUrl}
+                            href={`/d/${application.key}`}
                         >
                             <Button
                                 variant="outlined"
                                 color="primary"
                                 loadingPosition='start'
                                 loading={false}
-                                disabled={Boolean(false)}
+                                disabled={false}
                                 startIcon={<DownloadIcon />}
                             >
                                 Download
@@ -137,7 +135,8 @@ export const ApplicationCard = ({
                         </Link>
                     )}
 
-                    {displayContinue && (
+                    {/* Render the continue action only for editable applications. */}
+                    {isEditable && (
                         <Link
                             target="_blank"
                             rel="noopener"
@@ -149,7 +148,7 @@ export const ApplicationCard = ({
                                 color="success"
                                 loadingPosition='start'
                                 loading={false}
-                                disabled={Boolean(false)}
+                                disabled={false}
                                 startIcon={<PlayArrowRoundedIcon />}
                             >
                                 Continue

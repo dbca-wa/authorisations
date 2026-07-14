@@ -53,8 +53,8 @@ export const MainLayout = ({
             <CssBaseline />
             <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 <Toolbar>
-                    <Typography variant="h6" noWrap component="div">
-                        Authorisations Framework
+                    <Typography variant="h6" noWrap component="div" sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                        DBCA <Typography variant="h6" sx={{ opacity: 0.5 }}>/</Typography> Authorisations System
                     </Typography>
                 </Toolbar>
             </AppBar>

@@ -28,13 +28,15 @@ describe("CheckboxInput", () => {
     expect(checkbox.checked).toBe(true);
   });
 
-  it("shows required error when required checkbox is not checked", async () => {
+  it("shows required error in Alert when required checkbox is not checked", async () => {
     const question = makeQuestion({ type: "checkbox", label: "Required confirm", is_required: true });
 
     renderWithForm({ ui: <CheckboxInput question={question} /> });
 
     fireEvent.click(screen.getByRole("button", { name: "Submit" }));
 
-    expect(await screen.findByText(ERROR_MSG.required)).toBeInTheDocument();
+    const alert = await screen.findByRole("alert");
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent(ERROR_MSG.required);
   });
 });

@@ -10,6 +10,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import React from "react";
+import { LoadingState } from "./LoadingState";
 
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
@@ -168,14 +169,14 @@ export const NewApplication = () => {
     const [inProgress, setInProgress] = React.useState<boolean>(false);
 
     return (
-        <Box className="p-8 min-w-3xl max-w-5xl">
+        <Box className="p-8 w-full min-w-4xl lg:w-4xl xl:w-5xl 2xl:w-6xl">
             <Typography variant="h4" gutterBottom>
                 Start a New Application
             </Typography>
             <Typography color="textSecondary" sx={{ mb: 4 }}>
-                Here you can start a new application for an authorisation process.
+                Create a new application for an authorisation process.
             </Typography>
-            {isQuestionnairesLoading ? <Typography>Loading questionnaires...</Typography> :
+            {isQuestionnairesLoading ? <LoadingState /> :
                 processGroups.length === 0 ? <EmptyStateComponent /> :
                     <>
                         {processGroups.map((group) => (
