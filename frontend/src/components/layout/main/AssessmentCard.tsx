@@ -71,7 +71,7 @@ export const AssessmentCard = ({
     const processName = process?.name ?? `Unknown process (${application.process_slug})`;
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
     const statusCapitalised = formatStatusLabel(application.status);
-    const { createdAtRelative, updatedAtRelative } = formatRelativeDates(application);
+    const { createdAtRelative, updatedAtRelative, submittedAtRelative } = formatRelativeDates(application);
 
     const isDownloadable = downloadableStatuses.has(application.status);
 
@@ -135,7 +135,7 @@ export const AssessmentCard = ({
                         <Box className="flex gap-1.5 items-center">
                             <HistoryIcon fontSize="small" sx={{ color: 'action.active' }} />
                             <Typography variant="body2">
-                                Submitted {createdAtRelative}
+                                Submitted {submittedAtRelative || "pending"}
                             </Typography>
                         </Box>
                     </Box>

@@ -306,3 +306,118 @@ def test_assessment_page_sort_by_application_type(
     # Tear down
     page.close()
     context.close()
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_assessment_card_displays_submission_date_not_creation_date(
+    authenticated_browser_context_factory,
+    e2e_users,
+):
+    """CRITICAL: Verify "Submitted" label displays submission date (submitted_at), NOT creation date (created_at).
+    
+    This test catches the bug where AssessmentCard incorrectly displayed the creation date
+    for the "Submitted" label. The test creates an application with deliberately different
+    creation and submission dates to ensure the correct date field is displayed.
+    """
+    reviewer = e2e_users["reviewer"]
+    other = e2e_users["other"]
+
+    # Create a submitted application with DIFFERENT creation and submission dates
+    # Created 7 days ago, submitted today
+    now = timezone.now()
+    created_7_days_ago = now - timezone.timedelta(days=7)
+
+    # Get an existing questionnaire to use for our test app
+    existing_app = Application.objects.filter(owner=other, status="SUBMITTED").first()
+    assert existing_app is not None, "Expected a submitted application in seed data"
+
+    # Create new app with old creation date but recent submission date
+    test_app = Application.objects.create(
+        owner=other,
+        questionnaire=existing_app.questionnaire,
+        status="SUBMITTED",
+        document=existing_app.document,
+        created_at=created_7_days_ago,  # Created 7 days ago
+        submitted_at=now,  # Submitted today
+    )
+
+    # Open the SPA as reviewer
+    context = authenticated_browser_context_factory(reviewer)
+    page = context.new_page()
+
+    # Navigate to assessment queue
+    page.goto("/assessment")
+    page.wait_for_selector('button:has-text("Files")')
+
+    # Find the card for our test application by its internal_id
+    card_container = page.locator(f'text={test_app.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]')
+    assert card_container.is_visible(), f"Card for application {test_app.internal_id} not found"
+
+    # Get all text content from the card and look for submission info
+    card_text = card_container.text_content()
+
+    # Verify "Submitted" appears in the card
+    assert "Submitted" in card_text, f"'Submitted' label not found in card text: {card_text}"
+
+    # CRITICAL: Verify the card does NOT show "7 days ago" (which would indicate creation date was used)
+    # A submitted-today app should show "ago" (seconds/minutes/hours ago), not "7 days ago"
+    assert "7 days" not in card_text, (
+        f"BUG DETECTED: Card shows '7 days ago' in submission field, indicating creation date "
+        f"was used instead of submission date. Card text:\n{card_text}"
+    )
+
+    # Tear down
+    page.close()
+    context.close()
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_assessment_card_shows_pending_for_recently_submitted_apps(
+    authenticated_browser_context_factory,
+    e2e_users,
+):
+    """Verify submission date displays correctly for applications submitted at different times."""
+    reviewer = e2e_users["reviewer"]
+    other = e2e_users["other"]
+
+    # Get an existing submitted application
+    existing_app = Application.objects.filter(owner=other, status="SUBMITTED").first()
+    assert existing_app is not None, "Expected a submitted application in seed data"
+
+    # Open the SPA as reviewer
+    context = authenticated_browser_context_factory(reviewer)
+    page = context.new_page()
+
+    # Navigate to assessment queue
+    page.goto("/assessment")
+    page.wait_for_selector('button:has-text("Files")')
+
+    # Get all application cards
+    cards = page.locator('div[class*="MuiCard"]')
+    assert cards.count() >= 1, "No application cards found on assessment page"
+
+    # Check the first card's content
+    first_card = cards.first
+    card_text = first_card.text_content()
+
+    # Verify "Submitted" appears in the card
+    assert "Submitted" in card_text, f"'Submitted' label not found in card text: {card_text}"
+
+    # Verify submission date info is present
+    # The submission date should either show relative time ("2 seconds ago", etc.)
+    # or "pending" if not submitted yet
+    submission_info_found = any([
+        "ago" in card_text.lower(),  # Relative time format
+        "pending" in card_text.lower(),  # Not yet submitted
+    ])
+    
+    assert submission_info_found, (
+        f"Card should show submission info (relative time with 'ago' or 'pending'), "
+        f"but card text is: {card_text}"
+    )
+
+    # Tear down
+    page.close()
+    context.close()
