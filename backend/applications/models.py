@@ -439,6 +439,17 @@ class Application(models.Model):
         pdf_buffer.seek(0)
         return pdf_buffer
 
+    def reset_to_draft(self):
+        """Reset a submitted application back to DRAFT status and clear submitted_at.
+
+        This is a temporary administrative function for superusers to revert submitted
+        applications back to draft without data loss. Data integrity is maintained as
+        all application document data is preserved.
+        """
+        self.status = ApplicationStatus.DRAFT
+        self.submitted_at = None
+        self.save(update_fields=["status", "submitted_at"])
+
 
 # def certificate_path(instance, filename):
 #     """Define the upload path for the certificate file."""

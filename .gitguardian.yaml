@@ -1,0 +1,3 @@
+paths-ignore:
+  - path: backend/applications/tests.py
+    reason: Test fixtures with dummy passwords - not secrets
