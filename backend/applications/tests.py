@@ -1,10 +1,14 @@
 from unittest.mock import patch
 
+from django.contrib.admin.sites import AdminSite
+from django.contrib.messages import get_messages
 from django.test import RequestFactory, TestCase
+from django.utils import timezone
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
 
+from applications.admin import ApplicationAdmin
 from applications.models import Application, ApplicationStatus
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
 
@@ -277,3 +281,236 @@ class AttachmentSerialiserNameValidationTests(TestCase):
         with self.assertRaises(Exception) as context:
             serializer.validate_name(None)
         self.assertIn("cannot be empty", str(context.exception))
+
+
+class ApplicationAdminResetToDraftTests(TestCase):
+    """Verify reset button on admin detail view for submitted applications."""
+
+    def setUp(self):
+        """Create admin, users, process, questionnaire, and applications for testing."""
+        self.factory = RequestFactory()
+        self.admin_site = AdminSite()
+        self.app_admin = ApplicationAdmin(Application, self.admin_site)
+
+        # Create superuser (admin staff)
+        self.admin_user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="admin123"
+        )
+
+        # Create regular user (applicant)
+        self.applicant = User.objects.create_user(
+            username="applicant", password="testpass123"
+        )
+
+        # Create process and questionnaire
+        self.process = AuthorisationProcess.objects.create(
+            slug="s40",
+            name="Section 40",
+            description="Section 40 authorisation process",
+            sort_order=1,
+        )
+        self.questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="new-application",
+            name="New application",
+            description="Create a new application",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "description": "",
+                        "sections": [
+                            {
+                                "title": "Section 1",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Question 1",
+                                        "type": "text",
+                                        "is_required": False,
+                                        "description": "",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.admin_user,
+        )
+
+    def _build_admin_request(self, method="get"):
+        """Build a request with an authenticated admin user."""
+        if method.lower() == "post":
+            request = self.factory.post("/admin/applications/application/1/change/")
+        else:
+            request = self.factory.get("/admin/applications/application/1/change/")
+        request.user = self.admin_user
+        request.session = {}
+        # Add messages framework support
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        setattr(request, "_messages", FallbackStorage(request))
+        return request
+
+    def test_reset_button_visible_only_for_submitted_status(self):
+        """Verify that reset button is displayed only for SUBMITTED applications."""
+        # Create a submitted application
+        submitted_app = Application.objects.create(
+            owner=self.applicant,
+            questionnaire=self.questionnaire,
+            status=ApplicationStatus.SUBMITTED,
+            submitted_at=timezone.now(),
+            document={
+                "schema_version": "2025.07-1",
+                "active_step": 0,
+                "steps": [{"is_valid": None, "answers": {}}],
+            },
+        )
+
+        # Create a draft application
+        draft_app = Application.objects.create(
+            owner=self.applicant,
+            questionnaire=self.questionnaire,
+            status=ApplicationStatus.DRAFT,
+            document={
+                "schema_version": "2025.07-1",
+                "active_step": 0,
+                "steps": [{"is_valid": None, "answers": {}}],
+            },
+        )
+
+        # Button should appear for submitted
+        button_html = self.app_admin.reset_button(submitted_app)
+        self.assertIn("Reset to Draft", button_html)
+        self.assertIn("_reset_to_draft", button_html)
+
+        # Button should NOT appear for draft
+        button_html = self.app_admin.reset_button(draft_app)
+        self.assertEqual(button_html, "")
+
+    def test_reset_button_not_visible_for_other_statuses(self):
+        """Verify that reset button is hidden for non-submitted statuses."""
+        statuses_without_button = [
+            ApplicationStatus.DRAFT,
+            ApplicationStatus.DISCARDED,
+            ApplicationStatus.WITHDRAWN,
+            ApplicationStatus.UNDER_REVIEW,
+            ApplicationStatus.ACTION_REQUIRED,
+            ApplicationStatus.UNDER_ASSESSMENT,
+            ApplicationStatus.APPROVED,
+            ApplicationStatus.APPROVED_WITH_CONDITIONS,
+            ApplicationStatus.DEFERRED,
+            ApplicationStatus.REJECTED,
+        ]
+
+        for status in statuses_without_button:
+            app = Application.objects.create(
+                owner=self.applicant,
+                questionnaire=self.questionnaire,
+                status=status,
+                document={
+                    "schema_version": "2025.07-1",
+                    "active_step": 0,
+                    "steps": [{"is_valid": None, "answers": {}}],
+                },
+            )
+            button_html = self.app_admin.reset_button(app)
+            self.assertEqual(
+                button_html,
+                "",
+                f"Button should not appear for status {status}",
+            )
+
+    def test_reset_button_post_resets_application(self):
+        """Verify that POSTing the reset button resets the application."""
+        # Create a submitted application
+        app = Application.objects.create(
+            owner=self.applicant,
+            questionnaire=self.questionnaire,
+            status=ApplicationStatus.SUBMITTED,
+            submitted_at=timezone.now(),
+            document={
+                "schema_version": "2025.07-1",
+                "active_step": 0,
+                "steps": [{"is_valid": None, "answers": {}}],
+            },
+        )
+
+        original_id = app.id
+        original_submitted_at = app.submitted_at
+        original_document = app.document
+
+        # Simulate POST with _reset_to_draft button
+        request = self._build_admin_request(method="post")
+        request.POST = {"_reset_to_draft": ""}
+
+        # Call response_change which handles the reset
+        self.app_admin.response_change(request, app)
+
+        # Verify the application was reset
+        app.refresh_from_db()
+        self.assertEqual(app.id, original_id)
+        self.assertEqual(app.status, ApplicationStatus.DRAFT)
+        self.assertIsNone(app.submitted_at)
+        self.assertEqual(app.document, original_document)
+        self.assertIsNotNone(original_submitted_at)
+
+    def test_reset_button_preserves_document_data(self):
+        """Verify that document data is preserved during reset."""
+        # Create application with document data
+        document_data = {
+            "schema_version": "2025.07-1",
+            "active_step": 0,
+            "steps": [{"is_valid": None, "answers": {"0-0": "test_answer"}}],
+        }
+        app = Application.objects.create(
+            owner=self.applicant,
+            questionnaire=self.questionnaire,
+            status=ApplicationStatus.SUBMITTED,
+            submitted_at=timezone.now(),
+            document=document_data,
+        )
+
+        # Simulate POST with _reset_to_draft button
+        request = self._build_admin_request(method="post")
+        request.POST = {"_reset_to_draft": ""}
+
+        # Call response_change
+        self.app_admin.response_change(request, app)
+
+        # Verify document was preserved
+        app.refresh_from_db()
+        self.assertEqual(app.document, document_data)
+        self.assertEqual(app.status, ApplicationStatus.DRAFT)
+        self.assertIsNone(app.submitted_at)
+
+    def test_reset_shows_success_message(self):
+        """Verify that a success message is shown after reset."""
+        # Create a submitted application
+        app = Application.objects.create(
+            owner=self.applicant,
+            questionnaire=self.questionnaire,
+            status=ApplicationStatus.SUBMITTED,
+            submitted_at=timezone.now(),
+            document={
+                "schema_version": "2025.07-1",
+                "active_step": 0,
+                "steps": [{"is_valid": None, "answers": {}}],
+            },
+        )
+
+        # Simulate POST with _reset_to_draft button
+        request = self._build_admin_request(method="post")
+        request.POST = {"_reset_to_draft": ""}
+
+        # Call response_change
+        self.app_admin.response_change(request, app)
+
+        # Verify success message is present
+        messages_list = list(get_messages(request))
+        self.assertGreater(len(messages_list), 0)
+        message_text = " ".join(str(m) for m in messages_list)
+        self.assertIn("reset to DRAFT status", message_text)
+        self.assertIn(app.internal_id, message_text)
