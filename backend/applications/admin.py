@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from .models import Application, ApplicationAttachment, ApplicationStatus
 from .forms import ApplicationForm
@@ -154,7 +154,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         if not obj or obj.status != ApplicationStatus.SUBMITTED:
             return ""
 
-        return format_html(
+        return mark_safe(
             '<form method="post" style="display:inline">'
             '<button type="submit" name="_reset_to_draft" class="button" style="background-color:#ba2121">'
             'Reset to Draft'
