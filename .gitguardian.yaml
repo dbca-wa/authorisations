@@ -1,8 +1,3 @@
 paths-ignore:
   - path: backend/applications/tests.py
     reason: Test fixtures with dummy passwords - not secrets
-
-secret-ignore:
-  - name: Dummy test password in ApplicationAdminResetToDraftTests
-    match: "testpass123|admin123"
-    reason: Test fixtures only - not production secrets

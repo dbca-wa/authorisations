@@ -20,7 +20,7 @@ class ApplicationSerialiserTurnstileTests(TestCase):
         """Create the minimal process, questionnaire, and user needed for creation tests."""
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
-            username="applicant", password="testpass123"
+            username="applicant", password="testpass123"  # gitguardian:ignore
         )
         self.process = AuthorisationProcess.objects.create(
             slug="s40",
@@ -194,7 +194,7 @@ class AttachmentSerialiserNameValidationTests(TestCase):
         """Create the minimal objects needed for attachment tests."""
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
-            username="applicant", password="testpass123"
+            username="applicant", password="testpass123"  # gitguardian:ignore
         )
         self.process = AuthorisationProcess.objects.create(
             slug="s40",
@@ -294,12 +294,12 @@ class ApplicationAdminResetToDraftTests(TestCase):
 
         # Create superuser (admin staff)
         self.admin_user = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="admin123"
+            username="admin", email="admin@example.com", password="admin123"  # gitguardian:ignore
         )
 
         # Create regular user (applicant)
         self.applicant = User.objects.create_user(
-            username="applicant", password="testpass123"
+            username="applicant", password="testpass123"  # gitguardian:ignore
         )
 
         # Create process and questionnaire
