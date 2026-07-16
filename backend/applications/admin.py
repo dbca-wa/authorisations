@@ -1,7 +1,6 @@
-from django.contrib import admin, messages
-from django.utils.safestring import mark_safe
+from django.contrib import admin
 
-from .models import Application, ApplicationAttachment, ApplicationStatus
+from .models import Application, ApplicationAttachment
 from .forms import ApplicationForm
 
 
@@ -63,7 +62,6 @@ class ApplicationAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "submitted_at",
-        "reset_button",
         # "document",
     )
     editable_fields = ()
@@ -73,7 +71,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         (
             None,
             {
-                "fields": readonly_fields[:-1],  # Exclude reset_button from main fieldset
+                "fields": readonly_fields,
             },
         ),
         # A subsequent fieldset for editable fields
@@ -81,14 +79,6 @@ class ApplicationAdmin(admin.ModelAdmin):
             "Editable Fields",
             {
                 "fields": editable_fields,
-            },
-        ),
-        # Actions fieldset for the reset button
-        (
-            "Actions",
-            {
-                "fields": ("reset_button",),
-                "classes": ("collapse",),
             },
         ),
     )
@@ -137,44 +127,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        # Allow superusers to POST for the reset button; otherwise read-only
-        if request.user.is_superuser and request.method == "POST":
-            return True
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-    def reset_button(self, obj):
-        """Display a button to reset a submitted application to draft status.
-
-        The button is only visible if the application is in SUBMITTED status.
-        Clicking it POSTs back to the detail view with a _reset_to_draft parameter.
-        """
-        if not obj or obj.status != ApplicationStatus.SUBMITTED:
-            return ""
-
-        return mark_safe(
-            '<form method="post" style="display:inline">'
-            '<button type="submit" name="_reset_to_draft" class="button" style="background-color:#ba2121">'
-            'Reset to Draft'
-            '</button>'
-            '</form>'
-        )
-
-    reset_button.short_description = "Reset Application"
-
-    def response_change(self, request, obj):
-        """Handle the reset button submission before normal response logic."""
-        if "_reset_to_draft" in request.POST:
-            obj.reset_to_draft()
-            self.message_user(
-                request,
-                f"Application {obj.internal_id} has been reset to DRAFT status. "
-                f"The submitted_at timestamp has been cleared.",
-                level=messages.SUCCESS,
-            )
-            # Return to the same object view after reset
-            return super().response_change(request, obj)
-
-        return super().response_change(request, obj)

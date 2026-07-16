@@ -44,28 +44,6 @@ Development patterns, rules, and best practices for the backend codebase.
 - Read-only fields protect immutable dimensions for existing versions
 - Add/change action buttons are intentionally simplified for workflow control
 
-#### Application reset button (Temporary)
-
-**Feature**: A "Reset to Draft" button appears on the application detail view in Django admin when viewing a SUBMITTED application. Clicking it reverts the application status back to DRAFT and clears the `submitted_at` timestamp.
-
-**Why it exists**: This is a temporary workaround to allow administration staff (superusers) to undo application submissions while the technical officer tools are still in design phase. Staff can use this to help applicants who submitted prematurely or need to make corrections.
-
-**Removal timeline**: This feature will be removed once the technical officer assessment interface includes native status management controls. At that point, technical officers will directly manage application status through the end-user interface without needing admin involvement.
-
-**Implementation details**:
-- Model method: `Application.reset_to_draft()` (in `backend/applications/models.py`)
-- Admin method: `reset_button()` renders a form with button only for SUBMITTED applications
-- Admin handler: `response_change()` intercepts POST and calls model method
-- Tests: `ApplicationAdminResetToDraftTests` in `backend/applications/tests.py`
-
-**Cleanup checklist when removing**:
-1. Delete `Application.reset_to_draft()` method
-2. Remove `reset_button` method from `ApplicationAdmin`
-3. Remove `reset_button` from `readonly_fields` and `fieldsets` in `ApplicationAdmin`
-4. Remove imports: `format_html`, `ApplicationStatus` from admin.py
-5. Delete or repurpose `ApplicationAdminResetToDraftTests` class
-6. Update CHANGELOG to note removal
-
 ### django-admin-sortable2 constraints
 - First ordering field used by sortable mixin must be writable concrete field on the model (for this project: `sort_order`)
 - Do not make sortable admin depend on relation traversal ordering key
