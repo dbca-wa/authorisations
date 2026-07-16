@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## 1.0.3 - 2026-07-16
+
+### Fixed
+
+- Fixed session cookie collision issue in Firefox by using a distinct, host-scoped session cookie name (`authorisations_sessionid`) to prevent interference from parent-domain cookies set by sibling DBCA applications.
+
+### Changed
+
+- Removed redundant CSRF cookie settings (CSRF_COOKIE_NAME, CSRF_COOKIE_SAMESITE, CSRF_COOKIE_SECURE) as the application uses session-based CSRF protection instead.
+- Changed SESSION_COOKIE_SAMESITE from "Lax" to "Strict" unconditionally for improved security against cross-site cookie inclusion.
+
 ## 1.0.2 - 2026-07-14
 
 ### Added
