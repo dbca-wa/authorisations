@@ -1,6 +1,43 @@
 """Request-level E2E tests for API contract behaviours."""
 
 import pytest
+from django.conf import settings
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_session_cookie_is_not_overridden_by_parent_domain_cookie(
+    playwright,
+    live_server,
+    client,
+    e2e_users,
+):
+    """Keep the authenticated session stable when a parent-domain cookie is also present.
+
+    Firefox may serialise cookies with the host-scoped cookie first and the
+    parent-domain cookie second. Authorisations must continue to use its own
+    host-scoped session cookie and ignore the unrelated parent-domain value.
+    """
+    client.force_login(e2e_users["applicant"])
+    session_cookie = client.cookies[settings.SESSION_COOKIE_NAME].value
+
+    request_context = playwright.request.new_context(
+        base_url=live_server.url,
+        extra_http_headers={
+            "Cookie": f"{settings.SESSION_COOKIE_NAME}={session_cookie}; sessionid=parent-domain-session",
+        },
+    )
+
+    try:
+        response = request_context.get("/api/applications")
+        status = response.status
+        payload = response.json()
+    finally:
+        request_context.dispose()
+
+    assert status == 200
+    assert len(payload) == 1
+    assert payload[0]["owner_email"] == "e2e-applicant@example.com"
 
 
 @pytest.mark.e2e

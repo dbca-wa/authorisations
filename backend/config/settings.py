@@ -77,7 +77,8 @@ if ALLOWED_HOST:
 
 # SSL, CSRF and security settings
 
-# Use sessions for CSRF protection without disclosing CSRF token in cookies
+# Use sessions for CSRF protection without disclosing CSRF token in cookies.
+# This means CSRF tokens are stored in the session, not in a separate cookie.
 CSRF_USE_SESSIONS = True
 
 # Let the application know it's behind a proxy
@@ -88,27 +89,26 @@ USE_X_FORWARDED_HOST = True
 # by checking the X-Forwarded-Proto header
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Set custom the CSRF header name that Django will look on the request headers
-# for token validation when authenticating via AJAX etc.
+# CSRF header name that Django will look for in request headers for token validation (API/AJAX).
 CSRF_HEADER_NAME = env("CSRF_HEADER_NAME", default="HTTP_X_CSRFTOKEN")
+
+# CSRF header name to expose to the frontend client for inclusion in API requests.
 CSRF_HEADER_CLIENT = env("CSRF_HEADER_CLIENT", default="X-CsrfToken")
 
-# Set custom CSRF cookie name (probably the session key as well)
-CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME", default="csrftoken")
+# Keep the session cookie host-scoped and distinct from other DBCA apps that
+# may share parent-domain cookies under `.dbca.wa.gov.au`.
+SESSION_COOKIE_NAME = "authorisations_sessionid"
+SESSION_COOKIE_DOMAIN = None
 
 # Non-secure redirection cache: 1 minute in debug mode, 1 year in production
 SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
-if not DEBUG:
-    # Ensure SameSite attribute allows "safe" cross-site requests
-    CSRF_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SAMESITE = "Lax"
+# Ensure strict SameSite attribute for the session cookie to prevent cross-site inclusion.
+SESSION_COOKIE_SAMESITE = "Strict"
 
-    # Secure attribute is also recommended if using HTTPS
-    SECURE_ONLY = env("SECURE_ONLY")
-    CSRF_COOKIE_SECURE = SECURE_ONLY
-    SESSION_COOKIE_SECURE = SECURE_ONLY
+# Secure attribute is recommended if using HTTPS
+SESSION_COOKIE_SECURE = env("SECURE_ONLY")
 
 
 # Application definition
