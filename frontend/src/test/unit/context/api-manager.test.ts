@@ -160,7 +160,7 @@ describe("ApiManager", () => {
   });
 
   it("updateApplication sends PUT request with document", async () => {
-    const doc = { schema_version: "1.0", steps: [] };
+    const doc = { schema_version: "1.0", active_step: 0, steps: [] };
     (axios.put as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { key: "app-1" } });
 
     await ApiManager.updateApplication("app-1", doc);
