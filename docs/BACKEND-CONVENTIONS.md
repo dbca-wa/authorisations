@@ -2,6 +2,8 @@
 
 Development patterns, rules, and best practices for the backend codebase.
 
+**See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for the comprehensive feature development checklist, testing requirements, security guidelines, and common commands.**
+
 ## API layer
 
 - DRF viewsets are in `backend/api/views.py`
@@ -86,13 +88,16 @@ Development patterns, rules, and best practices for the backend codebase.
 ## Development workflows
 
 ### Backend commands
+
+**For comprehensive command reference and testing guidelines, see [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#quick-reference-common-commands).**
+
+Common management commands:
 - Run dev server: `cd backend && poetry run python manage.py runserver`
-- Run tests: `cd backend && poetry run python manage.py test`
 - Run migrations: `cd backend && poetry run python manage.py migrate`
-- Collect static: `cd backend && poetry run python manage.py collectstatic`
-- Normalise questionnaire sort order globally:
-  - `cd backend && poetry run python manage.py normalise_questionnaire_sort_order`
-  - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+- Normalise questionnaire sort order: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order`
+- Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+
+**For testing commands and best practices**, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).
 
 ## CI/CD pipeline policy
 

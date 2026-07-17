@@ -68,7 +68,7 @@ Edit the `.env` file and set the environment variables, including:
 Generate a Django secret key and add it to your `.env` file:
 
 ```bash
-python -c 'import secrets; print(secrets.token_hex(25))'
+cd backend && poetry run python -c 'import secrets; print(secrets.token_hex(25))'
 ```
 
 Install Python dependencies via Poetry (run within the `backend` directory):
@@ -144,61 +144,24 @@ mkdir assets
 
 ## Run the test suites
 
-Backend pytest uses a dedicated Django settings module at `config.test_settings`, backed by SQLite, so you do not need PostgreSQL `CREATEDB` privileges just to run the automated suite locally.
+**For comprehensive testing guidelines, test commands, and architecture, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).**
 
-### Backend tests
-
-Run the fast backend suite:
-
-```bash
-cd ../backend
-poetry run pytest
-```
-
-Run backend tests in parallel with coverage:
-
-```bash
-poetry run pytest -n auto --cov --cov-report=term-missing --cov-report=html --cov-report=xml
-```
-
-### Frontend tests
-
-Run the frontend test suite:
-
-```bash
-cd ../frontend
-bun run test
-```
-
-Run frontend tests with coverage:
-
-```bash
-bun run test:coverage
-```
-
-### End-to-end tests
-
-Run the E2E browser suite:
-
-```bash
-cd ../backend
-poetry run pytest e2e/tests -v
-```
-
-### For more information
-
-For full testing architecture, best practices, CI behaviour, E2E guidance, and troubleshooting, refer to [TESTING.md](TESTING.md).
+Quick start:
+- Backend: `cd backend && poetry run pytest`
+- Frontend: `cd frontend && bun run test:unit` (development)
+- E2E: `cd backend && poetry run pytest e2e/tests -v`
 
 ## Backend management commands
 
 Common Django management commands used in development:
 
 - `poetry run python manage.py runserver` — Run dev server
-- `poetry run python manage.py test` — Run tests
 - `poetry run python manage.py migrate` — Apply migrations
 - `poetry run python manage.py collectstatic` — Collect static files
 - `poetry run python manage.py normalise_questionnaire_sort_order` — Rebuild questionnaire sort order globally
   - Dry-run mode: `poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+
+**For full testing commands, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).**
 
 ## Static files
 

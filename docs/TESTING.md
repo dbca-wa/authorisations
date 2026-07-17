@@ -140,8 +140,8 @@ Example local commands to prepare assets for browser E2E:
 ```bash
 # from the repository root
 cd frontend
-npm ci
-npm run build
+bun install
+bun run build
 
 cd ../backend
 poetry run python manage.py collectstatic --noinput
@@ -149,6 +149,8 @@ poetry run python manage.py collectstatic --noinput
 # then run E2E (chromium example)
 poetry run pytest e2e/tests -v --browser chromium
 ```
+
+**Note**: For CI/production, use `npm ci && npm run build` instead of `bun install && bun run build`.
 
 ### 3) Database Isolation In Browser Tests
 
@@ -249,32 +251,14 @@ Suggested execution patterns:
 
 ## Local Commands
 
-### Backend
+**For complete command reference, see [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#quick-reference-common-commands).**
 
-Run all backend tests:
-- cd backend && poetry run pytest
+Quick reference:
+- **Backend tests**: `cd backend && poetry run pytest`
+- **Frontend tests**: `cd frontend && bun run test:unit` (local) or `npm run test:unit` (CI/production)
+- **E2E tests**: `cd backend && poetry run pytest e2e/tests -v`
 
-Run focused suites:
-- cd backend && poetry run pytest applications -q
-- cd backend && poetry run pytest questionnaires -q
-
-### Frontend
-
-Run frontend unit tests:
-- cd frontend && bun run test:unit
-- cd frontend && npm run test:unit
-
-Run frontend coverage:
-- cd frontend && bun run test:coverage
-- cd frontend && npm run test:coverage
-
-### E2E
-
-Run E2E tests only:
-- cd backend && poetry run pytest e2e/tests -v
-
-Run E2E with richer diagnostics:
-- cd backend && poetry run pytest e2e/tests -v --tracing=retain-on-failure --screenshot=only-on-failure
+For coverage, diagnostics, and specific test patterns, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-locations-and-commands).
 
 ## CI Reference Flow
 

@@ -2,6 +2,8 @@
 
 Development patterns and best practices for the frontend codebase.
 
+**See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for the comprehensive feature development checklist, testing requirements, and common commands.**
+
 ## Code comment conventions
 
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists
@@ -34,15 +36,9 @@ Development patterns and best practices for the frontend codebase.
 
 - Use `dayjs` for dates with `en-au` locale
 
-## Development workflows
+---
 
-### Frontend commands
-- Package manager policy:
-  - Use Bun for local development workflows because it is faster and supports npm-compatible scripts
-  - Use npm for UAT, production, and CI environments to keep deployment/runtime behaviour consistent
-- Run dev server (local development): `cd frontend && bun run dev`
-- Build (UAT/production/CI): `cd frontend && npm run build`
-- Lint (UAT/production/CI): `cd frontend && npm run lint`
+**See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for comprehensive development guidelines, testing, and command reference.**
 
 ## Application sorting patterns
 

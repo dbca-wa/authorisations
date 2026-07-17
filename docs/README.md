@@ -2,6 +2,14 @@
 
 Welcome to the Authorisations documentation hub. Use the links below to find information relevant to your task.
 
+## ⚠️ Before Any Feature Development
+
+**[FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md)** — **Mandatory checklist for all feature development and bugfixes.** Read this before every session. Covers code quality, testing, documentation, CHANGELOG requirements, and common commands. AI agents must follow this unless explicitly overridden.
+
+## Command Reference
+
+**[COMMAND-REFERENCE.md](COMMAND-REFERENCE.md)** — Quick visual guide to standardized command patterns. Local dev vs CI/production, backend vs frontend, with exact commands for every task.
+
 ## Getting Started
 
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** — Setup, installation, running locally, and development workflows

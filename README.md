@@ -6,6 +6,8 @@ Streamline DBCA authorisation workflows - from Animal Ethics to Section 40/45 - 
 
 **Documentation is located in [docs/](docs/README.md).**
 
+**⚠️ Before any feature development, read [docs/FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md) — this is the authoritative checklist for all development and must be followed on every session.**
+
 For setup and development instructions, start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 For testing, see the testing section in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) or the comprehensive guide at [docs/TESTING.md](docs/TESTING.md).

@@ -19,21 +19,13 @@ This project supports DBCA authorisation workflows. Contributions should preserv
 
 ## Testing
 
-### Backend
+Before opening a pull request, ensure all tests pass.
 
-```bash
-cd backend
-poetry run pytest
-```
+**For comprehensive testing guidelines and commands, see [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).**
 
-### Frontend
-
-```bash
-cd frontend
-bun run test
-```
-
-Run any narrower tests needed for the changed area before opening a pull request.
+Quick reference:
+- Backend: `cd backend && poetry run pytest`
+- Frontend: `cd frontend && bun run test:unit` (local development)
 
 ## Commit and pull request guidance
 
