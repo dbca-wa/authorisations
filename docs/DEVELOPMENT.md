@@ -200,6 +200,15 @@ Common Django management commands used in development:
 - `poetry run python manage.py normalise_questionnaire_sort_order` — Rebuild questionnaire sort order globally
   - Dry-run mode: `poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
 
+## Static files
+
+Static files in this project are managed using a hybrid approach between Vite and Django:
+
+1. **Frontend-driven assets**: Any assets placed in `frontend/public/` (for example `favicon.svg`) are automatically copied to `frontend/dist/` during the `bun run build` step.
+2. **Django-driven assets**: On production/UAT, Django's `STATICFILES_DIRS` settings include `frontend/dist/`. Running `python manage.py collectstatic` will gather these files into `STATIC_ROOT`.
+3. **Reference in templates**: To reference these files in Django templates (like `vite.html`), use the `{% static 'path/to/file' %}` tag (ensure `{% load static %}` is present). During development, Vite's development server serves these files, and `django-vite` handles proxying if configured, though standard static files are typically served directly from the `public` directory mapping.
+4. **Development flow**: In local development, you generally do not need to run `collectstatic`. Assets in `frontend/public` are served directly by Vite. If you add a new static asset, placing it in `frontend/public` is the preferred method to ensure it's available in all environments.
+
 ## Frontend commands
 
 See [FRONTEND-CONVENTIONS.md](FRONTEND-CONVENTIONS.md) for frontend development commands and package manager policy.
