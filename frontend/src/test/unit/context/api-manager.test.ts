@@ -94,4 +94,86 @@ describe("ApiManager", () => {
 
     expect((axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe("/assessment");
   });
+
+  it("fetchApplications calls correct endpoint", async () => {
+    (axios.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+
+    await ApiManager.fetchApplications();
+
+    const calls = (axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/applications");
+  });
+
+  it("getApplicationAttachments calls correct endpoint with app key", async () => {
+    (axios.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+
+    await ApiManager.getApplicationAttachments("app-123");
+
+    const calls = (axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/attachments?application_key=app-123");
+  });
+
+  it("deleteAttachment calls DELETE on correct endpoint", async () => {
+    (axios.delete as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({});
+
+    await ApiManager.deleteAttachment("att-123");
+
+    const calls = (axios.delete as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/attachments/att-123");
+  });
+
+  it("renameAttachment sends PATCH with new name", async () => {
+    (axios.patch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { key: "att-123", name: "new.pdf" } });
+
+    await ApiManager.renameAttachment("att-123", "new.pdf");
+
+    const calls = (axios.patch as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/attachments/att-123");
+    expect(calls[0][1]).toEqual({ name: "new.pdf" });
+  });
+
+  it("getQuestionnaire calls correct endpoint with questionnaire ID", async () => {
+    (axios.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: {} });
+
+    await ApiManager.getQuestionnaire(42);
+
+    const calls = (axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/questionnaires/42");
+  });
+
+  it("fetchQuestionnaires calls questionnaires endpoint", async () => {
+    (axios.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+
+    await ApiManager.fetchQuestionnaires();
+
+    const calls = (axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/questionnaires");
+  });
+
+  it("fetchAuthorisationProcesses calls processes endpoint", async () => {
+    (axios.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+
+    await ApiManager.fetchAuthorisationProcesses();
+
+    const calls = (axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/processes");
+  });
+
+  it("updateApplication sends PUT request with document", async () => {
+    const doc = { schema_version: "1.0", steps: [] };
+    (axios.put as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { key: "app-1" } });
+
+    await ApiManager.updateApplication("app-1", doc);
+
+    const calls = (axios.put as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe("/applications/app-1");
+    expect(calls[0][1]).toEqual({ document: doc });
+  });
+
+  it("handles API errors and re-throws", async () => {
+    const error = new Error("Network error");
+    (axios.get as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(error);
+
+    await expect(ApiManager.fetchApplications()).rejects.toBe(error);
+  });
 });

@@ -119,25 +119,6 @@ def test_application_create_rejects_mismatched_questionnaire_identity(
 
 
 @pytest.mark.django_db
-@pytest.mark.security
-def test_application_create_rejects_invalid_turnstile_token(
-    api_client,
-    user,
-    questionnaire,
-    monkeypatch,
-):
-    """Fail closed on create when Turnstile verification fails."""
-    monkeypatch.setattr(application_serialisers, "verify_turnstile_token", lambda *_args, **_kwargs: False)
-    payload = _build_create_payload(questionnaire)
-
-    api_client.force_authenticate(user=user)
-    response = api_client.post("/api/applications", payload, format="json")
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "turnstile_token" in response.data
-
-
-@pytest.mark.django_db
 def test_application_patch_draft_to_submitted_sets_submitted_at(
     api_client,
     user,

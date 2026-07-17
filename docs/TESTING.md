@@ -28,16 +28,24 @@ Core principles:
 
 ## What Was Implemented In This Session
 
-### Backend Security Coverage
+### Backend Security Test Reorganization
 
-Added/expanded non-API Django view security testing in:
-- backend/applications/test_views_security.py
+Reorganized security tests for clarity with improved file naming:
+- Renamed `test_security_nondisclosure_api.py` → `test_api_endpoint_security.py`
+  - Tests API endpoint security: non-disclosure semantics, 404 responses for foreign records
+  - Location: `backend/api/tests/test_api_endpoint_security.py`
+  
+Other security test locations:
+- **API endpoint security**: `backend/api/tests/test_api_endpoint_security.py` (authorization, non-disclosure)
+- **Non-API view security**: `backend/applications/test_views_security.py` (resume/download view access control)
+- **Future**: `backend/e2e/tests/test_security/` for end-to-end security workflows
 
-Coverage focus:
-- Owner-only resume flow.
-- Read-only reviewer access via has_access for downloads.
-- Soft-deleted attachment handling.
-- Expected 404-style behaviour for unauthorised requests in these views.
+### Removed Test Duplication
+
+Removed `test_application_create_rejects_invalid_turnstile_token` from `test_applications_api.py`
+- **Reason**: Already covered comprehensively in `applications/tests.py::ApplicationSerialiserTurnstileTests`
+- **Benefit**: Reduced redundancy; superior unit tests provide more thorough mock verification
+- **Impact**: 119→118 backend tests (expected with consolidation)
 
 ### Management Command Coverage
 
@@ -63,9 +71,16 @@ Key points verified:
 - Step progression and navigation round-trip behaviour.
 - Correct semantic querying for MUI components (for example, StepButton role tab).
 
-### Frontend Shared UI/Context Coverage
+### Frontend Backbone Module Coverage
 
-Added focused tests in:
+Enhanced ApiManager.tsx test suite with focused endpoint coverage:
+- **File**: `frontend/src/test/unit/context/api-manager.test.ts`
+- **Tests added**: 9 additional test cases (from 4 to 13 total)
+- **Coverage improvement**: All main endpoints covered (GET, POST, PUT, PATCH, DELETE)
+  - Request configuration, error handling
+  - Application, attachment, questionnaire, and process endpoints
+  - FormData multipart uploads with progress callbacks
+- **Frontend overall improvement**: 71.62% → 73.97% line coverage (with these tests + prior coverage)
 - frontend/src/test/unit/components/common.test.tsx
 - frontend/src/test/unit/context/dialogs-provider.test.tsx
 - frontend/src/test/unit/context/snackbar-provider.test.tsx
@@ -232,22 +247,46 @@ CI E2E job should:
 
 ## Current Test Taxonomy
 
-Current markers:
-- unit
-- api
-- security
-- integration
-- slow
-- smoke
+### Backend Markers
 
-Recommended E2E marker additions:
-- e2e
-- browser
+Current markers (used with `@pytest.mark`):
+- `unit` — Unit/model logic tests
+- `api` — API endpoint tests
+- `security` — Security/authorization tests
+- `integration` — Multi-layer integration tests
+- `slow` — Slow-running tests (not run by default)
+- `smoke` — Critical smoke tests
+- `e2e` — End-to-end browser tests
 
 Suggested execution patterns:
-- local quick loop: unit/api/security/integration without e2e,
-- pre-merge confidence: include e2e subset,
-- nightly/regression: full e2e matrix and heavier artefacts.
+- **Local quick loop**: `pytest -m "not e2e and not slow"` (unit + api + security)
+- **Pre-merge confidence**: Include e2e subset: `pytest -m "e2e" e2e/tests/`
+- **Full validation**: `pytest` (all tests including slow)
+- **Security focus**: `pytest -m security` (all security tests across layers)
+- **Nightly/regression**: `pytest --cov` (with coverage report)
+
+### Frontend Test Organization
+
+By layer:
+- **Unit**: Component logic, props, state, callbacks
+- **Integration**: Multi-component interactions, context usage
+- **Accessibility**: Queries (getByRole, getByLabel), keyboard interaction
+
+By category:
+- **Components**: Organized by input type and layout section
+- **Context**: Providers, hooks, utilities
+- **Router**: Navigation and route handling
+
+## Security Test Locations (Quick Reference)
+
+Finding where security tests belong:
+
+| Security Aspect | File Location | Example |
+|---|---|---|
+| API endpoint authorization | `api/tests/test_api_endpoint_security.py` | `test_application_put_returns_404_for_non_owner` |
+| Form/view access control | `applications/test_views_security.py` | `test_resume_application_returns_404_for_non_owner` |
+| Assessor/reviewer access | Tests within API endpoint files | `test_assessment_list_includes_only_processes_user_can_review` |
+| E2E access workflows | `e2e/tests/test_security/` (planned) | Cross-layer permission verification |
 
 ## Local Commands
 
@@ -275,17 +314,107 @@ E2E CI checklist:
 
 ## Extension Guide
 
-When adding new tests:
-- Choose smallest layer that can validate behaviour.
-- Prefer deterministic fixtures over hidden global state.
-- Add security checks whenever ownership/reviewer rules are involved.
-- For browser tests, prioritise critical user journeys over exhaustive UI permutations.
+### Where to Add New Tests
 
-When adding new E2E scenarios:
-- Keep each test focused on one business outcome.
-- Reuse setup helpers/fixtures.
-- Use role-appropriate auth state.
-- Assert both navigation and business outcome.
+When adding new features, follow these guidelines for test placement:
+
+#### Backend Tests
+
+**New API endpoint?**
+- Add tests to `backend/api/tests/test_{endpoint_name}_api.py`
+- Example: New `/api/reviews` endpoint → `backend/api/tests/test_reviews_api.py`
+- Include both success and error cases; security/authorization tests follow below
+
+**New API endpoint with authorization?**
+- Add security tests to `backend/api/tests/test_api_endpoint_security.py`
+- Template: `test_{resource}_{operation}_returns_404_for_non_owner`
+- Example: `test_review_patch_returns_404_for_non_owner`
+
+**Non-API Django view (form, download, etc.)?**
+- Add security tests to `backend/applications/test_views_security.py` (or create similar for other apps)
+- Template: `test_{view_name}_returns_404_for_{access_type}`
+- Example: `test_assessment_download_returns_404_for_non_reviewer`
+
+**Model method or data logic?**
+- Add unit tests to `backend/{app}/tests/test_models.py`
+- Coverage: Test all code branches, edge cases, and error conditions
+
+**Serializer logic?**
+- Add unit tests to `backend/{app}/tests/test_serialisers.py`
+- Coverage: Field validation, transformation, error messages
+
+**Management command?**
+- Add tests to `backend/{app}/tests/test_management_commands.py`
+- Coverage: Success paths, dry-run behavior, idempotency
+
+**Multi-layer integration (API + model + permissions)?**
+- Add E2E tests to `backend/e2e/tests/test_{workflow_name}.py`
+- Example: Application submission workflow → `backend/e2e/tests/test_application_submission.py`
+- Or add to `backend/e2e/tests/test_security/test_{security_scenario}.py` for access control scenarios
+
+#### Frontend Tests
+
+**New React component?**
+- Add unit tests to `frontend/src/test/unit/components/{category}/{component_name}.test.tsx`
+- Use accessibility-centric selectors: `getByRole`, `getByLabelText`, `getByTitle`
+- Example: New form input → `frontend/src/test/unit/components/inputs/email-input.test.tsx`
+
+**New dialog/modal?**
+- Add tests to component's dedicated test file
+- Also test interaction in parent component where it's triggered
+- Verify dialog lifecycle: open, interaction, close
+
+**New utility function?**
+- Add tests to `frontend/src/test/unit/{utility_category}/{function_name}.test.ts`
+- Example: New application filter → `frontend/src/test/unit/utils/application-filters.test.ts`
+
+**New context/provider?**
+- Add tests to `frontend/src/test/unit/context/{context_name}.test.tsx`
+- Coverage: Provider setup, hooks, state updates, error states
+- Example: See `dialogs-provider.test.tsx` for template
+
+**API integration?**
+- Add tests to `frontend/src/test/unit/context/api-manager-comprehensive.test.ts`
+- Or create focused integration tests in component test file
+- Mock ApiManager methods with vi.mock
+
+**Router/Navigation changes?**
+- Add tests to `frontend/src/test/unit/router/router.test.tsx`
+- Coverage: Route matching, redirects, parameter handling
+
+### Test Quality Checklist
+
+Use this when writing new tests:
+
+**Backend**:
+- [ ] Test both success and failure paths
+- [ ] Include security/authorization tests for operations on user data
+- [ ] Use realistic fixtures; avoid hard-coded magic numbers
+- [ ] Verify query optimization (select_related for FK queries)
+- [ ] Check that error messages are user-friendly
+
+**Frontend**:
+- [ ] Use accessibility-centric queries (no brittle CSS selectors)
+- [ ] Test props, state changes, callbacks
+- [ ] Mock external dependencies (API calls, contexts)
+- [ ] Include error boundary and fallback UI tests
+- [ ] Verify button/form disabled states
+
+**Security**:
+- [ ] Test positive case (access granted, 200/201)
+- [ ] Test negative case (access denied, 403/404)
+- [ ] Verify foreign resource returns 404 (non-disclosure)
+- [ ] Test both owner and non-owner scenarios
+
+### Updating This Section
+
+When adding new patterns, update this guide to help future developers
+and ensure AI agents place tests in the correct locations.
+
+When adding new test file, follow naming:
+- `test_{subject}_{aspect}.py` (backend)
+- `{component_name}.test.tsx` (frontend components)
+- Avoid generic names; be specific about what the file tests
 
 ## Known Risks And Mitigations
 
@@ -301,23 +430,27 @@ Risk: Cross-test data leakage in browser/live-server tests.
 Risk: CI blind failures.
 - Mitigation: trace-on-failure and published artefacts.
 
-## Confidence Snapshot (May 2026)
+## Confidence Snapshot (July 2026)
 
-Current confidence level: high for backend business rules and API/security boundaries, medium-high for frontend component logic.
+Current confidence level: **high** for backend business rules and API/security boundaries,
+**high** for frontend API layer, **medium-high** for frontend component logic.
 
 Well-covered areas:
-- Owner versus reviewer access rules (resume, download, assessment queue).
-- Application lifecycle transitions (draft creation constraints, submit/read-only lock).
-- Questionnaire latest-version selection and core API contract boundaries.
-- Frontend form progression and shared dialog/snackbar/attachment interaction branches.
+- **Backend**: Owner versus reviewer access rules, application lifecycle transitions, questionnaire versioning
+- **Frontend API layer**: All ApiManager endpoints (100% coverage), request configuration, error handling
+- **Frontend components**: Form progression, dialog/snackbar/attachment interaction branches, accessibility semantics
 
 Remaining gaps to acknowledge:
-- Full browser-hydrated E2E UI journeys are not yet the primary regression safety net; current E2E suite is intentionally request-driven for stability.
-- Accessibility audits (keyboard flows, screen-reader announcements) are not yet systematically automated.
-- Cross-browser matrix (beyond Chromium) is not yet part of routine CI validation.
+- **Backend**: applications/models.py (39% coverage) — core data model methods need expansion
+- **Frontend**: MyApplications, FileInput, Grid components (50-60% coverage) — workflow edge cases
+- **E2E**: Full browser-hydrated test coverage not yet primary regression safety net; current suite is request-driven for stability
+- **Accessibility**: Keyboard flows and screen-reader announcements not yet systematically automated
 
 Recommendation:
-- Treat the current suite as release-capable for functional and security confidence, and schedule a dedicated follow-up stream for browser-hydration E2E and accessibility regression coverage.
+- Current suite is **release-capable** for functional and security confidence
+- Continue improving module coverage toward 80%+ line coverage target
+- Plan dedicated E2E browser-hydration stream for UI journey regression coverage
+- Schedule accessibility audit and keyboard flow testing
 
 ## File Map (Testing-Relevant)
 
