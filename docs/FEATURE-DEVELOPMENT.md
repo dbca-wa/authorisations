@@ -25,10 +25,12 @@ This document defines the **mandatory guidelines and checklist for all feature d
 ## Implementation Phase
 
 ### 1. Package managers — critical rule
-- **Local development**: Use `bun` exclusively for all frontend commands (dev, lint, test, build)
+- **Local development**: Use `bun` exclusively for all frontend commands (dev, lint, test, build, package management)
 - **CI/production/Docker**: Use `npm` (compatibility with container images and CI pipelines)
 - **NEVER use `npm` for local development** — it negates the speed advantages of Bun and creates inconsistency
 - **NEVER use `bun` in CI/Docker/production** — stick to `npm` for deterministic, reproducible builds
+
+**Lock file synchronisation rule**: When adding a new frontend dependency locally, use `bun add package-name` followed by `bun install` to synchronise both `bun.lock` and `package-lock.json`. Bun manages both lock file formats; this ensures CI/production builds (which use `npm` and `package-lock.json`) receive identical locked versions as local development, preventing version drift across environments. **Node.js is not required locally** if only Bun is used; remove npm/Node.js entirely from local development to eliminate tool conflicts.
 
 ### 2. Code structure and style
 
