@@ -248,7 +248,8 @@ STORAGES = {
     },
 }
 
-# Original frontend build directory - doesn't exist in docker environment
+# Original frontend build directory 
+# - doesn't exist in docker environment, only for developent environment
 FRONTEND_DIST = Path(os.path.abspath(BASE_DIR / "../frontend/dist"))
 if FRONTEND_DIST.exists():
     STATICFILES_DIRS.append(FRONTEND_DIST)

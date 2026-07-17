@@ -205,9 +205,9 @@ Common Django management commands used in development:
 Static files in this project are managed using a hybrid approach between Vite and Django:
 
 1. **Frontend-driven assets**: Any assets placed in `frontend/public/` (for example `favicon.svg`) are automatically copied to `frontend/dist/` during the `bun run build` step.
-2. **Django-driven assets**: On production/UAT, Django's `STATICFILES_DIRS` settings include `frontend/dist/`. Running `python manage.py collectstatic` will gather these files into `STATIC_ROOT`.
-3. **Reference in templates**: To reference these files in Django templates (like `vite.html`), use the `{% static 'path/to/file' %}` tag (ensure `{% load static %}` is present). During development, Vite's development server serves these files, and `django-vite` handles proxying if configured, though standard static files are typically served directly from the `public` directory mapping.
-4. **Development flow**: In local development, you generally do not need to run `collectstatic`. Assets in `frontend/public` are served directly by Vite. If you add a new static asset, placing it in `frontend/public` is the preferred method to ensure it's available in all environments.
+2. **Django-driven assets (Production/UAT)**: In the Docker image, built assets are copied from the builder stage into `backend/assets/`. Django's base `STATICFILES_DIRS` includes this folder, allowing `collectstatic` to gather them into `STATIC_ROOT`.
+3. **Reference in templates**: To reference these files in Django templates (like `vite.html`), use the `{% static 'path/to/file' %}` tag (ensure `{% load static %}` is present). In Production, this resolves to hashed filenames for cache busting.
+4. **Development flow**: In local development, you generally use the Vite dev server (`bun run dev`). However, if you build the frontend locally, Django will automatically detect the `frontend/dist/` directory and add it to `STATICFILES_DIRS`, allowing you to test production-like static serving without moving files.
 
 ## Frontend commands
 
