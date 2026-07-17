@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## [1.0.4] - Unreleased
+
+### Added
+
+- Added a new favicon, replacing the default placeholder.
+
 ## 1.0.3 - 2026-07-16
 
 ### Fixed

@@ -43,3 +43,32 @@ def test_authenticated_shell_routes_render_spa_container(
     assert '<div id="root"></div>' in my_apps_body
     assert new_application_status == 200
     assert '<div id="root"></div>' in new_application_body
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_favicon_link_present_in_html(
+    authenticated_request_context_factory,
+    e2e_users,
+):
+    """Verify that the favicon link is present in the SPA container HTML."""
+    auth_context = authenticated_request_context_factory(e2e_users["applicant"])
+    request_context = auth_context["context"]
+
+    try:
+        response = request_context.get("/my-applications")
+        body = response.text()
+
+        # Verify the favicon file actually exists and is accessible
+        favicon_response = request_context.get("/static/favicon.svg")
+        favicon_status = favicon_response.status
+        favicon_content_type = favicon_response.headers.get("content-type", "")
+    finally:
+        request_context.dispose()
+
+    assert response.status == 200
+    # The {% static 'favicon.svg' %} tag should resolve to /static/favicon.svg
+    assert 'rel="icon" type="image/svg+xml" href="/static/favicon.svg"' in body
+
+    assert favicon_status == 200
+    assert "image/svg+xml" in favicon_content_type
