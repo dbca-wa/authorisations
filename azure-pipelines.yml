@@ -76,7 +76,7 @@ stages:
       displayName: Install Bun
     - script: |
         cd frontend
-        bun install --frozen-lockfile
+        ~/.bun/bin/bun install --frozen-lockfile
       displayName: Install frontend dependencies from bun.lock
     - script: |
         cd frontend
