@@ -14,6 +14,10 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added a new favicon, replacing the default placeholder.
 - Added comprehensive feature development guide ([FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md)) consolidating all mandatory best practices, testing requirements, code quality standards, and common commands in a single reference document for AI agents and developers.
 
+### Changed
+
+- Switched local frontend development to use Bun exclusively for improved build and test performance; CI pipeline automatically maintains npm compatibility for Docker builds and production deployments.
+
 ## 1.0.3 - 2026-07-16
 
 ### Fixed
