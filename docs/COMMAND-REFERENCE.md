@@ -29,29 +29,29 @@ cd backend && poetry run python -c 'import secrets; print(secrets.token_hex(25))
 ### Frontend
 ```bash
 # Dev server
-cd frontend && bun run dev
+cd frontend && npm run dev
 
 # Linting (syntax + types)
-cd frontend && bun run lint
-cd frontend && bun run lint -- --fix
+cd frontend && npm run lint
+cd frontend && npm run lint -- --fix
 
 # Build
-cd frontend && bun run build
+cd frontend && npm run build
 
 # Tests (unit only)
-cd frontend && bun run test:unit
+cd frontend && npm run test:unit
 
 # Tests (all)
-cd frontend && bun run test
+cd frontend && npm run test
 
 # Coverage
-cd frontend && bun run test:coverage
+cd frontend && npm run test:coverage
 ```
 
 ### E2E (Local)
 ```bash
 # Setup (frontend)
-cd frontend && bun install && bun run build
+cd frontend && npm install && npm run build
 
 # Setup (backend)
 cd backend && poetry run python manage.py collectstatic --noinput
@@ -67,7 +67,7 @@ cd backend && poetry run pytest e2e/tests -v
 ### Frontend
 ```bash
 # Install deps (in Dockerfile)
-npm install --no-audit --no-fund
+npm ci --no-audit --no-fund
 
 # Build (in Dockerfile)
 npm run build
@@ -91,9 +91,9 @@ npm run lint
 ## Key Rules
 
 ### Package Managers
-- **Local development**: Use `bun` exclusively
-- **CI/production/Docker**: Use `npm` exclusively
-- **Never mix**: Don't use npm locally, don't use bun in CI
+- **All contexts**: Use `npm` exclusively (local development, CI, production, Docker)
+- **No Bun**: Bun is not compatible with npm's dependency resolution; using both causes version mismatches
+- **Why?**: npm's deterministic resolution ensures identical versions everywhere; Bun resolves optional/peer dependencies differently
 
 ### Python/Backend
 - **Always use**: `cd backend && poetry run python ...`
@@ -101,12 +101,12 @@ npm run lint
 - **Virtual env**: Automatically activated by `poetry run`
 
 ### Test Commands
-| Layer | Local Dev | CI/Production |
-|---|---|---|
-| Backend unit/API | `cd backend && poetry run pytest` | Same |
-| Backend E2E | `cd backend && poetry run pytest e2e/tests -v` | Same |
-| Frontend unit | `cd frontend && bun run test:unit` | `npm run test:unit` |
-| Frontend all | `cd frontend && bun run test` | `npm run test` |
+| Layer | Command |
+|---|---|
+| Backend unit/API | `cd backend && poetry run pytest` |
+| Backend E2E | `cd backend && poetry run pytest e2e/tests -v` |
+| Frontend unit | `cd frontend && npm run test:unit` |
+| Frontend all | `cd frontend && npm run test` |
 
 ---
 

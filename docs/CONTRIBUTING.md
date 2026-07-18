@@ -25,7 +25,7 @@ Before opening a pull request, ensure all tests pass.
 
 Quick reference:
 - Backend: `cd backend && poetry run pytest`
-- Frontend: `cd frontend && bun run test:unit` (local development)
+- Frontend: `cd frontend && npm run test:coverage`
 
 ## Commit and pull request guidance
 

@@ -38,16 +38,16 @@ Development patterns and best practices for the frontend codebase.
 
 ## Package manager policy
 
-**Mandatory for local development:**
-- Use `bun` exclusively for all frontend commands: `bun run dev`, `bun run lint`, `bun run test:unit`, `bun run build`, and `bun add <package>`
-- `npm` and Node.js are intentionally not available locally; Bun is the only supported tool
-- When adding dependencies, use `bun add package-name` and commit `bun.lock`
-- CI automatically converts `bun.lock` to `package-lock.json` for compatibility with npm in Docker/production builds
+**Mandatory for all contexts (development, CI, production):**
+- Use `npm` exclusively for all frontend package management: dev server, linting, testing, building, and dependency management
+- Commands: `npm run dev`, `npm run lint`, `npm run test:unit`, `npm run build`, and `npm install package-name`
+- `package-lock.json` is committed to version control and used by all environments
 
-**Why this matters:**
-- Bun is significantly faster for local development workflows
-- Single source of truth: `bun.lock` is committed; all other environments derive deterministic versions from it
-- No manual sync overhead between lock files
+**Why npm:**
+- **Consistency across environments**: npm's deterministic resolution ensures identical dependency trees in development, CI, and production
+- **Audit compliance**: npm is the industry standard for production environments and passes corporate/regulatory audits
+- **No version drift**: committed `package-lock.json` guarantees identical versions everywhere
+- **Bun risks**: Bun resolves optional and peer dependencies differently than npm, causing version mismatches (e.g., yaml@1.10.2 vs 2.9.0). This incompatibility breaks the requirement for identical versions across environments.
 - Prevents accidental npm usage that would undermine consistency
 
 ---

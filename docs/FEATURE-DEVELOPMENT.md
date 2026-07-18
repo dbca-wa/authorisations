@@ -26,21 +26,23 @@ This document defines the **mandatory guidelines and checklist for all feature d
 
 ### 1. Package managers — mandatory rule
 
-**Local development (mandatory):**
-- Use `bun` exclusively for **all** frontend commands: dev server, linting, testing, building, dependency management
-- `npm` and Node.js are **not available locally** by design — Bun is the only frontend tool
-- This eliminates accidental npm usage and ensures consistency with CI
+**Frontend package management (mandatory across all environments):**
+- Use `npm` exclusively for **all** frontend package management: local development, dependency installation, linting, testing, building, and production deployments
+- `npm` is the only supported package manager; all CI/Docker builds and development workflows use npm
+- This ensures identical dependency resolution and versions across all environments: development, CI, UAT, and production
 
-**CI/production/Docker:**
-- CI generates `package-lock.json` from `bun.lock` (deterministic conversion from committed lockfile)
-- Docker and production builds use `npm ci` with the generated `package-lock.json`
-- This ensures identical versions across all environments (dev, CI, UAT, production)
+**Why not Bun?**
+While Bun offers performance improvements, it introduces critical compatibility risks:
+- **Dependency resolution differences**: Bun's algorithm resolves optional and peer dependencies differently than npm, resulting in mismatched versions across environments (e.g., yaml@1.10.2 vs yaml@2.9.0).
+- **Incompatible lock file formats**: Bun's lock file (`bun.lock`) cannot be reliably converted to npm's format; attempting to do so produces different dependency trees.
+- **Production incompatibility**: Most production environments, container registries, and audit tools expect npm lock files; Bun is not suitable for production.
+- **Maintenance burden**: Supporting multiple package managers exponentially increases debugging complexity and CI/CD fragility.
 
 **Workflow when adding dependencies:**
-1. In local dev, use `bun add package-name` (creates `bun.lock` entry)
-2. Commit `bun.lock` to git
-3. CI automatically generates `package-lock.json` from `bun.lock` before tests and Docker build
-4. Result: exact same versions everywhere, no manual sync needed, no risk of version drift
+1. Use `npm install package-name` to add a package (updates `package-lock.json`)
+2. Commit both `package.json` and `package-lock.json` to git
+3. CI and Docker builds use `npm ci` for reproducible installs from the committed lock file
+4. Result: guaranteed identical versions everywhere, no version drift, predictable builds
 
 ### 2. Code structure and style
 
@@ -88,17 +90,17 @@ This document defines the **mandatory guidelines and checklist for all feature d
 #### Frontend
 1. Check TypeScript and linting:
    ```bash
-   cd frontend && bun run lint
+   cd frontend && npm run lint
    ```
 
 2. Fix issues automatically:
    ```bash
-   cd frontend && bun run lint -- --fix
+   cd frontend && npm run lint -- --fix
    ```
 
 3. Build check (catches type errors):
    ```bash
-   cd frontend && bun run build
+   cd frontend && npm run build
    ```
 
 **Do NOT run tests until syntax and type checks pass.** Fix all errors first.
@@ -164,25 +166,14 @@ poetry run pytest -n auto --cov --cov-report=term-missing --cov-report=html
 
 #### Frontend tests
 
-**For local development**, use `bun run test:unit` from the `frontend` directory.
-**For CI/production**, use `npm run test:unit` (e.g., in Docker builds, CI pipelines).
+**For all contexts (development, CI, production)**, use `npm` with the committed `package-lock.json`.
 
 Structure:
 - Component unit tests: `frontend/src/test/unit/components/**/*.test.tsx`
 - Context tests: `frontend/src/test/unit/context/**/*.test.tsx`
 - Utility tests: `frontend/src/test/unit/**/*.test.ts`
 
-Local development commands:
-```bash
-cd frontend
-# Run all tests
-bun run test:unit
-
-# Coverage
-bun run test:coverage
-```
-
-**CI/production commands** (in Docker, pipelines, or when npm is required):
+Commands:
 ```bash
 cd frontend
 # Run all tests
@@ -265,6 +256,7 @@ Update docs when your feature introduces new concepts, changes workflows, or add
 - Check the `VERSION` file and `CHANGELOG.md` to determine if you should add to an existing `Unreleased` version or create a new one.
 - If the latest version in `CHANGELOG.md` has a past release date (compare with `VERSION`), that version has been released → create a new `[X.Y.Z] - Unreleased` section.
 - If an `Unreleased` version already exists, add your entry to it.
+- **Critical**: Never modify past release notes; only add entries to the `Unreleased` section. Changing historical entries corrupts the release timeline and audit trail.
 
 ### Example CHANGELOG entries
 
@@ -286,11 +278,11 @@ Update docs when your feature introduces new concepts, changes workflows, or add
 
 Before marking your work as ready:
 
-- [ ] **Code quality**: No syntax errors, TypeScript/linting passes (`bun run lint`, type checks pass).
+- [ ] **Code quality**: No syntax errors, TypeScript/linting passes (`npm run lint`, type checks pass).
 - [ ] **Tests written**: Unit/API/security/E2E as required for the feature (see [When to add tests](#when-to-add-tests)).
 - [ ] **Tests passing**: Run full test suite for affected layers locally before pushing.
   - Backend: `cd backend && poetry run pytest`
-  - Frontend: `cd frontend && bun run test:unit`
+  - Frontend: `cd frontend && npm run test:coverage`
   - E2E (if applicable): `cd backend && poetry run pytest e2e/tests -v`
 - [ ] **Documentation updated**: Code comments, README, architecture/convention docs, or TESTING.md as needed.
 - [ ] **CHANGELOG entry**: Concise, impact-focused summary in `CHANGELOG.md` under the correct version.
@@ -341,28 +333,26 @@ poetry run python manage.py migrate
 poetry run python manage.py createsuperuser
 ```
 
-### Frontend (Local Development)
+### Frontend
 
 ```bash
 cd frontend
 
 # Dev server
-bun run dev
+npm run dev
 
 # Build
-bun run build
+npm run build
 
 # Lint and type check
-bun run lint
+npm run lint
 
 # Tests
-bun run test:unit
+npm run test:unit
 
 # Coverage
-bun run test:coverage
+npm run test:coverage
 ```
-
-**Note**: For CI/production (Docker, pipelines), use `npm` instead of `bun` (e.g., `npm run build`, `npm run test:unit`). See [DEVELOPMENT.md](DEVELOPMENT.md) and deployment docs for CI-specific commands.
 
 ---
 

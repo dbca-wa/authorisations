@@ -23,8 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# Generated lock files (package-lock.json is generated in CI from bun.lock)
-package-lock.json
-
 # Test coverage reports
 coverage/

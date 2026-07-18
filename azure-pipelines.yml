@@ -72,20 +72,10 @@ stages:
       displayName: Use Node.js 22
       inputs:
         version: '22.x'
-    - script: curl -fsSL https://bun.sh/install | bash
-      displayName: Install Bun
-    - script: |
-        cd frontend
-        ~/.bun/bin/bun install --frozen-lockfile
-      displayName: Install frontend dependencies from bun.lock
-    - script: |
-        cd frontend
-        npm install --package-lock-only --no-audit --no-fund
-      displayName: Generate package-lock.json for CI/Docker compatibility
     - script: |
         cd frontend
         npm ci --no-audit --no-fund
-      displayName: Reinstall from generated package-lock.json
+      displayName: Install frontend dependencies
     - script: |
         cd frontend
         npm run lint
@@ -100,12 +90,6 @@ stages:
       inputs:
         targetPath: '$(Build.SourcesDirectory)/frontend/coverage/cobertura-coverage.xml'
         artifact: 'coverage-frontend'
-        publishLocation: 'pipeline'
-    - task: PublishPipelineArtifact@1
-      displayName: Publish package-lock.json for E2E and Docker
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)/frontend/package-lock.json'
-        artifact: 'package-lock'
         publishLocation: 'pipeline'
 
   - job: E2ETests
@@ -131,11 +115,6 @@ stages:
         cd backend
         poetry install --with dev
       displayName: Install backend dependencies
-    - task: DownloadPipelineArtifact@2
-      displayName: Download package-lock.json from FrontendTests
-      inputs:
-        artifact: 'package-lock'
-        path: '$(Build.SourcesDirectory)/frontend'
     - script: |
         cd frontend
         npm ci --no-audit --no-fund
@@ -255,11 +234,6 @@ stages:
         TAG=$(python3 scripts/get_image_tag.py "$(Build.SourceBranch)")
         echo "##vso[task.setvariable variable=imageTag]$TAG"
       displayName: Resolve Docker image tag from VERSION and branch
-    - task: DownloadPipelineArtifact@2
-      displayName: Download package-lock.json from FrontendTests
-      inputs:
-        artifact: 'package-lock'
-        path: '$(Build.SourcesDirectory)/frontend'
     - task: Docker@2
       displayName: Build Docker image
       inputs:

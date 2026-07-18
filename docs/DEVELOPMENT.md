@@ -7,7 +7,7 @@ This document covers setup, installation, and running the application locally fo
 - Docker engine: https://docs.docker.com/engine/install/
 - Python 3 (recommended version 3.14 via pyenv)
 - Poetry: https://python-poetry.org/docs/#installing-with-the-official-installer
-- Bun: https://bun.sh/docs/installation (mandatory for frontend development; Node.js and npm are not used locally)
+- Node.js 22 and npm: https://nodejs.org/
 
 ## Create the database
 
@@ -105,11 +105,11 @@ alias activate='source ~/dev/authorisations/backend/.venv/bin/activate'
 
 ## Setup the frontend
 
-Navigate to the frontend directory and install dependencies with Bun (the only supported package manager for local development):
+Navigate to the frontend directory and install dependencies with npm:
 
 ```bash
 cd ../frontend
-bun install
+npm install
 ```
 
 ## Run the application
@@ -124,10 +124,10 @@ poetry run python manage.py runserver
 
 ### Frontend
 
-In another terminal window, navigate to the `frontend` directory and run the Bun development server:
+In another terminal window, navigate to the `frontend` directory and run the npm development server:
 
 ```bash
-bun run dev
+npm run dev
 ```
 
 The application should be accessible in your web browser at `http://localhost:8000` and the Django admin interface at `http://localhost:8000/admin`. The backend proxies the frontend Vite server and reloads the page when any changes are made.
@@ -148,7 +148,7 @@ mkdir assets
 
 Quick start:
 - Backend: `cd backend && poetry run pytest`
-- Frontend: `cd frontend && bun run test:unit` (development)
+- Frontend: `cd frontend && npm run test:coverage`
 - E2E: `cd backend && poetry run pytest e2e/tests -v`
 
 ## Backend management commands
@@ -167,10 +167,10 @@ Common Django management commands used in development:
 
 Static files in this project are managed using a hybrid approach between Vite and Django:
 
-1. **Frontend-driven assets**: Any assets placed in `frontend/public/` (for example `favicon.svg`) are automatically copied to `frontend/dist/` during the `bun run build` step.
+1. **Frontend-driven assets**: Any assets placed in `frontend/public/` (for example `favicon.svg`) are automatically copied to `frontend/dist/` during the `npm run build` step.
 2. **Django-driven assets (Production/UAT)**: In the Docker image, built assets are copied from the builder stage into `backend/assets/`. Django's base `STATICFILES_DIRS` includes this folder, allowing `collectstatic` to gather them into `STATIC_ROOT`.
 3. **Reference in templates**: To reference these files in Django templates (like `vite.html`), use the `{% static 'path/to/file' %}` tag (ensure `{% load static %}` is present). In Production, this resolves to hashed filenames for cache busting.
-4. **Development flow**: In local development, you generally use the Vite dev server (`bun run dev`). However, if you build the frontend locally, Django will automatically detect the `frontend/dist/` directory and add it to `STATICFILES_DIRS`, allowing you to test production-like static serving without moving files.
+4. **Development flow**: In local development, you generally use the Vite dev server (`npm run dev`). However, if you build the frontend locally, Django will automatically detect the `frontend/dist/` directory and add it to `STATICFILES_DIRS`, allowing you to test production-like static serving without moving files.
 
 ## Frontend commands
 
