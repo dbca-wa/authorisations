@@ -7,7 +7,7 @@ This document covers setup, installation, and running the application locally fo
 - Docker engine: https://docs.docker.com/engine/install/
 - Python 3 (recommended version 3.14 via pyenv)
 - Poetry: https://python-poetry.org/docs/#installing-with-the-official-installer
-- Bun (recommended instead of npm): https://bun.com/docs/installation
+- Bun: https://bun.sh/docs/installation (mandatory for frontend development; Node.js and npm are not used locally)
 
 ## Create the database
 
@@ -105,7 +105,7 @@ alias activate='source ~/dev/authorisations/backend/.venv/bin/activate'
 
 ## Setup the frontend
 
-Navigate to the frontend directory and install dependencies with Bun:
+Navigate to the frontend directory and install dependencies with Bun (the only supported package manager for local development):
 
 ```bash
 cd ../frontend

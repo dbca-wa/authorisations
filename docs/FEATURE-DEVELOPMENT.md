@@ -24,13 +24,23 @@ This document defines the **mandatory guidelines and checklist for all feature d
 
 ## Implementation Phase
 
-### 1. Package managers — critical rule
-- **Local development**: Use `bun` exclusively for all frontend commands (dev, lint, test, build, package management)
-- **CI/production/Docker**: Use `npm` (compatibility with container images and CI pipelines)
-- **NEVER use `npm` for local development** — it negates the speed advantages of Bun and creates inconsistency
-- **NEVER use `bun` in CI/Docker/production** — stick to `npm` for deterministic, reproducible builds
+### 1. Package managers — mandatory rule
 
-**Lock file synchronisation rule**: When adding a new frontend dependency locally, use `bun add package-name` followed by `bun install` to synchronise both `bun.lock` and `package-lock.json`. Bun manages both lock file formats; this ensures CI/production builds (which use `npm` and `package-lock.json`) receive identical locked versions as local development, preventing version drift across environments. **Node.js is not required locally** if only Bun is used; remove npm/Node.js entirely from local development to eliminate tool conflicts.
+**Local development (mandatory):**
+- Use `bun` exclusively for **all** frontend commands: dev server, linting, testing, building, dependency management
+- `npm` and Node.js are **not available locally** by design — Bun is the only frontend tool
+- This eliminates accidental npm usage and ensures consistency with CI
+
+**CI/production/Docker:**
+- CI generates `package-lock.json` from `bun.lock` (deterministic conversion from committed lockfile)
+- Docker and production builds use `npm ci` with the generated `package-lock.json`
+- This ensures identical versions across all environments (dev, CI, UAT, production)
+
+**Workflow when adding dependencies:**
+1. In local dev, use `bun add package-name` (creates `bun.lock` entry)
+2. Commit `bun.lock` to git
+3. CI automatically generates `package-lock.json` from `bun.lock` before tests and Docker build
+4. Result: exact same versions everywhere, no manual sync needed, no risk of version drift
 
 ### 2. Code structure and style
 
@@ -76,12 +86,10 @@ This document defines the **mandatory guidelines and checklist for all feature d
    ```
 
 #### Frontend
-1. Check TypeScript and linting (local development):
+1. Check TypeScript and linting:
    ```bash
    cd frontend && bun run lint
    ```
-   - This runs ESLint and TypeScript compiler with Bun (faster, same rules).
-   - **For CI/production only**: `npm run lint` (when building Docker image or in CI pipelines).
 
 2. Fix issues automatically:
    ```bash
@@ -92,7 +100,6 @@ This document defines the **mandatory guidelines and checklist for all feature d
    ```bash
    cd frontend && bun run build
    ```
-   - **For CI/production only**: `npm run build` (when building Docker image or in CI pipelines).
 
 **Do NOT run tests until syntax and type checks pass.** Fix all errors first.
 
@@ -279,11 +286,11 @@ Update docs when your feature introduces new concepts, changes workflows, or add
 
 Before marking your work as ready:
 
-- [ ] **Code quality**: No syntax errors, TypeScript/linting passes (`npm run lint`, type checks pass).
+- [ ] **Code quality**: No syntax errors, TypeScript/linting passes (`bun run lint`, type checks pass).
 - [ ] **Tests written**: Unit/API/security/E2E as required for the feature (see [When to add tests](#when-to-add-tests)).
 - [ ] **Tests passing**: Run full test suite for affected layers locally before pushing.
   - Backend: `cd backend && poetry run pytest`
-  - Frontend: `cd frontend && npm run test:unit`
+  - Frontend: `cd frontend && bun run test:unit`
   - E2E (if applicable): `cd backend && poetry run pytest e2e/tests -v`
 - [ ] **Documentation updated**: Code comments, README, architecture/convention docs, or TESTING.md as needed.
 - [ ] **CHANGELOG entry**: Concise, impact-focused summary in `CHANGELOG.md` under the correct version.

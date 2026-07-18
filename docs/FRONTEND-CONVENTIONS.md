@@ -36,6 +36,20 @@ Development patterns and best practices for the frontend codebase.
 
 - Use `dayjs` for dates with `en-au` locale
 
+## Package manager policy
+
+**Mandatory for local development:**
+- Use `bun` exclusively for all frontend commands: `bun run dev`, `bun run lint`, `bun run test:unit`, `bun run build`, and `bun add <package>`
+- `npm` and Node.js are intentionally not available locally; Bun is the only supported tool
+- When adding dependencies, use `bun add package-name` and commit `bun.lock`
+- CI automatically converts `bun.lock` to `package-lock.json` for compatibility with npm in Docker/production builds
+
+**Why this matters:**
+- Bun is significantly faster for local development workflows
+- Single source of truth: `bun.lock` is committed; all other environments derive deterministic versions from it
+- No manual sync overhead between lock files
+- Prevents accidental npm usage that would undermine consistency
+
 ---
 
 **See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for comprehensive development guidelines, testing, and command reference.**

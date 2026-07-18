@@ -72,10 +72,20 @@ stages:
       displayName: Use Node.js 22
       inputs:
         version: '22.x'
+    - script: curl -fsSL https://bun.sh/install | bash
+      displayName: Install Bun
+    - script: |
+        cd frontend
+        bun install --frozen-lockfile
+      displayName: Install frontend dependencies from bun.lock
+    - script: |
+        cd frontend
+        npm install --package-lock-only --no-audit --no-fund
+      displayName: Generate package-lock.json for CI/Docker compatibility
     - script: |
         cd frontend
         npm ci --no-audit --no-fund
-      displayName: Install frontend dependencies
+      displayName: Reinstall from generated package-lock.json
     - script: |
         cd frontend
         npm run lint
