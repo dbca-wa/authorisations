@@ -101,6 +101,12 @@ stages:
         targetPath: '$(Build.SourcesDirectory)/frontend/coverage/cobertura-coverage.xml'
         artifact: 'coverage-frontend'
         publishLocation: 'pipeline'
+    - task: PublishPipelineArtifact@1
+      displayName: Publish package-lock.json for E2E and Docker
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/frontend/package-lock.json'
+        artifact: 'package-lock'
+        publishLocation: 'pipeline'
 
   - job: E2ETests
     displayName: End-to-end browser tests
@@ -125,6 +131,11 @@ stages:
         cd backend
         poetry install --with dev
       displayName: Install backend dependencies
+    - task: DownloadPipelineArtifact@2
+      displayName: Download package-lock.json from FrontendTests
+      inputs:
+        artifact: 'package-lock'
+        path: '$(Build.SourcesDirectory)/frontend'
     - script: |
         cd frontend
         npm ci --no-audit --no-fund
@@ -244,6 +255,11 @@ stages:
         TAG=$(python3 scripts/get_image_tag.py "$(Build.SourceBranch)")
         echo "##vso[task.setvariable variable=imageTag]$TAG"
       displayName: Resolve Docker image tag from VERSION and branch
+    - task: DownloadPipelineArtifact@2
+      displayName: Download package-lock.json from FrontendTests
+      inputs:
+        artifact: 'package-lock'
+        path: '$(Build.SourcesDirectory)/frontend'
     - task: Docker@2
       displayName: Build Docker image
       inputs:
