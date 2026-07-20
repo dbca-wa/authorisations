@@ -42,22 +42,7 @@ const generateQuestionnaireHash = (questionnaire: IQuestionnaireData): string =>
     return `${questionnaire.process_slug}-${questionnaire.code}`;
 };
 
-/**
- * Parses a hash string into process slug and questionnaire code components.
- * Handles questionnaire codes that may contain hyphens by splitting only on the first hyphen.
- * @param hash The hash string to parse (with or without leading '#')
- * @returns Object with processSlug and questionnaireCode, or null if hash format is invalid
- */
-const parseHashToKey = (hash: string): { processSlug: string; questionnaireCode: string } | null => {
-    const cleanHash = hash.startsWith('#') ? hash.slice(1) : hash;
-    const parts = cleanHash.split('-');
-    if (parts.length >= 2) {
-        const processSlug = parts[0];
-        const questionnaireCode = parts.slice(1).join('-');
-        return { processSlug, questionnaireCode };
-    }
-    return null;
-};
+
 
 interface IProcessGroup {
     process: IAuthorisationProcess;
@@ -516,6 +501,24 @@ const ProcessGroup = ({
     setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
     const [selectedQuestionnaireTab, setSelectedQuestionnaireTab] = React.useState<number>(0);
+    const processBoxRef = React.useRef<HTMLDivElement | null>(null);
+
+    // Check if URL hash matches any questionnaire in this group.
+    // If found, select that questionnaire's tab and scroll into view.
+    React.useEffect(() => {
+        const urlHash = window.location.hash.slice(1);
+        if (!urlHash) return;
+
+        const matchingIndex = group.questionnaires.findIndex(
+            (q) => generateQuestionnaireHash(q) === urlHash
+        );
+
+        if (matchingIndex !== -1) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSelectedQuestionnaireTab(matchingIndex);
+            processBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [group.questionnaires]);
 
     // Keep tab state stable while preventing out-of-range access when questionnaire lists change.
     const safeSelectedQuestionnaireTab = Math.min(
@@ -525,7 +528,7 @@ const ProcessGroup = ({
     const selectedQuestionnaire = group.questionnaires[safeSelectedQuestionnaireTab];
 
     return (
-        <Box sx={{ mb: 5 }}>
+        <Box ref={processBoxRef} className="mb-8">
             <Card className="p-6" elevation={4} sx={{ borderRadius: 2 }}>
                 <ProcessOverview process={group.process} />
 
