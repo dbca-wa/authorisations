@@ -3,6 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeApplication, makeProcess, makeQuestionnaire } from "../../../fixtures";
 
+// Mock clipboard
+Object.assign(navigator, {
+  clipboard: {
+    writeText: vi.fn(() => Promise.resolve()),
+  },
+});
+
 const {
   apiMocks,
   hideDialogMock,
@@ -200,5 +207,30 @@ describe("NewApplication", () => {
     // The updated_at date should be formatted as 5/10/2026 (US locale from new Date)
     const expectedDateString = new Date(updatedDate).toLocaleDateString();
     expect(screen.getByText(`Last updated: ${expectedDateString} (v1)`)).toBeInTheDocument();
+  });
+
+  it("copies questionnaire link to clipboard when link button is clicked", async () => {
+    useResolvedPromiseMock.mockReturnValue([
+      [
+        makeQuestionnaire({
+          process_slug: "s40",
+          code: "new-app",
+          name: "New application",
+        }),
+      ],
+      false,
+    ]);
+
+    render(<NewApplication />);
+
+    const linkButton = screen.getByRole("button", { name: /click to copy the link/i });
+    fireEvent.click(linkButton);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining("new-application#s40-new-app"),
+      );
+      expect(showSnackbarMock).toHaveBeenCalledWith("Link copied to clipboard", "info");
+    });
   });
 });

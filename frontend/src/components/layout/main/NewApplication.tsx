@@ -1,16 +1,17 @@
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
+import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import IconButton from '@mui/material/IconButton';
 import MuiLink from '@mui/material/Link';
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import React from "react";
-import { LoadingState } from "./LoadingState";
 
 import type { AlertColor } from '@mui/material/Alert';
 import { AxiosError } from 'axios';
@@ -24,7 +25,39 @@ import type { LoaderData } from '../../../context/types/Generic';
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
 import { EmptyStateComponent } from "./EmptyState";
+import { LoadingState } from "./LoadingState";
 import { PrivacyContent } from './PrivacyPolicy';
+
+// ============================================================================
+// Utility Functions & Interfaces
+// ============================================================================
+
+/**
+ * Generates a hash identifier for a questionnaire in the format: `{process_slug}-{questionnaire_code}`.
+ * Used for creating permanent links to specific questionnaire types within the new application page.
+ * @param questionnaire The questionnaire data object
+ * @returns Hash string suitable for use in window.location.hash
+ */
+const generateQuestionnaireHash = (questionnaire: IQuestionnaireData): string => {
+    return `${questionnaire.process_slug}-${questionnaire.code}`;
+};
+
+/**
+ * Parses a hash string into process slug and questionnaire code components.
+ * Handles questionnaire codes that may contain hyphens by splitting only on the first hyphen.
+ * @param hash The hash string to parse (with or without leading '#')
+ * @returns Object with processSlug and questionnaireCode, or null if hash format is invalid
+ */
+const parseHashToKey = (hash: string): { processSlug: string; questionnaireCode: string } | null => {
+    const cleanHash = hash.startsWith('#') ? hash.slice(1) : hash;
+    const parts = cleanHash.split('-');
+    if (parts.length >= 2) {
+        const processSlug = parts[0];
+        const questionnaireCode = parts.slice(1).join('-');
+        return { processSlug, questionnaireCode };
+    }
+    return null;
+};
 
 interface IProcessGroup {
     process: IAuthorisationProcess;
@@ -51,217 +84,9 @@ const buildProcessGroups = (
         .filter((group) => group.questionnaires.length > 0);
 }
 
-const ProcessOverview = ({
-    process,
-}: {
-    process: IAuthorisationProcess;
-}) => {
-    const processImageUrl = process.image_url;
-    const processImageCredit = process.image_credit;
-
-    return (
-        <>
-            {processImageUrl && (
-                <Box sx={{ mb: 2 }}>
-                    <Box
-                        component="img"
-                        src={processImageUrl}
-                        alt={`${process.name} image`}
-                        sx={{
-                            width: "100%",
-                            height: 260,
-                            objectFit: "cover",
-                            borderRadius: 1,
-                            display: "block",
-                        }}
-                    />
-                    <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: "block" }}>
-                        Photo credit: {processImageCredit || "TBC"}
-                    </Typography>
-                </Box>
-            )}
-
-            <Stack spacing={1}>
-                <Typography variant="h5">{process.name}</Typography>
-                <Typography variant="body1" color="textSecondary">
-                    {process.description}
-                </Typography>
-            </Stack>
-        </>
-    );
-}
-
-const ProcessGroup = ({
-    group,
-    inProgress,
-    setInProgress,
-}: {
-    group: IProcessGroup;
-    inProgress: boolean;
-    setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
-    const [selectedQuestionnaireTab, setSelectedQuestionnaireTab] = React.useState<number>(0);
-
-    // Keep tab state stable while preventing out-of-range access when questionnaire lists change.
-    const safeSelectedQuestionnaireTab = Math.min(
-        selectedQuestionnaireTab,
-        Math.max(group.questionnaires.length - 1, 0),
-    );
-    const selectedQuestionnaire = group.questionnaires[safeSelectedQuestionnaireTab];
-
-    return (
-        <Box sx={{ mb: 5 }}>
-            <Card className="p-6" elevation={4} sx={{ borderRadius: 2 }}>
-                <ProcessOverview
-                    process={group.process}
-                />
-
-                <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
-                    <Tabs
-                        orientation="vertical"
-                        value={safeSelectedQuestionnaireTab}
-                        onChange={(_, value: number) => setSelectedQuestionnaireTab(value)}
-                        aria-label={`${group.process.name} questionnaire tabs`}
-                        sx={{ minWidth: 220, borderRight: 1, borderColor: "divider" }}
-                    >
-                        {group.questionnaires.map((questionnaire, index) => {
-                            return (
-                                <Tab
-                                    key={getQuestionnaireUiKey(questionnaire)}
-                                    label={questionnaire.name}
-                                    id={`questionnaire-tab-${group.process.slug}-${index}`}
-                                    aria-controls={`questionnaire-tabpanel-${group.process.slug}-${index}`}
-                                    sx={{ alignItems: "flex-start", textAlign: "left" }}
-                                />
-                            );
-                        })}
-                    </Tabs>
-
-                    {selectedQuestionnaire && (
-                        <Box
-                            role="tabpanel"
-                            id={`questionnaire-tabpanel-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
-                            aria-labelledby={`questionnaire-tab-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
-                            sx={{ flex: 1, minWidth: 0 }}
-                        >
-                            <Questionnaire
-                                questionnaire={selectedQuestionnaire}
-                                inProgress={inProgress}
-                                setInProgress={setInProgress}
-                            />
-                        </Box>
-                    )}
-                </Box>
-            </Card>
-        </Box>
-    );
-}
-
-export const NewApplication = () => {
-    const { processes, questionnaires: questionnairesPromise } = useLoaderData<LoaderData>();
-    const [questionnaires, isQuestionnairesLoading] = useResolvedPromise<IQuestionnaireData[]>(questionnairesPromise, []);
-
-    const processGroups: IProcessGroup[] = React.useMemo(
-        () => buildProcessGroups(processes, questionnaires),
-        [processes, questionnaires],
-    );
-
-    const [inProgress, setInProgress] = React.useState<boolean>(false);
-
-    return (
-        <Box className="p-8 w-full min-w-4xl lg:w-4xl xl:w-5xl 2xl:w-6xl">
-            <Typography variant="h4" gutterBottom>
-                Start a New Application
-            </Typography>
-            <Typography color="textSecondary" sx={{ mb: 4 }}>
-                Create a new application for an authorisation process.
-            </Typography>
-            {isQuestionnairesLoading ? <LoadingState /> :
-                processGroups.length === 0 ? <EmptyStateComponent /> :
-                    <>
-                        {processGroups.map((group) => (
-                            <ProcessGroup
-                                key={group.process.slug}
-                                group={group}
-                                inProgress={inProgress}
-                                setInProgress={setInProgress}
-                            />
-                        ))}
-                    </>
-            }
-        </Box>
-    );
-}
-
-const Questionnaire = ({
-    questionnaire, inProgress, setInProgress,
-}: {
-    questionnaire: IQuestionnaireData;
-    inProgress: boolean;
-    setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
-    const localDate = formatDate(questionnaire.updated_at)
-    const navigate: NavigateFunction = useNavigate();
-    const { showDialog, hideDialog } = useDialog();
-    const { showSnackbar } = useSnackbar();
-
-    const sectionsCount = questionnaire.document.steps.reduce((acc, step) => {
-        return acc + step.sections.length;
-    }, 0);
-
-    const questionsCount = questionnaire.document.steps.reduce((acc, step) => {
-        return (
-            acc
-            + step.sections.reduce((sectionAcc, section) => {
-                return sectionAcc + section.questions.length;
-            }, 0)
-        );
-    }, 0);
-
-    return (
-        <Box sx={{ p: 1, minHeight: 300, display: "flex", flexDirection: "column" }}>
-            <Typography variant="h6" gutterBottom>{questionnaire.name}</Typography>
-            <Typography variant="body1" color="textPrimary" className="display-linebreak">
-                {questionnaire.description}
-            </Typography>
-
-            <Stack direction="row" sx={{ justifyContent: "space-between", mt: "auto" }}>
-                <Button
-                    variant="outlined"
-                    color="info"
-                    loadingPosition='start'
-                    loading={inProgress}
-                    disabled={inProgress}
-                    startIcon={<CreateOutlinedIcon />}
-                    onClick={() => startApplication({
-                        questionnaire,
-                        setInProgress,
-                        navigate,
-                        showDialog, hideDialog,
-                        showSnackbar,
-                    })}
-                >Start Application</Button>
-                <Box sx={{ textAlign: "right" }}>
-                    <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }} useFlexGap>
-                        <Typography variant="body2" color="textSecondary">
-                            Steps: <strong>{questionnaire.document.steps.length}</strong>
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                            Sections: <strong>{sectionsCount}</strong>
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                            Questions: <strong>{questionsCount}</strong>
-                        </Typography>
-
-                    </Stack>
-                    <Typography variant="subtitle2" color="textSecondary">
-                        Last updated: {localDate} (v{questionnaire.version})
-                    </Typography>
-                </Box>
-            </Stack>
-        </Box>
-    );
-}
+// ============================================================================
+// Application Flow Functions
+// ============================================================================
 
 const createNewApplication = async ({
     questionnaire,
@@ -532,5 +357,252 @@ const startApplication = async ({
     else {
         showPrivacyConsentDialog();
     }
+}
+
+// ============================================================================
+// Component Hierarchy (Child to Parent)
+// ============================================================================
+
+const ProcessOverview = ({
+    process,
+}: {
+    process: IAuthorisationProcess;
+}) => {
+    const processImageUrl = process.image_url;
+    const processImageCredit = process.image_credit;
+
+    return (
+        <>
+            {processImageUrl && (
+                <Box sx={{ mb: 2 }}>
+                    <Box
+                        component="img"
+                        src={processImageUrl}
+                        alt={`${process.name} image`}
+                        sx={{
+                            width: "100%",
+                            height: 260,
+                            objectFit: "cover",
+                            borderRadius: 1,
+                            display: "block",
+                        }}
+                    />
+                    <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: "block" }}>
+                        Photo credit: {processImageCredit || "TBC"}
+                    </Typography>
+                </Box>
+            )}
+
+            <Stack spacing={1}>
+                <Typography variant="h5">{process.name}</Typography>
+                <Typography variant="body1" color="textSecondary">
+                    {process.description}
+                </Typography>
+            </Stack>
+        </>
+    );
+}
+
+/**
+ * Questionnaire displays a single questionnaire form for creating a new application.
+ * Provides metadata (steps, sections, questions count), a button to start the application,
+ * and a permalink button that copies a link to this questionnaire to the clipboard.
+ */
+const Questionnaire = ({
+    questionnaire, inProgress, setInProgress,
+}: {
+    questionnaire: IQuestionnaireData;
+    inProgress: boolean;
+    setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
+    const localDate = formatDate(questionnaire.updated_at)
+    const navigate: NavigateFunction = useNavigate();
+    const { showDialog, hideDialog } = useDialog();
+    const { showSnackbar } = useSnackbar();
+
+    const sectionsCount = questionnaire.document.steps.reduce((acc, step) => {
+        return acc + step.sections.length;
+    }, 0);
+
+    const questionsCount = questionnaire.document.steps.reduce((acc, step) => {
+        return (
+            acc
+            + step.sections.reduce((sectionAcc, section) => {
+                return sectionAcc + section.questions.length;
+            }, 0)
+        );
+    }, 0);
+
+    /**
+     * Copies a permanent link of this questionnaire to the clipboard.
+     */
+    const copyLinkToClipboard = () => {
+        const hash = generateQuestionnaireHash(questionnaire);
+        const link = `${window.location.origin}/new-application#${hash}`;
+
+        navigator.clipboard.writeText(link).then(() => {
+            showSnackbar("Link copied to clipboard", "info");
+        }).catch(() => {
+            showSnackbar("Failed to copy link", "error");
+        });
+    };
+
+    return (
+        <Box sx={{ p: 1, minHeight: 300, display: "flex", flexDirection: "column", position: "relative" }}>
+            <Typography variant="h6" gutterBottom>
+                {questionnaire.name}
+                <IconButton
+                    color="inherit"
+                    size="medium"
+                    title="Click to copy the link to this questionnaire"
+                    aria-label="Click to copy the link to this questionnaire"
+                    onClick={copyLinkToClipboard}
+                >
+                    <LinkOutlinedIcon />
+                </IconButton>
+            </Typography>
+            <Typography variant="body1" color="textPrimary" className="display-linebreak">
+                {questionnaire.description}
+            </Typography>
+
+            <Stack direction="row" sx={{ justifyContent: "space-between", mt: "auto" }}>
+                <Button
+                    variant="outlined"
+                    color="info"
+                    loadingPosition='start'
+                    loading={inProgress}
+                    disabled={inProgress}
+                    startIcon={<CreateOutlinedIcon />}
+                    onClick={() => startApplication({
+                        questionnaire,
+                        setInProgress,
+                        navigate,
+                        showDialog, hideDialog,
+                        showSnackbar,
+                    })}
+                >Start Application</Button>
+                <Box sx={{ textAlign: "right" }}>
+                    <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }} useFlexGap>
+                        <Typography variant="body2" color="textSecondary">
+                            Steps: <strong>{questionnaire.document.steps.length}</strong>
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                            Sections: <strong>{sectionsCount}</strong>
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                            Questions: <strong>{questionsCount}</strong>
+                        </Typography>
+
+                    </Stack>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        Last updated: {localDate} (v{questionnaire.version})
+                    </Typography>
+                </Box>
+            </Stack>
+        </Box>
+    );
+}
+
+/**
+ * ProcessGroup manages a single authorisation process and its associated questionnaires.
+ */
+const ProcessGroup = ({
+    group,
+    inProgress,
+    setInProgress,
+}: {
+    group: IProcessGroup;
+    inProgress: boolean;
+    setInProgress: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
+    const [selectedQuestionnaireTab, setSelectedQuestionnaireTab] = React.useState<number>(0);
+
+    // Keep tab state stable while preventing out-of-range access when questionnaire lists change.
+    const safeSelectedQuestionnaireTab = Math.min(
+        selectedQuestionnaireTab,
+        Math.max(group.questionnaires.length - 1, 0),
+    );
+    const selectedQuestionnaire = group.questionnaires[safeSelectedQuestionnaireTab];
+
+    return (
+        <Box sx={{ mb: 5 }}>
+            <Card className="p-6" elevation={4} sx={{ borderRadius: 2 }}>
+                <ProcessOverview process={group.process} />
+
+                <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
+                    <Tabs
+                        orientation="vertical"
+                        value={safeSelectedQuestionnaireTab}
+                        onChange={(_, value: number) => setSelectedQuestionnaireTab(value)}
+                        aria-label={`${group.process.name} questionnaire tabs`}
+                        sx={{ minWidth: 220, borderRight: 1, borderColor: "divider" }}
+                    >
+                        {group.questionnaires.map((questionnaire, index) => {
+                            return (
+                                <Tab
+                                    key={getQuestionnaireUiKey(questionnaire)}
+                                    label={questionnaire.name}
+                                    id={`questionnaire-tab-${group.process.slug}-${index}`}
+                                    aria-controls={`questionnaire-tabpanel-${group.process.slug}-${index}`}
+                                    sx={{ alignItems: "flex-start", textAlign: "left" }}
+                                />
+                            );
+                        })}
+                    </Tabs>
+
+                    {selectedQuestionnaire && (
+                        <Box
+                            role="tabpanel"
+                            id={`questionnaire-tabpanel-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
+                            aria-labelledby={`questionnaire-tab-${group.process.slug}-${safeSelectedQuestionnaireTab}`}
+                            sx={{ flex: 1, minWidth: 0 }}
+                        >
+                            <Questionnaire
+                                questionnaire={selectedQuestionnaire}
+                                inProgress={inProgress}
+                                setInProgress={setInProgress}
+                            />
+                        </Box>
+                    )}
+                </Box>
+            </Card>
+        </Box>
+    );
+}
+
+export const NewApplication = () => {
+    const { processes, questionnaires: questionnairesPromise } = useLoaderData<LoaderData>();
+    const [questionnaires, isQuestionnairesLoading] = useResolvedPromise<IQuestionnaireData[]>(questionnairesPromise, []);
+
+    const processGroups: IProcessGroup[] = React.useMemo(
+        () => buildProcessGroups(processes, questionnaires),
+        [processes, questionnaires],
+    );
+
+    const [inProgress, setInProgress] = React.useState<boolean>(false);
+
+    return (
+        <Box className="p-8 w-full min-w-4xl lg:w-4xl xl:w-5xl 2xl:w-6xl">
+            <Typography variant="h4" gutterBottom>
+                Start a New Application
+            </Typography>
+            <Typography color="textSecondary" sx={{ mb: 4 }}>
+                Create a new application for an authorisation process.
+            </Typography>
+            {isQuestionnairesLoading ? <LoadingState /> :
+                processGroups.length === 0 ? <EmptyStateComponent /> :
+                    <>
+                        {processGroups.map((group) => (
+                            <ProcessGroup
+                                key={group.process.slug}
+                                group={group}
+                                inProgress={inProgress}
+                                setInProgress={setInProgress}
+                            />
+                        ))}
+                    </>
+            }
+        </Box>
+    );
 }
 
