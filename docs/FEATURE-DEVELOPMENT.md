@@ -73,7 +73,104 @@ While Bun offers performance improvements, it introduces critical compatibility 
 - Process and questionnaire identifiers must be explicit and unambiguous.
 - If changing serializer contracts, update frontend types and API manager calls in the same commit.
 
-### 3. Code quality — syntax, types, and linting
+### 3. Minimalist Implementation Principles
+
+**Core principle: Simple is better, less is more.** Push logic down to where it belongs, avoid layers of indirection, and let components be self-sufficient.
+
+#### Anti-patterns to avoid
+
+**❌ Don't:** Orchestrate everything from a parent component
+- ❌ Parent manages multiple refs, metadata maps, and callbacks for child components
+- ❌ Parent passes callbacks to children just to track state that children could own
+- ❌ Parent maintains ref collections and coordinates all state changes
+- ❌ Each decision wrapped in checks of checks: optional parameters with defensive ternary chains
+
+Example of over-orchestration:
+```typescript
+// ❌ Too many layers
+const Parent = () => {
+  const dataMap = useRef<Record<string, Data>>({});
+  const refMap = useRef<Record<string, HTMLDivElement | null>>({});
+  const metaMap = useRef<Record<string, Meta>>({});
+  
+  useEffect(() => {
+    // Sync all three maps, handle callbacks, coordinate scroll...
+  }, [deps]);
+  
+  return (
+    <Child onRef={(ref) => { refMap.current[key] = ref; }} 
+           onMeta={(meta) => { metaMap.current[key] = meta; }}
+           data={dataMap.current[key]} />
+  );
+};
+```
+
+**✅ Do:** Let each component own its concerns
+- ✅ Child components check their own conditions and manage their own state
+- ✅ Props are the only communication boundary (input data, output callbacks for user actions)
+- ✅ Each component has a clear, singular responsibility
+- ✅ No defensive checks unless absolutely necessary; default to sensible values
+
+Example of minimal implementation:
+```typescript
+// ✅ Simple and clean
+const Child = ({ data }) => {
+  const [state, setState] = useState(initialValue);
+  
+  useEffect(() => {
+    // Child checks if data applies to it
+    if (shouldProcessData(data)) {
+      setState(computedValue);
+    }
+  }, [data]);
+  
+  return <div>...</div>;
+};
+
+const Parent = ({ items }) => {
+  return items.map(item => <Child key={item.id} data={item} />);
+};
+```
+
+#### Practical guidelines
+
+1. **Start with the simplest possible implementation that solves the problem.**
+   - Don't add infrastructure "just in case"
+   - Don't create abstractions before you need them
+   - Don't create ref collections or metadata maps unless truly unavoidable
+
+2. **If you find yourself creating multiple refs/maps to coordinate state, stop and ask:**
+   - Could the child component own this state instead?
+   - Could this logic live in a single component without orchestration?
+   - Is the complexity justified by the feature, or am I over-engineering?
+
+3. **Dependency arrays and effect scoping:**
+   - Effects should depend on what they actually use (not proxy values)
+   - If you're listening to `window.location.hash` in an effect, either:
+     - Include it in dependencies (with proper handling), OR
+     - Listen to `hashchange` events explicitly (clearer intent)
+   - Don't silence eslint warnings (`// eslint-disable`) to hide the real issue
+
+4. **Props and communication:**
+   - Pass only what the component needs (not "just in case" props)
+   - Use callbacks for user actions, not for internal state sync
+   - Avoid optional props with defensive defaults; require sensible values or compute them at the boundary
+
+5. **When to refactor:**
+   - Refactor when code is duplicated across multiple components
+   - Refactor when a single responsibility becomes too large (>200 lines)
+   - Don't refactor prematurely or "improve" working code—the best code is the simplest code that works
+
+#### Trade-offs
+
+Minimalist implementation may mean:
+- Features that work for 95% of use cases rather than 100% (edge cases handled in future iterations)
+- Components that are "good enough" rather than maximally reusable
+- Accepting that some features have reasonable limitations (document them)
+
+This is intentional. Overbuilding creates maintenance debt and obscures real logic under layers of indirection.
+
+### 4. Code quality — syntax, types, and linting
 
 **STOP before running tests.** Ensure code integrity first:
 
