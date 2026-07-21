@@ -133,8 +133,10 @@ def test_editor_review_page_and_submit_application(
         page.wait_for_timeout(500)
         page.get_by_role("button", name="Continue").click()
         
-        # On review page: check consent box and submit
-        page.wait_for_selector('input[type="checkbox"]:not([disabled])', timeout=5000)
+        # On review page: wait for Submit button to appear (indicates review page is loaded)
+        page.get_by_role("button", name="Submit Application").wait_for(timeout=10000)
+        # Then wait for checkbox to be visible
+        page.wait_for_selector('input[type="checkbox"]:not([disabled])', timeout=10000)
         checkbox = page.locator('input[type="checkbox"]').first
         checkbox.click()
         
@@ -182,7 +184,10 @@ def test_submitted_application_pdf_available_for_download(
         page.wait_for_timeout(500)
         page.get_by_role("button", name="Continue").click()
         
-        page.wait_for_selector('input[type="checkbox"]:not([disabled])', timeout=5000)
+        # Wait for Submit button to appear (indicates review page is loaded)
+        page.get_by_role("button", name="Submit Application").wait_for(timeout=10000)
+        # Then wait for checkbox to be visible
+        page.wait_for_selector('input[type="checkbox"]:not([disabled])', timeout=10000)
         checkbox = page.locator('input[type="checkbox"]').first
         checkbox.click()
         
