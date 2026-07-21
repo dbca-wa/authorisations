@@ -18,6 +18,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 ### Changed
 
 - Standardised on npm for all frontend package management across development, CI, testing, and production environments to ensure identical dependency versions and predictable builds.
+- Disabled questionnaire tabs when only a single questionnaire to prevent user confusion from clicking non-functional tabs.
 
 ## 1.0.3 - 2026-07-16
 

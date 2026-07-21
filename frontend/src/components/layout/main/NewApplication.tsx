@@ -558,6 +558,7 @@ const ProcessGroup = ({
                                     id={`questionnaire-tab-${group.process.slug}-${index}`}
                                     aria-controls={`questionnaire-tabpanel-${group.process.slug}-${index}`}
                                     sx={{ alignItems: "flex-start", textAlign: "left" }}
+                                    disabled={group.questionnaires.length === 1}
                                 />
                             );
                         })}
