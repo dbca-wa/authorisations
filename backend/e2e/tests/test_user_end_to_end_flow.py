@@ -15,6 +15,19 @@ import pytest
 from questionnaires.models import Questionnaire
 
 
+def fill_editor_form_and_continue(page):
+    """Fill form and navigate to review page.
+    
+    Reusable helper to avoid form-filling duplication across tests.
+    Assumes page is at editor URL and form is loaded.
+    """
+    title_input = page.get_by_label("Project title")
+    title_input.fill("E2E Project Title")
+    # Click Continue and wait for page state change to review page
+    page.get_by_role("button", name="Continue").click()
+    page.wait_for_load_state("networkidle", timeout=5000)
+
+
 @pytest.fixture
 def draft_application(authenticated_request_context_factory, e2e_users):
     """Create a draft application via API and return its key."""
@@ -91,16 +104,10 @@ def test_editor_form_fill_and_continue_to_review(
 
     try:
         page.goto(f"/a/{app_key}")
-        page.wait_for_selector('div#root', timeout=5000)
+        page.wait_for_load_state("networkidle", timeout=5000)
         
-        # Fill form
-        title_input = page.get_by_label("Project title")
-        title_input.fill("E2E Project Title")
-        
-        # Wait a moment for auto-save, then continue
-        page.wait_for_timeout(500)
-        continue_button = page.get_by_role("button", name="Continue")
-        continue_button.click()
+        # Fill form and navigate to review
+        fill_editor_form_and_continue(page)
         
         # Verify we're on review page (should have Submit button)
         page.get_by_role("button", name="Submit Application").wait_for(timeout=5000)
@@ -125,34 +132,20 @@ def test_editor_review_page_and_submit_application(
 
     try:
         page.goto(f"/a/{app_key}")
-        page.wait_for_selector('div#root', timeout=5000)
+        page.wait_for_load_state("networkidle", timeout=5000)
         
-        # Fill and continue
-        title_input = page.get_by_label("Project title")
-        title_input.fill("E2E Project Title")
-        page.wait_for_timeout(500)
-        page.get_by_role("button", name="Continue").click()
+        # Fill and continue to review page
+        fill_editor_form_and_continue(page)
         
-        # On review page: wait for Submit button to appear (indicates review page is loaded)
-        page.get_by_role("button", name="Submit Application").wait_for(timeout=10000)
-        # Then wait for checkbox to be visible
-        page.wait_for_selector('input[type="checkbox"]:not([disabled])', timeout=10000)
-        checkbox = page.locator('input[type="checkbox"]').first
+        # Check consent and submit
+        checkbox = page.get_by_role("checkbox")
         checkbox.click()
-        
-        # Re-attach Turnstile mock for submission
-        mock_turnstile_script(page)
         
         submit_button = page.get_by_role("button", name="Submit Application")
         submit_button.click()
         
-        # Wait for submission to complete (page should change or show success)
-        # The editor redirects after submission, so wait for navigation away from editor
-        try:
-            page.wait_for_url(lambda url: "/a/" not in url, timeout=5000)
-        except Exception:
-            # Alternative: check if status changed to submitted
-            pass
+        # Wait for submission to complete - page becomes read-only but stays at same URL
+        page.wait_for_load_state("networkidle", timeout=5000)
     finally:
         page.close()
         context.close()
@@ -177,29 +170,20 @@ def test_submitted_application_pdf_available_for_download(
     try:
         # Complete the workflow: fill, review, submit
         page.goto(f"/a/{app_key}")
-        page.wait_for_selector('div#root', timeout=5000)
+        page.wait_for_load_state("networkidle", timeout=5000)
         
-        title_input = page.get_by_label("Project title")
-        title_input.fill("E2E Project Title")
-        page.wait_for_timeout(500)
-        page.get_by_role("button", name="Continue").click()
+        # Fill and continue to review page
+        fill_editor_form_and_continue(page)
         
-        # Wait for Submit button to appear (indicates review page is loaded)
-        page.get_by_role("button", name="Submit Application").wait_for(timeout=10000)
-        # Then wait for checkbox to be visible
-        page.wait_for_selector('input[type="checkbox"]:not([disabled])', timeout=10000)
-        checkbox = page.locator('input[type="checkbox"]').first
+        # Check consent and submit
+        checkbox = page.get_by_role("checkbox")
         checkbox.click()
         
-        mock_turnstile_script(page)
         submit_button = page.get_by_role("button", name="Submit Application")
         submit_button.click()
         
-        # Wait for submission and redirect
-        try:
-            page.wait_for_url(lambda url: "/a/" not in url, timeout=5000)
-        except Exception:
-            page.wait_for_timeout(1000)
+        # Wait for submission to complete - page becomes read-only but stays at same URL
+        page.wait_for_load_state("networkidle", timeout=5000)
         
         # Navigate to My Applications and check for PDF download link
         page.goto("/my-applications")
