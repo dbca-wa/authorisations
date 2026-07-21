@@ -137,17 +137,12 @@ def test_editor_review_page_and_submit_application(
         # Fill and continue to review page
         fill_editor_form_and_continue(page)
         
-        # Wait for Turnstile verification to complete
-        # The checkbox is disabled while Turnstile verifies; wait for it to become enabled
+        # Wait for Turnstile verification callback to complete and enable the checkbox
         page.wait_for_function(
-            """() => {
-                const checkbox = document.querySelector('input[type="checkbox"]');
-                return checkbox && !checkbox.disabled;
-            }""",
-            timeout=10000
+            "() => document.querySelector('input[type=\"checkbox\"]')?.disabled === false",
+            timeout=5000
         )
-        checkbox = page.get_by_role("checkbox")
-        checkbox.click()
+        page.get_by_role("checkbox").click()
         
         submit_button = page.get_by_role("button", name="Submit Application")
         submit_button.click()
@@ -183,17 +178,12 @@ def test_submitted_application_pdf_available_for_download(
         # Fill and continue to review page
         fill_editor_form_and_continue(page)
         
-        # Wait for Turnstile verification to complete
-        # The checkbox is disabled while Turnstile verifies; wait for it to become enabled
+        # Wait for Turnstile verification callback to complete and enable the checkbox
         page.wait_for_function(
-            """() => {
-                const checkbox = document.querySelector('input[type="checkbox"]');
-                return checkbox && !checkbox.disabled;
-            }""",
-            timeout=10000
+            "() => document.querySelector('input[type=\"checkbox\"]')?.disabled === false",
+            timeout=5000
         )
-        checkbox = page.get_by_role("checkbox")
-        checkbox.click()
+        page.get_by_role("checkbox").click()
         
         submit_button = page.get_by_role("button", name="Submit Application")
         submit_button.click()
