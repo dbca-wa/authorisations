@@ -14,6 +14,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added permanent links to questionnaire types on the new application page, enabling users to share and bookmark direct links to specific application types.
 - Added a new favicon, replacing the default placeholder.
 - Added comprehensive feature development guide ([FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md)) consolidating all mandatory best practices, testing requirements, code quality standards, and common commands in a single reference document for AI agents and developers.
+- Added new frontend as well as E2E tests for comprehensive coverage of "New application" page functionality.
 
 ### Changed
 
