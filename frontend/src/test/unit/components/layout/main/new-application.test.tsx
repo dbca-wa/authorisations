@@ -279,7 +279,7 @@ describe("NewApplication", () => {
     });
 
     it("shows error snackbar when clipboard copy fails", async () => {
-      (navigator.clipboard.writeText as any).mockRejectedValueOnce(new Error("clipboard error"));
+      (navigator.clipboard.writeText as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("clipboard error"));
 
       useResolvedPromiseMock.mockReturnValue([
         [
