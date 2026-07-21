@@ -26,6 +26,7 @@ export interface IQuestionnaireData {
     name: string;
     version: number;
     description: string;
+    sort_order: number;
     created_at: string;
     updated_at: string;
     document: IQuestionnaire;
