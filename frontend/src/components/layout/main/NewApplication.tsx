@@ -503,21 +503,31 @@ const ProcessGroup = ({
     const [selectedQuestionnaireTab, setSelectedQuestionnaireTab] = React.useState<number>(0);
     const processBoxRef = React.useRef<HTMLDivElement | null>(null);
 
-    // Check if URL hash matches any questionnaire in this group.
-    // If found, select that questionnaire's tab and scroll into view.
+    // Listen for hash changes and update tab selection when URL hash matches a questionnaire in this group.
     React.useEffect(() => {
-        const urlHash = window.location.hash.slice(1);
-        if (!urlHash) return;
+        const handleHashChange = () => {
+            const urlHash = window.location.hash.slice(1);
+            if (!urlHash) return;
 
-        const matchingIndex = group.questionnaires.findIndex(
-            (q) => generateQuestionnaireHash(q) === urlHash
-        );
+            const matchingIndex = group.questionnaires.findIndex(
+                (q) => generateQuestionnaireHash(q) === urlHash
+            );
 
-        if (matchingIndex !== -1) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setSelectedQuestionnaireTab(matchingIndex);
-            processBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+            if (matchingIndex !== -1) {
+                setSelectedQuestionnaireTab(matchingIndex);
+                processBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+
+        // Handle initial page load with hash
+        handleHashChange();
+
+        // Listen for subsequent hash changes
+        window.addEventListener('hashchange', handleHashChange);
+
+        return () => {
+            window.removeEventListener('hashchange', handleHashChange);
+        };
     }, [group.questionnaires]);
 
     // Keep tab state stable while preventing out-of-range access when questionnaire lists change.
