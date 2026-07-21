@@ -86,6 +86,18 @@
     }
   },
   {
+    "model": "processes.authorisationprocess",
+    "pk": 3,
+    "fields": {
+      "slug": "s45",
+      "name": "Section 45",
+      "description": "Section 45 authorisation process",
+      "sort_order": 3,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
     "model": "processes.authorisationprocess_assessor_groups",
     "pk": 1,
     "fields": {
@@ -193,6 +205,84 @@
                 "questions": [
                   {
                     "label": "Project title",
+                    "type": "text",
+                    "is_required": true,
+                    "description": ""
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sort_order": 1,
+      "created_at": "2026-01-01T00:00:00Z",
+      "created_by": 1,
+      "updated_at": "2026-01-01T00:00:00Z",
+      "updated_by": null
+    }
+  },
+  {
+    "model": "questionnaires.questionnaire",
+    "pk": 4,
+    "fields": {
+      "process": 1,
+      "version": 1,
+      "code": "renewal",
+      "name": "Renewal",
+      "description": "Renewal application form.",
+      "document": {
+        "schema_version": "2025.07-1",
+        "steps": [
+          {
+            "title": "Renewal details",
+            "description": "Provide renewal details.",
+            "sections": [
+              {
+                "title": "Details",
+                "description": "",
+                "questions": [
+                  {
+                    "label": "Renewal reason",
+                    "type": "text",
+                    "is_required": true,
+                    "description": ""
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sort_order": 2,
+      "created_at": "2026-01-01T00:00:00Z",
+      "created_by": 1,
+      "updated_at": "2026-01-01T00:00:00Z",
+      "updated_by": null
+    }
+  },
+  {
+    "model": "questionnaires.questionnaire",
+    "pk": 5,
+    "fields": {
+      "process": 3,
+      "version": 1,
+      "code": "new-application",
+      "name": "New application",
+      "description": "Section 45 application form.",
+      "document": {
+        "schema_version": "2025.07-1",
+        "steps": [
+          {
+            "title": "Application details",
+            "description": "Provide application details.",
+            "sections": [
+              {
+                "title": "Details",
+                "description": "",
+                "questions": [
+                  {
+                    "label": "Application type",
                     "type": "text",
                     "is_required": true,
                     "description": ""
