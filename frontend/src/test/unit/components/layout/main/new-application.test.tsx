@@ -433,13 +433,11 @@ describe("NewApplication", () => {
           process_slug: "s40",
           name: "Z - Should be first",
           code: "z-first",
-          sort_order: 1,
         }),
         makeQuestionnaire({
           process_slug: "s40",
           name: "A - Should be second",
           code: "a-second",
-          sort_order: 2,
         }),
       ];
 
