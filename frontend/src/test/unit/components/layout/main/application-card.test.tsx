@@ -36,7 +36,7 @@ describe("ApplicationCard", () => {
     expect(screen.getByText("New application (v1)")).toBeInTheDocument();
   });
 
-  it("shows continue button for editable statuses", () => {
+  it("shows continue button for drafts", () => {
     render(
       <ApplicationCard
         process={makeProcess()}
@@ -47,18 +47,7 @@ describe("ApplicationCard", () => {
     expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
   });
 
-  it("shows continue button for ACTION_REQUIRED status", () => {
-    render(
-      <ApplicationCard
-        process={makeProcess()}
-        application={makeApplication({ status: "ACTION_REQUIRED" })}
-      />,
-    );
-
-    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
-  });
-
-  it("hides continue button for non-editable statuses", () => {
+  it("hides continue button for submitted or finalised applications", () => {
     render(
       <ApplicationCard
         process={makeProcess()}

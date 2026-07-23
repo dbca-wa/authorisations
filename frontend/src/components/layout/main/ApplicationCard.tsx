@@ -32,7 +32,6 @@ const applicationSteps = [
 const statusToActiveStep: Record<ApplicationStatus, number> = {
     DRAFT: 0,
     DISCARDED: 0,           // Terminated during drafting — never submitted.
-    ACTION_REQUIRED: 0,
     SUBMITTED: 1,
     WITHDRAWN: 2,           // Terminated after submission — reached review stage.
     UNDER_REVIEW: 2,
@@ -65,7 +64,7 @@ export const ApplicationCard = ({
 
     const isTerminated = terminatedStatuses.has(application.status);
     const isDownloadable = downloadableStatuses.has(application.status);
-    const isEditable = application.status === "DRAFT" || application.status === "ACTION_REQUIRED";
+    const isEditable = application.status === "DRAFT";
 
     return (
         <ListItem className="mb-4">

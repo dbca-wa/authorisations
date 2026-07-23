@@ -35,9 +35,8 @@ vi.mock("../../../../../components/layout/main/ApplicationCard", () => ({
       "DEFERRED",
       "REJECTED"
     ];
-    const editableStatuses = ["DRAFT", "ACTION_REQUIRED"];
     const isDownloadable = downloadableStatuses.includes(application.status);
-    const isEditable = editableStatuses.includes(application.status);
+    const isEditable = application.status === "DRAFT";
     return (
       <div data-testid="application-card">{`${application.internal_id}|download:${isDownloadable ? "yes" : "no"}|continue:${isEditable ? "yes" : "no"}`}</div>
     );
@@ -78,7 +77,7 @@ describe("MyApplications", () => {
     expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
-  it("shows download button for downloadable statuses and continue button for editable statuses", () => {
+  it("renders download button for finalised/submitted and continue button for drafts", () => {
     useResolvedPromiseMock.mockReturnValue([
       [
         makeApplication({ internal_id: "app-submitted", status: "SUBMITTED", key: "k1" }),

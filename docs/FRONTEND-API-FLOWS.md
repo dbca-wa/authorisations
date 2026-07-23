@@ -24,7 +24,7 @@
    
 3. **`/assessment`** - ApplicationAssessment component
    - Reviewer-only (conditionally shown via `can_review` flag)
-   - Shows assessment queue for applications in SUBMITTED/UNDER_REVIEW/ACTION_REQUIRED/UNDER_ASSESSMENT
+   - Shows assessment queue for applications in SUBMITTED/UNDER_REVIEW/UNDER_ASSESSMENT
    - Sorted by status priority, then oldest first (FIFO)
    
 4. **`/a/:key`** - FormLayout component
@@ -128,7 +128,7 @@ User: Complete all steps + review page
 #### 5. **Assessment/Review Flow** (Reviewers)
 ```
 Reviewer: Navigate to /assessment
-  → See applications in SUBMITTED/UNDER_REVIEW/ACTION_REQUIRED/UNDER_ASSESSMENT
+  → See applications in SUBMITTED/UNDER_REVIEW/UNDER_ASSESSMENT
   → Click to view full application
   → PATCH /api/applications/{key} {status: "UNDER_REVIEW"} (or next status)
   → Application moves through review queue

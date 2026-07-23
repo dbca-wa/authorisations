@@ -247,7 +247,7 @@ class AssessmentViewSet(
                    that belong to processes the current user is authorised to assess.
       - RETRIEVE — a single application from that same scoped queue.
       - PATCH    — advance the application status (e.g. SUBMITTED → UNDER_REVIEW,
-                   UNDER_REVIEW → ACTION_REQUIRED, UNDER_ASSESSMENT → APPROVED).
+                   UNDER_REVIEW → DRAFT, UNDER_ASSESSMENT → APPROVED).
 
     Access is implicitly scoped by the user's reviewer group memberships; an
     authenticated user with no reviewer group assignments will receive an empty

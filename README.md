@@ -34,7 +34,9 @@ This system supports DBCA authorisation workflows, including Animal Ethics and S
 
 **Frontend Development:** See [docs/FRONTEND-CONVENTIONS.md](docs/FRONTEND-CONVENTIONS.md) for React, TypeScript, and component guidelines.
 
-**Application Flows:** See [docs/APPLICATION-FLOWS.md](docs/APPLICATION-FLOWS.md) for user journeys, routes, and workflows.
+**Application Flows:** See [docs/FRONTEND-API-FLOWS.md](docs/FRONTEND-API-FLOWS.md) for user journeys, routes, and workflows.
+
+**Status Workflow:** See [docs/STATUS-WORKFLOW.md](docs/STATUS-WORKFLOW.md) for application status definitions and business logic.
 
 **File Management:** See [docs/FILE-MANAGEMENT.md](docs/FILE-MANAGEMENT.md) for attachment design and implementation.
 

@@ -9,7 +9,6 @@ export type ApplicationStatus =
     | "WITHDRAWN"
     | "SUBMITTED"
     | "UNDER_REVIEW"
-    | "ACTION_REQUIRED"
     | "UNDER_ASSESSMENT"
     | "APPROVED"
     | "APPROVED_WITH_CONDITIONS"

@@ -22,7 +22,8 @@ Welcome to the Authorisations documentation hub. Use the links below to find inf
 
 ## Features & Workflows
 
-- **[APPLICATION-FLOWS.md](APPLICATION-FLOWS.md)** — User-facing workflows, routes, pages, and authentication
+- **[FRONTEND-API-FLOWS.md](FRONTEND-API-FLOWS.md)** — User-facing workflows, routes, pages, and authentication
+- **[STATUS-WORKFLOW.md](STATUS-WORKFLOW.md)** — Detailed definitions of application statuses and transition business logic
 - **[FILE-MANAGEMENT.md](FILE-MANAGEMENT.md)** — File attachment design and implementation
 
 ## Deployment & Release

@@ -11,7 +11,8 @@ This document defines the **mandatory guidelines and checklist for all feature d
 - Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand the data model, terminology, and design decisions.
 - Review [BACKEND-CONVENTIONS.md](BACKEND-CONVENTIONS.md) for backend patterns, security rules, and ordering constraints.
 - Review [FRONTEND-CONVENTIONS.md](FRONTEND-CONVENTIONS.md) for React, TypeScript, and component guidelines.
-- Check [APPLICATION-FLOWS.md](APPLICATION-FLOWS.md) for user journeys and authentication context.
+- Check [FRONTEND-API-FLOWS.md](FRONTEND-API-FLOWS.md) for user journeys and authentication context.
+- Check [STATUS-WORKFLOW.md](STATUS-WORKFLOW.md) for application status and business transitions.
 
 ### 2. Determine scope and layers
 
@@ -329,8 +330,10 @@ poetry run pytest e2e/tests -v --tracing=retain-on-failure --screenshot=only-on-
 
 Update docs when your feature introduces new concepts, changes workflows, or adds user-facing behaviour:
 
+- **STATUS-WORKFLOW.md** lifecycle of an application within the Authorisations system.
 - **ARCHITECTURE.md**: major data model changes, new entities, or core design decisions.
-- **APPLICATION-FLOWS.md**: new routes, new authentication/permission rules, new user workflows.
+- **FRONTEND-API-FLOWS.md**: new routes, new authentication/permission rules, new user workflows.
+- **STATUS-WORKFLOW.md**: changes to application statuses or transition logic.
 - **BACKEND-CONVENTIONS.md**: new patterns, security rules, or gotchas specific to backend development.
 - **FRONTEND-CONVENTIONS.md**: new component patterns, styling conventions, or frontend libraries.
 - **DEVELOPMENT.md**: new setup steps, environment variables, or management commands.
