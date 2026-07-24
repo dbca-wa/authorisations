@@ -446,7 +446,7 @@ const Questionnaire = ({
                     <LinkOutlinedIcon />
                 </IconButton>
             </Typography>
-            <Typography variant="body1" color="textPrimary" className="display-linebreak">
+            <Typography variant="body1" color="textPrimary" className="display-linebreak pb-8">
                 {questionnaire.description}
             </Typography>
 
