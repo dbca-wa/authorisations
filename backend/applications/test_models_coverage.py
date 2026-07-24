@@ -252,7 +252,7 @@ class ApplicationStatusTests(TestCase):
         """ApplicationStatus enum contains all required statuses."""
         expected_statuses = [
             "DRAFT", "DISCARDED", "SUBMITTED", "WITHDRAWN",
-            "UNDER_REVIEW", "ACTION_REQUIRED", "UNDER_ASSESSMENT",
+            "UNDER_REVIEW", "UNDER_ASSESSMENT",
             "APPROVED", "APPROVED_WITH_CONDITIONS", "DEFERRED", "REJECTED"
         ]
         for status in expected_statuses:
@@ -263,7 +263,6 @@ class ApplicationStatusTests(TestCase):
         expected = {
             ApplicationStatus.SUBMITTED,
             ApplicationStatus.UNDER_REVIEW,
-            ApplicationStatus.ACTION_REQUIRED,
             ApplicationStatus.UNDER_ASSESSMENT,
         }
         self.assertEqual(REVIEW_QUEUE_STATUSES, expected)
@@ -271,8 +270,8 @@ class ApplicationStatusTests(TestCase):
     def test_reviewer_settable_statuses_constant(self):
         """REVIEWER_SETTABLE_STATUSES contains correct statuses."""
         expected = {
+            ApplicationStatus.DRAFT,
             ApplicationStatus.UNDER_REVIEW,
-            ApplicationStatus.ACTION_REQUIRED,
             ApplicationStatus.UNDER_ASSESSMENT,
             ApplicationStatus.APPROVED,
             ApplicationStatus.APPROVED_WITH_CONDITIONS,

@@ -227,7 +227,25 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
     def validate_status(self, value):
         """
-        Validate the status field to ensure only allowed transitions.
+        Validate applicant-initiated status transitions per STATUS-WORKFLOW.md.
+
+        Enforces the workflow state machine for applicants:
+        - DRAFT → SUBMITTED: Submit application for review (with Turnstile verification)
+        - DRAFT → DISCARDED: Applicant abandons the draft application
+        - Any pre-decision state → WITHDRAWN: Applicant withdraws the application
+
+        The pre-decision states (allowing withdrawal) are: DRAFT, SUBMITTED,
+        UNDER_REVIEW, UNDER_ASSESSMENT. These can transition to WITHDRAWN at any
+        time before a final decision (APPROVED, REJECTED, etc.) is made.
+
+        Args:
+            value: The requested target status
+
+        Returns:
+            str: The validated status value if transition is permitted
+
+        Raises:
+            ValidationError: If the transition is not allowed from current status
         """
         # Draft -> Submitted
         if (
@@ -235,6 +253,23 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             and value == ApplicationStatus.SUBMITTED
         ):
             return value
+
+        # Draft -> Discarded (applicant abandons draft)
+        if (
+            self.instance.status == ApplicationStatus.DRAFT
+            and value == ApplicationStatus.DISCARDED
+        ):
+            return value
+
+        # Owner can withdraw from any pre-decision state
+        if value == ApplicationStatus.WITHDRAWN:
+            if self.instance.status in [
+                ApplicationStatus.DRAFT,
+                ApplicationStatus.SUBMITTED,
+                ApplicationStatus.UNDER_REVIEW,
+                ApplicationStatus.UNDER_ASSESSMENT,
+            ]:
+                return value
 
         raise exceptions.ValidationError(
             f"Invalid status transition from {self.instance.status} to {value}"
@@ -776,11 +811,39 @@ class AssessmentSerialiser(serializers.ModelSerializer):
 
     def validate_status(self, value: str) -> str:
         """
-        Validate that the requested status transition is permitted for an assessor.
+        Validate reviewer/assessor-initiated status transitions per STATUS-WORKFLOW.md.
 
-        Rejects transitions from non-queue statuses (e.g. DRAFT) to prevent
-        assessors from accidentally acting on applications that are not yet in
-        their queue, and rejects attempts to set applicant-only statuses.
+        Enforces strict state machine transitions for staff (reviewers/assessors):
+
+        SUBMITTED state:
+        - → UNDER_REVIEW: Reviewer claims the application for administrative review
+
+        UNDER_REVIEW state:
+        - → DRAFT: Return to applicant for additional information
+        - → UNDER_ASSESSMENT: Escalate to assessor for technical assessment
+
+        UNDER_ASSESSMENT state:
+        - → DRAFT: Return to applicant for re-submission
+        - → APPROVED: Final decision: approved
+        - → APPROVED_WITH_CONDITIONS: Final decision: approved with conditions
+        - → REJECTED: Final decision: rejected
+        - → DEFERRED: Final decision: deferred for later assessment
+
+        This validation ensures:
+        1. Applications only progress through designated review queue states
+        2. Invalid state progressions are rejected at the validation layer
+        3. Staff cannot set applicant-only statuses (DISCARDED, WITHDRAWN)
+        4. The workflow respects the role boundaries in STATUS-WORKFLOW.md
+
+        Args:
+            value: The requested target status (must be ApplicationStatus enum value)
+
+        Returns:
+            str: The validated status value if transition is permitted
+
+        Raises:
+            ValidationError: If the application is not in the review queue, or the
+                           transition is not permitted from the current status
         """
         current = self.instance.status
 
@@ -790,10 +853,29 @@ class AssessmentSerialiser(serializers.ModelSerializer):
                 f"Application with status '{current}' is not in the assessment queue."
             )
 
-        # Guard: the target status must be one assessors are permitted to set.
-        if value not in REVIEWER_SETTABLE_STATUSES:
+        # Define permitted transitions per current status (using STATUS-WORKFLOW.md)
+        permitted_transitions = {
+            ApplicationStatus.SUBMITTED: [
+                ApplicationStatus.UNDER_REVIEW,  # Reviewer claims for administrative review
+            ],
+            ApplicationStatus.UNDER_REVIEW: [
+                ApplicationStatus.DRAFT,  # Return to applicant for more information
+                ApplicationStatus.UNDER_ASSESSMENT,  # Move to technical assessment
+            ],
+            ApplicationStatus.UNDER_ASSESSMENT: [
+                ApplicationStatus.DRAFT,  # Return to applicant for re-submission
+                ApplicationStatus.APPROVED,  # Final decision: approved
+                ApplicationStatus.APPROVED_WITH_CONDITIONS,  # Final decision: approved with conditions
+                ApplicationStatus.REJECTED,  # Final decision: rejected
+                ApplicationStatus.DEFERRED,  # Final decision: deferred
+            ],
+        }
+
+        allowed = permitted_transitions.get(current, [])
+        if value not in allowed:
             raise exceptions.ValidationError(
-                f"Status '{value}' cannot be set by an assessor."
+                f"Cannot transition from {current} to {value}. "
+                f"Permitted transitions from {current}: {', '.join(allowed) or 'none'}."
             )
 
         return value

@@ -208,7 +208,47 @@ def test_assessment_patch_rejects_non_reviewer_settable_target_status(
     questionnaire_factory,
     application_factory,
 ):
-    """Reject assessor attempts to set applicant-only statuses."""
+    """Verify assessors can return an application to DRAFT via correct workflow."""
+    process = process_factory(slug="review-process")
+    process.assessor_groups.add(assessor_group)
+    application = application_factory(
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=assessor_user)
+    
+    # First: Transition SUBMITTED → UNDER_REVIEW
+    response = api_client.patch(
+        f"/api/assessment/{application.key}",
+        {"status": ApplicationStatus.UNDER_REVIEW},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    application.refresh_from_db()
+    assert application.status == ApplicationStatus.UNDER_REVIEW
+    
+    # Then: Transition UNDER_REVIEW → DRAFT
+    response = api_client.patch(
+        f"/api/assessment/{application.key}",
+        {"status": ApplicationStatus.DRAFT},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    application.refresh_from_db()
+    assert application.status == ApplicationStatus.DRAFT
+
+
+@pytest.mark.django_db
+def test_assessment_patch_restricted_status_returns_400(
+    api_client,
+    assessor_user,
+    assessor_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Reject assessor attempts to set restricted statuses like DISCARDED."""
     process = process_factory(slug="review-process")
     process.assessor_groups.add(assessor_group)
     application = application_factory(
@@ -219,12 +259,13 @@ def test_assessment_patch_rejects_non_reviewer_settable_target_status(
     api_client.force_authenticate(user=assessor_user)
     response = api_client.patch(
         f"/api/assessment/{application.key}",
-        {"status": ApplicationStatus.DRAFT},
+        {"status": ApplicationStatus.DISCARDED},
         format="json",
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "cannot be set by an assessor" in str(response.data)
+    # Error should indicate transition not allowed from SUBMITTED
+    assert "Cannot transition from SUBMITTED to DISCARDED" in str(response.data)
 
 
 @pytest.mark.django_db

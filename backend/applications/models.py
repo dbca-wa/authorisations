@@ -203,7 +203,6 @@ class ApplicationStatus(models.TextChoices):
     SUBMITTED = "SUBMITTED"
     WITHDRAWN = "WITHDRAWN"
     UNDER_REVIEW = "UNDER_REVIEW"
-    ACTION_REQUIRED = "ACTION_REQUIRED"
     UNDER_ASSESSMENT = "UNDER_ASSESSMENT"
     APPROVED = "APPROVED"
     APPROVED_WITH_CONDITIONS = "APPROVED_WITH_CONDITIONS"
@@ -215,14 +214,13 @@ class ApplicationStatus(models.TextChoices):
 REVIEW_QUEUE_STATUSES = frozenset([
     ApplicationStatus.SUBMITTED,
     ApplicationStatus.UNDER_REVIEW,
-    ApplicationStatus.ACTION_REQUIRED,
     ApplicationStatus.UNDER_ASSESSMENT,
 ])
 
 # Statuses a reviewer is permitted to set; excludes applicant-only transitions (DRAFT, DISCARDED).
 REVIEWER_SETTABLE_STATUSES = frozenset([
+    ApplicationStatus.DRAFT,
     ApplicationStatus.UNDER_REVIEW,
-    ApplicationStatus.ACTION_REQUIRED,
     ApplicationStatus.UNDER_ASSESSMENT,
     ApplicationStatus.APPROVED,
     ApplicationStatus.APPROVED_WITH_CONDITIONS,
