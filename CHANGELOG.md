@@ -15,11 +15,16 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added a new favicon, replacing the default placeholder.
 - Added comprehensive feature development guide ([FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md)) consolidating all mandatory best practices, testing requirements, code quality standards, and common commands in a single reference document for AI agents and developers.
 - Added new frontend as well as E2E tests for comprehensive coverage of "New application" page functionality.
+- Added formal specification of application status workflow ([STATUS-WORKFLOW.md](docs/STATUS-WORKFLOW.md)) documenting all 13 state transitions, permissions, and business rules with comprehensive test coverage across backend API (19 tests), E2E (6 tests), and frontend (10 statuses verified).
 
 ### Changed
 
 - Standardised on npm for all frontend package management across development, CI, testing, and production environments to ensure identical dependency versions and predictable builds.
 - Disabled questionnaire tabs when only a single questionnaire to prevent user confusion from clicking non-functional tabs.
+
+### Removed
+
+- Removed `ACTION_REQUIRED` status; applications now use concrete workflow states (DRAFT → SUBMITTED → UNDER_REVIEW → UNDER_ASSESSMENT → decision outcomes) with explicit transition rules and permission boundaries.
 
 ## 1.0.3 - 2026-07-16
 
