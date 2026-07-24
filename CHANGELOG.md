@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.0.4] - Unreleased
+## [1.1.0] - Unreleased
 
 ### Added
 
@@ -24,7 +24,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ### Removed
 
-- Removed `ACTION_REQUIRED` status; applications now use concrete workflow states (DRAFT → SUBMITTED → UNDER_REVIEW → UNDER_ASSESSMENT → decision outcomes) with explicit transition rules and permission boundaries.
+- Removed `ACTION_REQUIRED` status; applications now use concrete workflow states (DRAFT → SUBMITTED → UNDER_REVIEW → UNDER_ASSESSMENT → decision outcomes) with explicit transition rules and permission boundaries - REQUIRES DATABASE MIGRATION.
 
 ## 1.0.3 - 2026-07-16
 
