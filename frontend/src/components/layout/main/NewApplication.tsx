@@ -218,7 +218,7 @@ const PrivacyConsentDialogContent = ({
                         disabled={!isVerificationComplete}
                     />
                 )}
-                label="I acknowledge that DBCA will collect, use and disclose my personal information in accordance with applicable privacy laws and DBCA's Privacy Policy."
+                label="I acknowledge the above information and that DBCA will handle my personal information in accordance with applicable privacy laws and its Privacy Policy."
             />
 
             <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: "space-between" }}>
