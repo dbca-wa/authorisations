@@ -13,23 +13,23 @@ export const PrivacyContent = () => {
     return (
         <>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                The Department of Biodiversity, Conservation and Attractions (<strong>DBCA</strong>) collects personal information to:
+                The Department of Biodiversity, Conservation and Attractions (DBCA) collects personal information to:
             </Typography>
 
             <ul className="pl-6 mb-4 text-inherit list-disc">
                 <li>
                     <Typography variant="body2" color="textSecondary">
-                        receive, assess and manage animal ethics submissions and approvals in accordance with section 8 of the <em>Animal Welfare Act 2002</em> (WA) — <strong>AW Act</strong>;
+                        receive, assess and manage animal ethics submissions and approvals in accordance with section 8 of the <em>Animal Welfare Act 2002</em> (WA) (AW Act);
                     </Typography>
                 </li>
                 <li>
                     <Typography variant="body2" color="textSecondary">
-                        assess and determine applications made under sections 40 and 45 of the <em>Biodiversity Conservation Act 2016</em> (WA) — <strong>BC Act</strong>;
+                        assess and determine applications made under sections 40 and 45 of the <em>Biodiversity Conservation Act 2016</em> (WA) (BC Act);
                     </Typography>
                 </li>
                 <li>
                     <Typography variant="body2" color="textSecondary">
-                        assess and determine applications made under regulation 89 of the <em>Conservation and Land Management Regulations 2002</em> (WA) — <strong>CALM Regulations</strong>;
+                        assess and determine applications made under regulation 89 of the <em>Conservation and Land Management Regulations 2002</em> (WA) (CALM Regulations);
                     </Typography>
                 </li>
                 <li>
@@ -65,17 +65,17 @@ export const PrivacyContent = () => {
                 </li>
                 <li>
                     <Typography variant="body2" color="textSecondary">
-                        with relevant advisory bodies, committees or experts (including the <em>Animal Ethics Committee</em> — <strong>AEC</strong>) for the purpose of evaluating applications and submissions;
+                        with relevant advisory bodies, committees or experts (including the <em>Animal Ethics Committee</em>) for the purpose of evaluating applications and submissions;
                     </Typography>
                 </li>
                 <li>
                     <Typography variant="body2" color="textSecondary">
-                        with the <em>Department of Primary Industries and Regional Development</em> (<strong>DPIRD</strong>) for the purpose of assessing and determining exemptions under section 7 of the <em>Fish Resources Management Act 1994</em> (WA) — <strong>FRMA Act</strong>, including in some cases the application of biodiversity conservation conditions under section 7(2)(b) of the BC Act; and
+                        with the <em>Department of Primary Industries and Regional Development</em> (DPIRD) for the purpose of assessing and determining exemptions under section 7 of the <em>Fish Resources Management Act 1994</em> (WA) (FRMA Act), including in some cases the application of biodiversity conservation conditions for the purposes of section 7(2)(b) of the BC Act; and
                     </Typography>
                 </li>
                 <li>
                     <Typography variant="body2" color="textSecondary">
-                        with other Western Australian public sector agencies or oversight bodies where required or authorised under the <em>Privacy and Responsible Information Sharing Act 2024</em> (WA) — <strong>PRIS Act</strong>, the BC Act, the AW Act, the <em>Conservation and Land Management Act 1984</em> (WA) — <strong>CALM Act</strong>, or other written law.
+                        with other Western Australian public sector agencies or oversight bodies where required or authorised under the <em>Privacy and Responsible Information Sharing Act 2024</em> (WA) (PRIS Act), the BC Act, the AW Act, the <em>Conservation and Land Management Act 1984</em> (WA) (CALM Act), or any other written law.
                     </Typography>
                 </li>
             </ul>
@@ -85,7 +85,7 @@ export const PrivacyContent = () => {
             </Typography>
 
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                If you choose not to provide the required personal information, DBCA may be unable to assess your application or submission, issue an approval or authorisation, or progress the matter further. In these circumstances, you may not be able to obtain full lawful authority for the proposed activities and cannot legally proceed.
+                If you choose not to provide the required personal information, DBCA may be unable to assess your application or submission, issue an approval or authorisation, or progress the matter further.
             </Typography>
 
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
@@ -97,7 +97,7 @@ export const PrivacyContent = () => {
             </Typography>
 
             <Typography variant="body2" color="textSecondary" sx={{ mb: 0 }}>
-                If you have any questions about how your personal information will be handled, or if you would like to access or correct your personal information, please contact DBCA on <strong>(08) 9219 9004</strong> or email <Link href="mailto:privacy@dbca.wa.gov.au">privacy@dbca.wa.gov.au</Link>.
+                If you have any questions about how your personal information will be handled, or if you would like to access or correct your personal information, please contact DBCA at email <Link href="mailto:privacy@dbca.wa.gov.au">privacy@dbca.wa.gov.au</Link>.
             </Typography>
         </>
     );
