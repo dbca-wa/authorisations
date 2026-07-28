@@ -144,26 +144,75 @@ Anti-pattern to avoid:
 
 Note on static assets for browser tests:
 
-- When running E2E tests that use an actual browser context (Playwright `browser`),
-  the SPA static assets must be available to Django so the browser can load the
-  front-end shell. In CI this means building the frontend and running
-  `collectstatic` before executing Playwright tests. See the CI E2E job for an
-  example of the required steps.
+When running E2E tests that use an actual browser context (Playwright `browser`),
+the SPA static assets must be available to Django so the browser can load the
+front-end shell. There are **two valid approaches**, each appropriate for different contexts:
 
-Example local commands to prepare assets for browser E2E:
+#### Option A: Development Mode (Preferred for Local Development)
 
+Run the Vite dev server alongside Django. This is the **recommended approach for development work**
+because it enables:
+- Hot module reloading (HMR) as you edit frontend code
+- Faster iteration cycles
+- Immediate feedback on component changes
+
+Environment:
+- `DJANGO_VITE_TEST_DEV_MODE=true` (default locally)
+- Vite dev server listening on `http://localhost:5173`
+
+Commands:
+```bash
+# Terminal 1: Start Vite dev server
+cd frontend
+npm run dev
+
+# Terminal 2: Run E2E tests
+cd backend
+poetry run pytest e2e/tests -v --browser chromium
+```
+
+#### Option B: Static/Built Assets Mode (Used in CI)
+
+Build the frontend, collect static assets, and run tests against the bundled code.
+This mode mirrors production and is used in the CI pipeline.
+
+Environment:
+- `DJANGO_VITE_TEST_DEV_MODE=false`
+- `DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json`
+- Frontend built to `frontend/dist/`
+- Assets collected into `backend/static/` by Django's `collectstatic`
+
+Commands:
 ```bash
 # from the repository root
 cd frontend
-npm install
 npm run build
 
 cd ../backend
 poetry run python manage.py collectstatic --noinput
 
-# then run E2E (chromium example)
-poetry run pytest e2e/tests -v --browser chromium
+# Run E2E tests against built assets
+DJANGO_VITE_TEST_DEV_MODE=false DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json \
+  poetry run pytest e2e/tests -v --browser chromium
 ```
+
+#### Why CI Uses Static Mode
+
+The CI pipeline explicitly uses static/built assets because:
+- No dependency on a separately-running dev server
+- Validates that the production build works correctly
+- Deterministic: tests run against exactly what users will deploy
+- See `azure-pipelines.yml` E2E job for the full CI sequence
+
+#### Summary
+
+| Aspect | Dev Mode | Static Mode |
+|--------|----------|-------------|
+| **Best for** | Local development (preferred) | CI, final validation, production builds |
+| **Setup** | `npm run dev` in separate terminal | `npm run build` + `collectstatic` |
+| **Speed** | Fast iteration (HMR enabled) | Initial build slower; tests then run normally |
+| **Frontend changes** | Hot reload works; immediate feedback | Must rebuild to see changes |
+| **CI use** | Not typically used (dev server overhead) | Standard (no external dependencies) |
 
 ### 3) Database Isolation In Browser Tests
 
@@ -293,7 +342,12 @@ Finding where security tests belong:
 Quick reference:
 - **Backend tests**: `cd backend && poetry run pytest`
 - **Frontend tests**: `cd frontend && npm run test:unit`
-- **E2E tests**: `cd backend && poetry run pytest e2e/tests -v`
+- **E2E tests (dev mode, preferred)**: 
+  - Terminal 1: `cd frontend && npm run dev` (start Vite dev server)
+  - Terminal 2: `cd backend && poetry run pytest e2e/tests -v --browser chromium`
+- **E2E tests (static mode, CI-style)**:
+  - `cd frontend && npm run build && cd ../backend && poetry run python manage.py collectstatic --noinput`
+  - `DJANGO_VITE_TEST_DEV_MODE=false DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json poetry run pytest e2e/tests -v --browser chromium`
 
 For coverage, diagnostics, and specific test patterns, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-locations-and-commands).
 
@@ -306,7 +360,10 @@ Recommended Validate stage order:
 4. Coverage aggregation publish.
 
 E2E CI checklist:
-- Ensure Playwright browser install step exists.
+- Ensure frontend is built: `npm run build` in CI before E2E job runs.
+- Ensure Django collects static assets: `python manage.py collectstatic --noinput` in CI.
+- Set environment variables for static mode: `DJANGO_VITE_TEST_DEV_MODE=false` and `DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json`.
+- Ensure Playwright browser install step exists: `poetry run playwright install --with-deps chromium`.
 - Ensure pytest writes JUnit XML when PublishTestResults expects it.
 - Publish failure artefacts (trace/video/screenshots) for diagnosis.
 
