@@ -9,7 +9,6 @@ from django.urls import reverse
 
 from applications.models import Application, ApplicationAttachment
 
-
 pytestmark = [pytest.mark.security, pytest.mark.integration, pytest.mark.django_db]
 
 
@@ -29,7 +28,7 @@ def _create_attachment(application: Application, filename: str = "evidence.pdf")
 
 def _enable_reviewer_access(application: Application, reviewer_group: Group) -> None:
     """Grant reviewer-group read access to the application's process."""
-    application.questionnaire.process.assessor_groups.add(reviewer_group)
+    application.questionnaire.process.reviewer_groups.add(reviewer_group)
 
 
 def test_resume_application_returns_404_for_unauthenticated_user(client, application):

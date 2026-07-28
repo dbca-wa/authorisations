@@ -1,19 +1,18 @@
-"""E2E tests: comprehensive assessment page functionality including card display and attachments dialog."""
+"""E2E tests: comprehensive review page functionality including card display and attachments dialog."""
 
-from django.utils import timezone
-from django.core.files.uploadedfile import SimpleUploadedFile
 import pytest
-
 from applications.models import Application, ApplicationAttachment
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_assessment_card_displays_process_and_questionnaire_metadata(
+def test_review_card_displays_process_and_questionnaire_metadata(
     authenticated_browser_context_factory,
     e2e_users,
 ):
-    """Verify assessment card displays process name, questionnaire name with version, and status chips."""
+    """Verify review card displays process name, questionnaire name with version, and status chips."""
     reviewer = e2e_users["reviewer"]
     other = e2e_users["other"]
 
@@ -25,23 +24,23 @@ def test_assessment_card_displays_process_and_questionnaire_metadata(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue
-    page.goto("/assessment")
+    # Navigate to review queue
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     # Verify process name is displayed in a chip
     process_chip = page.locator(f'text={app.questionnaire.process.name}')
-    assert process_chip.count() >= 1, f"Process name '{app.questionnaire.process.name}' not found on assessment page"
+    assert process_chip.count() >= 1, f"Process name '{app.questionnaire.process.name}' not found on review page"
 
     # Verify questionnaire name and version are displayed together
     questionnaire_text = f"{app.questionnaire.name} (v{app.questionnaire.version})"
     questionnaire_chip = page.locator(f'text={questionnaire_text}')
-    assert questionnaire_chip.count() >= 1, f"Questionnaire text '{questionnaire_text}' not found on assessment page"
+    assert questionnaire_chip.count() >= 1, f"Questionnaire text '{questionnaire_text}' not found on review page"
 
     # Verify status is displayed (formatted with title case)
     status_text = " ".join(word.capitalize() for word in app.status.split("_"))
     status_chip = page.locator(f'text={status_text}')
-    assert status_chip.count() >= 1, f"Status '{status_text}' not found on assessment page"
+    assert status_chip.count() >= 1, f"Status '{status_text}' not found on review page"
 
     # Tear down
     page.close()
@@ -50,11 +49,11 @@ def test_assessment_card_displays_process_and_questionnaire_metadata(
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_assessment_card_displays_applicant_information(
+def test_review_card_displays_applicant_information(
     authenticated_browser_context_factory,
     e2e_users,
 ):
-    """Verify assessment card displays applicant full name, email, and submission date."""
+    """Verify review card displays applicant full name, email, and submission date."""
     reviewer = e2e_users["reviewer"]
     other = e2e_users["other"]
 
@@ -71,22 +70,22 @@ def test_assessment_card_displays_applicant_information(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue
-    page.goto("/assessment")
+    # Navigate to review queue
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     # Verify applicant full name is displayed
     full_name = f"{app.owner.first_name} {app.owner.last_name}"
     name_element = page.locator(f'text={full_name}')
-    assert name_element.count() >= 1, f"Applicant name '{full_name}' not found on assessment page"
+    assert name_element.count() >= 1, f"Applicant name '{full_name}' not found on review page"
 
     # Verify applicant email is displayed
     email_element = page.locator(f'text={app.owner.email}')
-    assert email_element.count() >= 1, f"Applicant email '{app.owner.email}' not found on assessment page"
+    assert email_element.count() >= 1, f"Applicant email '{app.owner.email}' not found on review page"
 
     # Verify "Submitted" text with relative time is displayed
     submitted_text = page.locator('text=Submitted')
-    assert submitted_text.count() >= 1, "Submitted text not found on assessment page"
+    assert submitted_text.count() >= 1, "Submitted text not found on review page"
 
     # Tear down
     page.close()
@@ -95,7 +94,7 @@ def test_assessment_card_displays_applicant_information(
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_assessment_card_email_copy_to_clipboard(
+def test_review_card_email_copy_to_clipboard(
     authenticated_browser_context_factory,
     e2e_users,
 ):
@@ -111,8 +110,8 @@ def test_assessment_card_email_copy_to_clipboard(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue
-    page.goto("/assessment")
+    # Navigate to review queue
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     # Find the email box and click it
@@ -139,7 +138,7 @@ def test_assessment_card_email_copy_to_clipboard(
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_assessment_card_pdf_download_button(
+def test_review_card_pdf_download_button(
     authenticated_browser_context_factory,
     e2e_users,
 ):
@@ -155,8 +154,8 @@ def test_assessment_card_pdf_download_button(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue
-    page.goto("/assessment")
+    # Navigate to review queue
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     # Find the PDF button and verify it's within a link
@@ -222,8 +221,8 @@ def test_attachment_dialog_shows_empty_and_populated_states(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue and wait for cards to render
-    page.goto("/assessment")
+    # Navigate to review queue and wait for cards to render
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     files_buttons = page.locator('button:has-text("Files")')
@@ -255,11 +254,11 @@ def test_attachment_dialog_shows_empty_and_populated_states(
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_assessment_page_sort_by_application_type(
+def test_review_page_sort_by_application_type(
     authenticated_browser_context_factory,
     e2e_users,
 ):
-    """Verify assessment queue can be sorted by application type (process order + questionnaire order)."""
+    """Verify review queue can be sorted by application type (process order + questionnaire order)."""
     reviewer = e2e_users["reviewer"]
     other = e2e_users["other"]
 
@@ -274,13 +273,13 @@ def test_assessment_page_sort_by_application_type(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue
-    page.goto("/assessment")
+    # Navigate to review queue
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     # Verify sort control is visible (shown only when there's more than 1 application)
     if len(submitted_apps) > 1:
-        sort_control = page.locator('id=assessment-sort')
+        sort_control = page.locator('id=review-sort')
         assert sort_control.is_visible(), "Sort control should be visible when multiple applications exist"
 
         # Open the sort dropdown
@@ -298,7 +297,7 @@ def test_assessment_page_sort_by_application_type(
         assert files_buttons.count() >= 1, "Applications should still be displayed after sorting"
     else:
         # Single application: sort control should not be visible
-        sort_control = page.locator('id=assessment-sort')
+        sort_control = page.locator('id=review-sort')
         assert (
             sort_control.count() == 0
         ), "Sort control should not be visible when only 1 application exists"
@@ -310,13 +309,13 @@ def test_assessment_page_sort_by_application_type(
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_assessment_card_displays_submission_date_not_creation_date(
+def test_review_card_displays_submission_date_not_creation_date(
     authenticated_browser_context_factory,
     e2e_users,
 ):
     """CRITICAL: Verify "Submitted" label displays submission date (submitted_at), NOT creation date (created_at).
     
-    This test catches the bug where AssessmentCard incorrectly displayed the creation date
+    This test catches the bug where ReviewCard incorrectly displayed the creation date
     for the "Submitted" label. The test creates an application with deliberately different
     creation and submission dates to ensure the correct date field is displayed.
     """
@@ -346,8 +345,8 @@ def test_assessment_card_displays_submission_date_not_creation_date(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue
-    page.goto("/assessment")
+    # Navigate to review queue
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     # Find the card for our test application by its internal_id
@@ -374,7 +373,7 @@ def test_assessment_card_displays_submission_date_not_creation_date(
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_assessment_card_shows_pending_for_recently_submitted_apps(
+def test_review_card_shows_pending_for_recently_submitted_apps(
     authenticated_browser_context_factory,
     e2e_users,
 ):
@@ -390,13 +389,13 @@ def test_assessment_card_shows_pending_for_recently_submitted_apps(
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
 
-    # Navigate to assessment queue
-    page.goto("/assessment")
+    # Navigate to review queue
+    page.goto("/review")
     page.wait_for_selector('button:has-text("Files")')
 
     # Get all application cards
     cards = page.locator('div[class*="MuiCard"]')
-    assert cards.count() >= 1, "No application cards found on assessment page"
+    assert cards.count() >= 1, "No application cards found on review page"
 
     # Check the first card's content
     first_card = cards.first

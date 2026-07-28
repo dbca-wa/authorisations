@@ -24,7 +24,7 @@ Development patterns, rules, and best practices for the backend codebase.
 
 - `Application.has_access(user)` grants **read** access. Two principals qualify:
   1. The application owner
-  2. Any authenticated user whose groups intersect the process's `reviewer_groups` (technical officers / assessors)
+  2. Any authenticated user whose groups intersect the process's `reviewer_groups` (technical officers responsible for initial triage and review)
 - `has_access` must **not** be used as the guard for write/mutation paths
   - `resume_application` (the interactive form URL) uses an explicit `application.owner == request.user` check so that reviewers cannot open and modify someone else's application through the form
   - `download_application` and `download_attachment` correctly use `has_access` because those are read-only operations

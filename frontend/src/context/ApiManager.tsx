@@ -180,9 +180,9 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async fetchAssessmentApplications(): Promise<IApplicationData[]> {
+    public static async fetchReviewQueueApplications(): Promise<IApplicationData[]> {
         const requestConfig = ApiManager.getRequestConfig();
-        const response = await axios.get<IApplicationData[]>("/assessment", requestConfig);
+        const response = await axios.get<IApplicationData[]>("/review", requestConfig);
 
         return response.data;
     }

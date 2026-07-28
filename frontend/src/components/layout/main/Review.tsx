@@ -9,7 +9,7 @@ import { LocalStorage } from "../../../context/LocalStorage";
 import type { IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
 import { LoadingState } from "./LoadingState";
-import { AssessmentCard } from "./AssessmentCard";
+import { ReviewCard } from "./ReviewCard";
 import { EmptyStateComponent } from "./EmptyState";
 import {
     ApplicationSortControl,
@@ -19,22 +19,22 @@ import {
     type SortOrderOption,
 } from './applicationUtils';
 
-const assessmentSortOrderStorageKey = "assessment-sort-order";
+const reviewSortOrderStorageKey = "review-sort-order";
 
 /**
- * Displays applications in the assessment queue for technical officers.
+ * Displays applications in the review queue for technical officers.
  * Applies reusable sorting controls and respects user preferences.
  */
-export const ApplicationAssessment = () => {
+export const ApplicationReview = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
     const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
 
     const [sortOrder, setSortOrder] = useState<SortOrderOption>(() =>
-        getInitialSortOrder(assessmentSortOrderStorageKey, "submitted_oldest")
+        getInitialSortOrder(reviewSortOrderStorageKey, "submitted_oldest")
     );
 
     useEffect(() => {
-        LocalStorage.setValue<SortOrderOption>(assessmentSortOrderStorageKey, sortOrder);
+        LocalStorage.setValue<SortOrderOption>(reviewSortOrderStorageKey, sortOrder);
     }, [sortOrder]);
 
     const processBySlug = useMemo(
@@ -42,7 +42,7 @@ export const ApplicationAssessment = () => {
         [processes]
     );
 
-    const sortedAssessmentApplications = useMemo(
+    const sortedReviewApplications = useMemo(
         () => sortApplications(applications, sortOrder),
         [applications, sortOrder]
     );
@@ -51,27 +51,27 @@ export const ApplicationAssessment = () => {
         <Box className="p-8 w-full min-w-2xl lg:w-3xl xl:w-4xl">
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography variant="h4" gutterBottom>
-                    Application Assessment
+                    Application Review
                 </Typography>
-                {!isApplicationsLoading && sortedAssessmentApplications.length > 1 &&
+                {!isApplicationsLoading && sortedReviewApplications.length > 1 &&
                     <ApplicationSortControl
                         value={sortOrder}
                         onChange={setSortOrder}
-                        controlId="assessment-sort"
+                        controlId="review-sort"
                         availableOptions={getAvailableSortOptions(applications)}
                     />
                 }
             </Box>
             <Typography color="textSecondary" sx={{ mb: 4 }}>
-                Assess and action applications in your queue.
+                Review and action applications in your queue.
             </Typography>
 
             {isApplicationsLoading ? <LoadingState /> :
-                sortedAssessmentApplications.length === 0 ? <EmptyStateComponent /> :
+                sortedReviewApplications.length === 0 ? <EmptyStateComponent /> :
                     <List>
-                        {sortedAssessmentApplications.map((application) => {
+                        {sortedReviewApplications.map((application) => {
                             const process = processBySlug.get(application.process_slug);
-                            return <AssessmentCard
+                            return <ReviewCard
                                 key={application.key}
                                 application={application}
                                 process={process}

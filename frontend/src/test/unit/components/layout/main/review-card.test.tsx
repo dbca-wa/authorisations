@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AssessmentCard } from "../../../../../components/layout/main/AssessmentCard";
+import { ReviewCard } from "../../../../../components/layout/main/ReviewCard";
 import * as ApiManagerModule from "../../../../../context/ApiManager";
 import { makeApplication, makeProcess } from "../../../fixtures";
 
@@ -23,7 +23,7 @@ vi.mock("../../../../../context/Hooks", async () => {
 vi.mock("../../../../../context/ApiManager");
 
 
-describe("AssessmentCard", () => {
+describe("ReviewCard", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.mocked(ApiManagerModule.ApiManager.getApplicationAttachments).mockResolvedValue([]);
@@ -31,7 +31,7 @@ describe("AssessmentCard", () => {
 
   it("renders identifiers and process metadata", () => {
     render(
-      <AssessmentCard
+      <ReviewCard
         process={makeProcess({ name: "Section 40" })}
         application={makeApplication({ internal_id: "s40-new-1/26-05", status: "SUBMITTED" })}
       />,
@@ -45,7 +45,7 @@ describe("AssessmentCard", () => {
   describe("process and questionnaire metadata chips", () => {
     it("displays process name chip", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess({ name: "Animal Ethics" })}
           application={makeApplication()}
         />,
@@ -56,7 +56,7 @@ describe("AssessmentCard", () => {
 
     it("displays questionnaire name and version chip", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({
             questionnaire_name: "Initial Assessment",
@@ -70,7 +70,7 @@ describe("AssessmentCard", () => {
 
     it("displays status chip", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ status: "UNDER_REVIEW" })}
         />,
@@ -81,7 +81,7 @@ describe("AssessmentCard", () => {
 
     it("displays created and updated date chips with relative times", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ status: "SUBMITTED" })}
         />,
@@ -95,7 +95,7 @@ describe("AssessmentCard", () => {
   describe("applicant information display", () => {
     it("displays applicant full name with person icon", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ owner_fullname: "Jane Smith" })}
         />,
@@ -106,7 +106,7 @@ describe("AssessmentCard", () => {
 
     it("displays unknown applicant when full name is missing", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ owner_fullname: "" })}
         />,
@@ -117,7 +117,7 @@ describe("AssessmentCard", () => {
 
     it("displays applicant email address with email icon", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ owner_email: "jane@example.com" })}
         />,
@@ -135,7 +135,7 @@ describe("AssessmentCard", () => {
       });
 
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ owner_email: "jane@example.com" })}
         />,
@@ -163,7 +163,7 @@ describe("AssessmentCard", () => {
       });
 
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ owner_email: "jane@example.com" })}
         />,
@@ -184,7 +184,7 @@ describe("AssessmentCard", () => {
 
     it("has accessible tooltip on email box for click-to-copy hint", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ owner_email: "jane@example.com" })}
         />,
@@ -202,7 +202,7 @@ describe("AssessmentCard", () => {
       const submittedDate = futureDate.toISOString();
 
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ status: "SUBMITTED", submitted_at: submittedDate })}  />,
       );
@@ -212,7 +212,7 @@ describe("AssessmentCard", () => {
 
     it("displays 'pending' when application has not been submitted", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ status: "DRAFT", submitted_at: null })}  />,
       );
@@ -226,7 +226,7 @@ describe("AssessmentCard", () => {
       const createdDate = pastDate.toISOString();
 
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ 
             status: "UNDER_REVIEW",
@@ -244,7 +244,7 @@ describe("AssessmentCard", () => {
   describe("files and download buttons", () => {
     it("displays the files button", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication()}
         />,
@@ -257,7 +257,7 @@ describe("AssessmentCard", () => {
       const application = makeApplication({ internal_id: "test-app-1" });
 
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={application}
         />,
@@ -279,7 +279,7 @@ describe("AssessmentCard", () => {
       const application = makeApplication({ status: "UNDER_REVIEW", key: "app-key-456" });
 
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={application}
         />,
@@ -293,7 +293,7 @@ describe("AssessmentCard", () => {
 
     it("hides download button for non-downloadable statuses", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ status: "DRAFT" })}
         />,
@@ -304,7 +304,7 @@ describe("AssessmentCard", () => {
 
     it("shows PDF button with correct icon for downloadable applications", () => {
       render(
-        <AssessmentCard
+        <ReviewCard
           process={makeProcess()}
           application={makeApplication({ status: "UNDER_REVIEW", key: "app-key-789" })}
         />,

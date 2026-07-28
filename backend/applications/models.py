@@ -48,7 +48,9 @@ def _normalise_answer_value(question: dict[str, Any], value: Any) -> str | None:
     return str(value)
 
 
-def _build_grid_rows(question: dict[str, Any], raw_value: Any) -> list[list[str | None]]:
+def _build_grid_rows(
+    question: dict[str, Any], raw_value: Any
+) -> list[list[str | None]]:
     """Convert raw grid answer data into a list of cell-value rows for the PDF table.
 
     Each row is a list of display strings aligned to the question's column definitions.
@@ -80,13 +82,13 @@ def _build_grid_rows(question: dict[str, Any], raw_value: Any) -> list[list[str 
 
 _EXTENSION_TO_ICON_CLASS = {
     # Must mirror getIconFromFilename in frontend/src/context/Utils.tsx.
-    "pdf":  "vscode-icons--file-type-pdf2",
-    "doc":  "vscode-icons--file-type-word",
+    "pdf": "vscode-icons--file-type-pdf2",
+    "doc": "vscode-icons--file-type-word",
     "docx": "vscode-icons--file-type-word",
-    "xls":  "vscode-icons--file-type-excel",
+    "xls": "vscode-icons--file-type-excel",
     "xlsx": "vscode-icons--file-type-excel",
-    "png":  "flat-color-icons--image-file",
-    "jpg":  "flat-color-icons--image-file",
+    "png": "flat-color-icons--image-file",
+    "jpg": "flat-color-icons--image-file",
     "jpeg": "flat-color-icons--image-file",
 }
 _DEFAULT_ICON_CLASS = "flat-color-icons--file"
@@ -132,7 +134,9 @@ def _build_question_item(
     if question_type == "file":
         # Normalise the answer to a list of attachment keys; treat missing or
         # non-list values (e.g. unanswered questions) as an empty upload set.
-        attachment_keys: list[str] = answer_value if isinstance(answer_value, list) else []
+        attachment_keys: list[str] = (
+            answer_value if isinstance(answer_value, list) else []
+        )
         image_extensions = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "tif", "tiff"}
         image_files: list[dict[str, Any]] = []
         other_files: list[dict[str, Any]] = []
@@ -142,14 +146,16 @@ def _build_question_item(
 
             if attachment is None:
                 # Record a placeholder card so the reviewer knows a file was expected.
-                other_files.append({
-                    "name": f"Missing file ({attachment_key})",
-                    "extension": "",
-                    "is_image": False,
-                    "file_src": "",
-                    "is_missing": True,
-                    "icon_class": _DEFAULT_ICON_CLASS,
-                })
+                other_files.append(
+                    {
+                        "name": f"Missing file ({attachment_key})",
+                        "extension": "",
+                        "is_image": False,
+                        "file_src": "",
+                        "is_missing": True,
+                        "icon_class": _DEFAULT_ICON_CLASS,
+                    }
+                )
                 continue
 
             name = attachment.name
@@ -211,22 +217,26 @@ class ApplicationStatus(models.TextChoices):
 
 
 # Statuses visible in the reviewer queue — applications awaiting or under active review.
-REVIEW_QUEUE_STATUSES = frozenset([
-    ApplicationStatus.SUBMITTED,
-    ApplicationStatus.UNDER_REVIEW,
-    ApplicationStatus.UNDER_ASSESSMENT,
-])
+REVIEW_QUEUE_STATUSES = frozenset(
+    [
+        ApplicationStatus.SUBMITTED,
+        ApplicationStatus.UNDER_REVIEW,
+        ApplicationStatus.UNDER_ASSESSMENT,
+    ]
+)
 
 # Statuses a reviewer is permitted to set; excludes applicant-only transitions (DRAFT, DISCARDED).
-REVIEWER_SETTABLE_STATUSES = frozenset([
-    ApplicationStatus.DRAFT,
-    ApplicationStatus.UNDER_REVIEW,
-    ApplicationStatus.UNDER_ASSESSMENT,
-    ApplicationStatus.APPROVED,
-    ApplicationStatus.APPROVED_WITH_CONDITIONS,
-    ApplicationStatus.DEFERRED,
-    ApplicationStatus.REJECTED,
-])
+REVIEWER_SETTABLE_STATUSES = frozenset(
+    [
+        ApplicationStatus.DRAFT,
+        ApplicationStatus.UNDER_REVIEW,
+        ApplicationStatus.UNDER_ASSESSMENT,
+        ApplicationStatus.APPROVED,
+        ApplicationStatus.APPROVED_WITH_CONDITIONS,
+        ApplicationStatus.DEFERRED,
+        ApplicationStatus.REJECTED,
+    ]
+)
 
 
 class Application(models.Model):
@@ -286,7 +296,9 @@ class Application(models.Model):
     @property
     def internal_id(self) -> str:
         """Generate a unique human-readable identifier combining process slug, questionnaire code and application id."""
-        submitted_at_suffix = self.submitted_at.strftime("/%y-%m") if self.submitted_at else ""
+        submitted_at_suffix = (
+            self.submitted_at.strftime("/%y-%m") if self.submitted_at else ""
+        )
         return f"{self.questionnaire.process.slug}-{self.questionnaire.code}-{self.id}{submitted_at_suffix}"
 
     def has_access(self, user: User) -> bool:
@@ -295,7 +307,7 @@ class Application(models.Model):
         Two principals are permitted:
         - The application owner (always has full access to their own record).
         - A reviewer / technical officer whose groups intersect with the
-          ``assessor_groups`` of the application's process.  This mirrors the
+          ``reviewer_groups`` of the application's process.  This mirrors the
           ``can_review`` annotation logic in ``AuthorisationProcessViewSet``.
 
         Note: read access does NOT imply write access.  Callers that require
@@ -314,14 +326,14 @@ class Application(models.Model):
         # are authorised to review.  We use the M2M through table directly to
         # avoid loading the full AuthorisationProcess object when only the
         # group membership check is needed.
-        from processes.models import AuthorisationProcess  # noqa: PLC0415 — avoid circular import at module level
-
-        is_reviewer = (
-            AuthorisationProcess.assessor_groups.through.objects.filter(
-                authorisationprocess_id=self.questionnaire.process_id,
-                group_id__in=user.groups.values("id"),
-            ).exists()
+        from processes.models import (
+            AuthorisationProcess,  # noqa: PLC0415 — avoid circular import at module level
         )
+
+        is_reviewer = AuthorisationProcess.reviewer_groups.through.objects.filter(
+            authorisationprocess_id=self.questionnaire.process_id,
+            group_id__in=user.groups.values("id"),
+        ).exists()
         return is_reviewer
 
     @staticmethod
@@ -332,7 +344,9 @@ class Application(models.Model):
         Reading at call-time means no server restart is needed when the CSS is
         regenerated, and Prince never has to make an HTTP request to fetch it.
         """
-        from django.contrib.staticfiles.finders import find as find_static  # noqa: PLC0415
+        from django.contrib.staticfiles.finders import (
+            find as find_static,  # noqa: PLC0415
+        )
 
         css_path = find_static("pdf-icons.css")
         if not css_path:

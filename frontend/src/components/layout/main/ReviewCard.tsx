@@ -55,10 +55,10 @@ export const AttachmentsDialogContent = ({
 };
 
 /**
- * Renders an application summary card for technical officers in the assessment queue.
+ * Renders an application summary card for technical officers in the review queue.
  * Displays process metadata, application status, and review/download action buttons.
  */
-export const AssessmentCard = ({
+export const ReviewCard = ({
     process,
     application,
 }: {

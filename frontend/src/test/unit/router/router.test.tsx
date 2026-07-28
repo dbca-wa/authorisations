@@ -7,7 +7,7 @@ const { apiMocks } = vi.hoisted(() => ({
     fetchAuthorisationProcesses: vi.fn(),
     fetchQuestionnaires: vi.fn(),
     fetchApplications: vi.fn(),
-    fetchAssessmentApplications: vi.fn(),
+    fetchReviewQueueApplications: vi.fn(),
     getApplication: vi.fn(),
     getQuestionnaire: vi.fn(),
     getApplicationAttachments: vi.fn(),
@@ -36,11 +36,11 @@ describe("router contracts", () => {
     vi.clearAllMocks();
   });
 
-  it("assessment route condition shows only when at least one process is reviewable", () => {
-    const assessmentRoute = ROUTES.find((route) => route.path === "/assessment");
+  it("review route condition shows only when at least one process is reviewable", () => {
+    const reviewRoute = ROUTES.find((route) => route.path === "/review");
 
-    expect(assessmentRoute?.condition?.([makeProcess({ can_review: false })])).toBe(false);
-    expect(assessmentRoute?.condition?.([makeProcess({ can_review: true })])).toBe(true);
+    expect(reviewRoute?.condition?.([makeProcess({ can_review: false })])).toBe(false);
+    expect(reviewRoute?.condition?.([makeProcess({ can_review: true })])).toBe(true);
   });
 
   it("my-applications loader requests processes and applications only", async () => {
@@ -70,15 +70,15 @@ describe("router contracts", () => {
     await expect(loaded.questionnaires).resolves.toHaveLength(1);
   });
 
-  it("assessment loader requests processes and assessment queue", async () => {
+  it("review loader requests processes and review queue", async () => {
     apiMocks.fetchAuthorisationProcesses.mockResolvedValue([makeProcess({ can_review: true })]);
-    apiMocks.fetchAssessmentApplications.mockResolvedValue([makeApplication()]);
+    apiMocks.fetchReviewQueueApplications.mockResolvedValue([makeApplication()]);
 
-    const route = ROUTES.find((currentRoute) => currentRoute.path === "/assessment");
+    const route = ROUTES.find((currentRoute) => currentRoute.path === "/review");
     const loaded = await route!.loader!({} as never);
 
     expect(apiMocks.fetchAuthorisationProcesses).toHaveBeenCalledTimes(1);
-    expect(apiMocks.fetchAssessmentApplications).toHaveBeenCalledTimes(1);
+    expect(apiMocks.fetchReviewQueueApplications).toHaveBeenCalledTimes(1);
     await expect(loaded.applications).resolves.toHaveLength(1);
   });
 });

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AttachmentsDialogContent } from "../../../../../components/layout/main/AssessmentCard";
+import { AttachmentsDialogContent } from "../../../../../components/layout/main/ReviewCard";
 import * as HooksModule from "../../../../../context/Hooks";
 import type {
   IApplicationAttachment,

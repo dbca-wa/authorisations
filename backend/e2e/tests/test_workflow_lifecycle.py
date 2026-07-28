@@ -1,13 +1,15 @@
 """E2E tests covering the 'critical path' of the application lifecycle.
 
 This module verifies the end-to-end flow described in STATUS-WORKFLOW.md:
-Applicant (Draft -> Submit) -> Reviewer (Review -> Assessment -> Return to Draft -> Re-submit -> Approve)
+Applicant (Draft -> Submit) -> Reviewer (Review/Triage -> Technical Assessment -> Return to Draft -> Re-submit -> Approve)
 """
 
 import json
+
 import pytest
-from playwright.sync_api import expect
 from applications.models import Application, ApplicationStatus
+from playwright.sync_api import expect
+
 
 def _auth_json_headers(auth_context: dict[str, object]) -> dict[str, str]:
     """Build JSON request headers with CSRF from an authenticated E2E context."""
@@ -74,7 +76,7 @@ class TestWorkflowLifecycle:
 
         # Move to Under Review
         res = req.patch(
-            f"/api/assessment/{app_key}",
+            f"/api/review/{app_key}",
             data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}),
             headers=headers
         )
@@ -82,7 +84,7 @@ class TestWorkflowLifecycle:
 
         # Return to Draft
         res = req.patch(
-            f"/api/assessment/{app_key}",
+            f"/api/review/{app_key}",
             data=json.dumps({"status": ApplicationStatus.DRAFT}),
             headers=headers
         )
@@ -119,15 +121,15 @@ class TestWorkflowLifecycle:
         headers = _auth_json_headers(rev_auth)
 
         # SUBMITTED -> UNDER_REVIEW
-        res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}), headers=headers)
+        res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}), headers=headers)
         assert res.status == 200
 
         # UNDER_REVIEW -> UNDER_ASSESSMENT
-        res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_ASSESSMENT}), headers=headers)
+        res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_ASSESSMENT}), headers=headers)
         assert res.status == 200
 
         # UNDER_ASSESSMENT -> APPROVED
-        res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.APPROVED}), headers=headers)
+        res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.APPROVED}), headers=headers)
         assert res.status == 200
         assert Application.objects.get(key=app_key).status == ApplicationStatus.APPROVED
 
@@ -166,14 +168,14 @@ class TestWorkflowLifecycle:
         headers = _auth_json_headers(rev_auth)
         
         res = req.patch(
-            f"/api/assessment/{app_key}",
+            f"/api/review/{app_key}",
             data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}),
             headers=headers
         )
         assert res.status == 200
         
         res = req.patch(
-            f"/api/assessment/{app_key}",
+            f"/api/review/{app_key}",
             data=json.dumps({"status": ApplicationStatus.DRAFT}),
             headers=headers
         )
@@ -198,13 +200,13 @@ class TestWorkflowLifecycle:
         req = rev_auth["context"]
         headers = _auth_json_headers(rev_auth)
         
-        res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}), headers=headers)
+        res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}), headers=headers)
         assert res.status == 200
         
-        res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_ASSESSMENT}), headers=headers)
+        res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_ASSESSMENT}), headers=headers)
         assert res.status == 200
         
-        res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.APPROVED}), headers=headers)
+        res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.APPROVED}), headers=headers)
         assert res.status == 200
         assert Application.objects.get(key=app_key).status == ApplicationStatus.APPROVED
 
@@ -212,7 +214,7 @@ class TestWorkflowLifecycle:
         self, authenticated_request_context_factory, e2e_users, monkeypatch
     ):
         """
-        Verify all assessor decision outcomes are accessible:
+        Verify all reviewer decision outcomes are accessible:
         APPROVED, APPROVED_WITH_CONDITIONS, REJECTED, DEFERRED
         """
         from applications import serialisers
@@ -245,19 +247,19 @@ class TestWorkflowLifecycle:
             )
             assert res.status == 200
             
-            # Reviewer progresses to assessment
+            # Reviewer progresses through review workflow
             rev_auth = authenticated_request_context_factory(reviewer)
             req = rev_auth["context"]
             headers = _auth_json_headers(rev_auth)
             
-            res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}), headers=headers)
+            res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_REVIEW}), headers=headers)
             assert res.status == 200
             
-            res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_ASSESSMENT}), headers=headers)
+            res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": ApplicationStatus.UNDER_ASSESSMENT}), headers=headers)
             assert res.status == 200
             
             # Test the specific outcome
-            res = req.patch(f"/api/assessment/{app_key}", data=json.dumps({"status": outcome}), headers=headers)
+            res = req.patch(f"/api/review/{app_key}", data=json.dumps({"status": outcome}), headers=headers)
             assert res.status == 200, f"Failed to set outcome {outcome}"
             assert Application.objects.get(key=app_key).status == outcome
 
@@ -267,7 +269,7 @@ def test_workflow_ui_smoke(
     authenticated_browser_context_factory,
     e2e_users,
 ):
-    """Smoke test to ensure the assessment UI loads and displays submitted applications."""
+    """Smoke test to ensure the review UI loads and displays submitted applications."""
     reviewer = e2e_users["reviewer"]
     
     # Ensure a submitted app exists
@@ -279,7 +281,7 @@ def test_workflow_ui_smoke(
 
     context = authenticated_browser_context_factory(reviewer)
     page = context.new_page()
-    page.goto("/assessment")
+    page.goto("/review")
     
     # Wait for the view to render
     page.wait_for_selector('button:has-text("Files")')

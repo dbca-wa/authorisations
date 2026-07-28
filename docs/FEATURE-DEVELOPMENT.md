@@ -228,7 +228,7 @@ This is intentional. Overbuilding creates maintenance debt and obscures real log
 | Documentation-only change | | | | | | No |
 
 *Security test required if endpoint touches application data or has owner/reviewer rules.
-**E2E required if workflow is mission-critical (e.g., application submission, assessment handoff).
+**E2E required if workflow is mission-critical (e.g., application submission, review handoff).
 
 ### Test locations and commands
 
@@ -309,7 +309,7 @@ poetry run pytest e2e/tests -v --tracing=retain-on-failure --screenshot=only-on-
 
 ### E2E test guidelines
 
-- Use E2E for mission-critical user journeys (e.g., application submission, assessment workflow).
+- Use E2E for mission-critical user journeys (e.g., application submission, review workflow).
 - Use accessibility-centric selectors (`page.getByRole()`, `page.getByLabel()`).
 - Explicit waits for UI state changes; avoid hard delays.
 - One test = one business outcome; keep focused.
@@ -362,7 +362,7 @@ Update docs when your feature introduces new concepts, changes workflows, or add
 
 ✓ Good:
 ```
-- Added attachments dialog for technical officers to view and download application files from the assessment queue.
+- Added attachments dialog for technical officers to view and download application files from the review queue.
 - Fixed attachment listing permissions so reviewers can see attachments for applications in authorised processes.
 - Renamed application sort option "most recently updated" to "updated newest" for consistency.
 ```

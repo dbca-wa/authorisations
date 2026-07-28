@@ -7,26 +7,25 @@ behaviour tests while reusing core fixtures from backend/conftest.py.
 from itertools import count
 
 import pytest
-from django.contrib.auth.models import Group
-
 from applications.models import Application, ApplicationAttachment, ApplicationStatus
+from django.contrib.auth.models import Group
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 
 
 @pytest.fixture
-def assessor_group(db):
-    """Create the canonical assessor group used in review authorisation tests."""
-    return Group.objects.create(name="assessors")
+def reviewer_group(db):
+    """Create the canonical reviewer group used in review authorisation tests."""
+    return Group.objects.create(name="reviewers")
 
 
 @pytest.fixture
-def assessor_user(db, assessor_group):
-    """Create an authenticated assessor user linked to the assessor group."""
+def reviewer_user(db, reviewer_group):
+    """Create an authenticated reviewer user linked to the reviewer group."""
     from users.models import User
 
-    user = User.objects.create_user(username="assessor", password="testpass123")
-    user.groups.add(assessor_group)
+    user = User.objects.create_user(username="reviewer", password="testpass123")
+    user.groups.add(reviewer_group)
     return user
 
 
