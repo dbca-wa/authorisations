@@ -9,7 +9,7 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { createBrowserRouter } from "react-router";
 import { ErrorPage } from "./components/layout/ErrorPage";
 import { FormLayout } from "./components/layout/form/FormLayout";
-import { ApplicationAssessment } from './components/layout/main/Assessment';
+import { ApplicationReview } from './components/layout/main/Review';
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
@@ -64,11 +64,11 @@ export const ROUTES: IRoute[] = [
 		loader: mainLoader({ questionnaires: true }),
 	},
 	{
-		label: "Assessment",
-		path: "/assessment",
+		label: "Review Queue",
+		path: "/review",
 		icon: <ChecklistRtlIcon />,
 		divider: true,
-		component: ApplicationAssessment,
+		component: ApplicationReview,
 		condition: (processes) => processes.some((process) => process.can_review),
 		loader: async (): Promise<LoaderData> => {
 			const processes = await ApiManager
@@ -76,7 +76,7 @@ export const ROUTES: IRoute[] = [
 				.catch(handleApiError);
 
 			const applications = ApiManager
-				.fetchAssessmentApplications()
+				.fetchReviewQueueApplications()
 				.catch(handleApiError);
 
 			return { processes, applications };

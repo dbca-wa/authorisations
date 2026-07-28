@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
-
 pytestmark = [pytest.mark.api]
 
 
@@ -65,7 +64,7 @@ def test_attachments_list_returns_reviewable_application_attachments_for_reviewe
     user.groups.add(reviewer_group)
 
     reviewable_application = application_factory(owner=other_user)
-    reviewable_application.questionnaire.process.assessor_groups.add(reviewer_group)
+    reviewable_application.questionnaire.process.reviewer_groups.add(reviewer_group)
     attachment = attachment_factory(application=reviewable_application)
 
     api_client.force_authenticate(user=user)

@@ -17,12 +17,12 @@ def test_processes_list_requires_authentication(api_client):
 
 
 @pytest.mark.django_db
-def test_processes_list_marks_can_review_false_for_non_assessor(
+def test_processes_list_marks_can_review_false_for_non_reviewer(
     api_client,
     user,
     process_factory,
 ):
-    """Expose can_review=False for authenticated users with no assessor-group membership."""
+    """Expose can_review=False for authenticated users with no reviewer-group membership."""
     process_factory(slug="proc-a", sort_order=1)
     process_factory(slug="proc-b", sort_order=2)
 
@@ -35,18 +35,18 @@ def test_processes_list_marks_can_review_false_for_non_assessor(
 
 @pytest.mark.django_db
 @pytest.mark.security
-def test_processes_list_marks_can_review_true_for_matching_assessor_group(
+def test_processes_list_marks_can_review_true_for_matching_reviewer_group(
     api_client,
-    assessor_user,
-    assessor_group,
+    reviewer_user,
+    reviewer_group,
     process_factory,
 ):
-    """Mark only linked processes as reviewable for assessor users."""
+    """Mark only linked processes as reviewable for reviewer users."""
     reviewable = process_factory(slug="proc-reviewable", sort_order=1)
     not_reviewable = process_factory(slug="proc-non-reviewable", sort_order=2)
-    reviewable.assessor_groups.add(assessor_group)
+    reviewable.reviewer_groups.add(reviewer_group)
 
-    api_client.force_authenticate(user=assessor_user)
+    api_client.force_authenticate(user=reviewer_user)
     response = api_client.get("/api/processes")
 
     assert response.status_code == status.HTTP_200_OK

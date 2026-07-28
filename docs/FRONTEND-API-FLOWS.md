@@ -22,9 +22,9 @@
    - Process-centric UI: processes grouped with questionnaires as tabs
    - Shows questionnaire version info
    
-3. **`/assessment`** - ApplicationAssessment component
+3. **`/review`** - ApplicationReview component
    - Reviewer-only (conditionally shown via `can_review` flag)
-   - Shows assessment queue for applications in SUBMITTED/UNDER_REVIEW/UNDER_ASSESSMENT
+   - Shows review queue for applications in SUBMITTED/UNDER_REVIEW/UNDER_ASSESSMENT
    - Sorted by status priority, then oldest first (FIFO)
    
 4. **`/a/:key`** - FormLayout component
@@ -38,7 +38,7 @@
 
 #### Backend Django Views (not SPA):
 - `GET /` → Redirect to `/my-applications`
-- `GET /my-applications`, `/new-application`, `/assessment`, `/settings` → Render `vite.html` (SPA entry point)
+- `GET /my-applications`, `/new-application`, `/review`, `/settings` → Render `vite.html` (SPA entry point)
 - `GET /a/<uuid:key>` → resume_application() - checks ownership, renders vite.html
 - `GET /d/<uuid:appKey>` → download_application() - PDF download (checks `has_access`)
 - `GET /d/<uuid:appKey>/<uuid:attachmentKey>` → download_attachment() - file download (checks `has_access`)
@@ -80,11 +80,11 @@
 - PATCH (partial update): Rename attachment
 - DELETE (soft delete): Mark `is_deleted=True`
 
-#### 5. **Assessment** (Reviewers only) - `/assessment`
+#### 5. **Review** (Reviewers only) - `/review`
 - GET (list): Applications in review queue for processes user can review (via group membership)
 - GET (detail by key): Single application from queue
 - PATCH (partial update): Update application status during review
-- Response includes: same as Application + assessment-specific fields
+- Response includes: same as Application + reviewer-specific fields
 
 ### Interaction Points (Data Submission)
 
@@ -122,15 +122,15 @@ User: Complete all steps + review page
   → Click "Submit Application"
   → PATCH /api/applications/{key} {status: "SUBMITTED"}
   → Status updates, form becomes read-only
-  → Application appears in /assessment for reviewers
+  → Application appears in /review for reviewers
 ```
 
-#### 5. **Assessment/Review Flow** (Reviewers)
+#### 5. **Review Flow** (Reviewers)
 ```
-Reviewer: Navigate to /assessment
+Reviewer: Navigate to /review
   → See applications in SUBMITTED/UNDER_REVIEW/UNDER_ASSESSMENT
   → Click to view full application
-  → PATCH /api/applications/{key} {status: "UNDER_REVIEW"} (or next status)
+  → PATCH /api/review/{key} {status: "UNDER_REVIEW"} (or next status)
   → Application moves through review queue
 ```
 
@@ -140,7 +140,7 @@ Reviewer: Navigate to /assessment
 
 **Public/Template Endpoints** (no auth check):
 - `GET /` - redirect
-- `GET /my-applications`, `/new-application`, `/assessment`, `/settings` - generic_template() returns vite.html with config (CSRF token injected)
+- `GET /my-applications`, `/new-application`, `/review`, `/settings` - generic_template() returns vite.html with config (CSRF token injected)
 - Note: These render SPA shell; actual API calls in SPA require authentication
 
 **Authentication Enforcement Points**:
@@ -156,9 +156,9 @@ Reviewer: Navigate to /assessment
 
 ### Permissions Model
 - **Applicants**: Can create applications, edit DRAFT status, view own submitted/completed applications
-- **Reviewers** (group-based): Can view assessment queue for assigned processes, update application status
+- **Reviewers** (group-based): Can view review queue for assigned processes, update application status
 - **Ownership**: Each application tied to `owner` (User who created it)
-- **Group-Based Access**: Process has `assessor_groups` M2M; users in these groups can review that process
+- **Group-Based Access**: Process has `reviewer_groups` M2M; users in these groups can review that process
 
 ---
 

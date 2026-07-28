@@ -1,25 +1,25 @@
 """Comprehensive coverage tests for applications.models module."""
 
 from unittest.mock import MagicMock, Mock, patch
-from django.test import TestCase, RequestFactory
+
 from django.contrib.auth.models import Group
 from django.core.files.base import ContentFile
-
+from django.test import RequestFactory, TestCase
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
 
 from applications.models import (
+    REVIEW_QUEUE_STATUSES,
+    REVIEWER_SETTABLE_STATUSES,
     Application,
-    ApplicationStatus,
     ApplicationAttachment,
-    _normalise_answer_value,
+    ApplicationStatus,
     _boolean_checkbox,
     _build_grid_rows,
     _build_question_item,
     _icon_class_for_extension,
-    REVIEW_QUEUE_STATUSES,
-    REVIEWER_SETTABLE_STATUSES,
+    _normalise_answer_value,
 )
 
 
@@ -393,7 +393,7 @@ class ApplicationModelTests(TestCase):
         self.reviewer_user.groups.add(group)
         
         # Add group to process assessor groups
-        self.process.assessor_groups.add(group)
+        self.process.reviewer_groups.add(group)
         
         app = Application.objects.create(
             owner=self.user,

@@ -1,19 +1,19 @@
 import uuid
 
 from applications.models import (
+    REVIEW_QUEUE_STATUSES,
     Application,
     ApplicationAttachment,
     ApplicationStatus,
-    REVIEW_QUEUE_STATUSES,
 )
-from django.utils import timezone
 from applications.serialisers import (
     ApplicationSerialiser,
     AttachmentSerialiser,
-    AssessmentSerialiser,
+    ReviewerSerialiser,
 )
-from django.db.models import BooleanField, Exists, F, OuterRef, Value, Window, Q
+from django.db.models import BooleanField, Exists, F, OuterRef, Q, Value, Window
 from django.db.models.functions import RowNumber
+from django.utils import timezone
 from processes.models import AuthorisationProcess
 from processes.serialisers import AuthorisationProcessSerialiser
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
@@ -133,7 +133,7 @@ class AttachmentViewSet(viewsets.ModelViewSet):
         """
         # Resolve which process IDs this user may review via the M2M through table.
         reviewable_process_ids = (
-            AuthorisationProcess.assessor_groups.through.objects.filter(
+            AuthorisationProcess.reviewer_groups.through.objects.filter(
                 group_id__in=self.request.user.groups.values("id")
             ).values("authorisationprocess_id")
         )
@@ -141,13 +141,19 @@ class AttachmentViewSet(viewsets.ModelViewSet):
         # Allow attachments that either belong to applications owned by the
         # current user or belong to applications in processes the user may
         # review. Always exclude soft-deleted records.
-        return ApplicationAttachment.objects.select_related(
-            "application", "application__owner", "application__questionnaire__process"
-        ).filter(
-            is_deleted=False,
-        ).filter(
-            Q(application__owner=self.request.user)
-            | Q(application__questionnaire__process_id__in=reviewable_process_ids)
+        return (
+            ApplicationAttachment.objects.select_related(
+                "application",
+                "application__owner",
+                "application__questionnaire__process",
+            )
+            .filter(
+                is_deleted=False,
+            )
+            .filter(
+                Q(application__owner=self.request.user)
+                | Q(application__questionnaire__process_id__in=reviewable_process_ids)
+            )
         )
 
     def perform_destroy(self, instance: ApplicationAttachment):
@@ -224,7 +230,7 @@ class AuthorisationProcessViewSet(viewsets.ReadOnlyModelViewSet):
         # any linked reviewer group matches one of the current user's groups,
         # the process is reviewable for that user.
         reviewer_group_links = (
-            AuthorisationProcess.assessor_groups.through.objects.filter(
+            AuthorisationProcess.reviewer_groups.through.objects.filter(
                 authorisationprocess_id=OuterRef("pk"),
                 group_id__in=self.request.user.groups.values("id"),
             )
@@ -234,20 +240,20 @@ class AuthorisationProcessViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset.annotate(can_review=Exists(reviewer_group_links))
 
 
-class AssessmentViewSet(
+class ReviewerViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
     """
-    ViewSet for assessors to manage submitted applications.
+    ViewSet for reviewers to manage submitted applications.
 
     Provides:
-      - LIST     — the assessment queue: applications in a review-relevant status
-                   that belong to processes the current user is authorised to assess.
+      - LIST     — the review queue: applications in a review-relevant status
+                   that belong to processes the current user is authorised to review.
       - RETRIEVE — a single application from that same scoped queue.
       - PATCH    — advance the application status (e.g. SUBMITTED → UNDER_REVIEW,
-                   UNDER_REVIEW → DRAFT, UNDER_ASSESSMENT → APPROVED).
+                   UNDER_REVIEW → DRAFT, UNDER_REVIEW → UNDER_ASSESSMENT).
 
     Access is implicitly scoped by the user's reviewer group memberships; an
     authenticated user with no reviewer group assignments will receive an empty
@@ -257,7 +263,7 @@ class AssessmentViewSet(
     """
 
     queryset = Application.objects.all()
-    serializer_class = AssessmentSerialiser
+    serializer_class = ReviewerSerialiser
     lookup_field = "key"
     http_method_names = ["get", "patch", "options", "head"]
 
@@ -268,13 +274,13 @@ class AssessmentViewSet(
 
         Reviewer authorisation is determined by group membership: a user can
         review a process if any of their groups is listed in that process's
-        ``assessor_groups``. This mirrors the ``can_review`` annotation logic
+        ``reviewer_groups``. This mirrors the ``can_review`` annotation logic
         in ``AuthorisationProcessViewSet`` but expressed as a queryset filter.
         """
         # Resolve which process IDs this user may review via the M2M join table.
         # Using the through model avoids a JOIN through AuthorisationProcess itself.
         reviewable_process_ids = (
-            AuthorisationProcess.assessor_groups.through.objects.filter(
+            AuthorisationProcess.reviewer_groups.through.objects.filter(
                 group_id__in=self.request.user.groups.values("id")
             ).values("authorisationprocess_id")
         )

@@ -262,14 +262,13 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             return value
 
         # Owner can withdraw from any pre-decision state
-        if value == ApplicationStatus.WITHDRAWN:
-            if self.instance.status in [
-                ApplicationStatus.DRAFT,
-                ApplicationStatus.SUBMITTED,
-                ApplicationStatus.UNDER_REVIEW,
-                ApplicationStatus.UNDER_ASSESSMENT,
-            ]:
-                return value
+        if value == ApplicationStatus.WITHDRAWN and self.instance.status in [
+            ApplicationStatus.DRAFT,
+            ApplicationStatus.SUBMITTED,
+            ApplicationStatus.UNDER_REVIEW,
+            ApplicationStatus.UNDER_ASSESSMENT,
+        ]:
+            return value
 
         raise exceptions.ValidationError(
             f"Invalid status transition from {self.instance.status} to {value}"
@@ -571,7 +570,9 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         """
         name = value.strip() if value else ""
         if not name:
-            raise serializers.ValidationError("Name cannot be empty or contain only whitespace.")
+            raise serializers.ValidationError(
+                "Name cannot be empty or contain only whitespace."
+            )
         return name
 
     def validate_question(self, value):
@@ -719,15 +720,15 @@ class AttachmentSerialiser(serializers.ModelSerializer):
         return instance
 
 
-class AssessmentSerialiser(serializers.ModelSerializer):
+class ReviewerSerialiser(serializers.ModelSerializer):
     """
-    Serialiser for the assessment-facing application view.
+    Serialiser for the reviewer-facing application view.
 
-    All fields are read-only except ``status``, which an assessor may advance
+    All fields are read-only except ``status``, which a reviewer may advance
     via PATCH. Transition validation enforces that:
       - the current status is a review-queue status (i.e. the application is
-        actually awaiting assessor action), and
-      - the requested status is one an assessor is permitted to set.
+        actually awaiting reviewer action), and
+      - the requested status is one a reviewer is permitted to set.
     """
 
     owner_email = serializers.CharField(
@@ -811,23 +812,23 @@ class AssessmentSerialiser(serializers.ModelSerializer):
 
     def validate_status(self, value: str) -> str:
         """
-        Validate reviewer/assessor-initiated status transitions per STATUS-WORKFLOW.md.
+        Validate reviewer-initiated status transitions per STATUS-WORKFLOW.md.
 
-        Enforces strict state machine transitions for staff (reviewers/assessors):
+        Enforces strict state machine transitions for reviewers:
 
         SUBMITTED state:
         - → UNDER_REVIEW: Reviewer claims the application for administrative review
 
         UNDER_REVIEW state:
         - → DRAFT: Return to applicant for additional information
-        - → UNDER_ASSESSMENT: Escalate to assessor for technical assessment
+        - → UNDER_ASSESSMENT: Escalate to next stage for technical assessment
 
         UNDER_ASSESSMENT state:
         - → DRAFT: Return to applicant for re-submission
         - → APPROVED: Final decision: approved
         - → APPROVED_WITH_CONDITIONS: Final decision: approved with conditions
         - → REJECTED: Final decision: rejected
-        - → DEFERRED: Final decision: deferred for later assessment
+        - → DEFERRED: Final decision: deferred for later review
 
         This validation ensures:
         1. Applications only progress through designated review queue states
@@ -850,7 +851,7 @@ class AssessmentSerialiser(serializers.ModelSerializer):
         # Guard: the application must actually be in the review queue.
         if current not in REVIEW_QUEUE_STATUSES:
             raise exceptions.ValidationError(
-                f"Application with status '{current}' is not in the assessment queue."
+                f"Application with status '{current}' is not in the review queue."
             )
 
         # Define permitted transitions per current status (using STATUS-WORKFLOW.md)

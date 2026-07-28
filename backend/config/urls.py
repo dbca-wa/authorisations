@@ -7,6 +7,7 @@ from applications.views import (
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
+
 # from home import home_page
 
 urlpatterns = [
@@ -16,7 +17,7 @@ urlpatterns = [
     path("", RedirectView.as_view(url="/my-applications", permanent=False)),
     path("my-applications", generic_template, name="my-applications"),
     path("new-application", generic_template, name="new-application"),
-    path("assessment", generic_template, name="assessment"),
+    path("review", generic_template, name="review"),
     path("settings", generic_template, name="settings"),
     path("privacy", generic_template, name="privacy"),
     path("a/<uuid:key>", resume_application, name="resume-application"),

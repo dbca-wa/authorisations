@@ -87,12 +87,12 @@ describe("ApiManager", () => {
     expect(config.onUploadProgress).toBe(callback);
   });
 
-  it("fetchAssessmentApplications targets assessment endpoint", async () => {
+  it("fetchReviewQueueApplications targets review endpoint", async () => {
     (axios.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
 
-    await ApiManager.fetchAssessmentApplications();
+    await ApiManager.fetchReviewQueueApplications();
 
-    expect((axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe("/assessment");
+    expect((axios.get as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe("/review");
   });
 
   it("fetchApplications calls correct endpoint", async () => {

@@ -17,7 +17,7 @@ def test_get_attachments_for_application_returns_empty_for_reviewer(
     # Application owned by other_user in a reviewable process (seed or factory should set process)
     application = application_factory(owner=other_user)
     # Ensure process has the reviewer group
-    application.questionnaire.process.assessor_groups.add(reviewer_group)
+    application.questionnaire.process.reviewer_groups.add(reviewer_group)
 
     api_client.force_authenticate(user=user)
 
@@ -38,7 +38,7 @@ def test_get_attachments_for_application_returns_attachments_for_reviewer(
     user.groups.add(reviewer_group)
 
     reviewable_application = application_factory(owner=other_user)
-    reviewable_application.questionnaire.process.assessor_groups.add(reviewer_group)
+    reviewable_application.questionnaire.process.reviewer_groups.add(reviewer_group)
 
     attachment = attachment_factory(application=reviewable_application, name="evidence-1.txt")
     api_client.force_authenticate(user=user)

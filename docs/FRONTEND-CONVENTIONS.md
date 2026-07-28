@@ -57,7 +57,7 @@ Development patterns and best practices for the frontend codebase.
 ## Application sorting patterns
 
 ### Reusable sorting utilities
-- Application list pages (`MyApplications`, `Assessment`) use a reusable sorting system through `src/components/layout/main/applicationUtils.tsx`
+- Application list pages (`MyApplications`, `Review`) use a reusable sorting system through `src/components/layout/main/applicationUtils.tsx`
 - Sort options (type: `SortOrderOption`): `"application_type"` (Application Type), `"submitted_newest"` (Submitted: Newest), `"submitted_oldest"` (Submitted: Oldest), `"created_newest"` (Created: Newest), `"created_oldest"` (Created: Oldest), `"updated_newest"` (Updated: Newest), `"updated_oldest"` (Updated: Oldest)
 - Hierarchical sorting: `"application_type"` sorts by `process_sort_order` (primary) then `questionnaire_sort_order` (secondary)
 - Date-based sorting:

@@ -101,7 +101,7 @@ Current implementation includes:
 - in-memory SQLite with migration + fixture loading for deterministic E2E runs,
 - authenticated Playwright request-context helpers with CSRF propagation,
 - role-based fixture users and process/questionnaire/application seed data,
-- request-driven E2E matrix covering routing, ownership, reviewer scope, assessment transitions, and draft lifecycle,
+- request-driven E2E matrix covering routing, ownership, reviewer scope, review transitions, and draft lifecycle,
 - resilient CI behaviour independent of PostgreSQL and frontend manifest coupling.
 
 Implemented E2E files:
@@ -283,7 +283,7 @@ Finding where security tests belong:
 |---|---|---|
 | API endpoint authorization | `api/tests/test_api_endpoint_security.py` | `test_application_put_returns_404_for_non_owner` |
 | Form/view access control | `applications/test_views_security.py` | `test_resume_application_returns_404_for_non_owner` |
-| Assessor/reviewer access | Tests within API endpoint files | `test_assessment_list_includes_only_processes_user_can_review` |
+| Assessor/reviewer access | Tests within API endpoint files | `test_reviewer_list_includes_only_processes_user_can_review` |
 | E2E access workflows | `e2e/tests/test_security/` (planned) | Cross-layer permission verification |
 
 ## Local Commands
@@ -331,7 +331,7 @@ When adding new features, follow these guidelines for test placement:
 **Non-API Django view (form, download, etc.)?**
 - Add security tests to `backend/applications/test_views_security.py` (or create similar for other apps)
 - Template: `test_{view_name}_returns_404_for_{access_type}`
-- Example: `test_assessment_download_returns_404_for_non_reviewer`
+- Example: `test_download_returns_404_for_non_reviewer`
 
 **Model method or data logic?**
 - Add unit tests to `backend/{app}/tests/test_models.py`
