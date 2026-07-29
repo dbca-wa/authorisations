@@ -2,6 +2,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RestoreIcon from '@mui/icons-material/Restore';
+import Alert from '@mui/material/Alert';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -65,8 +66,8 @@ export const ApplicationCard = ({
 }) => {
     const [displayedApplication, setDisplayedApplication] = React.useState<IApplicationData>(application);
     const { showSnackbar } = useSnackbar();
-    const processName = process?.name ?? `Unknown process (${displayedApplication.process_slug})`;
-    const questionnaireName = `${displayedApplication.questionnaire_name} (v${displayedApplication.questionnaire_version})`;
+    const processName = process?.name ?? `Unknown process (${application.process_slug})`;
+    const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
     const statusCapitalised = formatStatusLabel(displayedApplication.status);
     const { createdAtRelative, updatedAtRelative } = formatRelativeDates(displayedApplication);
 
@@ -81,8 +82,8 @@ export const ApplicationCard = ({
      */
     const handleDiscardClick = async () => {
         try {
-            await ApiManager.discardApplication(displayedApplication.key);
-            setDisplayedApplication({ ...displayedApplication, status: "DISCARDED" });
+            const updatedApp = await ApiManager.discardApplication(displayedApplication.key);
+            setDisplayedApplication(updatedApp);
             showSnackbar("Application discarded.", "info");
         } catch (error: unknown) {
             showSnackbar(
@@ -99,8 +100,8 @@ export const ApplicationCard = ({
      */
     const handleRevertClick = async () => {
         try {
-            await ApiManager.revertDiscardedApplication(displayedApplication.key);
-            setDisplayedApplication({ ...displayedApplication, status: "DRAFT" });
+            const updatedApp = await ApiManager.revertDiscardedApplication(displayedApplication.key);
+            setDisplayedApplication(updatedApp);
             showSnackbar("Application reverted to draft.", "info");
         } catch (error: unknown) {
             showSnackbar(
@@ -128,34 +129,35 @@ export const ApplicationCard = ({
                     <Chip label={`Updated ${updatedAtRelative}`} size="small" variant="outlined" />
                 </Box>
 
-                <Box className="my-8 w-9/10 mx-auto">
-                    <Stepper
-                        activeStep={statusToActiveStep[application.status]}
-                        alternativeLabel
-                        sx={(theme) => ({
-                            '& .MuiStepIcon-root': {
-                                color: theme.palette.grey[400],
-                            },
-                            '& .MuiStepIcon-root.Mui-active': {
-                                // Terminated applications (discarded/withdrawn) use a muted grey
-                                // to signal "stopped here" without implying an error occurred.
-                                color: isTerminated
-                                    ? theme.palette.grey[700]
-                                    : theme.palette.success.main,
-                            },
-                            '& .MuiStepIcon-root.Mui-completed': {
-                                color: isTerminated
-                                    ? theme.palette.grey[600]
-                                    : theme.palette.success.light,
-                            },
-                        })}
-                    >
-                        {applicationSteps.map((label) => (
-                            <Step key={label}>
-                                <StepLabel>{label}</StepLabel>
-                            </Step>
-                        ))}
-                    </Stepper>
+                <Box className="my-8 w-9/10 mx-auto flex items-center min-h-20">
+                    {isTerminated ? (
+                        <Alert severity="info" className="w-full">
+                            <strong>{isDiscarded ? 'Application Discarded' : 'Application Withdrawn'}</strong>
+                        </Alert>
+                    ) : (
+                        <Stepper
+                            activeStep={statusToActiveStep[displayedApplication.status]}
+                            alternativeLabel
+                            sx={(theme) => ({
+                                width: '100%',
+                                '& .MuiStepIcon-root': {
+                                    color: theme.palette.grey[400],
+                                },
+                                '& .MuiStepIcon-root.Mui-active': {
+                                    color: theme.palette.success.main,
+                                },
+                                '& .MuiStepIcon-root.Mui-completed': {
+                                    color: theme.palette.success.light,
+                                },
+                            })}
+                        >
+                            {applicationSteps.map((label) => (
+                                <Step key={label}>
+                                    <StepLabel>{label}</StepLabel>
+                                </Step>
+                            ))}
+                        </Stepper>
+                    )}
                 </Box>
                 <Box className="flex gap-1 mt-2">
                     {/* Discard button on left—only for editable (DRAFT) applications. */}
