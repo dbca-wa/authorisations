@@ -232,6 +232,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         Enforces the workflow state machine for applicants:
         - DRAFT → SUBMITTED: Submit application for review (with Turnstile verification)
         - DRAFT → DISCARDED: Applicant abandons the draft application
+        - DISCARDED → DRAFT: Applicant reverts the discard decision
         - Any pre-decision state → WITHDRAWN: Applicant withdraws the application
 
         The pre-decision states (allowing withdrawal) are: DRAFT, SUBMITTED,
@@ -261,9 +262,15 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         ):
             return value
 
+        # Discarded -> Draft (applicant reverts the discard decision)
+        if (
+            self.instance.status == ApplicationStatus.DISCARDED
+            and value == ApplicationStatus.DRAFT
+        ):
+            return value
+
         # Owner can withdraw from any pre-decision state
         if value == ApplicationStatus.WITHDRAWN and self.instance.status in [
-            ApplicationStatus.DRAFT,
             ApplicationStatus.SUBMITTED,
             ApplicationStatus.UNDER_REVIEW,
             ApplicationStatus.UNDER_ASSESSMENT,

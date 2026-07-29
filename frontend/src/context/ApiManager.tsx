@@ -98,6 +98,28 @@ export class ApiManager {
         return response.data;
     }
 
+    public static async discardApplication(key: string): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationData>(
+            `/applications/${key}`,
+            { status: "DISCARDED" },
+            requestConfig,
+        );
+
+        return response.data;
+    }
+
+    public static async revertDiscardedApplication(key: string): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationData>(
+            `/applications/${key}`,
+            { status: "DRAFT" },
+            requestConfig,
+        );
+
+        return response.data;
+    }
+
     public static async getApplicationAttachments(appKey: string): Promise<IApplicationAttachment[]> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.get<IApplicationAttachment[]>(

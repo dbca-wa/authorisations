@@ -278,8 +278,8 @@ class Application(models.Model):
     # - user, status, created_at DESC
     # - questionnaire, status, created_at DESC
     class Meta:
-        ordering = ["-created_at"]
-        indexes = [
+        ordering = ("-created_at",)
+        indexes = (
             models.Index(
                 fields=["owner", "status", "-created_at"],
                 name="apps_owner_status_idx",
@@ -288,7 +288,7 @@ class Application(models.Model):
                 fields=["questionnaire", "status", "-created_at"],
                 name="apps_questionnaire_status_idx",
             ),
-        ]
+        )
 
     def __str__(self):
         return f"Application #{self.id} by {self.owner.username} for {self.questionnaire.name}"
@@ -503,12 +503,12 @@ class ApplicationAttachment(models.Model):
     deleted_at = models.DateTimeField(blank=True, null=True, editable=False)
 
     class Meta:
-        indexes = [
+        indexes = (
             models.Index(
                 fields=["application", "is_deleted"],
                 name="attachments_app_deleted_idx",
             ),
-        ]
+        )
 
     def __str__(self):
         return f"Attachment {self.key} for Application {self.application.id}"
