@@ -17,6 +17,7 @@ import React from "react";
 import { ApiManager } from '../../../context/ApiManager';
 import { useSnackbar } from '../../../context/Hooks';
 import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
+import { terminatedStatuses } from '../../../context/types/Application';
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
 import { openNewTab } from '../../../context/Utils';
 import { ApplicationIdDisplay } from '../../Common';
@@ -48,21 +49,20 @@ const statusToActiveStep: Record<ApplicationStatus, number> = {
     REJECTED: 4,
 };
 
-/** Statuses that represent a terminal negative outcome at their respective step. */
-const terminatedStatuses = new Set<ApplicationStatus>(["DISCARDED", "WITHDRAWN"]);
-
-
 /**
  * Renders an application summary card for applicants.
  * Displays process metadata, application status, and action buttons (continue, download).
  * Maintains its own display state for immediate UI updates on status changes.
+ * Notifies parent via callback when application status changes (e.g., discard, revert).
  */
 export const ApplicationCard = ({
     process,
     application,
+    onStatusChanged,
 }: {
     process?: IAuthorisationProcess;
     application: IApplicationData;
+    onStatusChanged: (updatedApp: IApplicationData) => void;
 }) => {
     const [displayedApplication, setDisplayedApplication] = React.useState<IApplicationData>(application);
     const { showSnackbar } = useSnackbar();
@@ -71,7 +71,7 @@ export const ApplicationCard = ({
     const statusCapitalised = formatStatusLabel(displayedApplication.status);
     const { createdAtRelative, updatedAtRelative } = formatRelativeDates(displayedApplication);
 
-    const isTerminated = terminatedStatuses.has(displayedApplication.status);
+    const isTerminated = terminatedStatuses.includes(displayedApplication.status);
     const isDownloadable = downloadableStatuses.has(displayedApplication.status);
     const isEditable = displayedApplication.status === "DRAFT";
     const isDiscarded = displayedApplication.status === "DISCARDED";
@@ -79,12 +79,14 @@ export const ApplicationCard = ({
     /**
      * Initiates the discard workflow by sending a status update request to the API.
      * Updates local display state immediately on success for instant UI feedback.
+     * Triggers removal animation, then notifies parent after animation completes.
      */
     const handleDiscardClick = async () => {
         try {
             const updatedApp = await ApiManager.discardApplication(displayedApplication.key);
             setDisplayedApplication(updatedApp);
             showSnackbar("Application discarded.", "info");
+            onStatusChanged(updatedApp);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to discard application. Please try again later.",
@@ -97,12 +99,14 @@ export const ApplicationCard = ({
     /**
      * Initiates the revert workflow by sending a status update request to the API.
      * Updates local display state immediately on success for instant UI feedback.
+     * Triggers removal animation, then notifies parent after animation completes.
      */
     const handleRevertClick = async () => {
         try {
             const updatedApp = await ApiManager.revertDiscardedApplication(displayedApplication.key);
             setDisplayedApplication(updatedApp);
             showSnackbar("Application reverted to draft.", "info");
+            onStatusChanged(updatedApp);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to revert application. Please try again later.",

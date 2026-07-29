@@ -29,7 +29,8 @@ describe("Application Workflow Frontend Logic", () => {
         const { rerender } = render(
             <ApplicationCard 
                 process={makeProcess()} 
-                application={makeApplication({ status: "DRAFT" })} 
+                application={makeApplication({ status: "DRAFT" })}
+                onStatusChanged={vi.fn()}
             />
         );
         expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
@@ -40,7 +41,8 @@ describe("Application Workflow Frontend Logic", () => {
             rerender(
                 <ApplicationCard 
                     process={makeProcess()} 
-                    application={makeApplication({ status })} 
+                    application={makeApplication({ status })}
+                    onStatusChanged={vi.fn()}
                 />
             );
             expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
@@ -56,7 +58,8 @@ describe("Application Workflow Frontend Logic", () => {
         const { rerender } = render(
             <ApplicationCard 
                 process={makeProcess()} 
-                application={makeApplication({ status: "SUBMITTED" })} 
+                application={makeApplication({ status: "SUBMITTED" })}
+                onStatusChanged={vi.fn()}
             />
         );
         expect(screen.getByRole("link", { name: "Download application PDF" })).toBeInTheDocument();
@@ -65,7 +68,8 @@ describe("Application Workflow Frontend Logic", () => {
         rerender(
             <ApplicationCard 
                 process={makeProcess()} 
-                application={makeApplication({ status: "DRAFT" })} 
+                application={makeApplication({ status: "DRAFT" })}
+                onStatusChanged={vi.fn()}
             />
         );
         expect(screen.queryByRole("link", { name: "Download application PDF" })).not.toBeInTheDocument();
@@ -95,7 +99,8 @@ describe("Application Workflow Frontend Logic", () => {
             const { container } = render(
                 <ApplicationCard 
                     process={makeProcess()} 
-                    application={makeApplication({ status })} 
+                    application={makeApplication({ status })}
+                    onStatusChanged={vi.fn()}
                 />
             );
             

@@ -106,6 +106,21 @@ class TestApplicantTransitions:
         workflow_app.refresh_from_db()
         assert workflow_app.status == ApplicationStatus.DISCARDED
 
+    def test_revert_discarded_application(self, api_client, user, workflow_app):
+        """Allow owner to revert a discarded application back to draft."""
+        api_client.force_authenticate(user=user)
+        workflow_app.status = ApplicationStatus.DISCARDED
+        workflow_app.save()
+
+        response = api_client.patch(
+            f"/api/applications/{workflow_app.key}",
+            {"status": ApplicationStatus.DRAFT},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+        workflow_app.refresh_from_db()
+        assert workflow_app.status == ApplicationStatus.DRAFT
+
     def test_withdraw_during_review(self, api_client, user, reviewable_app):
         """Allow owner to withdraw application while under review."""
         api_client.force_authenticate(user=user)
@@ -306,6 +321,29 @@ class TestReviewerTransitions:
             format="json",
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_reviewer_cannot_revert_discarded_application(
+        self, api_client, reviewer_user, reviewable_app
+    ):
+        """Reject reviewer attempts to revert discarded applications (applicant-only).
+        
+        Reviewers don't have access to discarded applications, so the endpoint
+        returns 404 Not Found. This is the correct permission model.
+        """
+        api_client.force_authenticate(user=reviewer_user)
+        reviewable_app.status = ApplicationStatus.DISCARDED
+        reviewable_app.save()
+
+        response = api_client.patch(
+            f"/api/review/{reviewable_app.key}",
+            {"status": ApplicationStatus.DRAFT},
+            format="json",
+        )
+        # 404 is expected because reviewers cannot see discarded applications
+        assert response.status_code in [
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_404_NOT_FOUND,
+        ]
 
     def test_cannot_skip_review_queue_progression(
         self, api_client, reviewer_user, reviewable_app
