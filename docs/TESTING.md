@@ -28,17 +28,36 @@ Core principles:
 
 ## What Was Implemented In This Session
 
-### Backend Security Test Reorganization
+### Backend Test Organization
 
-Reorganized security tests for clarity with improved file naming:
-- Renamed `test_security_nondisclosure_api.py` → `test_api_endpoint_security.py`
-  - Tests API endpoint security: non-disclosure semantics, 404 responses for foreign records
-  - Location: `backend/api/tests/test_api_endpoint_security.py`
-  
-Other security test locations:
-- **API endpoint security**: `backend/api/tests/test_api_endpoint_security.py` (authorization, non-disclosure)
-- **Non-API view security**: `backend/applications/test_views_security.py` (resume/download view access control)
-- **Future**: `backend/e2e/tests/test_security/` for end-to-end security workflows
+**All tests organized under module-level `tests/` directories** with explicit naming conventions.
+
+Structure:
+- All tests: `backend/{app}/tests/test_*.py`
+- Security tests marked with: `@pytest.mark.security`
+
+File naming:
+- `test_models.py` — Model and unit tests
+- `test_serialisers.py` — Serialiser/API validation
+- `test_views_security.py` — Non-API view access control (resume, download)
+- `test_api_endpoint_security.py` — API endpoint authorization and non-disclosure
+- `test_forms.py` — Form field and form validation
+- `test_management_commands.py` — Management command behavior
+
+Unified discovery:
+```bash
+pytest -m security              # Run all security tests
+pytest -m "security and api"    # Run API security tests only
+pytest applications/tests       # Run all application tests
+pytest applications/tests/test_views_security.py  # Specific security test
+```
+
+**Why this structure?**
+- Consistent organization across all modules
+- Clear file purpose from naming
+- Tests organized by responsibility (`test_models.py`, `test_views_security.py`)
+- Pytest markers enable logical grouping without special directories
+- Single location per module for all test files
 
 ### Removed Test Duplication
 
