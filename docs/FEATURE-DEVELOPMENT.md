@@ -266,7 +266,10 @@ poetry run pytest
 poetry run pytest applications -q
 
 # Specific test file
-poetry run pytest api/tests/test_views.py -v
+poetry run pytest applications/tests/test_models.py -v
+
+# Security tests only
+poetry run pytest -m security -v
 
 # E2E tests only
 poetry run pytest e2e/tests -v
