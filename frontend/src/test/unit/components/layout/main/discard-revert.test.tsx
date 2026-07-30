@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApplicationCard } from "../../../../../components/layout/main/ApplicationCard";
 import { ApiManager } from "../../../../../context/ApiManager";
+import type { ApplicationStatus } from "../../../../../context/types/Application";
 import { makeApplication, makeProcess } from "../../../fixtures";
 
 const { showSnackbarMock } = vi.hoisted(() => ({
@@ -53,13 +54,13 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
     });
 
     it("does not render discard button for non-draft applications", () => {
-      const nonDraftStatuses = ["SUBMITTED", "UNDER_REVIEW", "UNDER_ASSESSMENT", "APPROVED"];
+      const nonDraftStatuses: ApplicationStatus[] = ["SUBMITTED", "UNDER_REVIEW", "UNDER_ASSESSMENT", "APPROVED"];
 
       nonDraftStatuses.forEach((status) => {
         const { unmount } = render(
           <ApplicationCard
             process={makeProcess()}
-            application={makeApplication({ status: status as any })}
+            application={makeApplication({ status })}
             onStatusChanged={vi.fn()}
           />,
         );
@@ -193,13 +194,13 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
     });
 
     it("does not render revert button for non-discarded applications", () => {
-      const nonDiscardedStatuses = ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED"];
+      const nonDiscardedStatuses: ApplicationStatus[] = ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED"];
 
       nonDiscardedStatuses.forEach((status) => {
         const { unmount } = render(
           <ApplicationCard
             process={makeProcess()}
-            application={makeApplication({ status: status as any })}
+            application={makeApplication({ status })}
             onStatusChanged={vi.fn()}
           />,
         );
