@@ -20,7 +20,7 @@ import { ApiManager } from '../../../context/ApiManager';
 import type { DialogOptions } from '../../../context/DialogContext';
 import { useDialog, useResolvedPromise, useSnackbar } from '../../../context/Hooks';
 import { TurnstileManager } from '../../../context/TurnstileManager';
-import { finalisedStatuses, type IApplicationData } from "../../../context/types/Application";
+import { activeStatuses, type IApplicationData } from "../../../context/types/Application";
 import type { LoaderData } from '../../../context/types/Generic';
 import type { IAuthorisationProcess, IQuestionnaireData } from "../../../context/types/Questionnaire";
 import { openNewTab } from '../../../context/Utils';
@@ -271,7 +271,7 @@ const startApplication = async ({
     }
 
     const inProgressApplication = existingApplications.find((app: IApplicationData) =>
-        app.process_slug === questionnaire.process_slug && !finalisedStatuses.includes(app.status)
+        app.process_slug === questionnaire.process_slug && activeStatuses.includes(app.status)
     );
 
     if (import.meta.env.DEV) {

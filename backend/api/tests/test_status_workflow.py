@@ -106,6 +106,21 @@ class TestApplicantTransitions:
         workflow_app.refresh_from_db()
         assert workflow_app.status == ApplicationStatus.DISCARDED
 
+    def test_revert_discarded_application(self, api_client, user, workflow_app):
+        """Allow owner to revert a discarded application back to draft."""
+        api_client.force_authenticate(user=user)
+        workflow_app.status = ApplicationStatus.DISCARDED
+        workflow_app.save()
+
+        response = api_client.patch(
+            f"/api/applications/{workflow_app.key}",
+            {"status": ApplicationStatus.DRAFT},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+        workflow_app.refresh_from_db()
+        assert workflow_app.status == ApplicationStatus.DRAFT
+
     def test_withdraw_during_review(self, api_client, user, reviewable_app):
         """Allow owner to withdraw application while under review."""
         api_client.force_authenticate(user=user)
@@ -307,6 +322,29 @@ class TestReviewerTransitions:
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_reviewer_cannot_revert_discarded_application(
+        self, api_client, reviewer_user, reviewable_app
+    ):
+        """Reject reviewer attempts to revert discarded applications (applicant-only).
+        
+        Reviewers don't have access to discarded applications, so the endpoint
+        returns 404 Not Found. This is the correct permission model.
+        """
+        api_client.force_authenticate(user=reviewer_user)
+        reviewable_app.status = ApplicationStatus.DISCARDED
+        reviewable_app.save()
+
+        response = api_client.patch(
+            f"/api/review/{reviewable_app.key}",
+            {"status": ApplicationStatus.DRAFT},
+            format="json",
+        )
+        # 404 is expected because reviewers cannot see discarded applications
+        assert response.status_code in [
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_404_NOT_FOUND,
+        ]
+
     def test_cannot_skip_review_queue_progression(
         self, api_client, reviewer_user, reviewable_app
     ):
@@ -431,4 +469,156 @@ class TestWorkflowBusinessRules:
         assert response.status_code in [
             status.HTTP_403_FORBIDDEN,
             status.HTTP_404_NOT_FOUND,
+        ]
+
+
+class TestDiscardRevertSecurity:
+    """Security tests for discard and revert workflows.
+    
+    Ensures that only the application owner can discard/revert,
+    and that proper access control is enforced.
+    """
+
+    pytestmark = [pytest.mark.api, pytest.mark.django_db]
+
+    @pytest.fixture
+    def draft_app_for_discard(
+        self, user, questionnaire_factory, application_factory
+    ):
+        """Return a draft application owned by test user."""
+        return application_factory(
+            owner=user,
+            questionnaire=questionnaire_factory(),
+            status=ApplicationStatus.DRAFT,
+        )
+
+    @pytest.fixture
+    def discarded_app_for_revert(
+        self, user, questionnaire_factory, application_factory
+    ):
+        """Return a discarded application owned by test user."""
+        return application_factory(
+            owner=user,
+            questionnaire=questionnaire_factory(),
+            status=ApplicationStatus.DISCARDED,
+        )
+
+    def test_user_cannot_discard_another_users_application(
+        self, api_client, user, other_user, draft_app_for_discard
+    ):
+        """Reject discard attempts on applications owned by other users."""
+        # other_user is not the owner
+        api_client.force_authenticate(user=other_user)
+
+        response = api_client.patch(
+            f"/api/applications/{draft_app_for_discard.key}",
+            {"status": ApplicationStatus.DISCARDED},
+            format="json",
+        )
+        # Should be 403 Forbidden or 404 Not Found
+        assert response.status_code in [
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_404_NOT_FOUND,
+        ]
+
+    def test_user_cannot_revert_another_users_application(
+        self, api_client, user, other_user, discarded_app_for_revert
+    ):
+        """Reject revert attempts on applications owned by other users."""
+        # other_user is not the owner
+        api_client.force_authenticate(user=other_user)
+
+        response = api_client.patch(
+            f"/api/applications/{discarded_app_for_revert.key}",
+            {"status": ApplicationStatus.DRAFT},
+            format="json",
+        )
+        # Should be 403 Forbidden or 404 Not Found
+        assert response.status_code in [
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_404_NOT_FOUND,
+        ]
+
+    def test_unauthenticated_user_cannot_discard(
+        self, api_client, draft_app_for_discard
+    ):
+        """Reject discard attempts from unauthenticated users."""
+        # No authentication
+        response = api_client.patch(
+            f"/api/applications/{draft_app_for_discard.key}",
+            {"status": ApplicationStatus.DISCARDED},
+            format="json",
+        )
+        # Can be either 401 (auth required) or 403 (permission denied)
+        assert response.status_code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+        ]
+
+    def test_unauthenticated_user_cannot_revert(
+        self, api_client, discarded_app_for_revert
+    ):
+        """Reject revert attempts from unauthenticated users."""
+        # No authentication
+        response = api_client.patch(
+            f"/api/applications/{discarded_app_for_revert.key}",
+            {"status": ApplicationStatus.DRAFT},
+            format="json",
+        )
+        # Can be either 401 (auth required) or 403 (permission denied)
+        assert response.status_code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+        ]
+
+    def test_owner_can_discard_own_draft(
+        self, api_client, user, draft_app_for_discard
+    ):
+        """Allow owner to discard their own draft application."""
+        api_client.force_authenticate(user=user)
+
+        response = api_client.patch(
+            f"/api/applications/{draft_app_for_discard.key}",
+            {"status": ApplicationStatus.DISCARDED},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        draft_app_for_discard.refresh_from_db()
+        assert draft_app_for_discard.status == ApplicationStatus.DISCARDED
+
+    def test_owner_can_revert_own_discarded(
+        self, api_client, user, discarded_app_for_revert
+    ):
+        """Allow owner to revert their own discarded application."""
+        api_client.force_authenticate(user=user)
+
+        response = api_client.patch(
+            f"/api/applications/{discarded_app_for_revert.key}",
+            {"status": ApplicationStatus.DRAFT},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        discarded_app_for_revert.refresh_from_db()
+        assert discarded_app_for_revert.status == ApplicationStatus.DRAFT
+
+    def test_reviewer_cannot_discard_submitted_application(
+        self, api_client, reviewer_user, reviewable_app
+    ):
+        """Reject reviewer attempts to discard applications they can review."""
+        api_client.force_authenticate(user=reviewer_user)
+        reviewable_app.status = ApplicationStatus.SUBMITTED
+        reviewable_app.save()
+
+        response = api_client.patch(
+            f"/api/review/{reviewable_app.key}",
+            {"status": ApplicationStatus.DISCARDED},
+            format="json",
+        )
+        # Should be 400 Bad Request (invalid transition for reviewer)
+        # or 403 Forbidden (not permitted for reviewers)
+        assert response.status_code in [
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_403_FORBIDDEN,
         ]

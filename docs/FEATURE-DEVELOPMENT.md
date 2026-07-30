@@ -237,11 +237,24 @@ This is intentional. Overbuilding creates maintenance debt and obscures real log
 **All backend tests use** `cd backend && poetry run pytest` **from the backend directory.**
 
 Structure:
-- Unit/model tests: `backend/{app}/tests.py` or `backend/{app}/tests/test_*.py`
+- All application tests: `backend/{app}/tests/test_*.py` (e.g., `test_models.py`, `test_serialisers.py`, `test_views_security.py`)
 - API endpoint tests: `backend/api/tests/test_*.py`
-- Security/view tests: `backend/{app}/test_views_security.py`
 - Management command tests: `backend/{app}/tests/test_management_commands.py`
 - E2E tests: `backend/e2e/tests/test_*.py`
+
+**Test file naming convention:**
+- `test_models.py` — Unit and model tests
+- `test_serialisers.py` — Serialiser validation tests
+- `test_views_security.py` — Non-API view access control (marked with `@pytest.mark.security`)
+- `test_api_endpoint_security.py` — API endpoint security and authorization (marked with `@pytest.mark.security`)
+- `test_forms.py` — Form field and form validation tests
+- `test_prince.py` — Utility/command wrapper tests
+
+**Security test organization:** Security tests are **co-located with application tests** in the `tests/` directory (not separated into a special folder). Use `@pytest.mark.security` for logical grouping. This enables:
+1. Unified test discovery via `pytest -m security` or `pytest -m "security and api"`
+2. Clear file naming (`*_security.py`) makes purpose obvious
+3. Everything organized under `tests/` for consistent structure
+4. Tests live near the code they verify
 
 Commands:
 ```bash
@@ -253,7 +266,10 @@ poetry run pytest
 poetry run pytest applications -q
 
 # Specific test file
-poetry run pytest api/tests/test_views.py -v
+poetry run pytest applications/tests/test_models.py -v
+
+# Security tests only
+poetry run pytest -m security -v
 
 # E2E tests only
 poetry run pytest e2e/tests -v

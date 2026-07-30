@@ -12,35 +12,47 @@ This system recognises three distinct roles in the application lifecycle:
 
 *Note: Depending on the specific Authorisation Process, a single user may act as both Reviewer and Assessor.*
 
-## Status Definitions
+## Status Definitions and Categories
 
-### 1. Drafting Phase (Applicant Controlled)
+Statuses are organised by workflow phase and grouped into operational categories based on their business impact:
 
-*   **DRAFT**: The initial state when an applicant starts a new application. The record is private to the applicant and not visible to staff. This status is also used when an application is returned by a Reviewer/Assessor for modification.
-*   **DISCARDED**: A terminal state for applications that the applicant decided not to proceed with *before* submission.
+### 1. Drafting Phase — Active & Terminated Statuses
 
-### 2. Review Phase (Reviewer/Assessor Controlled)
+*   **DRAFT** (Active): The initial state when an applicant starts a new application. The record is private to the applicant and not visible to staff. This status is also used when an application is returned by a Reviewer/Assessor for modification. Applicants can edit the application freely.
+*   **DISCARDED** (Terminated): A terminal state for applications that the applicant decided not to proceed with before submission. Applicants can revert discarded applications back to DRAFT to restore them for further editing or submission.
 
-*   **SUBMITTED**: The applicant has finalised the form. The application is now locked for editing and enters the staff queue.
-*   **WITHDRAWN**: A terminal state for applications retracted by the applicant. Can occur at any time *prior* to a final decision.
-*   **UNDER_REVIEW**: Administrative triage has started. This provides feedback to the applicant that their submission is being actively looked at.
+### 2. Review Phase — Active & Terminated Statuses
 
-### 3. Assessment Phase (Assessor Controlled)
+*   **SUBMITTED** (Active): The applicant has finalised the form. The application is now locked for editing and enters the staff review queue.
+*   **WITHDRAWN** (Terminated): A terminal state for applications retracted by the applicant at any time prior to a final decision. Once withdrawn, an application cannot be restored.
+*   **UNDER_REVIEW** (Active): Administrative triage has started. This provides feedback to the applicant that their submission is being actively assessed. The reviewer may request additional information by returning the application to DRAFT.
 
-*   **UNDER_ASSESSMENT**: Technical/regulatory evaluation phase. This indicates the administrative checks are passed and the content is being scrutinised for a decision.
+### 3. Assessment Phase — Active Statuses
 
-### 4. Outcome Phase (Terminal Decisions)
+*   **UNDER_ASSESSMENT** (Active): Technical or regulatory evaluation phase. This indicates the administrative checks have passed and the content is being scrutinised for a final decision.
+
+### 4. Outcome Phase — Finalised Statuses
 
 All terminal decisions (except Deferral) can include a **Decision Comment** explaining the rationale, conditions, or feedback.
 
-*   **APPROVED**: Regulatory approval granted.
-*   **APPROVED_WITH_CONDITIONS**: Approval granted subject to specific constraints or future requirements.
-*   **REJECTED**: Application refused with specific feedback provided.
-*   **DEFERRED**: A final state indicating that while the application is valid, a decision cannot be made at this time (e.g., pending external dependencies or seasonal constraints). A project may be approved later but would typically require a new assessment or specific administrative action once requirements are met.
+*   **APPROVED** (Finalised): Regulatory approval granted. The application has met all requirements.
+*   **APPROVED_WITH_CONDITIONS** (Finalised): Approval granted subject to specific constraints or future requirements. Applicants are notified of the conditions.
+*   **REJECTED** (Finalised): Application refused with specific feedback provided.
+*   **DEFERRED** (Finalised): The application is valid, but a decision cannot be made at this time (e.g., pending external dependencies or seasonal constraints). Applicants may reapply or await administrative action once requirements are met.
 
 ---
 
-## Workflow Diagram
+## Status Category Summary
+
+The system uses three operational categories to manage application concurrency and business rules:
+
+| Category | Statuses | Business Rules |
+| :--- | :--- | :--- |
+| **Active** | DRAFT, SUBMITTED, UNDER_REVIEW, UNDER_ASSESSMENT | The system warns applicants if they already have an active application for the same process, but does not prevent multiple active applications. Users are encouraged to focus on one application at a time. |
+| **Terminated** | DISCARDED, WITHDRAWN | Applications stopped before reaching a final decision. Discarded applications can be reverted to DRAFT. Terminated applications do not block new submissions for the same process. |
+| **Finalised** | APPROVED, APPROVED_WITH_CONDITIONS, REJECTED, DEFERRED | Applications that have reached a final decision outcome. Finalised applications are immutable and do not block new submissions. |
+
+---
 
 ```mermaid
 stateDiagram-v2
@@ -48,6 +60,7 @@ stateDiagram-v2
     
     DRAFT --> DISCARDED : Applicant Discard
     DRAFT --> SUBMITTED : Applicant Submit
+    DISCARDED --> DRAFT : Applicant Revert
     
     SUBMITTED --> WITHDRAWN : Applicant Withdraw
     SUBMITTED --> UNDER_REVIEW : Reviewer Claims
@@ -81,10 +94,16 @@ stateDiagram-v2
 | (Any) | **DRAFT** | System / Staff | Auto-created on start OR "Action Required" return |
 | **DRAFT** | **DISCARDED** | Applicant | User abandons draft |
 | **DRAFT** | **SUBMITTED** | Applicant | User completes submission |
+| **DISCARDED** | **DRAFT** | Applicant | User reverts the discard decision |
 | **SUBMITTED** | **WITHDRAWN** | Applicant | User retracts application |
 | **SUBMITTED** | **UNDER_REVIEW** | Reviewer | Staff begins administrative review |
-| **UNDER_REVIEW** | **UNDER_ASSESSMENT**| Reviewer | Administrative checks passed |
+| **UNDER_REVIEW** | **DRAFT** | Reviewer | Staff requests additional information |
+| **UNDER_REVIEW** | **WITHDRAWN** | Applicant | User retracts application during review |
+| **UNDER_REVIEW** | **UNDER_ASSESSMENT** | Reviewer | Administrative checks passed |
+| **UNDER_ASSESSMENT** | **DRAFT** | Assessor | Assessor requests additional information |
+| **UNDER_ASSESSMENT** | **WITHDRAWN** | Applicant | User retracts application before final decision |
 | **UNDER_ASSESSMENT** | **APPROVED** | Assessor | Final decision |
+| **UNDER_ASSESSMENT** | **APPROVED_WITH_CONDITIONS** | Assessor | Final decision |
 | **UNDER_ASSESSMENT** | **REJECTED** | Assessor | Final decision |
 | **UNDER_ASSESSMENT** | **DEFERRED** | Assessor | Final decision (held) |
 
@@ -95,6 +114,8 @@ stateDiagram-v2
 1.  **Linear Progression**: Applications must follow the defined order (Draft -> Submitted -> Review -> Assessment -> Decision) to ensure regulatory integrity.
 2.  **Immutability**: Applications are read-only for applicants in any state other than `DRAFT`.
 3.  **"Action Required" Pattern**: Instead of a dedicated status, "Action Required" is achieved by moving the application back to `DRAFT`. This simplifies the state machine while allowing full editing.
-4.  **Audit Trail**: High-level status transitions and decision comments will be captured via Django Admin log entries (`LogEntry`) to avoid manual schema overhead for internal auditing.
-5.  **Withdrawing**: Applicants can withdraw at any point prior to a final decision. Subsequent revoking of an `APPROVED` application is a separate administrative process not covered by this workflow.
+4.  **Discard and Revert**: Applicants can discard a draft application, moving it to the `DISCARDED` terminal state. Discarded applications can be reverted back to `DRAFT` to restore them for further editing or submission. Once reverted, they behave identically to newly created draft applications.
+5.  **Concurrent Applications**: The system warns applicants when attempting to create a new application if they already have an active application for the same process, but does not prevent multiple concurrent applications. Users are encouraged to complete or abandon existing applications before starting new ones for the same process.
+6.  **Audit Trail**: High-level status transitions and decision comments will be captured via Django Admin log entries (`LogEntry`) to avoid manual schema overhead for internal auditing.
+7.  **Withdrawing**: Applicants can withdraw at any point prior to a final decision. Subsequent revoking of an `APPROVED` application is a separate administrative process not covered by this workflow.
 

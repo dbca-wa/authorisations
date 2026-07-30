@@ -28,6 +28,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess({ name: "Section 40" })}
         application={makeApplication({ internal_id: "s40-new-1/26-05", status: "SUBMITTED" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -41,6 +42,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "DRAFT" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -52,6 +54,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "SUBMITTED" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -66,6 +69,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={application}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -81,6 +85,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={application}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -93,6 +98,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "DRAFT" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -104,6 +110,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "SUBMITTED" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 

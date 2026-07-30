@@ -24,7 +24,7 @@ vi.mock("../../../../../context/Hooks", async () => {
 });
 
 vi.mock("../../../../../components/layout/main/ApplicationCard", () => ({
-  ApplicationCard: ({ application }: { application: { internal_id: string; status: string; key: string } }) => {
+  ApplicationCard: ({ application, onStatusChanged: _onStatusChanged }: { application: { internal_id: string; status: string; key: string }; onStatusChanged: (app: unknown) => void }) => {
     // Simulate the behavior of ApplicationCard's internal logic
     const downloadableStatuses = [
       "SUBMITTED",
