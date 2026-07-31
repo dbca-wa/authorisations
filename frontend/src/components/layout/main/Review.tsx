@@ -4,7 +4,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLoaderData } from "react-router";
 import { useResolvedPromise } from "../../../context/Hooks";
 import { LocalStorage } from "../../../context/LocalStorage";
@@ -55,7 +55,9 @@ export const ApplicationReview = () => {
 
     /**
      * Handles status changes from individual ReviewCard components.
-     * Records the update, switches to the appropriate tab, and highlights the changed application.
+     * Records the update. If application remains in review queue, switches to appropriate tab
+     * and highlights the changed application. If application exits review queue (e.g., reset to DRAFT),
+     * stays in current tab without highlighting.
      */
     const handleApplicationStatusChanged = (updatedApp: IApplicationData) => {
         setApplicationUpdates((prev) => ({
@@ -63,15 +65,23 @@ export const ApplicationReview = () => {
             [updatedApp.key]: updatedApp,
         }));
 
-        // Switch to the tab matching the new status and highlight the application.
-        const tabIndex = updatedApp.status === "SUBMITTED" ? 0 : updatedApp.status === "UNDER_REVIEW" ? 1 : 2;
+        // If application reverted to DRAFT, stay in current tab without highlighting.
+        if (updatedApp.status === "DRAFT") {
+            return;
+        }
+
+        // Application remains in review queue: map status to tab index and highlight.
+        const tabIndex = updatedApp.status === "SUBMITTED" ? 0 
+            : updatedApp.status === "UNDER_REVIEW" ? 1 
+            : 2; // UNDER_ASSESSMENT
+        
         setSelectedTab(tabIndex);
         setHighlightedAppKey(updatedApp.key);
 
         // Clear highlight after animation completes.
         setTimeout(() => {
             setHighlightedAppKey(null);
-        }, 3000);
+        }, 5000);
     };
 
     /**
@@ -84,6 +94,17 @@ export const ApplicationReview = () => {
             cardRefsMap.current.delete(appKey);
         }
     };
+
+    /**
+     * Memoized callback factory for registering card elements.
+     * Ensures each ReviewCard receives a stable callback reference across renders.
+     */
+    const makeHandleCardMounted = useCallback(
+        (appKey: string) => (el: HTMLElement | null) => {
+            handleCardElementMounted(appKey, el);
+        },
+        []
+    );
 
     /**
      * Scrolls the highlighted card into view, centered on the screen.
@@ -194,7 +215,7 @@ export const ApplicationReview = () => {
                                 process={process}
                                 isHighlighted={application.key === highlightedAppKey}
                                 onStatusChanged={handleApplicationStatusChanged}
-                                onCardElementMounted={(el) => handleCardElementMounted(application.key, el)}
+                                onCardElementMounted={makeHandleCardMounted(application.key)}
                             />;
                         })}
                     </List>
