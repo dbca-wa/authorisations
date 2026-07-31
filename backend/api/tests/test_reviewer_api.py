@@ -178,11 +178,15 @@ def test_reviewer_patch_allows_reviewer_settable_status(
     application_factory,
 ):
     """Allow reviewers to move queue items to permitted reviewer statuses."""
+    from django.utils import timezone
+    
     process = process_factory(slug="review-process")
     process.reviewer_groups.add(reviewer_group)
+    original_submitted_at = timezone.now()
     application = application_factory(
         questionnaire=questionnaire_factory(process=process),
         status=ApplicationStatus.SUBMITTED,
+        submitted_at=original_submitted_at,
     )
 
     api_client.force_authenticate(user=reviewer_user)
@@ -195,6 +199,7 @@ def test_reviewer_patch_allows_reviewer_settable_status(
     application.refresh_from_db()
     assert response.status_code == status.HTTP_200_OK
     assert application.status == ApplicationStatus.UNDER_REVIEW
+    assert application.submitted_at == original_submitted_at
 
 
 @pytest.mark.django_db
@@ -207,11 +212,14 @@ def test_reviewer_patch_rejects_non_reviewer_settable_target_status(
     application_factory,
 ):
     """Verify reviewers can return an application to DRAFT via correct workflow."""
+    from django.utils import timezone
+    
     process = process_factory(slug="review-process")
     process.reviewer_groups.add(reviewer_group)
     application = application_factory(
         questionnaire=questionnaire_factory(process=process),
         status=ApplicationStatus.SUBMITTED,
+        submitted_at=timezone.now(),
     )
 
     api_client.force_authenticate(user=reviewer_user)
@@ -226,7 +234,7 @@ def test_reviewer_patch_rejects_non_reviewer_settable_target_status(
     application.refresh_from_db()
     assert application.status == ApplicationStatus.UNDER_REVIEW
     
-    # Then: Transition UNDER_REVIEW → DRAFT
+    # Then: Transition UNDER_REVIEW → DRAFT (should clear submitted_at)
     response = api_client.patch(
         f"/api/review/{application.key}",
         {"status": ApplicationStatus.DRAFT},
@@ -235,6 +243,7 @@ def test_reviewer_patch_rejects_non_reviewer_settable_target_status(
     assert response.status_code == status.HTTP_200_OK
     application.refresh_from_db()
     assert application.status == ApplicationStatus.DRAFT
+    assert application.submitted_at is None
 
 
 @pytest.mark.django_db

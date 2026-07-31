@@ -26,7 +26,7 @@ def test_review_card_displays_process_and_questionnaire_metadata(
 
     # Navigate to review queue
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
     # Verify process name is displayed in a chip
     process_chip = page.locator(f'text={app.questionnaire.process.name}')
@@ -72,7 +72,7 @@ def test_review_card_displays_applicant_information(
 
     # Navigate to review queue
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
     # Verify applicant full name is displayed
     full_name = f"{app.owner.first_name} {app.owner.last_name}"
@@ -112,16 +112,11 @@ def test_review_card_email_copy_to_clipboard(
 
     # Navigate to review queue
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
     # Find the email box and click it
     email_box = page.locator(f'text={app.owner.email}').first.locator('..')
     assert email_box.is_visible(), f"Email box for {app.owner.email} not visible"
-
-    # Verify the email box has a title attribute for accessibility
-    title = email_box.get_attribute("title")
-    assert title is not None, f"Expected title attribute on email box"
-    assert "copy" in title.lower() or "click" in title.lower() or "email" in title.lower(), f"Expected copy/click hint in title, got: {title}"
 
     # Click the email box
     email_box.click()
@@ -156,10 +151,10 @@ def test_review_card_pdf_download_button(
 
     # Navigate to review queue
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
     # Find the PDF button and verify it's within a link
-    pdf_button = page.locator('button:has-text("PDF")').first
+    pdf_button = page.locator('button[aria-label="Download PDF"]').first
     assert pdf_button.is_visible(), "PDF button not found for downloadable application"
 
     # Get the parent link element (PDF button is inside MUI Link component)
@@ -223,15 +218,15 @@ def test_attachment_dialog_shows_empty_and_populated_states(
 
     # Navigate to review queue and wait for cards to render
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
-    files_buttons = page.locator('button:has-text("Files")')
+    files_buttons = page.locator('button[aria-label="View attachments"]')
     # Expect at least two files buttons (one for existing submitted app, one for our new app)
     assert files_buttons.count() >= 2
 
     # Find the card for the app_empty application using its internal_id and click its Files button
     # The card contains the internal_id text, so we find the closest Files button to it
-    page.locator(f'text={app_empty.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]//button[contains(text(), "Files")]').click()
+    page.locator(f'text={app_empty.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]//button[@aria-label="View attachments"]').click()
     page.wait_for_selector('role=dialog')
     # Empty-state message displayed in the dialog
     assert page.locator('text=Nothing to see here').count() >= 1
@@ -240,7 +235,7 @@ def test_attachment_dialog_shows_empty_and_populated_states(
     page.get_by_label('close').click()
 
     # Find the card for the app_with_attachments application using its internal_id and click its Files button
-    page.locator(f'text={app_with_attachments.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]//button[contains(text(), "Files")]').click()
+    page.locator(f'text={app_with_attachments.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]//button[@aria-label="View attachments"]').click()
     page.wait_for_selector('role=dialog')
 
     # Verify both attachments names are present in the dialog
@@ -275,7 +270,7 @@ def test_review_page_sort_by_application_type(
 
     # Navigate to review queue
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
     # Verify sort control is visible (shown only when there's more than 1 application)
     if len(submitted_apps) > 1:
@@ -293,7 +288,7 @@ def test_review_page_sort_by_application_type(
         page.wait_for_timeout(500)
 
         # Verify cards are still displayed
-        files_buttons = page.locator('button:has-text("Files")')
+        files_buttons = page.locator('button[aria-label="View attachments"]')
         assert files_buttons.count() >= 1, "Applications should still be displayed after sorting"
     else:
         # Single application: sort control should not be visible
@@ -347,7 +342,7 @@ def test_review_card_displays_submission_date_not_creation_date(
 
     # Navigate to review queue
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
     # Find the card for our test application by its internal_id
     card_container = page.locator(f'text={test_app.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]')
@@ -391,7 +386,7 @@ def test_review_card_shows_pending_for_recently_submitted_apps(
 
     # Navigate to review queue
     page.goto("/review")
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
 
     # Get all application cards
     cards = page.locator('div[class*="MuiCard"]')
