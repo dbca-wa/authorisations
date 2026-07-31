@@ -63,4 +63,17 @@ h1 {
   white-space: pre-wrap;
 }
 
+/* Highlight animation for applications with status changes. */
+@keyframes card-highlight-blink {
+  0% { background-color: transparent; }
+  25% { background-color: rgba(33, 150, 243, 0.2); }
+  50% { background-color: transparent; }
+  75% { background-color: rgba(33, 150, 243, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.card-highlight-blink {
+  animation: card-highlight-blink 1.5s ease-in-out 2;
+}
+
 

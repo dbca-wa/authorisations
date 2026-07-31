@@ -66,11 +66,15 @@ export const AttachmentsDialogContent = ({
 export const ReviewCard = ({
     process,
     application,
+    isHighlighted,
     onStatusChanged,
+    onCardElementMounted,
 }: {
     process?: IAuthorisationProcess;
     application: IApplicationData;
+    isHighlighted: boolean;
     onStatusChanged: (updatedApp: IApplicationData) => void;
+    onCardElementMounted: (element: HTMLElement | null) => void;
 }) => {
     const { showDialog } = useDialog();
     const { showSnackbar } = useSnackbar();
@@ -166,7 +170,11 @@ export const ReviewCard = ({
 
     return (
         <ListItem className="mb-4">
-            <Card className="p-8 w-full rounded-lg!" elevation={4}>
+            <Card 
+                ref={(el) => onCardElementMounted(el as HTMLElement | null)}
+                className={`p-8 w-full rounded-lg! ${isHighlighted ? 'card-highlight-blink' : ''}`}
+                elevation={4}
+            >
                 {/* Header: Application ID on left, PDF/Files on right */}
                 <Box className="flex justify-between items-start mb-4 gap-4">
                     <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />

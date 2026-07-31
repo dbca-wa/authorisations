@@ -4,7 +4,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLoaderData } from "react-router";
 import { useResolvedPromise } from "../../../context/Hooks";
 import { LocalStorage } from "../../../context/LocalStorage";
@@ -33,6 +33,8 @@ export const ApplicationReview = () => {
     const [resolvedApplications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
     const [applicationUpdates, setApplicationUpdates] = useState<Record<string, IApplicationData>>({});
     const [selectedTab, setSelectedTab] = useState<number>(0);
+    const [highlightedAppKey, setHighlightedAppKey] = useState<string | null>(null);
+    const cardRefsMap = useRef<Map<string, HTMLElement>>(new Map());
 
     /**
      * Computes the merged applications list by overlaying any updates on the resolved applications.
@@ -53,14 +55,47 @@ export const ApplicationReview = () => {
 
     /**
      * Handles status changes from individual ReviewCard components.
-     * Records the update so re-categorisation and tab switching occur on the next render.
+     * Records the update, switches to the appropriate tab, and highlights the changed application.
      */
     const handleApplicationStatusChanged = (updatedApp: IApplicationData) => {
         setApplicationUpdates((prev) => ({
             ...prev,
             [updatedApp.key]: updatedApp,
         }));
+
+        // Switch to the tab matching the new status and highlight the application.
+        const tabIndex = updatedApp.status === "SUBMITTED" ? 0 : updatedApp.status === "UNDER_REVIEW" ? 1 : 2;
+        setSelectedTab(tabIndex);
+        setHighlightedAppKey(updatedApp.key);
+
+        // Clear highlight after animation completes.
+        setTimeout(() => {
+            setHighlightedAppKey(null);
+        }, 3000);
     };
+
+    /**
+     * Registers a card element in the refs map for scroll-to-view targeting.
+     */
+    const handleCardElementMounted = (appKey: string, element: HTMLElement | null) => {
+        if (element) {
+            cardRefsMap.current.set(appKey, element);
+        } else {
+            cardRefsMap.current.delete(appKey);
+        }
+    };
+
+    /**
+     * Scrolls the highlighted card into view, centered on the screen.
+     */
+    useEffect(() => {
+        if (highlightedAppKey) {
+            const card = cardRefsMap.current.get(highlightedAppKey);
+            if (card) {
+                card.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+    }, [highlightedAppKey]);
 
     const processBySlug = useMemo(
         () => new Map(processes.map((process) => [process.slug, process])),
@@ -157,7 +192,9 @@ export const ApplicationReview = () => {
                                 key={application.key}
                                 application={application}
                                 process={process}
+                                isHighlighted={application.key === highlightedAppKey}
                                 onStatusChanged={handleApplicationStatusChanged}
+                                onCardElementMounted={(el) => handleCardElementMounted(application.key, el)}
                             />;
                         })}
                     </List>
