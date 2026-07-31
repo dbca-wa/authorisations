@@ -107,21 +107,24 @@ export const ReviewCard = ({
      * Reviewer claims the application for administrative review.
      */
     const handleClaim = async () => {
+        let updatedApp: IApplicationData;
         try {
-            const updatedApp = await ApiManager.updateReviewerApplicationStatus(
+            updatedApp = await ApiManager.updateReviewerApplicationStatus(
                 displayedApplication.key,
                 "UNDER_REVIEW" as ApplicationStatus,
             );
-            setDisplayedApplication(updatedApp);
-            showSnackbar("Application claimed for review.", "success");
-            onStatusChanged(updatedApp);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to claim application. Please try again later.",
                 "error",
             );
             console.error("Error claiming application:", error);
+            return;
         }
+
+        setDisplayedApplication(updatedApp);
+        showSnackbar("Application claimed for review.", "success");
+        onStatusChanged(updatedApp);
     };
 
     /**
@@ -144,21 +147,25 @@ export const ReviewCard = ({
                     color="warning"
                     startIcon={<RestartAltRoundedIcon />}
                     onClick={async () => {
+                        let updatedApp: IApplicationData;
                         try {
-                            const updatedApp = await ApiManager.updateReviewerApplicationStatus(
+                            updatedApp = await ApiManager.updateReviewerApplicationStatus(
                                 displayedApplication.key,
                                 "DRAFT" as ApplicationStatus,
                             );
-                            setDisplayedApplication(updatedApp);
-                            showSnackbar("Application reset to draft for revision.", "info");
-                            onStatusChanged(updatedApp);
                         } catch (error: unknown) {
                             showSnackbar(
                                 "Failed to return application. Please try again later.",
                                 "error",
                             );
                             console.error("Error returning application:", error);
+                            hideDialog();
+                            return;
                         }
+
+                        setDisplayedApplication(updatedApp);
+                        showSnackbar("Application reset to draft for revision.", "info");
+                        onStatusChanged(updatedApp);
                         // Close the dialog after action
                         hideDialog();
                     }}
@@ -174,21 +181,24 @@ export const ReviewCard = ({
      * Escalates application to technical assessment after administrative checks pass.
      */
     const handleProceedtoAssessment = async () => {
+        let updatedApp: IApplicationData;
         try {
-            const updatedApp = await ApiManager.updateReviewerApplicationStatus(
+            updatedApp = await ApiManager.updateReviewerApplicationStatus(
                 displayedApplication.key,
                 "UNDER_ASSESSMENT" as ApplicationStatus,
             );
-            setDisplayedApplication(updatedApp);
-            showSnackbar("Application moved to assessment.", "success");
-            onStatusChanged(updatedApp);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to move application to assessment. Please try again later.",
                 "error",
             );
             console.error("Error moving application to assessment:", error);
+            return;
         }
+
+        setDisplayedApplication(updatedApp);
+        showSnackbar("Application moved to assessment.", "success");
+        onStatusChanged(updatedApp);
     };
 
     return (

@@ -83,18 +83,21 @@ export const ApplicationCard = ({
      * Triggers removal animation, then notifies parent after animation completes.
      */
     const handleDiscardClick = async () => {
+        let updatedApp: IApplicationData;
         try {
-            const updatedApp = await ApiManager.discardApplication(displayedApplication.key);
-            setDisplayedApplication(updatedApp);
-            showSnackbar("Application discarded.", "info");
-            onStatusChanged(updatedApp);
+            updatedApp = await ApiManager.discardApplication(displayedApplication.key);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to discard application. Please try again later.",
                 "error",
             );
             console.error("Error discarding application:", error);
+            return;
         }
+
+        setDisplayedApplication(updatedApp);
+        showSnackbar("Application discarded.", "info");
+        onStatusChanged(updatedApp);
     };
 
     /**
@@ -103,18 +106,21 @@ export const ApplicationCard = ({
      * Triggers removal animation, then notifies parent after animation completes.
      */
     const handleRevertClick = async () => {
+        let updatedApp: IApplicationData;
         try {
-            const updatedApp = await ApiManager.revertDiscardedApplication(displayedApplication.key);
-            setDisplayedApplication(updatedApp);
-            showSnackbar("Application reverted to draft.", "info");
-            onStatusChanged(updatedApp);
+            updatedApp = await ApiManager.revertDiscardedApplication(displayedApplication.key);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to revert application. Please try again later.",
                 "error",
             );
             console.error("Error reverting application:", error);
+            return;
         }
+
+        setDisplayedApplication(updatedApp);
+        showSnackbar("Application reverted to draft.", "info");
+        onStatusChanged(updatedApp);
     };
 
     return (
