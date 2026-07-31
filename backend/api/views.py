@@ -305,7 +305,16 @@ class ReviewerViewSet(
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+        save_kwargs = {}
+        requested_status = serializer.validated_data.get("status")
+
+        # Clear submitted_at when returning to DRAFT (reviewer requests info or re-submission).
+        # This allows the application to be resubmitted with a fresh internal_id if needed.
+        if requested_status == ApplicationStatus.DRAFT:
+            save_kwargs["submitted_at"] = None
+
+        serializer.save(**save_kwargs)
 
         # Clear any prefetch cache so the response reflects the saved state.
         if getattr(instance, "_prefetched_objects_cache", None):
