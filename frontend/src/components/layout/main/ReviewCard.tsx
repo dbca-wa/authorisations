@@ -11,10 +11,10 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
 import Link from '@mui/material/Link';
 import ListItem from "@mui/material/ListItem";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 
 import { useState } from 'react';
 import { ApiManager } from '../../../context/ApiManager';
@@ -76,7 +76,7 @@ export const ReviewCard = ({
     onStatusChanged: (updatedApp: IApplicationData) => void;
     onCardElementMounted: (element: HTMLElement | null) => void;
 }) => {
-    const { showDialog } = useDialog();
+    const { showDialog, hideDialog } = useDialog();
     const { showSnackbar } = useSnackbar();
     const [displayedApplication, setDisplayedApplication] = useState<IApplicationData>(application);
 
@@ -125,25 +125,48 @@ export const ReviewCard = ({
     };
 
     /**
-     * Reset application from UNDER_REVIEW or UNDER_ASSESSMENT to DRAFT.
-     * Resets application to DRAFT status so applicant can revise and resubmit.
+     * Shows confirmation dialog for resetting application to draft.
+     * Only proceeds with API call if user confirms the action.
      */
-    const handleResetToDraft = async () => {
-        try {
-            const updatedApp = await ApiManager.updateReviewerApplicationStatus(
-                displayedApplication.key,
-                "DRAFT" as ApplicationStatus,
-            );
-            setDisplayedApplication(updatedApp);
-            showSnackbar("Application reset to draft for revision.", "info");
-            onStatusChanged(updatedApp);
-        } catch (error: unknown) {
-            showSnackbar(
-                "Failed to return application. Please try again later.",
-                "error",
-            );
-            console.error("Error returning application:", error);
-        }
+    const confirmResetToDraft = () => {
+        showDialog({
+            title: "Confirm reset to draft",
+            content:
+                <Box className="flex flex-col items-center justify-center px-4 gap-2">
+                    <Typography sx={{ textAlign: "center" }}>
+                        This will reset the application to draft so the applicant can revise and resubmit.
+                    </Typography>
+                    <Typography>This action cannot be undone.</Typography>
+                </Box>,
+            actions: (
+                <Button
+                    variant="contained"
+                    color="warning"
+                    startIcon={<RestartAltRoundedIcon />}
+                    onClick={async () => {
+                        try {
+                            const updatedApp = await ApiManager.updateReviewerApplicationStatus(
+                                displayedApplication.key,
+                                "DRAFT" as ApplicationStatus,
+                            );
+                            setDisplayedApplication(updatedApp);
+                            showSnackbar("Application reset to draft for revision.", "info");
+                            onStatusChanged(updatedApp);
+                        } catch (error: unknown) {
+                            showSnackbar(
+                                "Failed to return application. Please try again later.",
+                                "error",
+                            );
+                            console.error("Error returning application:", error);
+                        }
+                        // Close the dialog after action
+                        hideDialog();
+                    }}
+                >
+                    Reset
+                </Button>
+            ),
+        });
     };
 
     /**
@@ -274,7 +297,7 @@ export const ReviewCard = ({
                                     variant="contained"
                                     color="warning"
                                     startIcon={<RestartAltRoundedIcon />}
-                                    onClick={handleResetToDraft}
+                                    onClick={confirmResetToDraft}
                                     className="w-32"
                                 >
                                     Reset
