@@ -1,5 +1,7 @@
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 
 import { useEffect, useMemo, useState } from "react";
@@ -23,11 +25,23 @@ const reviewSortOrderStorageKey = "review-sort-order";
 
 /**
  * Displays applications in the review queue for technical officers.
+ * Organises applications into tabs by status: Submitted, Under Review, Under Assessment.
  * Applies reusable sorting controls and respects user preferences.
  */
 export const ApplicationReview = () => {
     const { processes, applications: applicationsPromise } = useLoaderData<LoaderData>();
-    const [applications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
+    const [resolvedApplications, isApplicationsLoading] = useResolvedPromise<IApplicationData[]>(applicationsPromise, []);
+    const [applicationUpdates, setApplicationUpdates] = useState<Record<string, IApplicationData>>({});
+    const [selectedTab, setSelectedTab] = useState<number>(0);
+
+    /**
+     * Computes the merged applications list by overlaying any updates on the resolved applications.
+     * This preserves the loading state while allowing real-time status changes to be reflected.
+     */
+    const applications = useMemo(
+        () => resolvedApplications.map((app) => applicationUpdates[app.key] ?? app),
+        [resolvedApplications, applicationUpdates],
+    );
 
     const [sortOrder, setSortOrder] = useState<SortOrderOption>(() =>
         getInitialSortOrder(reviewSortOrderStorageKey, "submitted_oldest")
@@ -36,6 +50,17 @@ export const ApplicationReview = () => {
     useEffect(() => {
         LocalStorage.setValue<SortOrderOption>(reviewSortOrderStorageKey, sortOrder);
     }, [sortOrder]);
+
+    /**
+     * Handles status changes from individual ReviewCard components.
+     * Records the update so re-categorisation and tab switching occur on the next render.
+     */
+    const handleApplicationStatusChanged = (updatedApp: IApplicationData) => {
+        setApplicationUpdates((prev) => ({
+            ...prev,
+            [updatedApp.key]: updatedApp,
+        }));
+    };
 
     const processBySlug = useMemo(
         () => new Map(processes.map((process) => [process.slug, process])),
@@ -46,6 +71,29 @@ export const ApplicationReview = () => {
         () => sortApplications(applications, sortOrder),
         [applications, sortOrder]
     );
+
+    /**
+     * Groups applications by their review status into three categories.
+     * Enables tab-based filtering for reviewers to navigate the review workflow.
+     */
+    const categorisedApplications = useMemo(() => ({
+        submitted: sortedReviewApplications.filter((app) => app.status === "SUBMITTED"),
+        underReview: sortedReviewApplications.filter((app) => app.status === "UNDER_REVIEW"),
+        underAssessment: sortedReviewApplications.filter((app) => app.status === "UNDER_ASSESSMENT"),
+    }), [sortedReviewApplications]);
+
+    // Map tab index to the corresponding applications list for the selected tab.
+    const applicationsForTab = [
+        categorisedApplications.submitted,
+        categorisedApplications.underReview,
+        categorisedApplications.underAssessment,
+    ][selectedTab] || [];
+
+    const tabDescriptions = [
+        "Claim submitted applications for administrative review.",
+        "Perform administrative review and escalate to assessment.",
+        "Finalise assessments and make approval decisions.",
+    ];
 
     return (
         <Box className="p-8 w-full min-w-2xl lg:w-3xl xl:w-4xl">
@@ -62,19 +110,54 @@ export const ApplicationReview = () => {
                     />
                 }
             </Box>
-            <Typography color="textSecondary" sx={{ mb: 4 }}>
-                Review and action applications in your queue.
+
+            {/* Tab navigation for review queue statuses. */}
+            <Box className="border-b border-gray-300 mb-4">
+                <Tabs 
+                    variant="fullWidth" 
+                    value={selectedTab} 
+                    onChange={(_, newValue) => setSelectedTab(newValue)}
+                    aria-label="Application review status filter"
+                    role="tablist"
+                >
+                    <Tab 
+                        label={`Submitted (${categorisedApplications.submitted.length})`} 
+                        aria-label={`Submitted applications, ${categorisedApplications.submitted.length} total`}
+                        id="tab-submitted"
+                        aria-controls="tabpanel-submitted"
+                        disabled={categorisedApplications.submitted.length === 0}
+                    />
+                    <Tab 
+                        label={`Under Review (${categorisedApplications.underReview.length})`} 
+                        aria-label={`Under review applications, ${categorisedApplications.underReview.length} total`}
+                        id="tab-under-review"
+                        aria-controls="tabpanel-under-review"
+                        disabled={categorisedApplications.underReview.length === 0}
+                    />
+                    <Tab 
+                        label={`Under Assessment (${categorisedApplications.underAssessment.length})`} 
+                        aria-label={`Under assessment applications, ${categorisedApplications.underAssessment.length} total`}
+                        id="tab-under-assessment"
+                        aria-controls="tabpanel-under-assessment"
+                        disabled={categorisedApplications.underAssessment.length === 0}
+                    />
+                </Tabs>
+            </Box>
+
+            <Typography color="textSecondary" className="mb-3!">
+                {tabDescriptions[selectedTab]}
             </Typography>
 
             {isApplicationsLoading ? <LoadingState /> :
-                sortedReviewApplications.length === 0 ? <EmptyStateComponent /> :
+                applicationsForTab.length === 0 ? <EmptyStateComponent /> :
                     <List>
-                        {sortedReviewApplications.map((application) => {
+                        {applicationsForTab.map((application) => {
                             const process = processBySlug.get(application.process_slug);
                             return <ReviewCard
                                 key={application.key}
                                 application={application}
                                 process={process}
+                                onStatusChanged={handleApplicationStatusChanged}
                             />;
                         })}
                     </List>

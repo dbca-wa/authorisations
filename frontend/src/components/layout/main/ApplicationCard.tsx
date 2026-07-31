@@ -12,6 +12,7 @@ import ListItem from "@mui/material/ListItem";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
+import Tooltip from '@mui/material/Tooltip';
 import React from "react";
 
 import { ApiManager } from '../../../context/ApiManager';
@@ -166,76 +167,72 @@ export const ApplicationCard = ({
                 <Box className="flex gap-1 mt-2">
                     {/* Discard button on left—only for editable (DRAFT) applications. */}
                     {isEditable && (
-                        <Button
-                            variant="outlined"
-                            color="warning"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={false}
-                            startIcon={<DeleteOutlineIcon />}
-                            onClick={handleDiscardClick}
-                        >
-                            Discard
-                        </Button>
+                        <Tooltip title="Discard application" placement="bottom" arrow>
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                startIcon={<DeleteOutlineIcon />}
+                                onClick={handleDiscardClick}
+                            >
+                                Discard
+                            </Button>
+                        </Tooltip>
                     )}
 
                     {/* Revert button on left—only for discarded applications. */}
                     {isDiscarded && (
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={false}
-                            startIcon={<RestoreIcon />}
-                            onClick={handleRevertClick}
-                        >
-                            Revert
-                        </Button>
+                        <Tooltip title="Revert to draft" placement="bottom" arrow>
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<RestoreIcon />}
+                                onClick={handleRevertClick}
+                            >
+                                Revert
+                            </Button>
+                        </Tooltip>
                     )}
 
                     {/* Download and Continue buttons—push to the right. */}
                     <Box className="ml-auto flex gap-1">
                         {/* Render the PDF action only for downloadable statuses. */}
                         {isDownloadable && (
-                            <Link
-                                target="_blank"
-                                rel="noopener"
-                                aria-label="Download application PDF"
-                                href={`/d/${application.key}`}
-                            >
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    loadingPosition='start'
-                                    loading={false}
-                                    disabled={false}
-                                    startIcon={<DownloadIcon />}
+                            <Tooltip title="Download application PDF" placement="bottom" arrow>
+                                <Link
+                                    target="_blank"
+                                    rel="noopener"
+                                    aria-label="Download application PDF"
+                                    href={`/d/${application.key}`}
                                 >
-                                    Download
-                                </Button>
-                            </Link>
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        startIcon={<DownloadIcon />}
+                                    >
+                                        Download
+                                    </Button>
+                                </Link>
+                            </Tooltip>
                         )}
 
                         {/* Render the continue action only for editable applications. */}
                         {isEditable && (
-                            <Link
-                                target="_blank"
-                                rel="noopener"
-                                aria-label="Continue application"
-                                onClick={() => openNewTab(`/a/${application.key}`, application.key)}
-                            >
-                                <Button
-                                    variant="contained"
-                                    color="success"
-                                    loadingPosition='start'
-                                    loading={false}
-                                    disabled={false}
-                                    startIcon={<PlayArrowRoundedIcon />}
+                            <Tooltip title="Continue editing application" placement="bottom" arrow>
+                                <Link
+                                    target="_blank"
+                                    rel="noopener"
+                                    aria-label="Continue application"
+                                    onClick={() => openNewTab(`/a/${application.key}`, application.key)}
                                 >
-                                    Continue
-                                </Button>
-                            </Link>
+                                    <Button
+                                        variant="contained"
+                                        color="success"
+                                        startIcon={<PlayArrowRoundedIcon />}
+                                    >
+                                        Continue
+                                    </Button>
+                                </Link>
+                            </Tooltip>
                         )}
                     </Box>
                 </Box>

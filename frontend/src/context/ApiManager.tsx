@@ -2,7 +2,7 @@ import axios from "axios";
 
 import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import { ConfigManager } from "./ConfigManager";
-import type { IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
+import type { ApplicationStatus, IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "./types/Questionnaire";
 
 
@@ -205,6 +205,30 @@ export class ApiManager {
     public static async fetchReviewQueueApplications(): Promise<IApplicationData[]> {
         const requestConfig = ApiManager.getRequestConfig();
         const response = await axios.get<IApplicationData[]>("/review", requestConfig);
+
+        return response.data;
+    }
+
+    /**
+     * Update the status of an application in the review queue.
+     * Sends a PATCH request to advance the application through review workflow states.
+     * Transition validity is enforced by the backend serialiser.
+     *
+     * @param key - The application key (UUID)
+     * @param status - The target status (must be a valid reviewer-initiated transition)
+     * @returns The updated application data
+     * @throws AxiosError if the transition is invalid or user lacks reviewer permissions
+     */
+    public static async updateReviewerApplicationStatus(
+        key: string,
+        status: ApplicationStatus,
+    ): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationData>(
+            `/review/${key}`,
+            { status },
+            requestConfig,
+        );
 
         return response.data;
     }
