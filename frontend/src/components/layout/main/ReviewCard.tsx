@@ -137,9 +137,8 @@ export const ReviewCard = ({
             content:
                 <Box className="flex flex-col items-center justify-center px-4 gap-2">
                     <Typography sx={{ textAlign: "center" }}>
-                        This will reset the application to draft so the applicant can revise and resubmit.
+                        This will reset the application to <strong>"Draft"</strong> status,<br /> so the applicant can revise and resubmit.
                     </Typography>
-                    <Typography>This action cannot be undone.</Typography>
                 </Box>,
             actions: (
                 <Button
@@ -170,7 +169,7 @@ export const ReviewCard = ({
                         hideDialog();
                     }}
                 >
-                    Reset
+                    Confirm
                 </Button>
             ),
         });
