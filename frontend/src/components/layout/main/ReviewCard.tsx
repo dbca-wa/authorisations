@@ -70,7 +70,7 @@ export const ReviewCard = ({
     onStatusChanged,
     onCardElementMounted,
 }: {
-    process?: IAuthorisationProcess;
+    process: IAuthorisationProcess;
     application: IApplicationData;
     isHighlighted: boolean;
     onStatusChanged: (updatedApp: IApplicationData) => void;
@@ -80,7 +80,6 @@ export const ReviewCard = ({
     const { showSnackbar } = useSnackbar();
     const [displayedApplication, setDisplayedApplication] = useState<IApplicationData>(application);
 
-    const processName = process?.name ?? `Unknown process (${application.process_slug})`;
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
     const statusCapitalised = formatStatusLabel(displayedApplication.status);
     const { createdAtRelative, updatedAtRelative, submittedAtRelative } = formatRelativeDates(displayedApplication);
@@ -241,7 +240,7 @@ export const ReviewCard = ({
                 </Box>
 
                 <Box className="flex gap-2 my-4 flex-wrap justify-around">
-                    <Chip label={processName} size="small" variant="outlined" />
+                    <Chip label={process.name} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
 
                     {/* Force a wrapped row break between identifier chips and status/date chips. */}

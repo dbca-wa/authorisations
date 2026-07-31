@@ -61,13 +61,12 @@ export const ApplicationCard = ({
     application,
     onStatusChanged,
 }: {
-    process?: IAuthorisationProcess;
+    process: IAuthorisationProcess;
     application: IApplicationData;
     onStatusChanged: (updatedApp: IApplicationData) => void;
 }) => {
     const [displayedApplication, setDisplayedApplication] = React.useState<IApplicationData>(application);
     const { showSnackbar } = useSnackbar();
-    const processName = process?.name ?? `Unknown process (${application.process_slug})`;
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
     const statusCapitalised = formatStatusLabel(displayedApplication.status);
     const { createdAtRelative, updatedAtRelative } = formatRelativeDates(displayedApplication);
@@ -129,7 +128,7 @@ export const ApplicationCard = ({
                 <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
 
                 <Box className="flex gap-2 my-4 flex-wrap justify-around">
-                    <Chip label={processName} size="small" variant="outlined" />
+                    <Chip label={process.name} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
 
                     {/* Force a wrapped row break between identifier chips and status/date chips. */}

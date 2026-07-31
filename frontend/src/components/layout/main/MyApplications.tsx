@@ -148,7 +148,7 @@ export const MyApplications = () => {
                 applicationsForTab.length === 0 ? <EmptyStateComponent /> :
                     <List>
                         {applicationsForTab.map((a) => {
-                            const process = processBySlug.get(a.process_slug);
+                            const process = processBySlug.get(a.process_slug)!;
                             return <ApplicationCard
                                 key={a.key}
                                 application={a}

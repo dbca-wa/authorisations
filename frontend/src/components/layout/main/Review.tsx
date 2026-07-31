@@ -208,7 +208,7 @@ export const ApplicationReview = () => {
                 applicationsForTab.length === 0 ? <EmptyStateComponent /> :
                     <List>
                         {applicationsForTab.map((application) => {
-                            const process = processBySlug.get(application.process_slug);
+                            const process = processBySlug.get(application.process_slug)!;
                             return <ReviewCard
                                 key={application.key}
                                 application={application}
