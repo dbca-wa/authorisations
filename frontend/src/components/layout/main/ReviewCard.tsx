@@ -188,11 +188,39 @@ export const ReviewCard = ({
                 "error",
             );
             console.error("Error moving application to assessment:", error);
+            hideDialog();
             return;
         }
 
         showSnackbar("Application moved to assessment.", "success");
         onStatusChanged(updatedApp);
+        hideDialog();
+    };
+
+    /**
+     * Shows confirmation dialog for proceeding application to assessment.
+     * Only proceeds with API call if user confirms the action.
+     */
+    const confirmProceedToAssessment = () => {
+        showDialog({
+            title: "Confirm proceed to assessment",
+            content:
+                <Box className="flex flex-col items-center justify-center px-4 gap-2">
+                    <Typography sx={{ textAlign: "center" }}>
+                        This will move the application to "<strong>Under Assessment</strong>"<br /> status for decision-making.
+                    </Typography>
+                </Box>,
+            actions: (
+                <Button
+                    variant="contained"
+                    color="primary"
+                    endIcon={<NavigateNextRoundedIcon />}
+                    onClick={handleProceedtoAssessment}
+                >
+                    Confirm
+                </Button>
+            ),
+        });
     };
 
     return (
@@ -324,7 +352,7 @@ export const ReviewCard = ({
                                     variant="contained"
                                     color="primary"
                                     endIcon={<NavigateNextRoundedIcon />}
-                                    onClick={handleProceedtoAssessment}
+                                    onClick={confirmProceedToAssessment}
                                     className="w-32"
                                 >
                                     Assessment

@@ -516,6 +516,29 @@ describe("ReviewCard", () => {
     });
   });
 
+  describe("Proceed to Assessment action handler", () => {
+    it("shows confirmation dialog when Assessment is clicked", async () => {
+      render(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ status: "UNDER_REVIEW" })}
+          isHighlighted={false}
+          onStatusChanged={vi.fn()}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      const assessmentButtons = screen.getAllByText("Assessment");
+      const button = assessmentButtons[0].closest("button");
+      if (!button) throw new Error("Assessment button not found");
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(showDialogMock).toHaveBeenCalled();
+      });
+    });
+  });
+
   describe("Chip component updates", () => {
     it("displays status chip reflecting current application status", () => {
       render(
