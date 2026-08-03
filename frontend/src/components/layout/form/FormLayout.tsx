@@ -212,8 +212,9 @@ export const FormLayout = () => {
         document.title = `${questionnaire.process_name} / ${app.questionnaire_name} : DBCA Authorisations`;
     }, [questionnaire.process_name, app.questionnaire_name]);
 
-    // Guard against StrictMode double-invocation: only show the notice once per mount.
-    const privacyNoticeShown = React.useRef(false);
+    // Guard against StrictMode double-invocation: only show the notice once per mount
+    // for the editable applications.
+    const privacyNoticeShown = React.useRef(!userCanEdit);
 
     // Notify once on mount that personal information is being collected.
     React.useEffect(() => {
@@ -357,10 +358,7 @@ const AccountMenu = ({
             <Button
                 color="inherit"
                 startIcon={<ExitToAppIcon />}
-                onClick={() => {
-                    // Assuming we're in a popup window
-                    window.close();
-                }}
+                onClick={window.close}
             >Exit</Button>
         </Box>
     )

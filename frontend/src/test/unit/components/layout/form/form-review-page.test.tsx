@@ -111,7 +111,7 @@ describe("FormReviewPage", () => {
     vi.clearAllMocks();
   });
 
-  it("submits after verification and confirmation, then switches to read-only mode", async () => {
+  it("submits after verification and confirmation, then displays submission modal", async () => {
     const setUserCanEdit = vi.fn();
     submitApplicationMock.mockResolvedValue({ key: "app-1" });
     turnstileRenderMock.mockImplementation(async (_container: unknown, callbacks: { onSuccess?: (token: string) => void }) => {
@@ -136,11 +136,15 @@ describe("FormReviewPage", () => {
     await waitFor(() => {
       expect(submitApplicationMock).toHaveBeenCalledWith("app-1", "token-123");
     });
-    expect(showSnackbarMock).toHaveBeenCalledWith(
-      "Application has been successfully submitted and is read-only now.",
-      "success",
-    );
+    
+    // Verify modal is displayed after submission
+    await waitFor(() => {
+      expect(screen.getByText("Application Successfully Submitted")).toBeInTheDocument();
+      expect(screen.getByText(/locked in read-only mode/i)).toBeInTheDocument();
+    });
+    
     expect(setUserCanEdit).toHaveBeenCalledWith(false);
+    expect(fireConfettiEffectMock).toHaveBeenCalledWith(5);
   });
 
   it("shows verification error text when Turnstile reports an error", async () => {
@@ -160,7 +164,7 @@ describe("FormReviewPage", () => {
     expect(submitApplicationMock).not.toHaveBeenCalled();
   });
 
-  it("does not initialise Turnstile in read-only mode", () => {
+  it("does not initialise Turnstile in read-only mode and displays modal", () => {
     const setUserCanEdit = vi.fn();
 
     renderWithForm({
@@ -171,6 +175,12 @@ describe("FormReviewPage", () => {
 
     expect(turnstileRenderMock).not.toHaveBeenCalled();
     expect(screen.queryByText(/Verification failed:/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
+    
+    // Modal should be displayed when userCanEdit is false
+    expect(screen.getByText("Application Successfully Submitted")).toBeInTheDocument();
+    
+    // Submit button should be present but disabled
+    const submitButton = screen.getByRole("button", { name: "Submit Application", hidden: true });
+    expect(submitButton).toBeDisabled();
   });
 });
