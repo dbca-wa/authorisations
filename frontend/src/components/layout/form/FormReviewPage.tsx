@@ -47,6 +47,7 @@ export function FormReviewPage({
     const [turnstileLoading, setTurnstileLoading] = React.useState<boolean>(userCanEdit);
     const [turnstileError, setTurnstileError] = React.useState<string | null>(null);
     const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
+    const [submitInProgress, setSubmitInProgress] = React.useState<boolean>(false);
     const [submissionModalOpen, setSubmissionModalOpen] = React.useState<boolean>(!userCanEdit);
     const hasInitializedRef = React.useRef<boolean>(false);
     const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -111,6 +112,13 @@ export function FormReviewPage({
 
     const isTurnstileVerified = !userCanEdit || (!turnstileLoading && !turnstileError && !!turnstileToken);
 
+    // Disable the submit button if any of the following conditions are true:
+    // - the user has not confirmed the accuracy of their answers,
+    // - the user cannot edit (read-only mode),
+    // - Turnstile verification has not been completed successfully,
+    // - or a submission is currently in progress.
+    const submitButtonDisabled = !hasConfirmed || !userCanEdit || !isTurnstileVerified || submitInProgress;
+
     /**
      * The final submission handler for the review page. It checks for Turnstile verification and submits the application via the API.
      * Displays a success modal and triggers a confetti effect on successful submission.
@@ -122,6 +130,9 @@ export function FormReviewPage({
             showSnackbar("Please complete verification before submitting.", "error");
             return;
         }
+
+        // Disable the submit button to prevent multiple submissions
+        setSubmitInProgress(true);
 
         await ApiManager.submitApplication(applicationKey, turnstileToken || "")
             .then((resp) => {
@@ -139,6 +150,9 @@ export function FormReviewPage({
                 const message = responseData?.turnstile_token?.[0] ?? responseData?.status?.[0] ?? error.message;
                 showSnackbar(`Failed to submit: ${message}`, "error");
                 return null;
+            })
+            .finally(() => {
+                setSubmitInProgress(false);
             });
     };
 
@@ -255,8 +269,10 @@ export function FormReviewPage({
                     variant="contained"
                     size="large"
                     color="success"
+                    loadingPosition="start"
                     onClick={onFinalSubmit}
-                    disabled={!hasConfirmed || !userCanEdit || !isTurnstileVerified}
+                    loading={submitInProgress}
+                    disabled={submitButtonDisabled}
                     startIcon={<AssignmentTurnedInRoundedIcon />}
                 >
                     Submit Application

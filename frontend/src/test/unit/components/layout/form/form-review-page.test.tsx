@@ -183,4 +183,81 @@ describe("FormReviewPage", () => {
     const submitButton = screen.getByRole("button", { name: "Submit Application", hidden: true });
     expect(submitButton).toBeDisabled();
   });
+
+  it("shows loading indicator on submit button during submission and disables it", async () => {
+    const setUserCanEdit = vi.fn();
+    let resolveSubmission!: (value: { key: string }) => void;
+    const submissionPromise = new Promise<{ key: string }>((resolve) => {
+      resolveSubmission = resolve;
+    });
+    submitApplicationMock.mockReturnValue(submissionPromise);
+    turnstileRenderMock.mockImplementation(async (_container: unknown, callbacks: { onSuccess?: (token: string) => void }) => {
+      callbacks.onSuccess?.("token-123");
+      return "widget-1";
+    });
+
+    renderWithForm({
+      defaultValues: { 0: { "0-0": "Jane Doe", "0-1": "2026-05-22" } },
+      userCanEdit: true,
+      setUserCanEdit,
+    });
+
+    const confirmCheckbox = await screen.findByLabelText(/I confirm that the information provided/i);
+    fireEvent.click(confirmCheckbox);
+
+    const submitButton = screen.getByRole("button", { name: "Submit Application" });
+    expect(submitButton).toBeEnabled();
+
+    fireEvent.click(submitButton);
+
+    // During submission, button should be disabled
+    await waitFor(() => {
+      expect(submitButton).toBeDisabled();
+    });
+
+    // Resolve the submission
+    resolveSubmission({ key: "app-1" });
+
+    // After submission completes, modal should appear
+    await waitFor(() => {
+      expect(screen.getByText("Application Successfully Submitted")).toBeInTheDocument();
+    });
+  });
+
+  it("re-enables submit button if submission fails", async () => {
+    const setUserCanEdit = vi.fn();
+    submitApplicationMock.mockRejectedValue(
+      new Error("Submission failed")
+    );
+    turnstileRenderMock.mockImplementation(async (_container: unknown, callbacks: { onSuccess?: (token: string) => void }) => {
+      callbacks.onSuccess?.("token-123");
+      return "widget-1";
+    });
+
+    renderWithForm({
+      defaultValues: { 0: { "0-0": "Jane Doe", "0-1": "2026-05-22" } },
+      userCanEdit: true,
+      setUserCanEdit,
+    });
+
+    const confirmCheckbox = await screen.findByLabelText(/I confirm that the information provided/i);
+    fireEvent.click(confirmCheckbox);
+
+    const submitButton = screen.getByRole("button", { name: "Submit Application" });
+    fireEvent.click(submitButton);
+
+    // Wait for submission to fail and error message to appear
+    await waitFor(() => {
+      expect(showSnackbarMock).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to submit"),
+        "error",
+      );
+    });
+
+    // Button should be re-enabled after failure
+    expect(submitButton).toBeEnabled();
+
+    // Modal should NOT appear after failure
+    expect(screen.queryByText("Application Successfully Submitted")).not.toBeInTheDocument();
+  });
 });

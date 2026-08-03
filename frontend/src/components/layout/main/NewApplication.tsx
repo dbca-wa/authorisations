@@ -454,7 +454,7 @@ const Questionnaire = ({
                 <Button
                     variant="outlined"
                     color="info"
-                    loadingPosition='start'
+                    loadingPosition="start"
                     loading={inProgress}
                     disabled={inProgress}
                     startIcon={<CreateOutlinedIcon />}
