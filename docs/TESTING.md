@@ -292,6 +292,47 @@ CI E2E job should:
 - emit JUnit XML and publish results,
 - publish trace/video/screenshot artefacts when available.
 
+### 9) E2E Test Data Ownership Rules
+
+Critical security fixture principle:
+- **Applications in the review queue are those submitted by OTHER users, not the reviewer's own applications.**
+- Reviewers should see applications from applicants and other users, not only their own.
+
+Why this matters:
+- During development, applications were being created and tested in isolation to verify review features worked.
+- The bug discovered: when testing locally, a reviewer could see only their own applications in the review queue, but could not see applications submitted by other users.
+- This defeats the purpose of the reviewer role—reviewers need to review applications from applicants, not just their own submissions.
+- The correct test pattern ensures this access control works: applications owned by other users appear in the reviewer's queue.
+
+Correct test data setup:
+```python
+# ❌ WRONG: Testing with reviewer's own application
+reviewer = e2e_users["reviewer"]
+app = Application.objects.create(
+    owner=reviewer,  # ← Bug: reviewer can only see their own app, not others' applications
+    ...
+)
+
+# ✅ CORRECT: Testing with applications from other users
+reviewer = e2e_users["reviewer"]
+applicant = e2e_users["applicant"]  # or any other user
+app = Application.objects.create(
+    owner=applicant,  # ← Correct: reviewer can see applicant's submitted applications in queue
+    ...
+)
+```
+
+This applies to:
+- Seed data fixtures used in E2E tests
+- Programmatically-created test applications
+- Any manual testing of reviewer workflows
+
+Lessons from this:
+- Always create test applications as a different user (applicant) when testing reviewer workflows
+- Verify that reviewers can see applications from other users, not just their own
+- When manually testing, create applications as an applicant and switch to reviewer role to verify access
+- This is the correct access pattern: reviewers review others' applications
+
 ## Technical Learnings Captured During Implementation
 
 ### Backend/Test Environment

@@ -78,11 +78,10 @@ export const ReviewCard = ({
 }) => {
     const { showDialog, hideDialog } = useDialog();
     const { showSnackbar } = useSnackbar();
-    const [displayedApplication, setDisplayedApplication] = useState<IApplicationData>(application);
 
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
-    const statusCapitalised = formatStatusLabel(displayedApplication.status);
-    const { createdAtRelative, updatedAtRelative, submittedAtRelative } = formatRelativeDates(displayedApplication);
+    const statusCapitalised = formatStatusLabel(application.status);
+    const { createdAtRelative, updatedAtRelative, submittedAtRelative } = formatRelativeDates(application);
 
     const handleFilesClick = () => {
         showDialog({
@@ -109,7 +108,7 @@ export const ReviewCard = ({
         let updatedApp: IApplicationData;
         try {
             updatedApp = await ApiManager.updateReviewerApplicationStatus(
-                displayedApplication.key,
+                application.key,
                 "UNDER_REVIEW" as ApplicationStatus,
             );
         } catch (error: unknown) {
@@ -121,7 +120,6 @@ export const ReviewCard = ({
             return;
         }
 
-        setDisplayedApplication(updatedApp);
         showSnackbar("Application claimed for review.", "success");
         onStatusChanged(updatedApp);
     };
@@ -148,7 +146,7 @@ export const ReviewCard = ({
                         let updatedApp: IApplicationData;
                         try {
                             updatedApp = await ApiManager.updateReviewerApplicationStatus(
-                                displayedApplication.key,
+                                application.key,
                                 "DRAFT" as ApplicationStatus,
                             );
                         } catch (error: unknown) {
@@ -161,7 +159,6 @@ export const ReviewCard = ({
                             return;
                         }
 
-                        setDisplayedApplication(updatedApp);
                         showSnackbar("Application reset to draft for revision.", "info");
                         onStatusChanged(updatedApp);
                         // Close the dialog after action
@@ -182,7 +179,7 @@ export const ReviewCard = ({
         let updatedApp: IApplicationData;
         try {
             updatedApp = await ApiManager.updateReviewerApplicationStatus(
-                displayedApplication.key,
+                application.key,
                 "UNDER_ASSESSMENT" as ApplicationStatus,
             );
         } catch (error: unknown) {
@@ -194,7 +191,6 @@ export const ReviewCard = ({
             return;
         }
 
-        setDisplayedApplication(updatedApp);
         showSnackbar("Application moved to assessment.", "success");
         onStatusChanged(updatedApp);
     };
@@ -285,7 +281,7 @@ export const ReviewCard = ({
                 </Box>
                 {/* Action buttons: left and right justified with space-between. */}
                 <Box className="flex justify-between gap-1 mt-2">
-                    {displayedApplication.status === "SUBMITTED" && (
+                    {application.status === "SUBMITTED" && (
                         <Tooltip title="Claim application for review" placement="bottom" arrow>
                             <Button
                                 className="ml-auto!"
@@ -298,7 +294,7 @@ export const ReviewCard = ({
                             </Button>
                         </Tooltip>
                     )}
-                    {displayedApplication.status === "UNDER_REVIEW" && (
+                    {application.status === "UNDER_REVIEW" && (
                         <>
                             <Tooltip title="Reset application to draft for revision" placement="bottom" arrow>
                                 <Button

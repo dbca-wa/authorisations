@@ -415,3 +415,53 @@ def test_review_card_shows_pending_for_recently_submitted_apps(
     # Tear down
     page.close()
     context.close()
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_reviewer_claim_application_workflow(
+    authenticated_browser_context_factory,
+    e2e_users,
+):
+    """Verify reviewer can claim an application: SUBMITTED → UNDER_REVIEW."""
+    reviewer = e2e_users["reviewer"]
+    other = e2e_users["other"]
+
+    # Get a submitted application
+    app = Application.objects.filter(owner=other, status="SUBMITTED").first()
+    assert app is not None, "Expected a submitted application in seed data"
+    original_submitted_at = app.submitted_at
+
+    # Open review page as reviewer
+    context = authenticated_browser_context_factory(reviewer)
+    page = context.new_page()
+    page.goto("/review")
+    page.wait_for_selector('button:has-text("Claim")')
+
+    # Find and click the Claim button
+    claim_button = page.locator('button:has-text("Claim")').first
+    assert claim_button.is_visible(), "Claim button should be visible for SUBMITTED status"
+    claim_button.click()
+
+    # Verify success notification (snackbar) - wait for it to appear
+    page.wait_for_selector('text=Application claimed for review', timeout=5000)
+    success_message = page.locator('text=Application claimed for review')
+    assert success_message.is_visible(), "Success message should appear after claiming"
+
+    # Refresh and verify the application moved to UNDER_REVIEW tab
+    page.reload()
+    page.wait_for_selector('[role="tab"]')
+    
+    # Click the "Under Review" tab (second tab)
+    under_review_tab = page.locator('[role="tab"]').nth(1)
+    under_review_tab.click()
+    page.wait_for_timeout(500)
+    
+    # Verify application is now under review
+    app.refresh_from_db()
+    assert app.status == "UNDER_REVIEW", "Application should be in UNDER_REVIEW status"
+    assert app.submitted_at == original_submitted_at, "submitted_at should be preserved when moving to UNDER_REVIEW"
+
+    # Tear down
+    page.close()
+    context.close()

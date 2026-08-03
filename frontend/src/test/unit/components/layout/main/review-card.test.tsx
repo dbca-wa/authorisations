@@ -376,4 +376,218 @@ describe("ReviewCard", () => {
       expect(downloadButton.closest("a")).toHaveAttribute("href", "/d/app-key-789");
     });
   });
+
+  describe("action button visibility and behavior", () => {
+    describe("SUBMITTED status", () => {
+      it("displays Claim button for SUBMITTED status", () => {
+        render(
+          <ReviewCard
+            process={makeProcess()}
+            application={makeApplication({ status: "SUBMITTED" })}
+            isHighlighted={false}
+            onStatusChanged={vi.fn()}
+            onCardElementMounted={vi.fn()}
+          />,
+        );
+
+        expect(screen.getByText("Claim")).toBeInTheDocument();
+      });
+    });
+
+    describe("UNDER_REVIEW status", () => {
+      it("displays Reset and Assessment buttons for UNDER_REVIEW status", () => {
+        render(
+          <ReviewCard
+            process={makeProcess()}
+            application={makeApplication({ status: "UNDER_REVIEW" })}
+            isHighlighted={false}
+            onStatusChanged={vi.fn()}
+            onCardElementMounted={vi.fn()}
+          />,
+        );
+
+        expect(screen.getByText("Reset")).toBeInTheDocument();
+        expect(screen.getByText("Assessment")).toBeInTheDocument();
+      });
+    });
+
+    describe("UNDER_ASSESSMENT status", () => {
+      it("does not display action buttons for UNDER_ASSESSMENT status", () => {
+        render(
+          <ReviewCard
+            process={makeProcess()}
+            application={makeApplication({ status: "UNDER_ASSESSMENT" })}
+            isHighlighted={false}
+            onStatusChanged={vi.fn()}
+            onCardElementMounted={vi.fn()}
+          />,
+        );
+
+        expect(screen.queryByText("Claim")).not.toBeInTheDocument();
+        expect(screen.queryByText("Reset")).not.toBeInTheDocument();
+        expect(screen.queryByText("Assessment")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Claim action handler", () => {
+    it("successfully claims application and calls onStatusChanged with updated application", async () => {
+      const onStatusChangedMock = vi.fn();
+      const updatedApp = makeApplication({ status: "UNDER_REVIEW" });
+      vi.mocked(ApiManagerModule.ApiManager.updateReviewerApplicationStatus).mockResolvedValueOnce(
+        updatedApp,
+      );
+
+      render(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ status: "SUBMITTED" })}
+          isHighlighted={false}
+          onStatusChanged={onStatusChangedMock}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      const claimButton = screen.getByText("Claim").closest("button");
+      fireEvent.click(claimButton!);
+
+      await waitFor(() => {
+        expect(ApiManagerModule.ApiManager.updateReviewerApplicationStatus).toHaveBeenCalledWith(
+          expect.any(String),
+          "UNDER_REVIEW",
+        );
+        expect(onStatusChangedMock).toHaveBeenCalledWith(updatedApp);
+        expect(showSnackbarMock).toHaveBeenCalledWith(
+          "Application claimed for review.",
+          "success",
+        );
+      });
+    });
+
+    it("shows error snackbar when claim fails", async () => {
+      const onStatusChangedMock = vi.fn();
+      vi.mocked(ApiManagerModule.ApiManager.updateReviewerApplicationStatus).mockRejectedValueOnce(
+        new Error("API Error"),
+      );
+
+      render(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ status: "SUBMITTED" })}
+          isHighlighted={false}
+          onStatusChanged={onStatusChangedMock}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      const claimButton = screen.getByText("Claim").closest("button");
+      fireEvent.click(claimButton!);
+
+      await waitFor(() => {
+        expect(showSnackbarMock).toHaveBeenCalledWith(
+          "Failed to claim application. Please try again later.",
+          "error",
+        );
+        expect(onStatusChangedMock).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("Reset to Draft action handler", () => {
+    it("shows confirmation dialog when Reset is clicked", async () => {
+      render(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ status: "UNDER_REVIEW" })}
+          isHighlighted={false}
+          onStatusChanged={vi.fn()}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      const resetButtons = screen.getAllByText("Reset");
+      const button = resetButtons[0].closest("button");
+      if (!button) throw new Error("Reset button not found");
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(showDialogMock).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("Chip component updates", () => {
+    it("displays status chip reflecting current application status", () => {
+      render(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ status: "SUBMITTED" })}
+          isHighlighted={false}
+          onStatusChanged={vi.fn()}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText("Submitted")).toBeInTheDocument();
+    });
+
+    it("updates status chip when application status changes via prop", () => {
+      const { rerender } = render(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ status: "SUBMITTED" })}
+          isHighlighted={false}
+          onStatusChanged={vi.fn()}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText("Submitted")).toBeInTheDocument();
+
+      rerender(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ status: "UNDER_REVIEW" })}
+          isHighlighted={false}
+          onStatusChanged={vi.fn()}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText("Under Review")).toBeInTheDocument();
+      expect(screen.queryByText("Submitted")).not.toBeInTheDocument();
+    });
+
+    it("displays updated_at chip with relative time that updates with application prop changes", () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 5);
+
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() - 1);
+
+      const { rerender } = render(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ updated_at: oldDate.toISOString() })}
+          isHighlighted={false}
+          onStatusChanged={vi.fn()}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText(/Updated.*5.*days?.*ago/)).toBeInTheDocument();
+
+      rerender(
+        <ReviewCard
+          process={makeProcess()}
+          application={makeApplication({ updated_at: newDate.toISOString() })}
+          isHighlighted={false}
+          onStatusChanged={vi.fn()}
+          onCardElementMounted={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText(/Updated.*day.*ago/)).toBeInTheDocument();
+    });
+  });
 });

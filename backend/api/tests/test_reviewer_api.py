@@ -169,6 +169,7 @@ def test_reviewer_retrieve_returns_404_for_unreviewable_process(
 
 
 @pytest.mark.django_db
+@pytest.mark.security
 def test_reviewer_patch_allows_reviewer_settable_status(
     api_client,
     reviewer_user,
@@ -203,6 +204,7 @@ def test_reviewer_patch_allows_reviewer_settable_status(
 
 
 @pytest.mark.django_db
+@pytest.mark.security
 def test_reviewer_patch_rejects_non_reviewer_settable_target_status(
     api_client,
     reviewer_user,
@@ -507,3 +509,98 @@ def test_reviewer_list_includes_questionnaire_sort_order(
     assert response.data[0]["questionnaire_sort_order"] == 3
     assert "process_sort_order" in response.data[0]
     assert response.data[0]["process_sort_order"] == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.security
+def test_reviewer_patch_non_reviewer_cannot_change_status(
+    api_client,
+    user,
+    reviewer_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Reject non-reviewer attempts to change application status via PATCH endpoint."""
+    process = process_factory(slug="non-reviewer-test")
+    process.reviewer_groups.add(reviewer_group)
+    application = application_factory(
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=user)
+    response = api_client.patch(
+        f"/api/review/{application.key}",
+        {"status": ApplicationStatus.UNDER_REVIEW},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    application.refresh_from_db()
+    assert application.status == ApplicationStatus.SUBMITTED
+
+
+@pytest.mark.django_db
+@pytest.mark.security
+def test_reviewer_patch_submitted_at_cleared_only_on_draft_transition(
+    api_client,
+    reviewer_user,
+    reviewer_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Verify submitted_at is cleared only when transitioning to DRAFT, not on other transitions."""
+    from django.utils import timezone
+
+    process = process_factory(slug="submitted-at-test")
+    process.reviewer_groups.add(reviewer_group)
+    original_submitted_at = timezone.now()
+    application = application_factory(
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+        submitted_at=original_submitted_at,
+    )
+
+    api_client.force_authenticate(user=reviewer_user)
+
+    # Transition 1: SUBMITTED → UNDER_REVIEW (submitted_at should be preserved)
+    response = api_client.patch(
+        f"/api/review/{application.key}",
+        {"status": ApplicationStatus.UNDER_REVIEW},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    application.refresh_from_db()
+    assert application.status == ApplicationStatus.UNDER_REVIEW
+    assert application.submitted_at == original_submitted_at
+
+    # Transition 2: UNDER_REVIEW → UNDER_ASSESSMENT (submitted_at should still be preserved)
+    response = api_client.patch(
+        f"/api/review/{application.key}",
+        {"status": ApplicationStatus.UNDER_ASSESSMENT},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    application.refresh_from_db()
+    assert application.status == ApplicationStatus.UNDER_ASSESSMENT
+    assert application.submitted_at == original_submitted_at
+
+    # Create a new application to test DRAFT transition
+    application2 = application_factory(
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.UNDER_REVIEW,
+        submitted_at=original_submitted_at,
+    )
+
+    # Transition 3: UNDER_REVIEW → DRAFT (submitted_at should be cleared)
+    response = api_client.patch(
+        f"/api/review/{application2.key}",
+        {"status": ApplicationStatus.DRAFT},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    application2.refresh_from_db()
+    assert application2.status == ApplicationStatus.DRAFT
+    assert application2.submitted_at is None
