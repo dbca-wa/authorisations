@@ -31,8 +31,8 @@ class Migration(migrations.Migration):
                 ('questionnaire', models.ForeignKey(db_index=False, editable=False, on_delete=django.db.models.deletion.PROTECT, related_name='applications', to='questionnaires.questionnaire')),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['owner', 'status', '-created_at'], name='apps_owner_status_idx'), models.Index(fields=['questionnaire', 'status', '-created_at'], name='apps_questionnaire_status_idx')],
+                'ordering': ('-created_at',),
+                'indexes': (models.Index(fields=['owner', 'status', '-created_at'], name='apps_owner_status_idx'), models.Index(fields=['questionnaire', 'status', '-created_at'], name='apps_questionnaire_status_idx')),
             },
         ),
     ]

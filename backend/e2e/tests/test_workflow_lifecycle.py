@@ -7,7 +7,8 @@ Applicant (Draft -> Submit) -> Reviewer (Review/Triage -> Technical Assessment -
 import json
 
 import pytest
-from applications.models import Application, ApplicationStatus
+from applications.models import Application
+from applications.statuses import ApplicationStatus
 from playwright.sync_api import expect
 
 

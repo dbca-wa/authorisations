@@ -20,6 +20,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added formal specification of application status workflow ([STATUS-WORKFLOW.md](docs/STATUS-WORKFLOW.md)) documenting all 13 state transitions, permissions, and business rules with comprehensive test coverage across backend API (19 tests), E2E (6 tests), and frontend (10 statuses verified).
 - Added submission modal displayed after successful application submission and on page load for read-only applications, providing confirmation and options to download application PDF or exit the application.
 - Added technical officers review page workflow actions enabling reviewers to claim applications for review, reset applications to draft for applicant revision, and proceed applications to assessment stage with confirmation dialogs for each action.
+- Added audit logging for reviewer and assessor actions, recording every application status change with user, timestamp, and status transition details in an immutable audit log accessible through the Django admin interface for regulatory compliance and investigation purposes.
 
 ### Changed
 

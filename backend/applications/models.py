@@ -13,6 +13,7 @@ from users.models import User
 
 from .prince import Prince
 from .schema import get_answers_schema
+from .statuses import ApplicationStatus
 
 
 def _boolean_checkbox(value: Any) -> str:
@@ -199,44 +200,6 @@ def _build_question_item(
     # All scalar/simple types: normalise to a display string (or None if empty).
     item["value"] = _normalise_answer_value(question, answer_value)
     return item
-
-
-class ApplicationStatus(models.TextChoices):
-    """Enumeration of possible application statuses."""
-
-    DRAFT = "DRAFT"
-    DISCARDED = "DISCARDED"
-    SUBMITTED = "SUBMITTED"
-    WITHDRAWN = "WITHDRAWN"
-    UNDER_REVIEW = "UNDER_REVIEW"
-    UNDER_ASSESSMENT = "UNDER_ASSESSMENT"
-    APPROVED = "APPROVED"
-    APPROVED_WITH_CONDITIONS = "APPROVED_WITH_CONDITIONS"
-    DEFERRED = "DEFERRED"
-    REJECTED = "REJECTED"
-
-
-# Statuses visible in the reviewer queue — applications awaiting or under active review.
-REVIEW_QUEUE_STATUSES = frozenset(
-    [
-        ApplicationStatus.SUBMITTED,
-        ApplicationStatus.UNDER_REVIEW,
-        ApplicationStatus.UNDER_ASSESSMENT,
-    ]
-)
-
-# Statuses a reviewer is permitted to set; excludes applicant-only transitions (DRAFT, DISCARDED).
-REVIEWER_SETTABLE_STATUSES = frozenset(
-    [
-        ApplicationStatus.DRAFT,
-        ApplicationStatus.UNDER_REVIEW,
-        ApplicationStatus.UNDER_ASSESSMENT,
-        ApplicationStatus.APPROVED,
-        ApplicationStatus.APPROVED_WITH_CONDITIONS,
-        ApplicationStatus.DEFERRED,
-        ApplicationStatus.REJECTED,
-    ]
-)
 
 
 class Application(models.Model):

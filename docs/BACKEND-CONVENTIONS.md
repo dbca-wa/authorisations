@@ -169,6 +169,27 @@ Common management commands:
   - Publish raw coverage XML from each test job as pipeline artifacts
   - Add a dedicated downstream `Coverage` job that downloads both artifacts and runs a single `PublishCodeCoverageResults@2` step
 
+## Audit logging for reviewer and assessor actions
+
+The `audit` app records all application status changes made by reviewers and assessors for regulatory compliance and investigation purposes.
+
+**Model:** `audit.models.ApplicationAuditLog`
+- Fields: `application` (FK), `user` (FK, nullable), `prev_status` (CharField), `next_status` (CharField), `timestamp` (auto_now_add)
+- Indexes: (application, -timestamp), (user, -timestamp), (-timestamp) for efficient filtering and sorting
+- Admin: read-only interface only (no add, delete, or change permissions)
+
+**Integration points:**
+- `record_application_status_change(application, user, prev_status, next_status)` — explicit helper function in `audit.models`
+- Called automatically in `ReviewerViewSet.patch()` after status change is persisted
+- No signals; explicit calls only to make audit dependencies transparent
+
+**Key principles:**
+- Status transitions logged regardless of who makes them (reviewer, assessor, system)
+- Log entries are immutable: no user can modify or delete audit history
+- Only transitions where `prev_status != next_status` are logged; no-op transitions are skipped
+- Timestamps are automatically set to UTC on creation; all sorting and analysis uses this timestamp
+- User field is nullable to accommodate future system-triggered transitions
+
 ## Change safety checklist
 
 - Before changing questionnaire selection logic:

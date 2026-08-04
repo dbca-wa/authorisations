@@ -8,7 +8,8 @@ from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
 
-from applications.models import Application, ApplicationAttachment, ApplicationStatus
+from applications.models import Application, ApplicationAttachment
+from applications.statuses import ApplicationStatus
 from applications.serialisers import (
     ApplicationSerialiser,
     AttachmentSerialiser,

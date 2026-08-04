@@ -10,16 +10,18 @@ from questionnaires.models import Questionnaire
 from users.models import User
 
 from applications.models import (
-    REVIEW_QUEUE_STATUSES,
-    REVIEWER_SETTABLE_STATUSES,
     Application,
     ApplicationAttachment,
-    ApplicationStatus,
     _boolean_checkbox,
     _build_grid_rows,
     _build_question_item,
     _icon_class_for_extension,
     _normalise_answer_value,
+)
+from applications.statuses import (
+    REVIEW_QUEUE_STATUSES,
+    REVIEWER_SETTABLE_STATUSES,
+    ApplicationStatus,
 )
 
 

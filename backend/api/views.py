@@ -1,16 +1,19 @@
 import uuid
 
 from applications.models import (
-    REVIEW_QUEUE_STATUSES,
     Application,
     ApplicationAttachment,
+)
+from applications.statuses import (
     ApplicationStatus,
+    REVIEW_QUEUE_STATUSES,
 )
 from applications.serialisers import (
     ApplicationSerialiser,
     AttachmentSerialiser,
     ReviewerSerialiser,
 )
+from audit.models import record_application_status_change
 from django.db.models import BooleanField, Exists, F, OuterRef, Q, Value, Window
 from django.db.models.functions import RowNumber
 from django.utils import timezone
@@ -306,6 +309,9 @@ class ReviewerViewSet(
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
+        # Capture the status before the change for audit logging.
+        previous_status = instance.status
+
         save_kwargs = {}
         requested_status = serializer.validated_data.get("status")
 
@@ -315,6 +321,11 @@ class ReviewerViewSet(
             save_kwargs["submitted_at"] = None
 
         serializer.save(**save_kwargs)
+
+        # Log the status change for audit and regulatory compliance.
+        record_application_status_change(
+            instance, request.user, previous_status, instance.status
+        )
 
         # Clear any prefetch cache so the response reflects the saved state.
         if getattr(instance, "_prefetched_objects_cache", None):

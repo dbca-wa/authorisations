@@ -1,7 +1,7 @@
 """API tests for reviewer queue list/retrieve/update endpoints."""
 
 import pytest
-from applications.models import ApplicationStatus
+from applications.statuses import ApplicationStatus
 from rest_framework import status
 
 pytestmark = [pytest.mark.api]
