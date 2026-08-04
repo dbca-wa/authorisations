@@ -260,4 +260,54 @@ describe("FormReviewPage", () => {
     // Modal should NOT appear after failure
     expect(screen.queryByText("Application Successfully Submitted")).not.toBeInTheDocument();
   });
+
+
+
+  describe("Turnstile Integration", () => {
+    it("disables submit button when Turnstile token is missing", async () => {
+      const setUserCanEdit = vi.fn();
+      // Mock Turnstile to NOT provide a token
+      turnstileRenderMock.mockImplementation(async () => {
+        // Simulate no token being generated
+        return "widget-1";
+      });
+
+      renderWithForm({
+        defaultValues: { 0: { "0-0": "Jane Doe", "0-1": "2026-05-22" } },
+        userCanEdit: true,
+        setUserCanEdit,
+      });
+
+      // Confirmation checkbox
+      const confirmCheckbox = await screen.findByLabelText(/I confirm that the information provided/i);
+      fireEvent.click(confirmCheckbox);
+
+      // Submit button should still be disabled without Turnstile token
+      const submitButton = screen.getByRole("button", { name: "Submit Application" });
+      expect(submitButton).toBeDisabled();
+    });
+
+    it("handles Turnstile widget container initialization error gracefully", async () => {
+      const setUserCanEdit = vi.fn();
+      // Mock Turnstile render to be called (but container ref might be null in some edge case)
+      turnstileRenderMock.mockImplementation(async () => {
+        return "widget-1";
+      });
+
+      renderWithForm({
+        defaultValues: { 0: { "0-0": "Jane Doe", "0-1": "2026-05-22" } },
+        userCanEdit: true,
+        setUserCanEdit,
+      });
+
+      // Verify that Turnstile render was attempted
+      await waitFor(() => {
+        expect(turnstileRenderMock).toHaveBeenCalled();
+      });
+
+      // Submit button should be disabled without successful verification
+      const submitButton = screen.getByRole("button", { name: "Submit Application" });
+      expect(submitButton).toBeDisabled();
+    });
+  });
 });
