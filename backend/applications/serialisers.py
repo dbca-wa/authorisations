@@ -12,10 +12,12 @@ from questionnaires.models import Questionnaire
 from rest_framework import exceptions, serializers, status
 
 from .models import (
-    REVIEW_QUEUE_STATUSES,
-    REVIEWER_SETTABLE_STATUSES,
     Application,
     ApplicationAttachment,
+)
+from .statuses import (
+    REVIEW_QUEUE_STATUSES,
+    REVIEWER_SETTABLE_STATUSES,
     ApplicationStatus,
 )
 from .schema import get_answers_schema

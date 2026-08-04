@@ -7,7 +7,8 @@ defined in docs/STATUS-WORKFLOW.md.
 from datetime import timedelta
 
 import pytest
-from applications.models import Application, ApplicationStatus
+from applications.models import Application
+from applications.statuses import ApplicationStatus
 from django.utils import timezone
 from rest_framework import status
 

@@ -147,8 +147,12 @@ def test_editor_review_page_and_submit_application(
         submit_button = page.get_by_role("button", name="Submit Application")
         submit_button.click()
         
-        # Wait for submission to complete - page becomes read-only but stays at same URL
-        page.wait_for_load_state("networkidle", timeout=5000)
+        # Wait for submission modal to appear
+        page.wait_for_selector('text="Application Successfully Submitted"', timeout=5000)
+        
+        # Verify modal contains expected content
+        expect_text = "locked in read-only mode"
+        page.get_by_text(expect_text, exact=False).wait_for()
     finally:
         page.close()
         context.close()

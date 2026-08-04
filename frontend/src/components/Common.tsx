@@ -7,9 +7,9 @@ import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from "@mui/material/Typography";
 
-import Tooltip from '@mui/material/Tooltip';
 import type { TypographyProps } from "@mui/material/Typography";
 import { useRef } from 'react';
 import { ApiManager } from '../context/ApiManager';
@@ -249,18 +249,19 @@ export const ApplicationIdDisplay = ({
     const isSmallVariant = variant === 'caption' || variant === 'body2';
 
     return (
-        <Typography
-            variant={variant}
-            component="div"
-            className="flex items-center w-fit cursor-pointer transition-opacity duration-200 ease-in-out hover:opacity-100"
-            sx={{
-                opacity: isSmallVariant ? 0.7 : 1,
-            }}
-            onClick={handleCopy}
-            title="Click to copy application ID"
-        >
-            <NumbersIcon sx={{ fontSize: 'inherit' }} />
-            {internalId}
-        </Typography>
+        <Tooltip title="Copy application ID" placement="top" arrow>
+            <Typography
+                variant={variant}
+                component="div"
+                className="flex items-center w-fit cursor-pointer transition-opacity duration-200 ease-in-out hover:opacity-100"
+                sx={{
+                    opacity: isSmallVariant ? 0.7 : 1,
+                }}
+                onClick={handleCopy}
+            >
+                <NumbersIcon sx={{ fontSize: 'inherit' }} />
+                {internalId}
+            </Typography>
+        </Tooltip>
     );
 };

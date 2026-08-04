@@ -19,6 +19,7 @@ import type { IAnswer, IApplicationAttachment, IFormAnswers, IGridAnswerRow } fr
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep, type IGridQuestionColumn, type IQuestion, type IQuestionnaire } from "../../../context/types/Questionnaire";
 import { FileAttachmentList } from '../../Common';
+import { SubmissionModal } from './SubmissionModal';
 
 const getStepPrefix = (stepIndex: number) => `${stepIndex + 1}.`;
 const getSectionPrefix = (sectionIndex: number) => `${String.fromCharCode(65 + sectionIndex)})`;
@@ -46,6 +47,8 @@ export function FormReviewPage({
     const [turnstileLoading, setTurnstileLoading] = React.useState<boolean>(userCanEdit);
     const [turnstileError, setTurnstileError] = React.useState<string | null>(null);
     const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
+    const [submitInProgress, setSubmitInProgress] = React.useState<boolean>(false);
+    const [submissionModalOpen, setSubmissionModalOpen] = React.useState<boolean>(!userCanEdit);
     const hasInitializedRef = React.useRef<boolean>(false);
     const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -109,23 +112,35 @@ export function FormReviewPage({
 
     const isTurnstileVerified = !userCanEdit || (!turnstileLoading && !turnstileError && !!turnstileToken);
 
-    // Dummy submit handler for now
+    // Disable the submit button if any of the following conditions are true:
+    // - the user has not confirmed the accuracy of their answers,
+    // - the user cannot edit (read-only mode),
+    // - Turnstile verification has not been completed successfully,
+    // - or a submission is currently in progress.
+    const submitButtonDisabled = !hasConfirmed || !userCanEdit || !isTurnstileVerified || submitInProgress;
+
+    /**
+     * The final submission handler for the review page. It checks for Turnstile verification and submits the application via the API.
+     * Displays a success modal and triggers a confetti effect on successful submission.
+     * @returns {Promise<void>} A promise that resolves when the submission process is complete.
+     * @throws Will throw an error if the Turnstile verification fails or if the API submission fails.
+     */
     const onFinalSubmit = async () => {
         if (userCanEdit && !turnstileToken) {
             showSnackbar("Please complete verification before submitting.", "error");
             return;
         }
 
-        // alert("Submitted! (implement server-side integration here)");
+        // Disable the submit button to prevent multiple submissions
+        setSubmitInProgress(true);
+
         await ApiManager.submitApplication(applicationKey, turnstileToken || "")
-            // Successfully save to API    
             .then((resp) => {
-                showSnackbar("Application has been successfully submitted and is read-only now.", "success");
                 setUserCanEdit(false);
+                setSubmissionModalOpen(true);
                 fireConfettiEffect(5);
                 return resp;
             })
-            // Display the error message to user and log to console
             .catch((error: AxiosError) => {
                 console.error('API Error:', error);
                 const responseData = error.response?.data as {
@@ -135,9 +150,10 @@ export function FormReviewPage({
                 const message = responseData?.turnstile_token?.[0] ?? responseData?.status?.[0] ?? error.message;
                 showSnackbar(`Failed to submit: ${message}`, "error");
                 return null;
+            })
+            .finally(() => {
+                setSubmitInProgress(false);
             });
-
-        // if (!response) return;
     };
 
     return (
@@ -253,13 +269,21 @@ export function FormReviewPage({
                     variant="contained"
                     size="large"
                     color="success"
+                    loadingPosition="start"
                     onClick={onFinalSubmit}
-                    disabled={!hasConfirmed || !userCanEdit || !isTurnstileVerified}
+                    loading={submitInProgress}
+                    disabled={submitButtonDisabled}
                     startIcon={<AssignmentTurnedInRoundedIcon />}
                 >
                     Submit Application
                 </Button>
             </div>
+
+            <SubmissionModal
+                open={submissionModalOpen}
+                applicationKey={applicationKey}
+                onClose={() => setSubmissionModalOpen(false)}
+            />
         </div>
     );
 }

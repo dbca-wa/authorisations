@@ -12,6 +12,7 @@ import ListItem from "@mui/material/ListItem";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
+import Tooltip from '@mui/material/Tooltip';
 import React from "react";
 
 import { ApiManager } from '../../../context/ApiManager';
@@ -60,13 +61,12 @@ export const ApplicationCard = ({
     application,
     onStatusChanged,
 }: {
-    process?: IAuthorisationProcess;
+    process: IAuthorisationProcess;
     application: IApplicationData;
     onStatusChanged: (updatedApp: IApplicationData) => void;
 }) => {
     const [displayedApplication, setDisplayedApplication] = React.useState<IApplicationData>(application);
     const { showSnackbar } = useSnackbar();
-    const processName = process?.name ?? `Unknown process (${application.process_slug})`;
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
     const statusCapitalised = formatStatusLabel(displayedApplication.status);
     const { createdAtRelative, updatedAtRelative } = formatRelativeDates(displayedApplication);
@@ -82,18 +82,21 @@ export const ApplicationCard = ({
      * Triggers removal animation, then notifies parent after animation completes.
      */
     const handleDiscardClick = async () => {
+        let updatedApp: IApplicationData;
         try {
-            const updatedApp = await ApiManager.discardApplication(displayedApplication.key);
-            setDisplayedApplication(updatedApp);
-            showSnackbar("Application discarded.", "info");
-            onStatusChanged(updatedApp);
+            updatedApp = await ApiManager.discardApplication(displayedApplication.key);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to discard application. Please try again later.",
                 "error",
             );
             console.error("Error discarding application:", error);
+            return;
         }
+
+        setDisplayedApplication(updatedApp);
+        showSnackbar("Application discarded.", "info");
+        onStatusChanged(updatedApp);
     };
 
     /**
@@ -102,18 +105,21 @@ export const ApplicationCard = ({
      * Triggers removal animation, then notifies parent after animation completes.
      */
     const handleRevertClick = async () => {
+        let updatedApp: IApplicationData;
         try {
-            const updatedApp = await ApiManager.revertDiscardedApplication(displayedApplication.key);
-            setDisplayedApplication(updatedApp);
-            showSnackbar("Application reverted to draft.", "info");
-            onStatusChanged(updatedApp);
+            updatedApp = await ApiManager.revertDiscardedApplication(displayedApplication.key);
         } catch (error: unknown) {
             showSnackbar(
                 "Failed to revert application. Please try again later.",
                 "error",
             );
             console.error("Error reverting application:", error);
+            return;
         }
+
+        setDisplayedApplication(updatedApp);
+        showSnackbar("Application reverted to draft.", "info");
+        onStatusChanged(updatedApp);
     };
 
     return (
@@ -122,7 +128,7 @@ export const ApplicationCard = ({
                 <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
 
                 <Box className="flex gap-2 my-4 flex-wrap justify-around">
-                    <Chip label={processName} size="small" variant="outlined" />
+                    <Chip label={process.name} size="small" variant="outlined" />
                     <Chip label={questionnaireName} size="small" variant="outlined" />
 
                     {/* Force a wrapped row break between identifier chips and status/date chips. */}
@@ -166,76 +172,72 @@ export const ApplicationCard = ({
                 <Box className="flex gap-1 mt-2">
                     {/* Discard button on left—only for editable (DRAFT) applications. */}
                     {isEditable && (
-                        <Button
-                            variant="outlined"
-                            color="warning"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={false}
-                            startIcon={<DeleteOutlineIcon />}
-                            onClick={handleDiscardClick}
-                        >
-                            Discard
-                        </Button>
+                        <Tooltip title="Discard application" placement="bottom" arrow>
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                startIcon={<DeleteOutlineIcon />}
+                                onClick={handleDiscardClick}
+                            >
+                                Discard
+                            </Button>
+                        </Tooltip>
                     )}
 
                     {/* Revert button on left—only for discarded applications. */}
                     {isDiscarded && (
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            loadingPosition='start'
-                            loading={false}
-                            disabled={false}
-                            startIcon={<RestoreIcon />}
-                            onClick={handleRevertClick}
-                        >
-                            Revert
-                        </Button>
+                        <Tooltip title="Revert to draft" placement="bottom" arrow>
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<RestoreIcon />}
+                                onClick={handleRevertClick}
+                            >
+                                Revert
+                            </Button>
+                        </Tooltip>
                     )}
 
                     {/* Download and Continue buttons—push to the right. */}
                     <Box className="ml-auto flex gap-1">
                         {/* Render the PDF action only for downloadable statuses. */}
                         {isDownloadable && (
-                            <Link
-                                target="_blank"
-                                rel="noopener"
-                                aria-label="Download application PDF"
-                                href={`/d/${application.key}`}
-                            >
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    loadingPosition='start'
-                                    loading={false}
-                                    disabled={false}
-                                    startIcon={<DownloadIcon />}
+                            <Tooltip title="Download application PDF" placement="bottom" arrow>
+                                <Link
+                                    target="_blank"
+                                    rel="noopener"
+                                    aria-label="Download application PDF"
+                                    href={`/d/${application.key}`}
                                 >
-                                    Download
-                                </Button>
-                            </Link>
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        startIcon={<DownloadIcon />}
+                                    >
+                                        Download
+                                    </Button>
+                                </Link>
+                            </Tooltip>
                         )}
 
                         {/* Render the continue action only for editable applications. */}
                         {isEditable && (
-                            <Link
-                                target="_blank"
-                                rel="noopener"
-                                aria-label="Continue application"
-                                onClick={() => openNewTab(`/a/${application.key}`, application.key)}
-                            >
-                                <Button
-                                    variant="contained"
-                                    color="success"
-                                    loadingPosition='start'
-                                    loading={false}
-                                    disabled={false}
-                                    startIcon={<PlayArrowRoundedIcon />}
+                            <Tooltip title="Continue editing application" placement="bottom" arrow>
+                                <Link
+                                    target="_blank"
+                                    rel="noopener"
+                                    aria-label="Continue application"
+                                    onClick={() => openNewTab(`/a/${application.key}`, application.key)}
                                 >
-                                    Continue
-                                </Button>
-                            </Link>
+                                    <Button
+                                        variant="contained"
+                                        color="success"
+                                        startIcon={<PlayArrowRoundedIcon />}
+                                    >
+                                        Continue
+                                    </Button>
+                                </Link>
+                            </Tooltip>
                         )}
                     </Box>
                 </Box>

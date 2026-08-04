@@ -7,7 +7,8 @@ Applicant (Draft -> Submit) -> Reviewer (Review/Triage -> Technical Assessment -
 import json
 
 import pytest
-from applications.models import Application, ApplicationStatus
+from applications.models import Application
+from applications.statuses import ApplicationStatus
 from playwright.sync_api import expect
 
 
@@ -60,13 +61,17 @@ class TestWorkflowLifecycle:
         """
         Verify reviewer can triage (Under Review) and return to applicant (Draft).
         This verifies the 'Return to Draft' pattern that replaced 'Action Required'.
+        Verify submitted_at is cleared when returning to DRAFT.
         """
+        from django.utils import timezone
+        
         applicant = e2e_users["applicant"]
         reviewer = e2e_users["reviewer"]
         
-        # Prepare a submitted app
+        # Prepare a submitted app with submitted_at set
         app = Application.objects.filter(owner=applicant, status=ApplicationStatus.DRAFT).first()
         app.status = ApplicationStatus.SUBMITTED
+        app.submitted_at = timezone.now()
         app.save()
         app_key = str(app.key)
 
@@ -82,14 +87,16 @@ class TestWorkflowLifecycle:
         )
         assert res.status == 200
 
-        # Return to Draft
+        # Return to Draft (should clear submitted_at)
         res = req.patch(
             f"/api/review/{app_key}",
             data=json.dumps({"status": ApplicationStatus.DRAFT}),
             headers=headers
         )
         assert res.status == 200
-        assert Application.objects.get(key=app_key).status == ApplicationStatus.DRAFT
+        updated_app = Application.objects.get(key=app_key)
+        assert updated_app.status == ApplicationStatus.DRAFT
+        assert updated_app.submitted_at is None
 
     def test_full_progression_to_approval(
         self, authenticated_request_context_factory, e2e_users
@@ -138,9 +145,9 @@ class TestWorkflowLifecycle:
     ):
         """
         Verify the full 'Return to Draft + Re-submission' cycle:
-        1. Applicant Submits
-        2. Reviewer returns to Draft (requesting modifications)
-        3. Applicant Re-edits and Re-submits
+        1. Applicant Submits (sets submitted_at)
+        2. Reviewer returns to Draft (clears submitted_at)
+        3. Applicant Re-edits and Re-submits (sets NEW submitted_at with fresh timestamp)
         4. Reviewer approves
         """
         from applications import serialisers
@@ -183,6 +190,9 @@ class TestWorkflowLifecycle:
         assert Application.objects.get(key=app_key).status == ApplicationStatus.DRAFT
 
         # 3. Applicant Re-submits (after editing in DRAFT)
+        import time
+        time.sleep(0.1)  # Small delay to ensure different timestamp
+        
         app_auth = authenticated_request_context_factory(applicant)  # Refresh CSRF context
         res = app_auth["context"].patch(
             f"/api/applications/{app_key}",
@@ -191,9 +201,10 @@ class TestWorkflowLifecycle:
         )
         assert res.status == 200
         
-        # Verify submitted_at is preserved (not updated)
+        # Verify submitted_at is set to a NEW timestamp (not the original)
         resubmitted_app = Application.objects.get(key=app_key)
-        assert resubmitted_app.submitted_at == original_submitted_at
+        assert resubmitted_app.submitted_at is not None
+        assert resubmitted_app.submitted_at > original_submitted_at
 
         # 4. Reviewer approves
         rev_auth = authenticated_request_context_factory(reviewer)  # Refresh CSRF context
@@ -284,7 +295,7 @@ def test_workflow_ui_smoke(
     page.goto("/review")
     
     # Wait for the view to render
-    page.wait_for_selector('button:has-text("Files")')
+    page.wait_for_selector('button[aria-label="View attachments"]')
     
     # Check for the "Submitted" status chip
     status_locator = page.get_by_text("Submitted", exact=True).first

@@ -50,7 +50,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Discard/ })).toBeInTheDocument();
     });
 
     it("does not render discard button for non-draft applications", () => {
@@ -65,7 +65,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
           />,
         );
 
-        expect(screen.queryByRole("button", { name: "Discard" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Discard/ })).not.toBeInTheDocument();
         unmount();
       });
     });
@@ -85,7 +85,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+      fireEvent.click(screen.getByRole("button", { name: /Discard/ }));
 
       await waitFor(() => {
         expect(ApiManager.discardApplication).toHaveBeenCalledWith("app-1");
@@ -107,7 +107,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+      fireEvent.click(screen.getByRole("button", { name: /Discard/ }));
 
       await waitFor(() => {
         expect(onStatusChanged).toHaveBeenCalledWith(discardedApp);
@@ -128,7 +128,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+      fireEvent.click(screen.getByRole("button", { name: /Discard/ }));
 
       await waitFor(() => {
         expect(showSnackbarMock).toHaveBeenCalledWith("Application discarded.", "info");
@@ -148,7 +148,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+      fireEvent.click(screen.getByRole("button", { name: /Discard/ }));
 
       await waitFor(() => {
         expect(showSnackbarMock).toHaveBeenCalledWith(
@@ -172,7 +172,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+      fireEvent.click(screen.getByRole("button", { name: /Discard/ }));
 
       await waitFor(() => {
         expect(onStatusChanged).not.toHaveBeenCalled();
@@ -190,7 +190,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      expect(screen.getByRole("button", { name: "Revert" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Revert/ })).toBeInTheDocument();
     });
 
     it("does not render revert button for non-discarded applications", () => {
@@ -225,7 +225,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Revert" }));
+      fireEvent.click(screen.getByRole("button", { name: /Revert/ }));
 
       await waitFor(() => {
         expect(ApiManager.revertDiscardedApplication).toHaveBeenCalledWith("app-2");
@@ -247,7 +247,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Revert" }));
+      fireEvent.click(screen.getByRole("button", { name: /Revert/ }));
 
       await waitFor(() => {
         expect(onStatusChanged).toHaveBeenCalledWith(revertedApp);
@@ -268,7 +268,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Revert" }));
+      fireEvent.click(screen.getByRole("button", { name: /Revert/ }));
 
       await waitFor(() => {
         expect(showSnackbarMock).toHaveBeenCalledWith("Application reverted to draft.", "info");
@@ -288,7 +288,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Revert" }));
+      fireEvent.click(screen.getByRole("button", { name: /Revert/ }));
 
       await waitFor(() => {
         expect(showSnackbarMock).toHaveBeenCalledWith(
@@ -312,7 +312,7 @@ describe("ApplicationCard Discard and Revert Workflows", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: "Revert" }));
+      fireEvent.click(screen.getByRole("button", { name: /Revert/ }));
 
       await waitFor(() => {
         expect(onStatusChanged).not.toHaveBeenCalled();

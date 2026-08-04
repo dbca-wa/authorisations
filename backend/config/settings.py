@@ -131,6 +131,7 @@ INSTALLED_APPS = [
     "processes",
     "questionnaires",
     "applications",
+    "audit",
 ]
 
 MIDDLEWARE = [

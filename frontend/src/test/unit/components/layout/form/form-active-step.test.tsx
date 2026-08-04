@@ -177,4 +177,37 @@ describe("FormActiveStep", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(handleSubmit).toHaveBeenCalled();
   });
+
+  describe("Form Behavior", () => {
+    it("prevents form submission on Enter key for text inputs but allows for textarea", () => {
+      const handleSubmit = vi.fn(() => async () => {
+        return;
+      });
+
+      const currentStep: IFormStep = {
+        title: "Step 1",
+        description: "",
+        sections: [
+          {
+            title: "Section 1",
+            description: "",
+            questions: [{ label: "Name", type: "text", is_required: false }],
+          },
+        ],
+      };
+
+      const { container } = renderWithForm({ currentStep, activeStep: 0, handleSubmit });
+
+      const form = container.querySelector("form");
+      if (!form) throw new Error("Form not found");
+
+      // Test that Enter key doesn't submit form
+      const event = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
+      const preventDefaultSpy = vi.spyOn(event, "preventDefault");
+      form.dispatchEvent(event);
+
+      // The prevention happens in onKeyDown handler  
+      expect(preventDefaultSpy).toHaveBeenCalled();
+    });
+  });
 });

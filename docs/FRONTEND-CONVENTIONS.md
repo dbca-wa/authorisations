@@ -4,6 +4,13 @@ Development patterns and best practices for the frontend codebase.
 
 **See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for the comprehensive feature development checklist, testing requirements, and common commands.**
 
+## File extensions
+
+- Use `.tsx` for files that export React components with JSX
+- Use `.ts` for all other files: utilities, hooks, context setup, type definitions, constants, and services with no JSX
+- This distinction makes it immediately clear whether a file contains React components, improving code navigation and refactoring safety
+- **Type definition files must use `.ts`** — they contain only type declarations/interfaces and no JSX
+
 ## Code comment conventions
 
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists

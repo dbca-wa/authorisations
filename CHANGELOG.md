@@ -18,12 +18,19 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added comprehensive feature development guide ([FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md)) consolidating all mandatory best practices, testing requirements, code quality standards, and common commands in a single reference document for AI agents and developers.
 - Added new frontend as well as E2E tests for comprehensive coverage of "New application" page functionality.
 - Added formal specification of application status workflow ([STATUS-WORKFLOW.md](docs/STATUS-WORKFLOW.md)) documenting all 13 state transitions, permissions, and business rules with comprehensive test coverage across backend API (19 tests), E2E (6 tests), and frontend (10 statuses verified).
+- Added submission modal displayed after successful application submission and on page load for read-only applications, providing confirmation and options to download application PDF or exit the application.
+- Added technical officers review page workflow actions enabling reviewers to claim applications for review, reset applications to draft for applicant revision, and proceed applications to assessment stage with confirmation dialogs for each action.
+- Added audit logging for reviewer and assessor actions, recording every application status change with user, timestamp, and status transition details in an immutable audit log accessible through the Django admin interface for regulatory compliance and investigation purposes.
 
 ### Changed
 
 - Renamed "Assessment" terminology to "Review" throughout the application, including API endpoints (/api/assessment → /api/review), menu navigation ("Assessment Queue" → "Review Queue"), and related components and fixtures, to align with domain conventions.
 - Standardised on npm for all frontend package management across development, CI, testing, and production environments to ensure identical dependency versions and predictable builds.
 - Disabled questionnaire tabs when only a single questionnaire to prevent user confusion from clicking non-functional tabs.
+
+### Fixed
+
+- Fixed submit button allowing duplicate API submissions by adding loading indicator and disabled state during submission process.
 
 ### Removed
 

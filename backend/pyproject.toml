@@ -53,7 +53,7 @@ requests = "^2.33.1"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.test_settings"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
-testpaths = ["api", "applications", "processes", "questionnaires", "users"]
+testpaths = ["api", "applications", "audit", "processes", "questionnaires", "users"]
 addopts = "--strict-config --strict-markers -p no:asyncio"
 xfail_strict = true
 markers = [

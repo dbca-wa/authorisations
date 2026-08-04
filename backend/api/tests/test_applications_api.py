@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import status
 
 import applications.serialisers as application_serialisers
-from applications.models import ApplicationStatus
+from applications.statuses import ApplicationStatus
 
 
 pytestmark = [pytest.mark.api]
