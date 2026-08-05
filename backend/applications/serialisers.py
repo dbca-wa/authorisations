@@ -118,7 +118,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         required=False,
         read_only=True,
     )
-    privacy_consent_agreed = serializers.BooleanField(
+    collection_notice_agreed = serializers.BooleanField(
         required=False,
         write_only=True,
     )
@@ -151,7 +151,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             "questionnaire_name",
             "questionnaire_version",
             "questionnaire_sort_order",
-            "privacy_consent_agreed",
+            "collection_notice_agreed",
             "turnstile_token",
             "status",
             "created_at",
@@ -194,9 +194,9 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         # Questionnaire version is required when creating (to confirm data integrity)
         fields["questionnaire_version"].required = isPost
         fields["questionnaire_version"].read_only = not isPost
-        # Privacy consent acknowledgement is required when creating for auditability.
-        fields["privacy_consent_agreed"].required = isPost
-        fields["privacy_consent_agreed"].read_only = not isPost
+        # Collection notice acknowledgement is required when creating for auditability.
+        fields["collection_notice_agreed"].required = isPost
+        fields["collection_notice_agreed"].read_only = not isPost
         # Turnstile verification token is required during create and final submit PATCH.
         fields["turnstile_token"].required = isPost or isPatch
         fields["turnstile_token"].read_only = not (isPost or isPatch)
@@ -346,7 +346,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         questionnaire_id = questionnaire_data.get("id")
         questionnaire_code = questionnaire_data.get("code")
         questionnaire_version = questionnaire_data.get("version")
-        privacy_consent_agreed = attrs.get("privacy_consent_agreed")
+        collection_notice_agreed = attrs.get("collection_notice_agreed")
 
         # Ensure all integrity fields are present.
         if (
@@ -359,11 +359,11 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
                 "Process slug, questionnaire id, code and version are required."
             )
 
-        # Creation is allowed only when explicit consent is acknowledged.
-        if privacy_consent_agreed is not True:
+        # Creation is allowed only when explicit collection notice consent is acknowledged.
+        if collection_notice_agreed is not True:
             raise exceptions.ValidationError(
                 {
-                    "privacy_consent_agreed": "This field must be true to create an application."
+                    "collection_notice_agreed": "This field must be true to create an application."
                 }
             )
 

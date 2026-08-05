@@ -71,7 +71,7 @@ def test_new_application_requires_privacy_consent_before_creation(
                 "questionnaire_id": questionnaire.id,
                 "questionnaire_code": questionnaire.code,
                 "questionnaire_version": questionnaire.version,
-                "privacy_consent_agreed": False,
+                "collection_notice_agreed": False,
                 "turnstile_token": "e2e-token",
             }),
             headers={
@@ -85,7 +85,7 @@ def test_new_application_requires_privacy_consent_before_creation(
         request_context.dispose()
 
     assert status == 400
-    assert "privacy_consent_agreed" in payload
+    assert "collection_notice_agreed" in payload
 
 
 @pytest.mark.e2e
@@ -109,7 +109,7 @@ def test_new_application_requires_turnstile_token(
                 "questionnaire_id": questionnaire.id,
                 "questionnaire_code": questionnaire.code,
                 "questionnaire_version": questionnaire.version,
-                "privacy_consent_agreed": True,
+                "collection_notice_agreed": True,
             }),
             headers={
                 str(auth_context["csrf_header"]): str(auth_context["csrf_token"]),
@@ -146,7 +146,7 @@ def test_new_application_creation_succeeds_with_valid_payload(
                 "questionnaire_id": questionnaire.id,
                 "questionnaire_code": questionnaire.code,
                 "questionnaire_version": questionnaire.version,
-                "privacy_consent_agreed": True,
+                "collection_notice_agreed": True,
                 "turnstile_token": "e2e-token",
             }),
             headers={

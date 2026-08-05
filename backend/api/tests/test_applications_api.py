@@ -20,7 +20,7 @@ def _build_create_payload(questionnaire):
         "questionnaire_id": questionnaire.id,
         "questionnaire_code": questionnaire.code,
         "questionnaire_version": questionnaire.version,
-        "privacy_consent_agreed": True,
+        "collection_notice_agreed": True,
         "turnstile_token": "test-token",
     }
 
@@ -87,16 +87,16 @@ def test_application_create_requires_privacy_consent(
     questionnaire,
     monkeypatch,
 ):
-    """Reject creation unless privacy consent is explicitly acknowledged."""
+    """Reject creation unless collection notice consent is explicitly acknowledged."""
     monkeypatch.setattr(application_serialisers, "verify_turnstile_token", lambda *_args, **_kwargs: True)
     payload = _build_create_payload(questionnaire)
-    payload["privacy_consent_agreed"] = False
+    payload["collection_notice_agreed"] = False
 
     api_client.force_authenticate(user=user)
     response = api_client.post("/api/applications", payload, format="json")
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "privacy_consent_agreed" in response.data
+    assert "collection_notice_agreed" in response.data
 
 
 @pytest.mark.django_db

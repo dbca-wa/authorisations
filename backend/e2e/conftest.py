@@ -464,7 +464,7 @@ def draft_application(authenticated_request_context_factory, e2e_users):
                 "questionnaire_id": questionnaire.id,
                 "questionnaire_code": questionnaire.code,
                 "questionnaire_version": questionnaire.version,
-                "privacy_consent_agreed": True,
+                "collection_notice_agreed": True,
                 "turnstile_token": "e2e-turnstile-token",
             }),
             headers={

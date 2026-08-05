@@ -78,7 +78,7 @@ class ApplicationSerialiserTurnstileTests(TestCase):
             "questionnaire_id": self.questionnaire.id,
             "questionnaire_code": self.questionnaire.code,
             "questionnaire_version": self.questionnaire.version,
-            "privacy_consent_agreed": True,
+            "collection_notice_agreed": True,
             "turnstile_token": "test-token",
         }
 
