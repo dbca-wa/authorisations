@@ -1,4 +1,5 @@
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
+import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import LaunchIcon from '@mui/icons-material/Launch';
 import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import Box from "@mui/material/Box";
@@ -88,8 +89,10 @@ const CollectionNoticeDialog = ({
     const [turnstileLoading, setTurnstileLoading] = React.useState<boolean>(true);
     const [turnstileError, setTurnstileError] = React.useState<string | null>(null);
     const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
+    const [showScrollButton, setShowScrollButton] = React.useState<boolean>(true);
     const hasInitializedRef = React.useRef<boolean>(false);
     const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null);
+    const scrollableContentRef = React.useRef<HTMLDivElement | null>(null);
 
     /**
     * Render the Turnstile widget on component mount and wait for its callbacks
@@ -157,13 +160,59 @@ const CollectionNoticeDialog = ({
         onConfirmed(isAccepted, turnstileToken);
     };
 
+    // Scroll down indicator button handler
+    const handleScrollDown = () => {
+        if (scrollableContentRef.current) {
+            scrollableContentRef.current.scrollBy({
+                top: scrollableContentRef.current.clientHeight,
+                behavior: 'smooth',
+            });
+        }
+        setShowScrollButton(false);
+    };
+
+    // Hide the scroll down button when the user scrolls manually
+    React.useEffect(() => {
+        const scrollableContent = scrollableContentRef.current;
+        if (!scrollableContent) return;
+
+        const handleScroll = () => {
+            setShowScrollButton(false);
+        };
+
+        scrollableContent.addEventListener('scroll', handleScroll);
+        return () => {
+            scrollableContent.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
+    // Determine if content is actually scrollable using ResizeObserver
+    React.useEffect(() => {
+        const scrollableContent = scrollableContentRef.current;
+        if (!scrollableContent) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            const isScrollable = scrollableContent.scrollHeight > scrollableContent.clientHeight;
+            setShowScrollButton(isScrollable);
+        });
+
+        resizeObserver.observe(scrollableContent);
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, []);
+
+
     return (
-        <Box>
-            <Box className="max-h-[60vh] overflow-y-auto border-b border-gray-300">
+        <>
+            <Box
+                ref={scrollableContentRef}
+                className="max-h-[60vh] overflow-y-auto border-b border-gray-300"
+            >
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     The Department of Biodiversity, Conservation and Attractions (DBCA) collects personal information to:
                 </Typography>
-
                 <ul className="pl-6 mb-4 text-inherit list-disc">
                     <li>
                         <Typography variant="body2" color="textSecondary">
@@ -196,15 +245,12 @@ const CollectionNoticeDialog = ({
                         </Typography>
                     </li>
                 </ul>
-
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     The personal information collected may include names, contact details, organisational affiliation, role details and other information necessary to assess applications and issue lawful authority for activities.
                 </Typography>
-
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     DBCA may share this information:
                 </Typography>
-
                 <ul className="pl-6 mb-4 text-inherit list-disc">
                     <li>
                         <Typography variant="body2" color="textSecondary">
@@ -227,23 +273,18 @@ const CollectionNoticeDialog = ({
                         </Typography>
                     </li>
                 </ul>
-
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     You are required to provide this information where it is necessary to enable DBCA to assess applications and submissions and to perform its statutory functions under the BC Act, the AW Act, the CALM Act, the CALM Regulations and to support DPIRD's statutory functions under the FRMA Act.
                 </Typography>
-
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     If you choose not to provide the required personal information, DBCA may be unable to assess your application or submission, issue an approval or authorisation, or progress the matter further.
                 </Typography>
-
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     DBCA will handle all personal information in accordance with the PRIS Act and DBCA's Privacy Policy.
                 </Typography>
-
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     For further details on how DBCA manages your personal information, please refer to <Link href="https://www.dbca.wa.gov.au/privacy" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">DBCA's Privacy Policy<LaunchIcon fontSize="inherit" /></Link>.
                 </Typography>
-
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     If you have any questions about how your personal information will be handled, or if you would like to access or correct your personal information, please contact DBCA at email <Link href="mailto:privacy@dbca.wa.gov.au">privacy@dbca.wa.gov.au</Link>.
                 </Typography>
@@ -271,6 +312,22 @@ const CollectionNoticeDialog = ({
                     )}
                     label="I acknowledge the above information and that DBCA will handle my personal information in accordance with applicable privacy laws and its Privacy Policy."
                 />
+
+                {/* Scroll down indicator button - sticky at bottom, disappears after click */}
+                {showScrollButton && (
+                    <Box className="sticky bottom-0 mx-auto w-fit pb-4">
+                        <IconButton
+                            color="primary"
+                            onClick={handleScrollDown}
+                            size="medium"
+                            sx={{ borderColor: 'primary.main', backgroundColor: theme => theme.palette.background.default }}
+                            className="border! animate-bounce"
+                            disableRipple
+                        >
+                            <ArrowDownwardRoundedIcon />
+                        </IconButton>
+                    </Box>
+                )}
             </Box>
 
             {/* Action buttons */}
@@ -287,7 +344,7 @@ const CollectionNoticeDialog = ({
                     I agree
                 </Button>
             </Stack>
-        </Box>
+        </>
     );
 }
 
