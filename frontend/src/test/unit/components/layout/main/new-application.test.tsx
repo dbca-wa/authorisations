@@ -16,7 +16,7 @@ class MockResizeObserver {
   unobserve = vi.fn();
   disconnect = vi.fn();
 }
-(globalThis as any).ResizeObserver = MockResizeObserver;
+(globalThis as Record<string, unknown>).ResizeObserver = MockResizeObserver;
 
 const {
   apiMocks,
