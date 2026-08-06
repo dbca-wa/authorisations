@@ -90,6 +90,7 @@ export const MainLayout = ({
                             value={footerRoute.external ? `external:${footerRoute.path}` : footerRoute.path}
                             sx={{
                                 minWidth: 'auto',
+                                textWrap: 'nowrap',
                                 px: 2,
                                 '& .MuiBottomNavigationAction-label': {
                                     display: 'none',

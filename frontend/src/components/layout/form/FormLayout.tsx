@@ -222,10 +222,10 @@ export const FormLayout = () => {
         privacyNoticeShown.current = true;
         showSnackbar(
             <>
-                DBCA will collect, use and disclose your personal information in <br />
-                accordance with applicable privacy laws and its{" "}
+                Your personal information is collected, used and disclosed in <br />
+                accordance with applicable privacy laws and our{" "}
                 <Link href="/privacy" target="_blank" rel="noopener" color="inherit" underline="always">
-                    Privacy Policy
+                    Privacy Statement
                 </Link>.
             </>,
             "info",

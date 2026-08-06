@@ -280,10 +280,10 @@ const CollectionNoticeDialog = ({
                     If you choose not to provide the required personal information, DBCA may be unable to assess your application or submission, issue an approval or authorisation, or progress the matter further.
                 </Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                    DBCA will handle all personal information in accordance with the PRIS Act and DBCA's Privacy Policy.
+                    DBCA will handle all personal information in accordance with the PRIS Act and DBCA's Privacy Statement.
                 </Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                    For further details on how DBCA manages your personal information, please refer to <Link href="https://www.dbca.wa.gov.au/privacy" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">DBCA's Privacy Policy<LaunchIcon fontSize="inherit" /></Link>.
+                    For further details on how DBCA manages your personal information, please refer to <Link href="https://www.dbca.wa.gov.au/privacy" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">DBCA's Privacy Statement<LaunchIcon fontSize="inherit" /></Link>.
                 </Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     If you have any questions about how your personal information will be handled, or if you would like to access or correct your personal information, please contact DBCA at email <Link href="mailto:privacy@dbca.wa.gov.au">privacy@dbca.wa.gov.au</Link>.
@@ -310,7 +310,7 @@ const CollectionNoticeDialog = ({
                             disabled={!isVerificationComplete}
                         />
                     )}
-                    label="I acknowledge the above information and that DBCA will handle my personal information in accordance with applicable privacy laws and its Privacy Policy."
+                    label="I acknowledge the above information and that DBCA will handle my personal information in accordance with applicable privacy laws and its Privacy Statement."
                 />
 
                 {/* Scroll down indicator button - sticky at bottom, disappears after click */}
