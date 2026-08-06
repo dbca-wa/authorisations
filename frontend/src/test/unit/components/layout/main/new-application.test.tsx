@@ -10,6 +10,14 @@ Object.assign(navigator, {
   },
 });
 
+// Mock ResizeObserver
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+(globalThis as any).ResizeObserver = MockResizeObserver;
+
 const {
   apiMocks,
   hideDialogMock,
