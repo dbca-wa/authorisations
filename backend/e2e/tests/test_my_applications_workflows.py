@@ -39,7 +39,7 @@ def multiple_applications_fixture(authenticated_request_context_factory, e2e_use
                 "questionnaire_id": questionnaire.id,
                 "questionnaire_code": questionnaire.code,
                 "questionnaire_version": questionnaire.version,
-                "privacy_consent_agreed": True,
+                "collection_notice_agreed": True,
                 "turnstile_token": "e2e-turnstile-token",
             }),
             headers={
@@ -58,7 +58,7 @@ def multiple_applications_fixture(authenticated_request_context_factory, e2e_use
                 "questionnaire_id": questionnaire.id,
                 "questionnaire_code": questionnaire.code,
                 "questionnaire_version": questionnaire.version,
-                "privacy_consent_agreed": True,
+                "collection_notice_agreed": True,
                 "turnstile_token": "e2e-turnstile-token",
             }),
             headers={
@@ -105,7 +105,7 @@ def draft_application_for_discard(authenticated_request_context_factory, e2e_use
                 "questionnaire_id": questionnaire.id,
                 "questionnaire_code": questionnaire.code,
                 "questionnaire_version": questionnaire.version,
-                "privacy_consent_agreed": True,
+                "collection_notice_agreed": True,
                 "turnstile_token": "e2e-turnstile-token",
             }),
             headers={

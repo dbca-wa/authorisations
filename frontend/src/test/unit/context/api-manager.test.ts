@@ -37,7 +37,7 @@ describe("ApiManager", () => {
       questionnaireId: 5,
       questionnaireCode: "new",
       questionnaireVersion: 2,
-      privacyConsentAgreed: true,
+      collectionNoticeAgreed: true,
       turnstileToken: "ts-token",
     });
 
@@ -48,7 +48,7 @@ describe("ApiManager", () => {
       questionnaire_id: 5,
       questionnaire_code: "new",
       questionnaire_version: 2,
-      privacy_consent_agreed: true,
+      collection_notice_agreed: true,
       turnstile_token: "ts-token",
     });
     expect(config.baseURL).toBe("/api");

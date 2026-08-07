@@ -10,6 +10,14 @@ Object.assign(navigator, {
   },
 });
 
+// Mock ResizeObserver
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+(globalThis as Record<string, unknown>).ResizeObserver = MockResizeObserver;
+
 const {
   apiMocks,
   hideDialogMock,
@@ -53,10 +61,15 @@ vi.mock("../../../../../context/ApiManager", () => ({
   ApiManager: apiMocks,
 }));
 
-vi.mock("../../../../../context/TurnstileManager", () => ({
-  TurnstileManager: {
+const { TurnstileManagerMock } = vi.hoisted(() => ({
+  TurnstileManagerMock: {
     preload: vi.fn(),
+    render: vi.fn(),
   },
+}));
+
+vi.mock("../../../../../context/TurnstileManager", () => ({
+  TurnstileManager: TurnstileManagerMock,
 }));
 
 import { NewApplication } from "../../../../../components/layout/main/NewApplication";
@@ -510,6 +523,83 @@ describe("NewApplication", () => {
       });
     });
   });
+
+  describe("Collection Notice Dialog - Button State", () => {
+    it("keeps 'I agree' button disabled until both Turnstile verification and consent checkbox are ready", async () => {
+      useResolvedPromiseMock.mockReturnValue([
+        [
+          makeQuestionnaire({
+            process_slug: "s40",
+            name: "New application",
+          }),
+        ],
+        false,
+      ]);
+      apiMocks.fetchApplications.mockResolvedValue([]);
+
+      render(<NewApplication />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Start Application" }));
+
+      await waitFor(() => {
+        expect(showDialogMock).toHaveBeenCalledWith(
+          expect.objectContaining({ title: "Collection Notice Disclaimer" }),
+        );
+      });
+
+      // Get the dialog content (CollectionNoticeDialog component)
+      const dialogOptions = showDialogMock.mock.calls[0][0];
+      const dialogContent = dialogOptions.content;
+
+      // Mock TurnstileManager.render to simulate successful verification
+      let capturedOnSuccess: ((token: string) => void) | null = null;
+      TurnstileManagerMock.render.mockImplementation(
+        (_container: HTMLElement, callbacks: { onSuccess: (token: string) => void }) => {
+          capturedOnSuccess = callbacks.onSuccess;
+          return Promise.resolve();
+        }
+      );
+
+      // Render the dialog content which now includes the buttons
+      render(dialogContent);
+
+      // Initially the button should be disabled (before Turnstile verification)
+      const agreeButton = screen.getByRole("button", { name: "I agree" });
+      expect(agreeButton).toHaveAttribute("disabled");
+
+      // Also check that the checkbox is disabled until Turnstile succeeds
+      const checkbox = screen.getByRole("checkbox", {
+        name: /I acknowledge the above information/i,
+      });
+      expect(checkbox).toHaveAttribute("disabled");
+
+      // Simulate Turnstile verification succeeding
+      await waitFor(() => {
+        expect(capturedOnSuccess).not.toBeNull();
+      });
+
+      if (capturedOnSuccess) {
+        (capturedOnSuccess as (token: string) => void)("fake-turnstile-token");
+      }
+
+      // After Turnstile succeeds, the checkbox should be enabled
+      await waitFor(() => {
+        expect(checkbox).not.toHaveAttribute("disabled");
+      });
+
+      // But button should still be disabled because checkbox is not yet checked
+      expect(agreeButton).toHaveAttribute("disabled");
+
+      // User clicks the checkbox to acknowledge
+      fireEvent.click(checkbox);
+
+      // Now both conditions are met, button should be enabled
+      await waitFor(() => {
+        expect(agreeButton).not.toHaveAttribute("disabled");
+      });
+    });
+  });
+
 
   describe("Questionnaire Rendering", () => {
     it("displays questionnaire description when available", () => {

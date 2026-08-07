@@ -181,7 +181,7 @@ class ApplicationSerialiserValidationTests(TestCase):
 
     @patch("applications.serialisers.verify_turnstile_token")
     def test_create_requires_privacy_consent(self, mock_verify):
-        """ApplicationSerialiser requires privacy_consent_agreed."""
+        """ApplicationSerialiser requires collection_notice_agreed."""
         mock_verify.return_value = True
 
         from django.test import RequestFactory
@@ -196,7 +196,7 @@ class ApplicationSerialiserValidationTests(TestCase):
             "questionnaire_id": self.questionnaire.id,
             "questionnaire_code": self.questionnaire.code,
             "questionnaire_version": self.questionnaire.version,
-            "privacy_consent_agreed": False,  # False
+            "collection_notice_agreed": False,  # False
             "turnstile_token": "test-token",
         }
 
@@ -206,7 +206,7 @@ class ApplicationSerialiserValidationTests(TestCase):
         )
 
         self.assertFalse(serializer.is_valid())
-        self.assertIn("privacy_consent_agreed", serializer.errors or {})
+        self.assertIn("collection_notice_agreed", serializer.errors or {})
 
     @patch("applications.serialisers.verify_turnstile_token")
     def test_create_validates_questionnaire_exists(self, mock_verify):
@@ -225,7 +225,7 @@ class ApplicationSerialiserValidationTests(TestCase):
             "questionnaire_id": 99999,  # Non-existent
             "questionnaire_code": "new-app",
             "questionnaire_version": 1,
-            "privacy_consent_agreed": True,
+            "collection_notice_agreed": True,
             "turnstile_token": "test-token",
         }
 

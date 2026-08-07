@@ -53,14 +53,14 @@ export class ApiManager {
         questionnaireId,
         questionnaireCode,
         questionnaireVersion,
-        privacyConsentAgreed,
+        collectionNoticeAgreed,
         turnstileToken,
     }: {
         processSlug: string;
         questionnaireId: number;
         questionnaireCode: string;
         questionnaireVersion: number;
-        privacyConsentAgreed: boolean;
+        collectionNoticeAgreed: boolean;
         turnstileToken: string;
     }): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
@@ -69,7 +69,7 @@ export class ApiManager {
             questionnaire_id: questionnaireId,
             questionnaire_code: questionnaireCode,
             questionnaire_version: questionnaireVersion,
-            privacy_consent_agreed: privacyConsentAgreed,
+            collection_notice_agreed: collectionNoticeAgreed,
             turnstile_token: turnstileToken,
         }, requestConfig);
 

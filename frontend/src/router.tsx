@@ -13,7 +13,7 @@ import { ApplicationReview } from './components/layout/main/Review';
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
-import { PrivacyPolicy } from './components/layout/main/PrivacyPolicy';
+import { PrivacyStatement } from './components/layout/main/PrivacyStatement';
 import { UserSettings } from './components/layout/main/UserSettings';
 import { ApiManager } from './context/ApiManager';
 import type { IRoute, LoaderData } from "./context/types/Generic";
@@ -91,11 +91,11 @@ export const ROUTES: IRoute[] = [
 		loader: mainLoader(),
 	},
 	{
-		label: "Privacy Policy",
+		label: "Privacy Statement",
 		path: "/privacy",
 		icon: <PolicyIcon />,
 		divider: false,
-		component: PrivacyPolicy,
+		component: PrivacyStatement,
 		loader: mainLoader(),
 		sidebar: false,
 	},
