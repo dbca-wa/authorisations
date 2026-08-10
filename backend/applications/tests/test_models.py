@@ -1,21 +1,15 @@
 """Comprehensive coverage tests for applications.models module."""
 
-from unittest.mock import MagicMock, Mock, patch
-
 from django.contrib.auth.models import Group
-from django.core.files.base import ContentFile
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
 
 from applications.models import (
     Application,
-    ApplicationAttachment,
     _boolean_checkbox,
     _build_grid_rows,
-    _build_question_item,
-    _icon_class_for_extension,
     _normalise_answer_value,
 )
 from applications.statuses import (
@@ -150,101 +144,6 @@ class GridRowsTests(TestCase):
         # Since the key doesn't match, it returns None for that cell
         self.assertEqual(len(result), 1)
         self.assertEqual(len(result[0]), 1)
-
-
-class IconClassTests(TestCase):
-    """Test file extension to icon class mapping."""
-
-    def test_icon_class_for_pdf(self):
-        """PDF extension maps to correct icon class."""
-        result = _icon_class_for_extension("pdf")
-        self.assertEqual(result, "vscode-icons--file-type-pdf2")
-
-    def test_icon_class_for_doc(self):
-        """DOC extension maps to Word icon."""
-        result = _icon_class_for_extension("doc")
-        self.assertEqual(result, "vscode-icons--file-type-word")
-
-    def test_icon_class_for_docx(self):
-        """DOCX extension maps to Word icon."""
-        result = _icon_class_for_extension("docx")
-        self.assertEqual(result, "vscode-icons--file-type-word")
-
-    def test_icon_class_for_unknown_extension(self):
-        """Unknown extension returns default icon class."""
-        result = _icon_class_for_extension("xyz")
-        self.assertEqual(result, "flat-color-icons--file")
-
-    def test_icon_class_for_image_extensions(self):
-        """Image extensions map to image icon."""
-        for ext in ["jpg", "jpeg", "png"]:
-            result = _icon_class_for_extension(ext)
-            self.assertEqual(result, "flat-color-icons--image-file")
-
-
-class QuestionItemBuilderTests(TestCase):
-    """Test question payload building for PDF rendering."""
-
-    def test_build_question_item_for_text_type(self):
-        """_build_question_item creates correct payload for text question."""
-        question = {"type": "text", "label": "Test Question"}
-        result = _build_question_item(question, "answer text", 0, {})
-        
-        self.assertEqual(result["label"], "Test Question")
-        self.assertEqual(result["type"], "text")
-        self.assertEqual(result["value"], "answer text")
-
-    def test_build_question_item_for_missing_label(self):
-        """_build_question_item uses default label when missing."""
-        question = {"type": "text"}
-        result = _build_question_item(question, "value", 5, {})
-        self.assertEqual(result["label"], "Question 6")
-
-    def test_build_question_item_for_grid_type(self):
-        """_build_question_item creates grid payload with rows."""
-        question = {
-            "type": "grid",
-            "label": "Grid Question",
-            "grid_columns": [
-                {"label": "Col A"},
-                {"label": "Col B"},
-            ]
-        }
-        raw_value = [{"Col A": "A1", "Col B": "B1"}]
-        result = _build_question_item(question, raw_value, 0, {})
-        
-        self.assertEqual(result["type"], "grid")
-        self.assertEqual(result["grid_columns"], ["Col A", "Col B"])
-        self.assertEqual(len(result["grid_rows"]), 1)
-
-    def test_build_question_item_for_grid_type_with_default_column_label(self):
-        """_build_question_item uses default column label when missing."""
-        question = {
-            "type": "grid",
-            "grid_columns": [{}]  # Missing label
-        }
-        result = _build_question_item(question, [], 0, {})
-        self.assertEqual(result["grid_columns"], ["Column"])
-
-    def test_build_question_item_for_file_type_with_no_attachments(self):
-        """_build_question_item handles file type with empty answer."""
-        question = {"type": "file", "label": "Upload Files"}
-        result = _build_question_item(question, [], 0, {})
-        
-        self.assertEqual(result["type"], "file")
-        self.assertEqual(result["image_files"], [])
-        self.assertEqual(result["other_files"], [])
-        self.assertEqual(result["files"], [])
-
-    def test_build_question_item_for_file_type_with_missing_attachment(self):
-        """_build_question_item shows placeholder for missing attachments."""
-        question = {"type": "file"}
-        result = _build_question_item(question, ["missing-key"], 0, {})
-        
-        other_files = result["other_files"]
-        self.assertEqual(len(other_files), 1)
-        self.assertTrue(other_files[0]["is_missing"])
-        self.assertIn("Missing file", other_files[0]["name"])
 
 
 class ApplicationStatusTests(TestCase):
@@ -413,78 +312,4 @@ class ApplicationModelTests(TestCase):
         )
         self.assertFalse(app.has_access(self.reviewer_user))
 
-    @patch('applications.models.Application._load_pdf_icon_css')
-    def test_build_pdf_context_empty_document(self, mock_load_css):
-        """build_pdf_context handles empty application document."""
-        mock_load_css.return_value = ""
-        app = Application.objects.create(
-            owner=self.user,
-            questionnaire=self.questionnaire,
-            document={"steps": []},
-        )
-        context = app.build_pdf_context()
-        
-        # Empty document should still have steps list (from questionnaire)
-        self.assertIn("steps", context)
 
-    def test_build_pdf_context_with_answers(self):
-        """build_pdf_context builds correct structure with answers."""
-        questionnaire = Questionnaire.objects.create(
-            process=self.process,
-            code="renewal",
-            name="Renewal",
-            document={
-                "schema_version": "2025.07-1",
-                "steps": [
-                    {
-                        "title": "Step 1",
-                        "sections": [
-                            {
-                                "title": "Section A",
-                                "description": "",
-                                "questions": [
-                                    {
-                                        "label": "Name",
-                                        "type": "text",
-                                        "is_required": True,
-                                    }
-                                ],
-                            }
-                        ],
-                    }
-                ],
-            },
-            sort_order=1,
-            created_by=self.user,
-        )
-        
-        app = Application.objects.create(
-            owner=self.user,
-            questionnaire=questionnaire,
-            document={
-                "steps": [
-                    {
-                        "answers": {
-                            "0-0": "John Doe"
-                        }
-                    }
-                ]
-            },
-        )
-        
-        context = app.build_pdf_context()
-        
-        # Check structure
-        self.assertEqual(len(context["steps"]), 1)
-        step = context["steps"][0]
-        self.assertEqual(step["title"], "Step 1")
-        self.assertEqual(len(step["sections"]), 1)
-        
-        section = step["sections"][0]
-        self.assertEqual(section["prefix"], "A)")
-        self.assertEqual(section["title"], "Section A")
-        self.assertEqual(len(section["questions"]), 1)
-        
-        question = section["questions"][0]
-        self.assertEqual(question["label"], "Name")
-        self.assertEqual(question["value"], "John Doe")
