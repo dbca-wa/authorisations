@@ -345,3 +345,148 @@ class PDFContextBuildingTests(TestCase):
             "table-layout: fixed must be in CSS")
         self.assertTrue(cell_word_break_pos >= 0,
             "word-break: break-word must be in CSS for cells")
+
+    def test_render_pdf_html_with_embedded_images_and_captions(self):
+        """render_pdf_html displays embedded images with centre-aligned grey captions.
+
+        This test verifies that:
+        1. Embedded image files are rendered with their file names as captions
+        2. Captions use the attachment-image-caption class
+        3. Captions are centre-aligned (not left-aligned)
+        4. Captions use a grey tone for visual hierarchy (not primary text colour)
+        """
+        # Create a questionnaire with a file upload question
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="images-test",
+            name="Image Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Upload Images",
+                        "sections": [
+                            {
+                                "title": "Images Section",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Attach images",
+                                        "type": "file",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        # Create an application with embedded images
+        # File names would be rendered as captions
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            # File keys will be populated after creating attachments
+                            "0-0": []
+                        }
+                    }
+                ]
+            },
+        )
+
+        # Create mock attachment objects with file information
+        from applications.models import ApplicationAttachment
+        from django.core.files.base import ContentFile
+        import uuid
+
+        # Create first image attachment
+        img1_key = uuid.uuid4()
+        img1 = ApplicationAttachment.objects.create(
+            application=app,
+            key=img1_key,
+            question="0-0",  # Question index
+            name="screenshot-dashboard.png",
+            file=ContentFile(b"fake png data", name="screenshot-dashboard.png"),
+        )
+
+        # Create second image attachment
+        img2_key = uuid.uuid4()
+        img2 = ApplicationAttachment.objects.create(
+            application=app,
+            key=img2_key,
+            question="0-0",  # Question index
+            name="form-filled-example.jpg",
+            file=ContentFile(b"fake jpg data", name="form-filled-example.jpg"),
+        )
+
+        # Update the application document to reference the actual attachment keys
+        app.document = {
+            "steps": [
+                {
+                    "answers": {
+                        "0-0": [str(img1_key), str(img2_key)]
+                    }
+                }
+            ]
+        }
+        app.save()
+
+        # Render the PDF HTML
+        html = app.render_pdf_html()
+
+        # Verify 1: Image captions are present with correct file names
+        self.assertIn("screenshot-dashboard.png", html,
+            "First image file name must appear in rendered output")
+        self.assertIn("form-filled-example.jpg", html,
+            "Second image file name must appear in rendered output")
+
+        # Verify 2: Captions use the attachment-image-caption class
+        self.assertIn("class=\"attachment-image-caption\"", html,
+            "Image captions must use attachment-image-caption class")
+
+        # Verify 3: The CSS includes text-align: center for captions
+        style_start = html.find("<style>")
+        style_end = html.find("</style>")
+        self.assertTrue(style_start >= 0 and style_end >= 0,
+            "Style block must exist in rendered HTML")
+
+        style_content = html[style_start:style_end]
+
+        # Find the .attachment-image-caption CSS rule
+        caption_css_start = style_content.find(".attachment-image-caption")
+        self.assertTrue(caption_css_start >= 0,
+            "attachment-image-caption CSS rule must exist")
+
+        # Find the next closing brace after the rule starts
+        caption_css_end = style_content.find("}", caption_css_start)
+        caption_css_block = style_content[caption_css_start:caption_css_end]
+
+        # Verify text-align: center is in the CSS block
+        self.assertIn("text-align: center", caption_css_block,
+            "attachment-image-caption must have text-align: center")
+
+        # Verify 4: Caption colour is grey (not black)
+        # Grey colours are in the range #555-#999 or RGB(85-153, 85-153, 85-153)
+        # We expect something like #666 or #777 or #888
+        self.assertRegex(caption_css_block, r"color:\s*#[6-9a-f]{3}",
+            "attachment-image-caption colour should be grey, not black")
+
+        # Verify 5: word-break is still applied to captions
+        self.assertIn("word-break: break-word", caption_css_block,
+            "attachment-image-caption should still have word-break for long file names")
+
+        # Verify 6: Image elements are rendered with correct structure
+        self.assertIn("class=\"attachment-image\"", html,
+            "Images must use attachment-image class")
+        self.assertIn("attachment-group", html,
+            "Images must be grouped in attachment-group")
+        self.assertIn("Image attachments", html,
+            "Section title for images must be present")
