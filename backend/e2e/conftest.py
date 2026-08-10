@@ -217,6 +217,16 @@ def configure_vite_for_e2e(django_db_setup):
     settings.DJANGO_VITE["default"]["dev_mode"] = False
     settings.DJANGO_VITE["default"]["manifest_path"] = str(manifest_path)
 
+    # pytest-django live_server wraps the app with StaticFilesHandler, which serves
+    # static files via finder paths rather than WhiteNoise's STATIC_ROOT lookup.
+    # In static mode we therefore expose STATIC_ROOT to finders so post-processed
+    # fingerprinted assets (for example main-<hash>.<fingerprint>.css) resolve.
+    static_root = Path(settings.STATIC_ROOT)
+    if static_root.exists():
+        static_dirs = list(settings.STATICFILES_DIRS)
+        if static_root not in static_dirs:
+            settings.STATICFILES_DIRS = [*static_dirs, static_root]
+
 
 @pytest.fixture(scope="session", autouse=True)
 def allow_e2e_db_thread_sharing(django_db_setup, django_db_blocker):

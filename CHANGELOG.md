@@ -7,15 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.1.0] - Unreleased
+## [1.1.0] - Unreleased (Requires DB Migration)
 
 ### Added
 
 - Added discard and revert functionality allowing applicants to abandon draft applications by moving them to DISCARDED status, with the ability to restore them back to DRAFT for continued editing.
 - Added tab-based filtering system for My Applications page enabling applicants to organise applications by status category (Active, Terminated, Finalised), improving visibility of application lifecycle stages.
 - Added permanent links to questionnaire types on the new application page, enabling users to share and bookmark direct links to specific application types.
-- Added a full privacy statement page with section-by-section expandable content and dedicated contact details. Also updated the 
-"Collection Notice Disclaimer" that we request applicants to acknowledge and agree prior to creating new applications.
+- Added a full privacy statement page with section-by-section expandable content and dedicated contact details. Also updated the "Collection Notice Disclaimer" that we request applicants to acknowledge and agree prior to creating new applications.
 - Added a new favicon, replacing the default placeholder.
 - Added comprehensive feature development guide ([FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md)) consolidating all mandatory best practices, testing requirements, code quality standards, and common commands in a single reference document for AI agents and developers.
 - Added new frontend as well as E2E tests for comprehensive coverage of "New application" page functionality.
@@ -33,10 +32,11 @@ Entries should be concise, single-sentence summaries without excessive technical
 ### Fixed
 
 - Fixed submit button allowing duplicate API submissions by adding loading indicator and disabled state during submission process.
+- Fixed attachment file-type icons intermittently disappearing (especially Excel) across both draft form editing and reviewer attachment views, which previously caused blank file tiles due to a static asset processing issue in production mode.
 
 ### Removed
 
-- Removed `ACTION_REQUIRED` status; applications now use concrete workflow states (DRAFT → SUBMITTED → UNDER_REVIEW → UNDER_ASSESSMENT → decision outcomes) with explicit transition rules and permission boundaries - REQUIRES DATABASE MIGRATION.
+- Removed `ACTION_REQUIRED` status; applications now use concrete workflow states (DRAFT → SUBMITTED → UNDER_REVIEW → UNDER_ASSESSMENT → decision outcomes) with explicit transition rules and permission boundaries.
 
 ## 1.0.3 - 2026-07-16
 

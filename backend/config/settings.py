@@ -243,11 +243,18 @@ STORAGES = {
     "default": {
         "BACKEND": "config.storage.PrivateMediaStorage",
     },
-    # Use whitenoise to add compression and caching support for static files.
+    # Use WhiteNoise compression without manifest re-fingerprinting.
+    # PS: Do not use CompressedManifestStaticFilesStorage because its CSS post-processing
+    # can corrupt embedded icon data URIs and cause file-type icons (for example Excel)
+    # to disappear in attachment interfaces.
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
+
+# Treat Vite-hashed JS/CSS assets as immutable for long-term browser caching.
+# Examples: assets/main-h-8CfJcN.css, assets/main-DIYSo1IQ.js
+WHITENOISE_IMMUTABLE_FILE_TEST = r"^.+\-[a-zA-Z0-9_-]{6,}\.(css|js)(?:\.gz)?$"
 
 # Original frontend build directory 
 # - doesn't exist in docker environment, only for developent environment

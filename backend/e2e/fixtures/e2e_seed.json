@@ -303,6 +303,46 @@
     }
   },
   {
+    "model": "questionnaires.questionnaire",
+    "pk": 6,
+    "fields": {
+      "process": 1,
+      "version": 0,
+      "code": "new-application",
+      "name": "New application",
+      "description": "Legacy file-upload variant for icon regression E2E coverage.",
+      "document": {
+        "schema_version": "2025.07-1",
+        "steps": [
+          {
+            "title": "Attachments",
+            "description": "Provide supporting files.",
+            "sections": [
+              {
+                "title": "Files",
+                "description": "Upload files.",
+                "questions": [
+                  {
+                    "label": "Upload files",
+                    "type": "file",
+                    "is_required": false,
+                    "description": "Attach files for regression validation.",
+                    "file_max_attachments": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sort_order": 1,
+      "created_at": "2026-01-01T00:00:00Z",
+      "created_by": 1,
+      "updated_at": "2026-01-01T00:00:00Z",
+      "updated_by": null
+    }
+  },
+  {
     "model": "applications.application",
     "pk": 1,
     "fields": {
@@ -348,6 +388,29 @@
       "created_at": "2026-01-03T00:00:00Z",
       "updated_at": "2026-01-03T00:00:00Z",
       "submitted_at": "2026-01-03T00:00:00Z"
+    }
+  },
+  {
+    "model": "applications.application",
+    "pk": 3,
+    "fields": {
+      "key": "00000000-0000-4000-8000-000000000003",
+      "owner": 3,
+      "questionnaire": 6,
+      "status": "DRAFT",
+      "document": {
+        "schema_version": "2025.07-1",
+        "active_step": 0,
+        "steps": [
+          {
+            "is_valid": null,
+            "answers": {}
+          }
+        ]
+      },
+      "created_at": "2026-01-04T00:00:00Z",
+      "updated_at": "2026-01-04T00:00:00Z",
+      "submitted_at": null
     }
   }
 ]
