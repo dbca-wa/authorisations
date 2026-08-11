@@ -112,8 +112,9 @@ class QuestionItemBuilderTests(TestCase):
         self.assertTrue(other_files[0]["is_missing"])
         self.assertIn("Missing file", other_files[0]["name"])
 
-    @patch('applications.models.os.path.exists')
-    def test_build_question_item_for_image_missing_with_local_storage(self, mock_exists):
+    @patch('applications.models.settings.LOCAL_MEDIA_STORAGE', True)
+    @patch('applications.models.os.path.getsize')
+    def test_build_question_item_for_image_missing_with_local_storage(self, mock_getsize):
         """_build_question_item marks missing local image with is_missing=True and placeholder file_src."""
         # Simulate local file storage where file doesn't exist
         mock_attachment = Mock()
@@ -124,17 +125,9 @@ class QuestionItemBuilderTests(TestCase):
         type(mock_attachment.file).path = PropertyMock(
             return_value="/media/attachments/photo.png"
         )
-        # .file.url returns a valid URL for fallback
-        type(mock_attachment.file).url = PropertyMock(
-            return_value="https://example.com/media/photo.png"
-        )
-        # .file.size raises ResourceNotFoundError (fallback also fails)
-        type(mock_attachment.file).size = PropertyMock(
-            side_effect=ResourceNotFoundError("File not found in storage")
-        )
         
-        # Mock os.path.exists to return False (file doesn't exist in local storage)
-        mock_exists.return_value = False
+        # Mock os.path.getsize to raise OSError (file doesn't exist in local storage)
+        mock_getsize.side_effect = OSError("File not found")
 
         attachments_by_key = {
             "image-key-1": mock_attachment,
@@ -192,9 +185,9 @@ class QuestionItemBuilderTests(TestCase):
         self.assertIn("image-not-found.png", image_file["file_src"], "file_src must include placeholder image")
         self.assertEqual(image_file["file_size"], "0\xa0bytes", "file_size must be 0 bytes when missing")
 
-    @patch('applications.models.os.path.exists')
+    @patch('applications.models.settings.LOCAL_MEDIA_STORAGE', True)
     @patch('applications.models.os.path.getsize')
-    def test_build_question_item_for_image_existing_with_local_storage(self, mock_getsize, mock_exists):
+    def test_build_question_item_for_image_existing_with_local_storage(self, mock_getsize):
         """_build_question_item correctly handles existing local image with file size."""
         mock_attachment = Mock()
         mock_attachment.name = "landscape.jpg"
@@ -205,8 +198,6 @@ class QuestionItemBuilderTests(TestCase):
             return_value="/media/attachments/2025-01/app123/landscape.jpg"
         )
         
-        # Mock os.path.exists to return True (file exists)
-        mock_exists.return_value = True
         # Mock os.path.getsize to return a file size
         mock_getsize.return_value = 1536000  # 1.5 MB
 
@@ -335,9 +326,9 @@ class QuestionItemBuilderTests(TestCase):
         self.assertTrue(file_item["is_missing"], "is_missing should be True when Azure blob doesn't exist")
         self.assertEqual(file_item["file_size"], "0\xa0bytes", "file_size should be 0 bytes when missing")
 
-    @patch('applications.models.os.path.exists')
+    @patch('applications.models.settings.LOCAL_MEDIA_STORAGE', True)
     @patch('applications.models.os.path.getsize')
-    def test_build_question_item_for_multiple_files_mixed_missing_existing(self, mock_getsize, mock_exists):
+    def test_build_question_item_for_multiple_files_mixed_missing_existing(self, mock_getsize):
         """_build_question_item handles mix of existing and missing files correctly."""
         # Existing image
         mock_image = Mock()
@@ -346,17 +337,11 @@ class QuestionItemBuilderTests(TestCase):
         type(mock_image.file).path = PropertyMock(return_value="/media/photo.jpg")
         type(mock_image.file).size = PropertyMock(return_value=512000)
         
-        # Missing image - .path raises OSError; fallback Azure also fails
+        # Missing image - os.path.getsize raises OSError
         mock_missing_image = Mock()
         mock_missing_image.name = "missing.png"
         mock_missing_image.key = "img-2"
-        type(mock_missing_image.file).path = PropertyMock(side_effect=OSError("Not found"))
-        type(mock_missing_image.file).url = PropertyMock(
-            return_value="https://example.com/missing.png"
-        )
-        type(mock_missing_image.file).size = PropertyMock(
-            side_effect=ResourceNotFoundError("Not found in storage")
-        )
+        type(mock_missing_image.file).path = PropertyMock(return_value="/media/missing.png")
         
         # Existing non-image
         mock_doc = Mock()
@@ -364,11 +349,13 @@ class QuestionItemBuilderTests(TestCase):
         mock_doc.key = "file-1"
         type(mock_doc.file).size = PropertyMock(return_value=1024000)
 
-        # Mock os.path.exists to return True (existing image file exists)
-        # Note: This patches all calls to os.path.exists
-        mock_exists.return_value = True
-        # Mock os.path.getsize to return the size for the existing image
-        mock_getsize.return_value = 512000
+        # Mock os.path.getsize to return size for existing file and raise for missing
+        def getsize_side_effect(path):
+            if "missing" in path:
+                raise OSError("File not found")
+            return 512000  # Size for photo.jpg
+
+        mock_getsize.side_effect = getsize_side_effect
 
         attachments_by_key = {
             "img-1": mock_image,

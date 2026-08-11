@@ -170,18 +170,19 @@ def _build_question_item(
             file_size = 0
 
             if is_image:
-                # For local storage Prince reads the file via a file:// URI.
-                # For Azure (or any remote storage) that will raise `NotImplementedError`
-                # when we attempt to access the file path, so we fall back to the storage URL.
-                # If the file is missing, use the placeholder image instead.
-                try:
-                    file_path = attachment.file.path
-                    if not os.path.exists(file_path):
-                        raise OSError("Local file not found")
-                    file_src = "file://" + file_path
-                    file_size = os.path.getsize(file_path)
-                except (NotImplementedError, OSError):
-                    # Local storage failed; try remote storage URL
+                # Determine storage backend based on configuration and access accordingly.
+                # Local storage: file:// URIs for Prince; remote storage: signed URLs.
+                if settings.LOCAL_MEDIA_STORAGE:
+                    # Local file storage: read file directly from filesystem.
+                    try:
+                        file_path = attachment.file.path
+                        file_size = os.path.getsize(file_path)
+                        file_src = "file://" + file_path
+                    except OSError:
+                        is_missing = True
+                        file_src = f"file://{settings.STATIC_ROOT}/images/image-not-found.png"
+                else:
+                    # Remote storage (Azure Blob): use signed URL and API calls.
                     try:
                         file_src = attachment.file.url
                         file_size = attachment.file.size
