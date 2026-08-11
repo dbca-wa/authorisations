@@ -91,7 +91,7 @@ stateDiagram-v2
 
 | Status From | Status To | Responsibility | Context |
 | :--- | :--- | :--- | :--- |
-| (Any) | **DRAFT** | System / Staff | Auto-created on start OR "Action Required" return |
+| (Any) | **DRAFT** | System / Applicant | Created on start OR "action required" return |
 | **DRAFT** | **DISCARDED** | Applicant | User abandons draft |
 | **DRAFT** | **SUBMITTED** | Applicant | User completes submission |
 | **DISCARDED** | **DRAFT** | Applicant | User reverts the discard decision |
