@@ -146,6 +146,7 @@ class QuestionItemBuilderTests(TestCase):
         self.assertIn("image-not-found.png", image_file["file_src"], "file_src must include placeholder image")
         self.assertEqual(image_file["file_size"], "0\xa0bytes", "file_size must be 0 bytes when missing")
 
+    @patch('applications.models.settings.LOCAL_MEDIA_STORAGE', False)
     def test_build_question_item_for_image_missing_with_azure_storage(self):
         """_build_question_item marks missing Azure blob with is_missing=True and placeholder file_src."""
         # Simulate Azure Blob Storage where .path raises NotImplementedError and .size raises ResourceNotFoundError
@@ -218,6 +219,7 @@ class QuestionItemBuilderTests(TestCase):
         # File size should match the mocked size
         self.assertEqual(image_file["file_size"], "1.5\xa0MB", "file_size should be formatted correctly")
 
+    @patch('applications.models.settings.LOCAL_MEDIA_STORAGE', False)
     def test_build_question_item_for_image_existing_with_azure_storage(self):
         """_build_question_item correctly handles existing Azure blob image with file size."""
         mock_attachment = Mock()
