@@ -353,6 +353,13 @@
         text-align: center;
       }
 
+      .attachment-file-size {
+        font-size: 10px;
+        color: #888;
+        text-align: center;
+        font-style: italic;
+      }
+
       .attachment-missing {
         color: #b71c1c;
       }
@@ -458,7 +465,7 @@
                                 {% for file in question.image_files %}
                                   <li class="attachment-item">
                                     <img class="attachment-image" src="{{ file.file_src }}" alt="{{ file.name }}" />
-                                    <p class="attachment-image-caption">{{ file.name }}</p>
+                                    <p class="attachment-image-caption{% if file.is_missing %} attachment-missing{% endif %}">{{ file.name }} - {{ file.file_size }}</p>
                                   </li>
                                 {% endfor %}
                               </ul>
@@ -476,6 +483,7 @@
                                     <span class="attachment-file-name{% if file.is_missing %} attachment-missing{% endif %}">
                                       {{ file.name }}
                                     </span>
+                                    <span class="attachment-file-size">{{ file.file_size }}</span>
                                   </div>
                                 {% endfor %}
                               </div>

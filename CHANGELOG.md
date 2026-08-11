@@ -28,6 +28,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Renamed "Assessment" terminology to "Review" throughout the application, including API endpoints (/api/assessment → /api/review), menu navigation ("Assessment Queue" → "Review Queue"), and related components and fixtures, to align with domain conventions.
 - Standardised on npm for all frontend package management across development, CI, testing, and production environments to ensure identical dependency versions and predictable builds.
 - Disabled questionnaire tabs when only a single questionnaire to prevent user confusion from clicking non-functional tabs.
+- Improved handling of missing files and file size display in PDF generation, showing placeholder images for missing attachments and displaying human-readable file sizes alongside filenames for all file types.
 
 ### Fixed
 

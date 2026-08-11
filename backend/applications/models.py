@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import io
+import os
 import uuid
 from typing import Any
 
+from azure.core.exceptions import ResourceNotFoundError
 from django.conf import settings
 from django.db import models
+from django.template.defaultfilters import filesizeformat
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django_jsonform.models.fields import JSONField
@@ -164,18 +167,34 @@ def _build_question_item(
             is_image = extension in image_extensions
             file_src = ""
             is_missing = False
+            file_size = 0
 
             if is_image:
                 # For local storage Prince reads the file via a file:// URI.
-                # For Azure (or any remote storage) fall back to the signed URL
-                # and let Prince fetch it over HTTP(S) at render time.
+                # For Azure (or any remote storage) that will raise `NotImplementedError`
+                # when we attempt to access the file path, so we fall back to the storage URL.
+                # If the file is missing, use the placeholder image instead.
                 try:
-                    file_src = "file://" + attachment.file.path
-                except (ValueError, NotImplementedError, OSError):
+                    file_path = attachment.file.path
+                    if not os.path.exists(file_path):
+                        raise OSError("Local file not found")
+                    file_src = "file://" + file_path
+                    file_size = os.path.getsize(file_path)
+                except (NotImplementedError, OSError):
+                    # Local storage failed; try remote storage URL
                     try:
                         file_src = attachment.file.url
-                    except Exception:  # noqa: BLE001
+                        file_size = attachment.file.size
+                    except ResourceNotFoundError:
                         is_missing = True
+                        file_src = f"file://{settings.STATIC_ROOT}/images/image-not-found.png"
+            else:
+                # Non-image files: always try to get size without requiring path access
+                # this will throw OSError or ResourceNotFoundError if the file is missing.
+                try:
+                    file_size = attachment.file.size
+                except (OSError, ResourceNotFoundError):
+                    is_missing = True
 
             file_item: dict[str, Any] = {
                 "name": name,
@@ -183,10 +202,13 @@ def _build_question_item(
                 "is_image": is_image,
                 "file_src": file_src,
                 "is_missing": is_missing,
+                "file_size": filesizeformat(file_size),
                 "icon_class": _icon_class_for_extension(extension),
             }
 
-            if is_image and file_src and not is_missing:
+            # Images render inline in PDF even if missing (with placeholder).
+            # Other files are listed as named cards.
+            if is_image:
                 image_files.append(file_item)
             else:
                 other_files.append(file_item)

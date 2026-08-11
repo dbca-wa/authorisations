@@ -1,7 +1,10 @@
 """Tests for PDF rendering, including context building and template styling."""
 
-from unittest.mock import patch
+import uuid
+from unittest.mock import Mock, PropertyMock, patch
 
+from azure.core.exceptions import ResourceNotFoundError
+from django.core.files.base import ContentFile
 from django.test import TestCase
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
@@ -9,6 +12,7 @@ from users.models import User
 
 from applications.models import (
     Application,
+    ApplicationAttachment,
     _build_question_item,
     _icon_class_for_extension,
 )
@@ -107,6 +111,287 @@ class QuestionItemBuilderTests(TestCase):
         self.assertEqual(len(other_files), 1)
         self.assertTrue(other_files[0]["is_missing"])
         self.assertIn("Missing file", other_files[0]["name"])
+
+    @patch('applications.models.os.path.exists')
+    def test_build_question_item_for_image_missing_with_local_storage(self, mock_exists):
+        """_build_question_item marks missing local image with is_missing=True and placeholder file_src."""
+        # Simulate local file storage where file doesn't exist
+        mock_attachment = Mock()
+        mock_attachment.name = "photo.png"
+        mock_attachment.key = "image-key-1"
+        
+        # .file.path returns a valid path string
+        type(mock_attachment.file).path = PropertyMock(
+            return_value="/media/attachments/photo.png"
+        )
+        # .file.url returns a valid URL for fallback
+        type(mock_attachment.file).url = PropertyMock(
+            return_value="https://example.com/media/photo.png"
+        )
+        # .file.size raises ResourceNotFoundError (fallback also fails)
+        type(mock_attachment.file).size = PropertyMock(
+            side_effect=ResourceNotFoundError("File not found in storage")
+        )
+        
+        # Mock os.path.exists to return False (file doesn't exist in local storage)
+        mock_exists.return_value = False
+
+        attachments_by_key = {
+            "image-key-1": mock_attachment,
+        }
+
+        question = {"type": "file", "label": "Upload Photos"}
+        result = _build_question_item(question, ["image-key-1"], 0, attachments_by_key)
+
+        # Image should be in image_files with placeholder path
+        self.assertEqual(len(result["image_files"]), 1)
+        self.assertEqual(len(result["other_files"]), 0)
+
+        image_file = result["image_files"][0]
+        self.assertEqual(image_file["name"], "photo.png")
+        self.assertTrue(image_file["is_missing"], "is_missing flag must be True when local file doesn't exist")
+        self.assertIn("image-not-found.png", image_file["file_src"], "file_src must include placeholder image")
+        self.assertEqual(image_file["file_size"], "0\xa0bytes", "file_size must be 0 bytes when missing")
+
+    def test_build_question_item_for_image_missing_with_azure_storage(self):
+        """_build_question_item marks missing Azure blob with is_missing=True and placeholder file_src."""
+        # Simulate Azure Blob Storage where .path raises NotImplementedError and .size raises ResourceNotFoundError
+        mock_attachment = Mock()
+        mock_attachment.name = "photo.png"
+        mock_attachment.key = "image-key-2"
+        
+        # .file.path raises NotImplementedError (Azure backend doesn't support file:// paths)
+        type(mock_attachment.file).path = PropertyMock(
+            side_effect=NotImplementedError("Azure storage does not support file:// paths")
+        )
+        # .file.url returns a signed URL string (doesn't check if blob exists)
+        type(mock_attachment.file).url = PropertyMock(
+            return_value="https://azurestorage.blob.core.windows.net/container/blob.png?sig=..."
+        )
+        # .file.size raises ResourceNotFoundError when blob doesn't exist (triggers API call)
+        type(mock_attachment.file).size = PropertyMock(
+            side_effect=ResourceNotFoundError("Blob not found")
+        )
+
+        attachments_by_key = {
+            "image-key-2": mock_attachment,
+        }
+
+        question = {"type": "file", "label": "Upload Photos"}
+        result = _build_question_item(question, ["image-key-2"], 0, attachments_by_key)
+
+        # Image should be in image_files with placeholder path
+        self.assertEqual(len(result["image_files"]), 1, 
+                         f"Expected 1 image file, got {len(result['image_files'])}. "
+                         f"image_files={result['image_files']}, other_files={result['other_files']}")
+        self.assertEqual(len(result["other_files"]), 0)
+
+        image_file = result["image_files"][0]
+        self.assertEqual(image_file["name"], "photo.png")
+        self.assertTrue(image_file["is_missing"], "is_missing flag must be True when Azure blob doesn't exist")
+        self.assertIn("image-not-found.png", image_file["file_src"], "file_src must include placeholder image")
+        self.assertEqual(image_file["file_size"], "0\xa0bytes", "file_size must be 0 bytes when missing")
+
+    @patch('applications.models.os.path.exists')
+    @patch('applications.models.os.path.getsize')
+    def test_build_question_item_for_image_existing_with_local_storage(self, mock_getsize, mock_exists):
+        """_build_question_item correctly handles existing local image with file size."""
+        mock_attachment = Mock()
+        mock_attachment.name = "landscape.jpg"
+        mock_attachment.key = "image-key-3"
+        
+        # .file.path returns a valid file path
+        type(mock_attachment.file).path = PropertyMock(
+            return_value="/media/attachments/2025-01/app123/landscape.jpg"
+        )
+        
+        # Mock os.path.exists to return True (file exists)
+        mock_exists.return_value = True
+        # Mock os.path.getsize to return a file size
+        mock_getsize.return_value = 1536000  # 1.5 MB
+
+        attachments_by_key = {
+            "image-key-3": mock_attachment,
+        }
+
+        question = {"type": "file", "label": "Upload Photos"}
+        result = _build_question_item(question, ["image-key-3"], 0, attachments_by_key)
+
+        self.assertEqual(len(result["image_files"]), 1)
+        self.assertEqual(len(result["other_files"]), 0)
+
+        image_file = result["image_files"][0]
+        self.assertEqual(image_file["name"], "landscape.jpg")
+        self.assertFalse(image_file["is_missing"], "is_missing should be False for existing file")
+        self.assertTrue(image_file["file_src"].startswith("file://"), "file_src should be file:// URI for local storage")
+        # File size should match the mocked size
+        self.assertEqual(image_file["file_size"], "1.5\xa0MB", "file_size should be formatted correctly")
+
+    def test_build_question_item_for_image_existing_with_azure_storage(self):
+        """_build_question_item correctly handles existing Azure blob image with file size."""
+        mock_attachment = Mock()
+        mock_attachment.name = "diagram.png"
+        mock_attachment.key = "image-key-4"
+        
+        # .file.path raises NotImplementedError (Azure doesn't support file paths)
+        type(mock_attachment.file).path = PropertyMock(
+            side_effect=NotImplementedError("Azure storage does not support file:// paths")
+        )
+        # .file.url returns a valid signed URL
+        type(mock_attachment.file).url = PropertyMock(
+            return_value="https://azurestorage.blob.core.windows.net/container/diagram.png?sig=..."
+        )
+        # .file.size returns the blob size (no exception = blob exists)
+        type(mock_attachment.file).size = PropertyMock(return_value=1048576)  # 1 MB
+
+        attachments_by_key = {
+            "image-key-4": mock_attachment,
+        }
+
+        question = {"type": "file", "label": "Upload Photos"}
+        result = _build_question_item(question, ["image-key-4"], 0, attachments_by_key)
+
+        self.assertEqual(len(result["image_files"]), 1)
+        self.assertEqual(len(result["other_files"]), 0)
+
+        image_file = result["image_files"][0]
+        self.assertEqual(image_file["name"], "diagram.png")
+        self.assertFalse(image_file["is_missing"], "is_missing should be False for existing blob")
+        self.assertEqual(image_file["file_src"], "https://azurestorage.blob.core.windows.net/container/diagram.png?sig=...", 
+                         "file_src should be the blob URL")
+        self.assertEqual(image_file["file_size"], "1.0\xa0MB", "file_size should be formatted as 1.0 MB")
+
+    def test_build_question_item_for_non_image_file_existing(self):
+        """_build_question_item correctly handles existing non-image file with file size."""
+        mock_attachment = Mock()
+        mock_attachment.name = "document.pdf"
+        mock_attachment.key = "file-key-1"
+        
+        # .file.size returns file size (works for both local and Azure)
+        type(mock_attachment.file).size = PropertyMock(return_value=2097152)  # 2 MB
+
+        attachments_by_key = {
+            "file-key-1": mock_attachment,
+        }
+
+        question = {"type": "file", "label": "Upload Documents"}
+        result = _build_question_item(question, ["file-key-1"], 0, attachments_by_key)
+
+        self.assertEqual(len(result["image_files"]), 0)
+        self.assertEqual(len(result["other_files"]), 1)
+
+        file_item = result["other_files"][0]
+        self.assertEqual(file_item["name"], "document.pdf")
+        self.assertEqual(file_item["extension"], "pdf")
+        self.assertFalse(file_item["is_missing"], "is_missing should be False for existing file")
+        self.assertEqual(file_item["file_size"], "2.0\xa0MB", "file_size should be formatted as 2.0 MB")
+        self.assertEqual(file_item["icon_class"], "vscode-icons--file-type-pdf2", "PDF should have correct icon class")
+
+    def test_build_question_item_for_non_image_file_missing_local_storage(self):
+        """_build_question_item marks missing local non-image file with is_missing=True."""
+        mock_attachment = Mock()
+        mock_attachment.name = "spreadsheet.xlsx"
+        mock_attachment.key = "file-key-2"
+        
+        # .file.size raises OSError when file is missing in local storage
+        type(mock_attachment.file).size = PropertyMock(
+            side_effect=OSError("File not found")
+        )
+
+        attachments_by_key = {
+            "file-key-2": mock_attachment,
+        }
+
+        question = {"type": "file"}
+        result = _build_question_item(question, ["file-key-2"], 0, attachments_by_key)
+
+        self.assertEqual(len(result["other_files"]), 1)
+        file_item = result["other_files"][0]
+        self.assertEqual(file_item["name"], "spreadsheet.xlsx")
+        self.assertTrue(file_item["is_missing"], "is_missing should be True when local file doesn't exist")
+        self.assertEqual(file_item["file_size"], "0\xa0bytes", "file_size should be 0 bytes when missing")
+
+    def test_build_question_item_for_non_image_file_missing_azure_storage(self):
+        """_build_question_item marks missing Azure non-image file with is_missing=True."""
+        mock_attachment = Mock()
+        mock_attachment.name = "report.docx"
+        mock_attachment.key = "file-key-3"
+        
+        # .file.size raises ResourceNotFoundError when blob doesn't exist in Azure
+        type(mock_attachment.file).size = PropertyMock(
+            side_effect=ResourceNotFoundError("Blob not found")
+        )
+
+        attachments_by_key = {
+            "file-key-3": mock_attachment,
+        }
+
+        question = {"type": "file"}
+        result = _build_question_item(question, ["file-key-3"], 0, attachments_by_key)
+
+        self.assertEqual(len(result["other_files"]), 1)
+        file_item = result["other_files"][0]
+        self.assertEqual(file_item["name"], "report.docx")
+        self.assertTrue(file_item["is_missing"], "is_missing should be True when Azure blob doesn't exist")
+        self.assertEqual(file_item["file_size"], "0\xa0bytes", "file_size should be 0 bytes when missing")
+
+    @patch('applications.models.os.path.exists')
+    @patch('applications.models.os.path.getsize')
+    def test_build_question_item_for_multiple_files_mixed_missing_existing(self, mock_getsize, mock_exists):
+        """_build_question_item handles mix of existing and missing files correctly."""
+        # Existing image
+        mock_image = Mock()
+        mock_image.name = "photo.jpg"
+        mock_image.key = "img-1"
+        type(mock_image.file).path = PropertyMock(return_value="/media/photo.jpg")
+        type(mock_image.file).size = PropertyMock(return_value=512000)
+        
+        # Missing image - .path raises OSError; fallback Azure also fails
+        mock_missing_image = Mock()
+        mock_missing_image.name = "missing.png"
+        mock_missing_image.key = "img-2"
+        type(mock_missing_image.file).path = PropertyMock(side_effect=OSError("Not found"))
+        type(mock_missing_image.file).url = PropertyMock(
+            return_value="https://example.com/missing.png"
+        )
+        type(mock_missing_image.file).size = PropertyMock(
+            side_effect=ResourceNotFoundError("Not found in storage")
+        )
+        
+        # Existing non-image
+        mock_doc = Mock()
+        mock_doc.name = "contract.pdf"
+        mock_doc.key = "file-1"
+        type(mock_doc.file).size = PropertyMock(return_value=1024000)
+
+        # Mock os.path.exists to return True (existing image file exists)
+        # Note: This patches all calls to os.path.exists
+        mock_exists.return_value = True
+        # Mock os.path.getsize to return the size for the existing image
+        mock_getsize.return_value = 512000
+
+        attachments_by_key = {
+            "img-1": mock_image,
+            "img-2": mock_missing_image,
+            "file-1": mock_doc,
+        }
+
+        question = {"type": "file"}
+        result = _build_question_item(question, ["img-1", "img-2", "file-1"], 0, attachments_by_key)
+
+        # Check image files: 1 existing + 1 missing
+        self.assertEqual(len(result["image_files"]), 2)
+        self.assertFalse(result["image_files"][0]["is_missing"])
+        self.assertTrue(result["image_files"][1]["is_missing"])
+
+        # Check other files: 1 existing document
+        self.assertEqual(len(result["other_files"]), 1)
+        self.assertFalse(result["other_files"][0]["is_missing"])
+
+        # Verify file sizes
+        self.assertEqual(result["image_files"][0]["file_size"], "500.0\xa0KB")
+        self.assertEqual(result["image_files"][1]["file_size"], "0\xa0bytes")
+        self.assertEqual(result["other_files"][0]["file_size"], "1000.0\xa0KB")
 
 
 class PDFContextBuildingTests(TestCase):
@@ -403,10 +688,6 @@ class PDFContextBuildingTests(TestCase):
         )
 
         # Create mock attachment objects with file information
-        from applications.models import ApplicationAttachment
-        from django.core.files.base import ContentFile
-        import uuid
-
         # Create first image attachment
         img1_key = uuid.uuid4()
         img1 = ApplicationAttachment.objects.create(
