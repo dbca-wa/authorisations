@@ -310,6 +310,13 @@ poetry run pytest e2e/tests -v --tracing=retain-on-failure --screenshot=only-on-
 
 ### Backend test guidelines
 
+**Imports:**
+- **All imports must be at the module level** (top of file), following PEP 8. Do NOT import within test functions or methods.
+- Exception: Only import inside functions to avoid **unavoidable circular imports**. Document the reason with a comment if this occurs.
+- Keep import groups organized: stdlib, third-party (Django, pytest, etc.), local imports, in that order.
+- Remove unused imports during review; use tools like `pylint --disable=all --enable=unused-import` to identify them.
+
+**Test structure:**
 - Security tests must verify both **positive** (access granted) and **negative** (access denied, 403/404) cases.
 - Use realistic fixtures; avoid brittle hard-coded internal details.
 - Test latest-version selection for questionnaires (ordering, cloning on edit).

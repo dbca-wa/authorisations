@@ -5,10 +5,13 @@ Applicant (Draft -> Submit) -> Reviewer (Review/Triage -> Technical Assessment -
 """
 
 import json
+import time
 
 import pytest
+from applications import serialisers
 from applications.models import Application
 from applications.statuses import ApplicationStatus
+from django.utils import timezone
 from playwright.sync_api import expect
 
 
@@ -63,8 +66,6 @@ class TestWorkflowLifecycle:
         This verifies the 'Return to Draft' pattern that replaced 'Action Required'.
         Verify submitted_at is cleared when returning to DRAFT.
         """
-        from django.utils import timezone
-        
         applicant = e2e_users["applicant"]
         reviewer = e2e_users["reviewer"]
         
@@ -150,7 +151,6 @@ class TestWorkflowLifecycle:
         3. Applicant Re-edits and Re-submits (sets NEW submitted_at with fresh timestamp)
         4. Reviewer approves
         """
-        from applications import serialisers
         monkeypatch.setattr(serialisers, "verify_turnstile_token", lambda *args, **kwargs: True)
 
         applicant = e2e_users["applicant"]
@@ -190,7 +190,6 @@ class TestWorkflowLifecycle:
         assert Application.objects.get(key=app_key).status == ApplicationStatus.DRAFT
 
         # 3. Applicant Re-submits (after editing in DRAFT)
-        import time
         time.sleep(0.1)  # Small delay to ensure different timestamp
         
         app_auth = authenticated_request_context_factory(applicant)  # Refresh CSRF context
@@ -228,7 +227,6 @@ class TestWorkflowLifecycle:
         Verify all reviewer decision outcomes are accessible:
         APPROVED, APPROVED_WITH_CONDITIONS, REJECTED, DEFERRED
         """
-        from applications import serialisers
         monkeypatch.setattr(serialisers, "verify_turnstile_token", lambda *args, **kwargs: True)
 
         applicant = e2e_users["applicant"]

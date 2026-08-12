@@ -5,6 +5,7 @@ ensure views return an appropriate 404 response instead of raising.
 """
 
 import pytest
+from azure.core.exceptions import ResourceNotFoundError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -41,8 +42,6 @@ def test_download_attachment_returns_404_when_file_missing_in_storage(
     attachment = _create_attachment(application)
 
     # Simulate Azure's ResourceNotFoundError when opening the file.
-    from azure.core.exceptions import ResourceNotFoundError
-
     def _raise_missing(*args, **kwargs):
         raise ResourceNotFoundError("The specified blob does not exist.")
 

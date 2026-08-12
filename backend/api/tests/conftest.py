@@ -4,11 +4,13 @@ This module defines API-specific fixtures. Common factories (questionnaire_facto
 application_factory, process_factory) are inherited from backend/conftest.py.
 """
 
+from itertools import count
+
 import pytest
 from applications.models import ApplicationAttachment
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from itertools import count
+from users.models import User
 
 
 @pytest.fixture
@@ -20,8 +22,6 @@ def reviewer_group(db):
 @pytest.fixture
 def reviewer_user(db, reviewer_group):
     """Create an authenticated reviewer user linked to the reviewer group."""
-    from users.models import User
-
     user = User.objects.create_user(username="reviewer", password="testpass123")
     user.groups.add(reviewer_group)
     return user

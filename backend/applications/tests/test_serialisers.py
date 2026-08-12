@@ -1,20 +1,20 @@
 """Comprehensive coverage tests for applications and API serialisers."""
 
-from unittest.mock import MagicMock, Mock, patch
+import uuid
+from unittest.mock import patch
 
-from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
+from django.utils import timezone
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
 
 from applications.models import Application, ApplicationAttachment
-from applications.statuses import ApplicationStatus
 from applications.serialisers import (
     ApplicationSerialiser,
     AttachmentSerialiser,
-    ReviewerSerialiser,
 )
+from applications.statuses import ApplicationStatus
 
 
 class AttachmentSerialiserTests(TestCase):
@@ -50,8 +50,6 @@ class AttachmentSerialiserTests(TestCase):
 
     def test_attachment_serialiser_serializes_attachment(self):
         """AttachmentSerialiser correctly serialises an attachment."""
-        import uuid
-
         attachment_key = uuid.uuid4()
         attachment = ApplicationAttachment.objects.create(
             application=self.application,
@@ -68,8 +66,6 @@ class AttachmentSerialiserTests(TestCase):
 
     def test_attachment_serialiser_exposes_size_as_readonly(self):
         """AttachmentSerialiser exposes size field and marks it read-only."""
-        import uuid
-
         attachment_key = uuid.uuid4()
         attachment = ApplicationAttachment.objects.create(
             application=self.application,
@@ -87,8 +83,6 @@ class AttachmentSerialiserTests(TestCase):
 
     def test_attachment_serialiser_size_field_is_readonly(self):
         """AttachmentSerialiser marks size as read-only in get_fields."""
-        from django.test import RequestFactory
-
         factory = RequestFactory()
         request = factory.patch("/api/attachments/test-key")
         request.user = self.user
@@ -147,8 +141,6 @@ class ApplicationSerialiserTests(TestCase):
 
     def test_application_serialiser_handles_submitted_status(self):
         """ApplicationSerialiser correctly serialises submitted application."""
-        from django.utils import timezone
-
         application = Application.objects.create(
             owner=self.user,
             questionnaire=self.questionnaire,
@@ -165,8 +157,6 @@ class ApplicationSerialiserTests(TestCase):
 
     def test_application_serialiser_includes_attachments(self):
         """ApplicationSerialiser includes attachments."""
-        import uuid
-
         application = Application.objects.create(
             owner=self.user,
             questionnaire=self.questionnaire,
@@ -219,8 +209,6 @@ class ApplicationSerialiserValidationTests(TestCase):
         """ApplicationSerialiser requires collection_notice_agreed."""
         mock_verify.return_value = True
 
-        from django.test import RequestFactory
-
         factory = RequestFactory()
         request = factory.post("/api/applications")
         request.user = self.user
@@ -248,8 +236,6 @@ class ApplicationSerialiserValidationTests(TestCase):
         """ApplicationSerialiser validates questionnaire is found."""
         mock_verify.return_value = True
 
-        from django.test import RequestFactory
-
         factory = RequestFactory()
         request = factory.post("/api/applications")
         request.user = self.user
@@ -275,8 +261,6 @@ class ApplicationSerialiserValidationTests(TestCase):
     def test_patch_submit_requires_turnstile(self, mock_verify):
         """ApplicationSerialiser requires valid turnstile for submit."""
         mock_verify.return_value = False  # Invalid token
-
-        from django.test import RequestFactory
 
         factory = RequestFactory()
         request = factory.patch("/api/applications/test-key")

@@ -1,7 +1,8 @@
 """Comprehensive coverage tests for applications.models module."""
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, AnonymousUser
 from django.test import TestCase
+from django.utils import timezone
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
@@ -253,7 +254,6 @@ class ApplicationModelTests(TestCase):
 
     def test_application_internal_id_for_submitted(self):
         """internal_id property includes date suffix for submitted apps."""
-        from django.utils import timezone
         app = Application.objects.create(
             owner=self.user,
             questionnaire=self.questionnaire,
@@ -283,7 +283,6 @@ class ApplicationModelTests(TestCase):
             document={"steps": []},
         )
         # Create an unauthenticated user (is_authenticated=False is default for AnonymousUser)
-        from django.contrib.auth.models import AnonymousUser
         anon = AnonymousUser()
         self.assertFalse(app.has_access(anon))
 

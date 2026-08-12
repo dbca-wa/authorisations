@@ -7,7 +7,7 @@ defined in docs/STATUS-WORKFLOW.md.
 from datetime import timedelta
 
 import pytest
-from applications.models import Application
+from applications import serialisers
 from applications.statuses import ApplicationStatus
 from django.utils import timezone
 from rest_framework import status
@@ -44,8 +44,6 @@ class TestApplicantTransitions:
     def test_submit_draft_success(self, api_client, user, workflow_app, monkeypatch):
         """Allow owner to transition DRAFT to SUBMITTED."""
         # Mock turnstile verification for submission
-        from applications import serialisers
-
         monkeypatch.setattr(
             serialisers, "verify_turnstile_token", lambda *args, **kwargs: True
         )
@@ -399,8 +397,6 @@ class TestWorkflowBusinessRules:
         self, api_client, user, workflow_app, monkeypatch
     ):
         """Ensure re-submission doesn't overwrite the original submitted_at timestamp."""
-        from applications import serialisers
-
         monkeypatch.setattr(
             serialisers, "verify_turnstile_token", lambda *args, **kwargs: True
         )

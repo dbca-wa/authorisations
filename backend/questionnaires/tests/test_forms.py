@@ -1,14 +1,13 @@
 """Comprehensive coverage tests for questionnaires module."""
 
-import json
-from django.test import TestCase
-from django.core.exceptions import ValidationError
-from django import forms
-from django.contrib.auth.models import AnonymousUser
+import re
 
+from django.test import TestCase
+from django.utils.text import slugify
+from django_jsonform.models.fields import JSONField
 from processes.models import AuthorisationProcess
 from users.models import User
-from questionnaires.models import Questionnaire
+
 from questionnaires.bugfix import DocumentJSONField, DocumentJSONFormField
 from questionnaires.forms import QuestionnaireForm
 
@@ -91,7 +90,6 @@ class DocumentJSONFieldTests(TestCase):
 
     def test_document_json_field_is_subclass_of_json_field(self):
         """DocumentJSONField is a proper JSONField subclass."""
-        from django_jsonform.models.fields import JSONField
         self.assertTrue(issubclass(DocumentJSONField, JSONField))
 
 
@@ -150,13 +148,11 @@ class QuestionnaireFormMethodsTests(TestCase):
 
     def test_clean_name_rejects_special_characters(self):
         """Names with special characters are rejected."""
-        import re
         name = "Invalid@Special#"
         self.assertTrue(bool(re.search(r"[^A-Za-z0-9\- ]", name)))
 
     def test_clean_name_accepts_hyphens_and_spaces(self):
         """Valid names with hyphens and spaces are accepted."""
-        import re
         name = "Valid-Name With Spaces"
         self.assertFalse(bool(re.search(r"[^A-Za-z0-9\- ]", name)))
         self.assertFalse(name.startswith("-"))
@@ -164,14 +160,12 @@ class QuestionnaireFormMethodsTests(TestCase):
 
     def test_clean_code_slugifies_input(self):
         """Code is converted to slug format."""
-        from django.utils.text import slugify
         code = "My Code With Spaces"
         code = slugify(code)
         self.assertTrue("-" in code or code.islower())
 
     def test_clean_code_rejects_blank_after_slugify(self):
         """Code that slugifies to empty string is rejected."""
-        from django.utils.text import slugify
         code = "@#$%@#$"
         code = slugify(code)
         self.assertEqual(code, "")

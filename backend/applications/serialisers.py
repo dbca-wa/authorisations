@@ -15,12 +15,11 @@ from .models import (
     Application,
     ApplicationAttachment,
 )
+from .schema import get_answers_schema
 from .statuses import (
     REVIEW_QUEUE_STATUSES,
-    REVIEWER_SETTABLE_STATUSES,
     ApplicationStatus,
 )
-from .schema import get_answers_schema
 
 
 def verify_turnstile_token(

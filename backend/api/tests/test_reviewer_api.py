@@ -1,6 +1,7 @@
 """API tests for reviewer queue list/retrieve/update endpoints."""
 
 import pytest
+from django.utils import timezone
 from applications.statuses import ApplicationStatus
 from rest_framework import status
 
@@ -179,8 +180,6 @@ def test_reviewer_patch_allows_reviewer_settable_status(
     application_factory,
 ):
     """Allow reviewers to move queue items to permitted reviewer statuses."""
-    from django.utils import timezone
-    
     process = process_factory(slug="review-process")
     process.reviewer_groups.add(reviewer_group)
     original_submitted_at = timezone.now()
@@ -214,8 +213,6 @@ def test_reviewer_patch_rejects_non_reviewer_settable_target_status(
     application_factory,
 ):
     """Verify reviewers can return an application to DRAFT via correct workflow."""
-    from django.utils import timezone
-    
     process = process_factory(slug="review-process")
     process.reviewer_groups.add(reviewer_group)
     application = application_factory(
@@ -552,8 +549,6 @@ def test_reviewer_patch_submitted_at_cleared_only_on_draft_transition(
     application_factory,
 ):
     """Verify submitted_at is cleared only when transitioning to DRAFT, not on other transitions."""
-    from django.utils import timezone
-
     process = process_factory(slug="submitted-at-test")
     process.reviewer_groups.add(reviewer_group)
     original_submitted_at = timezone.now()

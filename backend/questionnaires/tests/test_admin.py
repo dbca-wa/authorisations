@@ -1,12 +1,13 @@
 """Unit tests for questionnaire admin change view access control."""
 
+from unittest.mock import MagicMock
+
 import pytest
-from django.test import Client
+from django.test import Client, RequestFactory
+from users.models import User
 
 from questionnaires.admin import QuestionnaireAdmin
 from questionnaires.models import Questionnaire
-from users.models import User
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 
@@ -137,10 +138,6 @@ def test_new_version_inherits_sort_order_from_previous_version(
     the sort_order from the previous version, not get a new/different value.
     This preserves the questionnaire's position in the admin list.
     """
-    from unittest.mock import MagicMock
-
-    from django.test import RequestFactory
-
     # Create v1 with sort_order=3
     v1 = Questionnaire.objects.create(
         process=process,

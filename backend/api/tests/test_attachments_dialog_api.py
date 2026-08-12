@@ -4,6 +4,8 @@ import pytest
 from django.contrib.auth.models import Group
 from rest_framework import status
 
+from applications.models import ApplicationAttachment
+
 
 @pytest.mark.django_db
 def test_get_attachments_for_application_returns_empty_for_reviewer(
@@ -43,7 +45,6 @@ def test_get_attachments_for_application_returns_attachments_for_reviewer(
     attachment = attachment_factory(application=reviewable_application, name="evidence-1.txt")
     api_client.force_authenticate(user=user)
     # Sanity check: attachment should exist in DB for the given application
-    from applications.models import ApplicationAttachment
     assert ApplicationAttachment.objects.filter(application=reviewable_application, key=attachment.key).exists()
 
     api_client.force_authenticate(user=user)
