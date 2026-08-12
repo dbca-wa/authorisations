@@ -9,4 +9,5 @@ exec gunicorn config.wsgi \
     --graceful-timeout 90 \
     --max-requests 2048 \
     --workers 4 \
-    --preload
+    --preload \
+    --no-control-socket
