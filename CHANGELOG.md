@@ -48,7 +48,6 @@ Entries should be concise, single-sentence summaries without excessive technical
 ### Changed
 
 - Removed redundant CSRF cookie settings (CSRF_COOKIE_NAME, CSRF_COOKIE_SAMESITE, CSRF_COOKIE_SECURE) as the application uses session-based CSRF protection instead.
-- Changed SESSION_COOKIE_SAMESITE from "Lax" to "Strict" unconditionally for improved security against cross-site cookie inclusion.
 
 ## 1.0.2 - 2026-07-14
 

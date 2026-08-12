@@ -104,8 +104,11 @@ SESSION_COOKIE_DOMAIN = None
 SECURE_HSTS_SECONDS = 60 if DEBUG else env("SECURE_HSTS_SECONDS")
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
-# Ensure strict SameSite attribute for the session cookie to prevent cross-site inclusion.
-SESSION_COOKIE_SAMESITE = "Strict"
+# The `Lax` value allows the session cookie to be sent with top-level navigations 
+# and GET requests initiated by third-party websites, but not with other types of 
+# cross-site requests (e.g., POST requests). This helps mitigate CSRF attacks 
+# while still allowing some cross-site usage scenarios.
+SESSION_COOKIE_SAMESITE = "Lax"
 
 # Secure attribute is recommended if using HTTPS
 SESSION_COOKIE_SECURE = env("SECURE_ONLY")
