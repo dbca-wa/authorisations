@@ -82,3 +82,6 @@ show_missing = true
 skip_empty = true
 omit = ["manage.py", "*/migrations/*", "*/tests.py", "*/test_*.py", "*/conftest.py"]
 
+[tool.ruff]
+exclude = ["*.toml"]
+
