@@ -1,5 +1,6 @@
 from api.models import ClientConfig
 from api.serialisers import ClientConfigSerialiser
+from azure.core.exceptions import ResourceNotFoundError
 from django.http import FileResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import render
@@ -72,8 +73,14 @@ def download_attachment(request, appKey, attachmentKey):
     if attachment.application.has_access(request.user) is False:
         return RESPONSE_404
 
-    # Serve the file
-    return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
+    # Serve the file. If the underlying storage backend reports that the
+    # object is missing (for example Azure's ResourceNotFoundError) or an
+    # OS-level error occurs, return a 404 rather than propagating an
+    # exception that could result in a 500 response.
+    try:
+        return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
+    except (ResourceNotFoundError, OSError):
+        return RESPONSE_404
 
 
 def download_application(request, appKey):

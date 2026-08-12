@@ -427,6 +427,82 @@ E2E CI checklist:
 - Ensure pytest writes JUnit XML when PublishTestResults expects it.
 - Publish failure artefacts (trace/video/screenshots) for diagnosis.
 
+## Backend Test Guidelines
+
+### Import organization
+
+**Golden rule: All imports must be at the module level (top of file), following PEP 8.**
+
+This ensures code is readable, follows Python conventions, and enables static analysis tools to work correctly.
+
+**Good practice:**
+```python
+# At the top of file
+from unittest.mock import patch, MagicMock
+from django.test import TestCase, RequestFactory
+from django.utils import timezone
+
+from applications.models import Application, ApplicationAttachment
+from users.models import User
+
+
+class AttachmentSerialiserTests(TestCase):
+    """Test AttachmentSerialiser."""
+
+    def setUp(self):
+        """Create test fixtures."""
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
+
+    def test_attachment_serialiser_exposes_size_as_readonly(self):
+        """AttachmentSerialiser exposes size field and marks it read-only."""
+        # Use imports defined at module level
+        attachment_key = uuid.uuid4()
+        attachment = ApplicationAttachment.objects.create(
+            application=self.application,
+            name="test.pdf",
+            file="test.pdf",
+            key=attachment_key,
+            size=2048,
+        )
+```
+
+**Anti-pattern (DO NOT DO THIS):**
+```python
+class AttachmentSerialiserTests(TestCase):
+    def test_attachment_serialiser_exposes_size_as_readonly(self):
+        # Import inside function - violates PEP 8
+        import uuid
+        from django.test import RequestFactory
+        
+        attachment_key = uuid.uuid4()
+        ...
+```
+
+**Exception:** Only import inside functions to resolve **unavoidable circular imports**. Always document the reason:
+```python
+def test_circular_import_case(self):
+    # Local import to avoid circular dependency with models.py
+    from applications.serialisers import ApplicationSerialiser
+    serializer = ApplicationSerialiser(context={"request": self.request})
+```
+
+**Import organization (PEP 8 order):**
+1. Standard library imports (unittest, datetime, etc.)
+2. Third-party imports (django, rest_framework, pytest, etc.)
+3. Local application imports (models, serialisers, etc.)
+
+**Cleanup unused imports:**
+- Review and remove imports that are not referenced in the test file.
+- Use pylint to identify unused imports: `pylint --disable=all --enable=unused-import backend/`
+- Clean up during code review to keep test files maintainable.
+
+### Other backend test best practices
+
+- Security tests must verify both **positive** (access granted) and **negative** (access denied, 403/404) cases.
+- Use realistic fixtures; avoid brittle hard-coded internal details.
+- Test latest-version selection for questionnaires (ordering, cloning on edit).
+- Test N+1 prevention: check that `select_related` is used on expected FK paths.
+
 ## Extension Guide
 
 ### Where to Add New Tests

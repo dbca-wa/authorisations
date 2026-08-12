@@ -79,6 +79,7 @@
 
       table {
         width: 100%;
+        table-layout: fixed;
         border-collapse: collapse;
         border-spacing: 0;
       }
@@ -113,6 +114,8 @@
       .section-table td {
         border: 1px solid #222;
         vertical-align: top;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
 
       .header-cell {
@@ -220,6 +223,8 @@
         padding: 9px 10px;
         font-size: 12px;
         line-height: 1.45;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
 
       .section-heading {
@@ -249,6 +254,8 @@
         padding: 6px 8px;
         font-size: 11px;
         vertical-align: top;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
 
       .grid-table th {
@@ -311,7 +318,8 @@
       .attachment-image-caption {
         margin: 6px 0 0;
         font-size: 11px;
-        color: #222;
+        color: #666;
+        text-align: center;
         word-break: break-word;
       }
 
@@ -343,6 +351,13 @@
         color: #222;
         word-break: break-all;
         text-align: center;
+      }
+
+      .attachment-file-size {
+        font-size: 10px;
+        color: #888;
+        text-align: center;
+        font-style: italic;
       }
 
       .attachment-missing {
@@ -450,7 +465,7 @@
                                 {% for file in question.image_files %}
                                   <li class="attachment-item">
                                     <img class="attachment-image" src="{{ file.file_src }}" alt="{{ file.name }}" />
-                                    <p class="attachment-image-caption">{{ file.name }}</p>
+                                    <p class="attachment-image-caption{% if file.is_missing %} attachment-missing{% endif %}">{{ file.name }} - {{ file.file_size }}</p>
                                   </li>
                                 {% endfor %}
                               </ul>
@@ -468,6 +483,7 @@
                                     <span class="attachment-file-name{% if file.is_missing %} attachment-missing{% endif %}">
                                       {{ file.name }}
                                     </span>
+                                    <span class="attachment-file-size">{{ file.file_size }}</span>
                                   </div>
                                 {% endfor %}
                               </div>

@@ -115,6 +115,7 @@ describe("FileInput", () => {
               name: "Evidence.pdf",
               created_at: "2026-05-14T00:00:00Z",
               download_url: "/d/file",
+              size: 0,
             },
           ]}
           onAttachmentAdded={vi.fn()}
@@ -149,6 +150,7 @@ describe("FileInput", () => {
               name: "Evidence.pdf",
               created_at: "2026-05-14T00:00:00Z",
               download_url: "/d/file",
+              size: 0,
             },
           ]}
           onAttachmentAdded={vi.fn()}

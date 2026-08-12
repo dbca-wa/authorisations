@@ -15,7 +15,7 @@ import { useRef } from 'react';
 import { ApiManager } from '../context/ApiManager';
 import { useDialog, useSnackbar } from '../context/Hooks';
 import type { IApplicationAttachment } from "../context/types/Application";
-import { getIconFromFilename } from "../context/Utils";
+import { formatFileSize, getIconFromFilename } from "../context/Utils";
 
 
 export const FileAttachmentList = ({
@@ -156,7 +156,7 @@ export const FileAttachmentList = ({
     // Dynamically adjust item size based on attachment count
     const itemCount = attachments.length;
     const justifyContent = fullWidth && itemCount < 6 ? 'space-around' : 'flex-start';
-    const size = fullWidth && itemCount < 6
+    const gridItemSize = fullWidth && itemCount < 6
         ? itemCount <= 2
             ? { xs: 6, sm: 5, md: 4.5, lg: 4.5, xl: 4.5 }  // Make 1-2 items wider but not full width
             : itemCount === 3
@@ -170,8 +170,8 @@ export const FileAttachmentList = ({
         <Grid container spacing={2} sx={{ alignItems: 'stretch', justifyContent: justifyContent }} className="min-w-sm!">
             {attachments.map((attachment) => (
                 <Grid key={attachment.key}
-                    size={size}
-                    className={`rounded-md flex flex-col items-center justify-between py-2 px-2 ${minHeight}`}
+                    size={gridItemSize}
+                    className={`rounded-md flex flex-col items-center justify-between py-2 px-2 w-42! ${minHeight}`}
                     sx={{
                         border: '1px solid',
                         borderColor: 'action.disabled',
@@ -194,6 +194,11 @@ export const FileAttachmentList = ({
                             </Typography>
                         </Link>
                     </Tooltip>
+                    {attachment.size > 0 && (
+                        <Typography variant="caption" sx={{ color: 'text.secondary', marginTop: 0.5 }}>
+                            {formatFileSize(attachment.size)}
+                        </Typography>
+                    )}
                     {canEdit && (
                         <Box className="flex gap-2">
                             <IconButton

@@ -128,6 +128,7 @@ export interface IApplicationAttachment {
     application_key: string;
     question: string;
     name: string;
+    size: number;
     created_at: string;
     download_url: string;
 }

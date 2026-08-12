@@ -9,6 +9,8 @@ Tests complete user journeys across multiple application statuses:
 """
 
 import json
+import re
+
 import pytest
 from questionnaires.models import Questionnaire
 
@@ -153,7 +155,6 @@ def test_my_applications_displays_tabs_with_multiple_statuses(
         # Verify Active tab is selected and has at least 2 applications (draft + submitted)
         active_text = active_tab.text_content()
         # Extract the count number (e.g., "Active (2)" → 2)
-        import re
         match = re.search(r'\((\d+)\)', active_text)
         active_count = int(match.group(1)) if match else 0
         assert active_count >= 2, f"Active tab should have at least 2 applications, found {active_count}"
