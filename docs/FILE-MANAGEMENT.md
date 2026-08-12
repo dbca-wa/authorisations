@@ -20,23 +20,27 @@ This document outlines the design and implementation plan for supporting file at
 ### `ApplicationAttachment` Model
 
 - `id`: Integer primary key (for DB efficiency).
-- `uuid`: UUID (unique, indexed, used for all external references and URLs).
+- `key`: UUID (unique, indexed, used for all external references and URLs).
 - `application`: ForeignKey to `Application.id` (integer PK).
-- `question_key`: String, identifies the question in the JSON answer document.
-- `file`: FileField, stores the file as `attachments/{application.key}/{uuid}` (no extension in storage path), but preserves the original filename in the model.
-- `uploaded_at`: DateTime, when the file was uploaded.
+- `question`: String, identifies the question in the JSON answer document.
+- `name`: String, the original filename as provided by the user.
+- `size`: BigInteger, file size in bytes (captured automatically during upload).
+- `file`: FileField, stores the file as `attachments/{year}/{month}/{application.key}/{uuid}` (no extension in storage path), where `year` and `month` are based on application creation date.
 - `is_deleted`: Boolean, default `False`. Marks soft-deleted files (never hard delete).
+- `created_at`: DateTime, when the file was uploaded.
+- `deleted_at`: DateTime, when the file was soft-deleted (null if not deleted).
 
 ---
 
 ## Serializer
 
-- Use the existing `AttachmentSerializer` for all attachment-related API actions.
+- Use the existing `AttachmentSerialiser` for all attachment-related API actions.
 - Validates:
   - File size and type (enforced via settings and per-question config).
-  - That the `question_key` exists in the application's JSON document.
+  - That the `question` field exists in the application's JSON document.
   - Per-question attachment count limits (configurable).
-- Exposes only the `uuid` for reference in the API and JSON answers (never the filename or extension).
+- Captures and exposes the file `size` (in bytes) as a read-only field.
+- Exposes the `key` (UUID) for reference in the API and JSON answers (never the filename or extension).
 
 ---
 
@@ -100,7 +104,7 @@ All endpoints use `{key}` (the application's UUID) for lookups:
 
 ## Summary
 
-This design provides a robust, auditable, and maintainable solution for file attachments in the application system, balancing efficient DB lookups, secure file storage, and flexible API usage. All references and lookups use UUIDs for security and consistency, while integer PKs ensure DB performance. The approach is extensible for future requirements and easy to review and maintain.
+This design provides a robust, auditable, and maintainable solution for file attachments in the application system, balancing efficient DB lookups, secure file storage, and flexible API usage. All references and lookups use UUIDs for security and consistency, while integer PKs ensure DB performance. File sizes are automatically captured during upload and exposed via the API for client-side display. The approach is extensible for future requirements and easy to review and maintain.
 
 ---
 

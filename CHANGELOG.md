@@ -22,6 +22,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added submission modal displayed after successful application submission and on page load for read-only applications, providing confirmation and options to download application PDF or exit the application.
 - Added technical officers review page workflow actions enabling reviewers to claim applications for review, reset applications to draft for applicant revision, and proceed applications to assessment stage with confirmation dialogs for each action.
 - Added audit logging for reviewer and assessor actions, recording every application status change with user, timestamp, and status transition details in an immutable audit log accessible through the Django admin interface for regulatory compliance and investigation purposes.
+- Added file size tracking and display for application attachments, automatically capturing file sizes during upload and displaying human-readable sizes (B, KB, MB) in the frontend attachment list and admin interface.
 
 ### Changed
 

@@ -1,7 +1,8 @@
 """E2E tests for file attachment rendering on draft editor pages.
 
 This module validates that uploaded attachment tiles render correctly,
-including filename visibility and icon display for supported file types.
+including filename visibility, icon display for supported file types,
+and file size information in human-readable format.
 """
 
 import pytest
@@ -108,6 +109,84 @@ def test_draft_editor_file_attachments_render_icons_for_supported_types(
         assert_attachment_icon_renders("image.png", "flat-color-icons--image-file")
         assert_attachment_icon_renders("document.pdf", "vscode-icons--file-type-pdf2")
         assert_attachment_icon_renders("data.xlsx", "vscode-icons--file-type-excel")
+    finally:
+        page.close()
+        context.close()
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_draft_editor_attachment_tiles_display_file_size_in_human_readable_format(
+    authenticated_browser_context_factory,
+    e2e_users,
+):
+    """Verify draft editor attachment tiles display file sizes in human-readable format.
+
+    Scenario steps:
+    1. Use seeded draft application with a single file question.
+    2. Add attachments with various file sizes (small, medium, large).
+    3. Open the draft editor URL for the application.
+    4. Confirm all three filenames and formatted file sizes are visible.
+    5. Verify sizes display correctly: bytes for small files, KB/MB for larger files.
+    """
+    owner = e2e_users["other"]
+    application = Application.objects.select_related("questionnaire", "questionnaire__process").get(
+        owner=owner,
+        key="00000000-0000-4000-8000-000000000003",
+        status="DRAFT",
+    )
+
+    question_key = "0.0-0"
+    # Create attachments with different sizes for formatting verification
+    ApplicationAttachment.objects.create(
+        application=application,
+        question=question_key,
+        name="small.txt",
+        file=SimpleUploadedFile("small.txt", b"tiny" * 50, content_type="text/plain"),
+        size=200,  # 200 bytes
+    )
+    ApplicationAttachment.objects.create(
+        application=application,
+        question=question_key,
+        name="medium.pdf",
+        file=SimpleUploadedFile("medium.pdf", b"%PDF-1.4\n" + b"x" * 5000, content_type="application/pdf"),
+        size=5120,  # 5 KB
+    )
+    ApplicationAttachment.objects.create(
+        application=application,
+        question=question_key,
+        name="large.xlsx",
+        file=SimpleUploadedFile("large.xlsx", b"PK\x03\x04" + b"x" * 102400, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        size=102400,  # ~100 KB
+    )
+
+    context = authenticated_browser_context_factory(owner)
+    page = context.new_page()
+
+    try:
+        page.goto(f"/a/{application.key}")
+        page.wait_for_load_state("networkidle", timeout=5000)
+
+        # Verify all filenames are present
+        assert page.locator("text=small.txt").count() >= 1
+        assert page.locator("text=medium.pdf").count() >= 1
+        assert page.locator("text=large.xlsx").count() >= 1
+
+        # Verify formatted file sizes are displayed
+        # 200 bytes should display as "200 B"
+        assert page.locator("text=200 B").count() >= 1, (
+            "Expected file size '200 B' to be displayed for small.txt"
+        )
+        
+        # 5 KB should display as "5 KB"
+        assert page.locator("text=5 KB").count() >= 1, (
+            "Expected file size '5 KB' to be displayed for medium.pdf"
+        )
+        
+        # ~100 KB should display with proper formatting
+        assert page.locator("text=/100(\\.[0-9])? KB/").count() >= 1, (
+            "Expected file size to display as '100 KB' or similar for large.xlsx"
+        )
     finally:
         page.close()
         context.close()

@@ -479,6 +479,7 @@ class ApplicationAttachment(models.Model):
     )
     question = models.CharField(max_length=100, blank=False, null=False)
     name = models.CharField(max_length=255, blank=False, null=False)
+    size = models.PositiveIntegerField(default=0, editable=False)
     file = models.FileField(
         upload_to=attachment_upload_path,
         blank=False,

@@ -471,6 +471,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
             "application_key",
             "question",
             "name",
+            "size",
             "file",
             "created_at",
             "download_url",
@@ -479,6 +480,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
             "key",
             "application_key",
             "question",
+            "size",
             "created_at",
             "download_url",
         )
@@ -671,6 +673,7 @@ class AttachmentSerialiser(serializers.ModelSerializer):
                 "application": application,
                 "question": validated_data["question"],
                 "name": validated_data["name"],
+                "size": validated_data["file"].size,
                 "file": validated_data["file"],
             }
         except KeyError as e:

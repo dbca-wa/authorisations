@@ -66,6 +66,41 @@ class AttachmentSerialiserTests(TestCase):
         self.assertEqual(data["key"], str(attachment.key))
         self.assertEqual(data["name"], "test.pdf")
 
+    def test_attachment_serialiser_exposes_size_as_readonly(self):
+        """AttachmentSerialiser exposes size field and marks it read-only."""
+        import uuid
+
+        attachment_key = uuid.uuid4()
+        attachment = ApplicationAttachment.objects.create(
+            application=self.application,
+            name="test.pdf",
+            file="test.pdf",
+            key=attachment_key,
+            size=2048,
+        )
+
+        serializer = AttachmentSerialiser(attachment)
+        data = serializer.data
+
+        self.assertIn("size", data)
+        self.assertEqual(data["size"], 2048)
+
+    def test_attachment_serialiser_size_field_is_readonly(self):
+        """AttachmentSerialiser marks size as read-only in get_fields."""
+        from django.test import RequestFactory
+
+        factory = RequestFactory()
+        request = factory.patch("/api/attachments/test-key")
+        request.user = self.user
+
+        serializer = AttachmentSerialiser(
+            context={"request": request},
+        )
+        fields = serializer.get_fields()
+
+        self.assertIn("size", fields)
+        self.assertTrue(fields["size"].read_only)
+
 
 class ApplicationSerialiserTests(TestCase):
     """Test ApplicationSerialiser."""
