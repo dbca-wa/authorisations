@@ -13,7 +13,7 @@
         marks: none;
 
         @top-left {
-          content: "#{{ application.internal_id }}";
+          content: "#{{ application.internal_id }}" string(app-status);
           font: 8.5pt Arial, Helvetica, sans-serif;
           color: #4c4c4c;
           vertical-align: middle;
@@ -86,6 +86,15 @@
 
       p {
         margin: 0;
+      }
+
+      .status-marker {
+        display: block;
+        height: 0;
+        overflow: hidden;
+        font-size: 0;
+        line-height: 0;
+        string-set: app-status attr(data-status);
       }
 
       .section-breadcrumb-marker {
@@ -375,6 +384,7 @@
   </head>
   <body>
     <main>
+      <div class="status-marker" data-status="{% if application.status == 'DRAFT' %} - DRAFT{% endif %}"></div>
       <div class="header-wrapper" aria-label="Form Header">
         <div class="header-cell">
           <div class="header-inner">
