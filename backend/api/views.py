@@ -259,8 +259,7 @@ class ReviewerViewSet(
                    UNDER_REVIEW → DRAFT, UNDER_REVIEW → UNDER_ASSESSMENT).
 
     Access is implicitly scoped by the user's reviewer group memberships; an
-    authenticated user with no reviewer group assignments will receive an empty
-    list and 404s on individual lookups.
+    authenticated user with no reviewer group assignments will receive a 404.
 
     Future: answer-level comments will be added as a nested action on this viewset.
     """
@@ -269,6 +268,17 @@ class ReviewerViewSet(
     serializer_class = ReviewerSerialiser
     lookup_field = "key"
     http_method_names = ["get", "patch", "options", "head"]
+
+    def _user_is_reviewer(self):
+        """
+        Check if the current user is a member of any reviewer group.
+
+        Returns True if the user belongs to at least one group that is
+        assigned as a reviewer_group to some process.
+        """
+        return AuthorisationProcess.reviewer_groups.through.objects.filter(
+            group_id__in=self.request.user.groups.values("id")
+        ).exists()
 
     def get_queryset(self):
         """
@@ -297,6 +307,17 @@ class ReviewerViewSet(
             )
             .select_related("owner", "questionnaire", "questionnaire__process")
         )
+
+    def list(self, request, *args, **kwargs):
+        """
+        Return 404 for users without reviewer-group membership.
+
+        For authorised reviewers, return the filtered review queue based on
+        their group memberships and REVIEW_QUEUE_STATUSES.
+        """
+        if not self._user_is_reviewer():
+            raise NotFound()
+        return super().list(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         """
