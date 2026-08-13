@@ -31,6 +31,10 @@ Welcome to the Authorisations documentation hub. Use the links below to find inf
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** — Kubernetes, kustomize configuration, and deployment procedures
 - **[RELEASE.md](RELEASE.md)** — Semantic versioning and production release process
 
+## Maintenance & Operations
+
+- **[DEPENDENCY-UPGRADE.md](DEPENDENCY-UPGRADE.md)** — Process-driven approach to upgrading backend and frontend dependencies, breaking-change analysis, and pending upgrade inventory
+
 ## Quality & Contributions
 
 - **[TESTING.md](TESTING.md)** — Testing strategy, running tests locally and in CI, and best practices
