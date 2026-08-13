@@ -402,12 +402,12 @@ Finding where security tests belong:
 Quick reference:
 - **Backend tests**: `cd backend && poetry run pytest`
 - **Frontend tests**: `cd frontend && npm run test:unit`
-- **E2E tests (dev mode, preferred)**: 
+- **E2E tests (dev mode, preferred)**:
   - Terminal 1: `cd frontend && npm run dev` (start Vite dev server)
-  - Terminal 2: `cd backend && poetry run pytest e2e/tests -v --browser chromium`
+  - Terminal 2: `cd backend && poetry run pytest e2e/tests -v -n auto --dist loadscope --browser chromium`
 - **E2E tests (static mode, CI-style)**:
   - `cd frontend && npm run build && cd ../backend && poetry run python manage.py collectstatic --noinput`
-  - `DJANGO_VITE_TEST_DEV_MODE=false DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json poetry run pytest e2e/tests -v --browser chromium`
+  - `DJANGO_VITE_TEST_DEV_MODE=false DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json poetry run pytest e2e/tests -v -n auto --dist loadscope --browser chromium`
 
 For coverage, diagnostics, and specific test patterns, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-locations-and-commands).
 

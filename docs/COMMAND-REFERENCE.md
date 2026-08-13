@@ -56,8 +56,11 @@ cd frontend && npm install && npm run build
 # Setup (backend)
 cd backend && poetry run python manage.py collectstatic --noinput
 
-# Run tests
-cd backend && poetry run pytest e2e/tests -v
+# Run tests (parallel execution across all CPU cores)
+cd backend && poetry run pytest e2e/tests -v -n auto --dist loadscope
+
+# Run tests with diagnostic output (trace + screenshot on failure)
+cd backend && poetry run pytest e2e/tests -v -n auto --dist loadscope --tracing=retain-on-failure --screenshot=only-on-failure
 ```
 
 ---

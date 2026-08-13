@@ -31,6 +31,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Standardised on npm for all frontend package management across development, CI, testing, and production environments to ensure identical dependency versions and predictable builds.
 - Disabled questionnaire tabs when only a single questionnaire to prevent user confusion from clicking non-functional tabs.
 - Improved handling of missing files and file size display in PDF generation, showing placeholder images for missing attachments and displaying human-readable file sizes alongside filenames for all file types.
+- **Dependency upgrades:** Updated 19 backend packages (Django 5.2.17, cryptography 50.0.0, djangorestframework 3.18.0, pytest-django 4.14.0) and 19 frontend packages (axios, eslint, globals, msw, typescript-eslint, and build tooling) with zero codebase modifications. Created [DEPENDENCY-UPGRADE.md](docs/DEPENDENCY-UPGRADE.md) documenting upgrade workflow and breaking-change analysis methodology.
 
 ### Fixed
 

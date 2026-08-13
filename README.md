@@ -42,6 +42,8 @@ This system supports DBCA authorisation workflows, including Animal Ethics and S
 
 **Deployment:** See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes and kustomize configuration.
 
+**Dependencies:** See [docs/DEPENDENCY-UPGRADE.md](docs/DEPENDENCY-UPGRADE.md) for dependency upgrade process and guidelines.
+
 ## Writing style
 
 - Use British English spelling in code comments, docs, command names, and developer guidance.
