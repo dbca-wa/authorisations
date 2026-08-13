@@ -164,36 +164,37 @@ def test_review_status_transition_updates_through_api(
 
 @pytest.mark.e2e
 @pytest.mark.django_db(transaction=True)
-def test_review_page_soft_404_non_reviewer(
+def test_review_page_authorization(
     authenticated_browser_context_factory,
     e2e_users,
 ):
-    """Frontend soft_404: non-reviewer accessing /review page renders error page."""
-    # Reviewer user: can access /review page and loads review component
+    """Verify /review access control: 404 for non-reviewers, renders correctly for reviewers."""
+    # Reviewer user: GET /review → 200 response, renders Review Queue
     reviewer_context = authenticated_browser_context_factory(e2e_users["reviewer"])
     reviewer_page = reviewer_context.new_page()
-
     try:
-        reviewer_page.goto("/review")
+        reviewer_response = reviewer_page.goto("/review")
         reviewer_page.wait_for_load_state("networkidle")
         reviewer_body = reviewer_page.content()
     finally:
         reviewer_page.close()
         reviewer_context.close()
 
-    # Non-reviewer user: accesses /review page, gets SPA shell
-    # but frontend loader throws 404 and React renders ErrorPage
+    # Non-reviewer user: GET /review → 404 response, renders error page
     applicant_context = authenticated_browser_context_factory(e2e_users["applicant"])
     applicant_page = applicant_context.new_page()
-
     try:
-        applicant_page.goto("/review")
+        applicant_response = applicant_page.goto("/review")
         applicant_page.wait_for_load_state("networkidle")
         applicant_body = applicant_page.content()
     finally:
         applicant_page.close()
         applicant_context.close()
 
-    # Reviewer should not see error page; applicant should
+    # Verify backend HTTP response codes
+    assert reviewer_response.status == 200
+    assert applicant_response.status == 404
+
+    # Verify frontend rendering
     assert "Review Queue" in reviewer_body
     assert "404 - Not found" in applicant_body
