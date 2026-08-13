@@ -218,3 +218,35 @@ def test_download_attachment_returns_404_when_attachment_is_soft_deleted(client,
     )
 
     assert response.status_code == 404
+
+
+def test_review_page_returns_404_for_unauthenticated_user(client):
+    """Return 404 for anonymous users on /review to avoid disclosing its existence."""
+    response = client.get(reverse("review"))
+
+    assert response.status_code == 404
+
+
+def test_review_page_returns_404_for_non_reviewer_user(client, user):
+    """Return 404 for authenticated users without reviewer permissions on /review."""
+    client.force_login(user)
+    response = client.get(reverse("review"))
+
+    assert response.status_code == 404
+
+
+def test_review_page_returns_200_for_reviewer_user(client, user, questionnaire_factory):
+    """Allow authenticated reviewers to access /review page."""
+    # Create a reviewer group and add user to it
+    reviewer_group = Group.objects.create(name="review-page-test-reviewers")
+    user.groups.add(reviewer_group)
+
+    # Create a questionnaire (which has a process) with this group as reviewer
+    questionnaire = questionnaire_factory()
+    questionnaire.process.reviewer_groups.add(reviewer_group)
+
+    client.force_login(user)
+    response = client.get(reverse("review"))
+
+    assert response.status_code == 200
+    assert '<div id="root"></div>' in response.content.decode()

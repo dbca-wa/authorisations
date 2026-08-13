@@ -1,9 +1,10 @@
-from api.models import ClientConfig
-from api.serialisers import ClientConfigSerialiser
 from azure.core.exceptions import ResourceNotFoundError
 from django.http import FileResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import render
+
+from api.models import ClientConfig
+from api.serialisers import ClientConfigSerialiser
 
 from .models import Application, ApplicationAttachment
 
@@ -104,3 +105,14 @@ def download_application(request, appKey):
 
     # Serve the PDF file
     return FileResponse(pdf_file, as_attachment=False, filename=f"application_{appKey}.pdf")
+
+
+def review_page(request):
+    """Display review queue page - only accessible to authenticated reviewers.
+    
+    Returns 404 for unauthenticated users or users without reviewer permissions.
+    """
+    if not request.user.is_authenticated or not request.user.is_reviewer():
+        return RESPONSE_404
+
+    return generic_template(request)

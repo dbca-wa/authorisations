@@ -12,12 +12,25 @@ Development patterns, rules, and best practices for the backend codebase.
 
 ## Security and ownership
 
+### Authorization patterns
+
+**Reviewer authorization check:**
+- Use `request.user.is_reviewer()` to determine if a user belongs to any reviewer group for any process
+- The method returns `False` for unauthenticated users (AnonymousUser)
+- Always check `is_authenticated` before calling `is_reviewer()` on routes that render public SPA shells to avoid AttributeError:
+  ```python
+  if not request.user.is_authenticated or not request.user.is_reviewer():
+      return RESPONSE_404
+  ```
+
+### Access control patterns
+
 - Application and attachment querysets must always enforce owner scoping
 - Attachment deletions are soft-delete and must include ownership checks
- - Application querysets must always enforce owner scoping for write/modify paths.
- - Attachment listing endpoints may return results to reviewers for applications
-   in processes they are authorised to assess; deletion and mutation remain
-   owner-only and must include ownership checks.
+- Application querysets must always enforce owner scoping for write/modify paths.
+- Attachment listing endpoints may return results to reviewers for applications
+  in processes they are authorised to assess; deletion and mutation remain
+  owner-only and must include ownership checks.
 - CSRF behaviour includes project-specific configuration and has known interactions with third-party admin endpoints
 
 ### Read access vs write access (`has_access` vs owner check)

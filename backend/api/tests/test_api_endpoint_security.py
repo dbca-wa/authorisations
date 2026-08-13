@@ -143,3 +143,53 @@ def test_attachment_list_filter_does_not_disclose_foreign_or_unknown_application
     assert unknown_response.status_code == status.HTTP_200_OK
     assert foreign_response.data == []
     assert unknown_response.data == []
+
+
+@pytest.mark.django_db
+def test_reviewer_list_returns_404_for_non_reviewer(
+    api_client,
+    user,
+    reviewer_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Hide review endpoint from users without reviewer-group permissions by returning 404."""
+    process = process_factory(slug="review-hidden", sort_order=1)
+    process.reviewer_groups.add(reviewer_group)
+    application_factory(
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/review")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_reviewer_patch_returns_404_for_non_reviewer(
+    api_client,
+    user,
+    reviewer_group,
+    process_factory,
+    questionnaire_factory,
+    application_factory,
+):
+    """Prevent non-reviewers from updating reviewer queue by returning 404 on PATCH."""
+    process = process_factory(slug="review-patch-hidden", sort_order=1)
+    process.reviewer_groups.add(reviewer_group)
+    application = application_factory(
+        questionnaire=questionnaire_factory(process=process),
+        status=ApplicationStatus.SUBMITTED,
+    )
+
+    api_client.force_authenticate(user=user)
+    response = api_client.patch(
+        f"/api/review/{application.key}",
+        {"status": ApplicationStatus.UNDER_REVIEW},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND

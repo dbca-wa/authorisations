@@ -760,3 +760,151 @@ class PDFContextBuildingTests(TestCase):
             "Images must be grouped in attachment-group")
         self.assertIn("Image attachments", html,
             "Section title for images must be present")
+
+    def test_render_pdf_html_includes_draft_label_in_header_for_draft_status(self):
+        """render_pdf_html includes DRAFT label in page header when status is DRAFT.
+
+        This test verifies that:
+        1. A status marker element is present in the HTML
+        2. When application status is DRAFT, data-status attribute contains " - DRAFT"
+        3. The string-set CSS captures the DRAFT label
+        4. The @top-left page header includes the DRAFT label after the internal ID
+           in the format: "#internal_id - DRAFT"
+        """
+        # Create an application with DRAFT status
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="draft-test",
+            name="Draft Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Test Question",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="DRAFT",  # Explicitly set to DRAFT
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": "test answer"
+                        }
+                    }
+                ]
+            },
+        )
+
+        # Render the PDF HTML
+        html = app.render_pdf_html()
+
+        # Verify 1: Status marker element is present with DRAFT label separator
+        self.assertIn('class="status-marker"', html,
+            "Status marker element must be present in HTML")
+        self.assertIn('data-status=" - DRAFT"', html,
+            "Status marker must have data-status=' - DRAFT' for DRAFT applications")
+
+        # Verify 2: CSS string-set rule for status marker is present
+        self.assertIn("string-set: app-status attr(data-status)", html,
+            "CSS must include string-set rule to capture status from data attribute")
+
+        # Verify 3: @top-left page header shows internal ID followed by status string
+        # The content property should show the internal ID followed by string(app-status)
+        self.assertIn('content: "#', html,
+            "Page header must show internal_id with #")
+        self.assertIn('string(app-status)', html,
+            "Page header must include string(app-status) for DRAFT label")
+
+    def test_render_pdf_html_excludes_draft_label_for_non_draft_status(self):
+        """render_pdf_html does not include DRAFT label when status is not DRAFT.
+
+        This test verifies that:
+        1. A status marker element is present in the HTML
+        2. When application status is NOT DRAFT, data-status attribute is empty
+        3. The page header shows only the internal ID without DRAFT suffix
+        """
+        # Create an application with SUBMITTED status
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="submitted-test",
+            name="Submitted Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Test Question",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="SUBMITTED",  # Set to SUBMITTED, not DRAFT
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": "test answer"
+                        }
+                    }
+                ]
+            },
+        )
+
+        # Render the PDF HTML
+        html = app.render_pdf_html()
+
+        # Verify 1: Status marker element is present but empty
+        self.assertIn('class="status-marker"', html,
+            "Status marker element must be present in HTML")
+        self.assertIn('data-status=""', html,
+            "Status marker must have empty data-status for non-DRAFT applications")
+
+        # Verify 2: CSS string-set rule is still present
+        self.assertIn("string-set: app-status attr(data-status)", html,
+            "CSS must include string-set rule even for non-DRAFT applications")
+
+        # Verify 3: @top-left page header shows internal ID (without DRAFT suffix)
+        # The content property should show the internal ID followed by empty status string
+        self.assertIn('content: "#', html,
+            "Page header must show internal_id with #")
+        self.assertIn('string(app-status)', html,
+            "Page header must include string(app-status) function")

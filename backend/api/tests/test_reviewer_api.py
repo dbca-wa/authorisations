@@ -19,15 +19,17 @@ def test_reviewer_list_requires_authentication(api_client):
 
 @pytest.mark.django_db
 @pytest.mark.security
-def test_reviewer_list_is_empty_for_non_reviewer_user(
+def test_reviewer_list_returns_200_for_reviewer_with_empty_queue(
     api_client,
-    user,
-    application_factory,
+    reviewer_user,
+    reviewer_group,
+    process_factory,
 ):
-    """Return an empty queue for users without reviewer-group permissions."""
-    application_factory(status=ApplicationStatus.SUBMITTED)
+    """Allow reviewers to access endpoint and return empty list when no applications in queue."""
+    process = process_factory(slug="empty-queue-test", sort_order=1)
+    process.reviewer_groups.add(reviewer_group)
 
-    api_client.force_authenticate(user=user)
+    api_client.force_authenticate(user=reviewer_user)
     response = api_client.get("/api/review")
 
     assert response.status_code == status.HTTP_200_OK
