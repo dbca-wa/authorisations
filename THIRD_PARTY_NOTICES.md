@@ -20,7 +20,7 @@ attribution obligations, those obligations continue to apply.
 
 | Package | Version reviewed | Licence |
 | --- | --- | --- |
-| Django | 5.2.14 | BSD-3-Clause |
+| Django | 5.2.17 | BSD-3-Clause |
 | psycopg | 3.3.4 | LGPL-3.0-only |
 | django-vite | 3.1.0 | Apache-2.0 |
 | whitenoise | 6.12.0 | MIT |
@@ -31,12 +31,12 @@ attribution obligations, those obligations continue to apply.
 | django-jsonform | 2.23.2 | BSD-3-Clause |
 | django-admin-tools | 0.9.3 | MIT |
 | frozendict | 2.4.7 | LGPL-3.0-only |
-| dbca-utils | 3.0.3 | Apache-2.0 |
-| djangorestframework | 3.17.1 | BSD-3-Clause |
+| dbca-utils | 3.0.13 | Apache-2.0 |
+| djangorestframework | 3.18.0 | BSD-3-Clause |
 | pyfsig | 1.1.1 | MIT |
 | django-storages | 1.14.6 | BSD-3-Clause |
 | django-admin-sortable2 | 2.3.1 | MIT |
-| requests | 2.33.1 | Apache-2.0 |
+| requests | 2.34.2 | Apache-2.0
 
 ### Backend compliance notes
 
@@ -53,17 +53,23 @@ attribution obligations, those obligations continue to apply.
 | @mui/material | 9.1.2 | MIT |
 | @mui/x-data-grid | 9.7.0 | MIT |
 | @mui/x-date-pickers | 9.7.0 | MIT |
-| @tailwindcss/vite | 4.3.2 | MIT |
-| axios | 1.18.1 | MIT |
+| @tailwindcss/vite | 4.3.3 | MIT |
+| axios | 1.19.0 | MIT |
 | dayjs | 1.11.21 | MIT |
-| react | 19.2.7 | MIT |
-| react-dom | 19.2.7 | MIT |
+| eslint | 10.8.1 | MIT |
+| globals | 17.11.0 | MIT |
+| msw | 2.15.0 | MIT |
+| react | 19.2.8 | MIT |
+| react-dom | 19.2.8 | MIT |
 | react-dropzone | 15.0.0 | MIT |
 | react-hook-form | 7.80.0 | MIT |
-| react-router | 7.18.1 | MIT |
-| tailwindcss | 4.3.2 | MIT |
+| react-router | 7.18.2 | MIT |
+| tailwindcss | 4.3.3 | MIT |
+| typescript | 6.0.3 | Apache-2.0 |
+| typescript-eslint | 8.67.0 | BSD-2-Clause |
 | underscore | 1.13.8 | MIT |
 | uuid | 14.0.1 | MIT |
+| vitest | 4.1.10 | MIT |
 
 ### Frontend transitive licence notes
 

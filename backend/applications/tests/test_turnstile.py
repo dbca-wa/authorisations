@@ -5,7 +5,8 @@ from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
 
-from applications.models import Application, ApplicationStatus
+from applications.models import Application
+from applications.statuses import ApplicationStatus
 from applications.serialisers import ApplicationSerialiser, AttachmentSerialiser
 
 
@@ -77,7 +78,7 @@ class ApplicationSerialiserTurnstileTests(TestCase):
             "questionnaire_id": self.questionnaire.id,
             "questionnaire_code": self.questionnaire.code,
             "questionnaire_version": self.questionnaire.version,
-            "privacy_consent_agreed": True,
+            "collection_notice_agreed": True,
             "turnstile_token": "test-token",
         }
 

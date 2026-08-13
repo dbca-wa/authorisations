@@ -6,6 +6,8 @@ Streamline DBCA authorisation workflows - from Animal Ethics to Section 40/45 - 
 
 **Documentation is located in [docs/](docs/README.md).**
 
+**⚠️ Before any feature development, read [docs/FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md) — this is the authoritative checklist for all development and must be followed on every session.**
+
 For setup and development instructions, start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 For testing, see the testing section in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) or the comprehensive guide at [docs/TESTING.md](docs/TESTING.md).
@@ -32,11 +34,15 @@ This system supports DBCA authorisation workflows, including Animal Ethics and S
 
 **Frontend Development:** See [docs/FRONTEND-CONVENTIONS.md](docs/FRONTEND-CONVENTIONS.md) for React, TypeScript, and component guidelines.
 
-**Application Flows:** See [docs/APPLICATION-FLOWS.md](docs/APPLICATION-FLOWS.md) for user journeys, routes, and workflows.
+**Application Flows:** See [docs/FRONTEND-API-FLOWS.md](docs/FRONTEND-API-FLOWS.md) for user journeys, routes, and workflows.
+
+**Status Workflow:** See [docs/STATUS-WORKFLOW.md](docs/STATUS-WORKFLOW.md) for application status definitions and business logic.
 
 **File Management:** See [docs/FILE-MANAGEMENT.md](docs/FILE-MANAGEMENT.md) for attachment design and implementation.
 
 **Deployment:** See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes and kustomize configuration.
+
+**Dependencies:** See [docs/DEPENDENCY-UPGRADE.md](docs/DEPENDENCY-UPGRADE.md) for dependency upgrade process and guidelines.
 
 ## Writing style
 

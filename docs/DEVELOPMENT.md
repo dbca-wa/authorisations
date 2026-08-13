@@ -7,7 +7,7 @@ This document covers setup, installation, and running the application locally fo
 - Docker engine: https://docs.docker.com/engine/install/
 - Python 3 (recommended version 3.14 via pyenv)
 - Poetry: https://python-poetry.org/docs/#installing-with-the-official-installer
-- Bun (recommended instead of npm): https://bun.com/docs/installation
+- Node.js 22 and npm: https://nodejs.org/
 
 ## Create the database
 
@@ -68,7 +68,7 @@ Edit the `.env` file and set the environment variables, including:
 Generate a Django secret key and add it to your `.env` file:
 
 ```bash
-python -c 'import secrets; print(secrets.token_hex(25))'
+cd backend && poetry run python -c 'import secrets; print(secrets.token_hex(25))'
 ```
 
 Install Python dependencies via Poetry (run within the `backend` directory):
@@ -105,11 +105,11 @@ alias activate='source ~/dev/authorisations/backend/.venv/bin/activate'
 
 ## Setup the frontend
 
-Navigate to the frontend directory and install dependencies with Bun:
+Navigate to the frontend directory and install dependencies with npm:
 
 ```bash
 cd ../frontend
-bun install
+npm install
 ```
 
 ## Run the application
@@ -124,10 +124,10 @@ poetry run python manage.py runserver
 
 ### Frontend
 
-In another terminal window, navigate to the `frontend` directory and run the Bun development server:
+In another terminal window, navigate to the `frontend` directory and run the npm development server:
 
 ```bash
-bun run dev
+npm run dev
 ```
 
 The application should be accessible in your web browser at `http://localhost:8000` and the Django admin interface at `http://localhost:8000/admin`. The backend proxies the frontend Vite server and reloads the page when any changes are made.
@@ -144,61 +144,33 @@ mkdir assets
 
 ## Run the test suites
 
-Backend pytest uses a dedicated Django settings module at `config.test_settings`, backed by SQLite, so you do not need PostgreSQL `CREATEDB` privileges just to run the automated suite locally.
+**For comprehensive testing guidelines, test commands, and architecture, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).**
 
-### Backend tests
-
-Run the fast backend suite:
-
-```bash
-cd ../backend
-poetry run pytest
-```
-
-Run backend tests in parallel with coverage:
-
-```bash
-poetry run pytest -n auto --cov --cov-report=term-missing --cov-report=html --cov-report=xml
-```
-
-### Frontend tests
-
-Run the frontend test suite:
-
-```bash
-cd ../frontend
-bun run test
-```
-
-Run frontend tests with coverage:
-
-```bash
-bun run test:coverage
-```
-
-### End-to-end tests
-
-Run the E2E browser suite:
-
-```bash
-cd ../backend
-poetry run pytest e2e/tests -v
-```
-
-### For more information
-
-For full testing architecture, best practices, CI behaviour, E2E guidance, and troubleshooting, refer to [TESTING.md](TESTING.md).
+Quick start:
+- Backend: `cd backend && poetry run pytest`
+- Frontend: `cd frontend && npm run test:coverage`
+- E2E: `cd backend && poetry run pytest e2e/tests -v`
 
 ## Backend management commands
 
 Common Django management commands used in development:
 
 - `poetry run python manage.py runserver` — Run dev server
-- `poetry run python manage.py test` — Run tests
 - `poetry run python manage.py migrate` — Apply migrations
 - `poetry run python manage.py collectstatic` — Collect static files
 - `poetry run python manage.py normalise_questionnaire_sort_order` — Rebuild questionnaire sort order globally
   - Dry-run mode: `poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+
+**For full testing commands, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).**
+
+## Static files
+
+Static files in this project are managed using a hybrid approach between Vite and Django:
+
+1. **Frontend-driven assets**: Any assets placed in `frontend/public/` (for example `favicon.svg`) are automatically copied to `frontend/dist/` during the `npm run build` step.
+2. **Django-driven assets (Production/UAT)**: In the Docker image, built assets are copied from the builder stage into `backend/assets/`. Django's base `STATICFILES_DIRS` includes this folder, allowing `collectstatic` to gather them into `STATIC_ROOT`.
+3. **Reference in templates**: To reference these files in Django templates (like `vite.html`), use the `{% static 'path/to/file' %}` tag (ensure `{% load static %}` is present). In Production, this resolves to hashed filenames for cache busting.
+4. **Development flow**: In local development, you generally use the Vite dev server (`npm run dev`). However, if you build the frontend locally, Django will automatically detect the `frontend/dist/` directory and add it to `STATICFILES_DIRS`, allowing you to test production-like static serving without moving files.
 
 ## Frontend commands
 

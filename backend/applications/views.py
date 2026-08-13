@@ -1,8 +1,10 @@
-from api.models import ClientConfig
-from api.serialisers import ClientConfigSerialiser
+from azure.core.exceptions import ResourceNotFoundError
 from django.http import FileResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import render
+
+from api.models import ClientConfig
+from api.serialisers import ClientConfigSerialiser
 
 from .models import Application, ApplicationAttachment
 
@@ -72,8 +74,14 @@ def download_attachment(request, appKey, attachmentKey):
     if attachment.application.has_access(request.user) is False:
         return RESPONSE_404
 
-    # Serve the file
-    return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
+    # Serve the file. If the underlying storage backend reports that the
+    # object is missing (for example Azure's ResourceNotFoundError) or an
+    # OS-level error occurs, return a 404 rather than propagating an
+    # exception that could result in a 500 response.
+    try:
+        return FileResponse(attachment.file, as_attachment=False, filename=attachment.name)
+    except (ResourceNotFoundError, OSError):
+        return RESPONSE_404
 
 
 def download_application(request, appKey):
@@ -97,3 +105,14 @@ def download_application(request, appKey):
 
     # Serve the PDF file
     return FileResponse(pdf_file, as_attachment=False, filename=f"application_{appKey}.pdf")
+
+
+def review_page(request):
+    """Display review queue page - only accessible to authenticated reviewers.
+    
+    Returns 404 for unauthenticated users or users without reviewer permissions.
+    """
+    if not request.user.is_authenticated or not request.user.is_reviewer():
+        return RESPONSE_404
+
+    return generic_template(request)

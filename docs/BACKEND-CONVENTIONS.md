@@ -2,6 +2,8 @@
 
 Development patterns, rules, and best practices for the backend codebase.
 
+**See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for the comprehensive feature development checklist, testing requirements, security guidelines, and common commands.**
+
 ## API layer
 
 - DRF viewsets are in `backend/api/views.py`
@@ -10,19 +12,32 @@ Development patterns, rules, and best practices for the backend codebase.
 
 ## Security and ownership
 
+### Authorization patterns
+
+**Reviewer authorization check:**
+- Use `request.user.is_reviewer()` to determine if a user belongs to any reviewer group for any process
+- The method returns `False` for unauthenticated users (AnonymousUser)
+- Always check `is_authenticated` before calling `is_reviewer()` on routes that render public SPA shells to avoid AttributeError:
+  ```python
+  if not request.user.is_authenticated or not request.user.is_reviewer():
+      return RESPONSE_404
+  ```
+
+### Access control patterns
+
 - Application and attachment querysets must always enforce owner scoping
 - Attachment deletions are soft-delete and must include ownership checks
- - Application querysets must always enforce owner scoping for write/modify paths.
- - Attachment listing endpoints may return results to reviewers for applications
-   in processes they are authorised to assess; deletion and mutation remain
-   owner-only and must include ownership checks.
+- Application querysets must always enforce owner scoping for write/modify paths.
+- Attachment listing endpoints may return results to reviewers for applications
+  in processes they are authorised to assess; deletion and mutation remain
+  owner-only and must include ownership checks.
 - CSRF behaviour includes project-specific configuration and has known interactions with third-party admin endpoints
 
 ### Read access vs write access (`has_access` vs owner check)
 
 - `Application.has_access(user)` grants **read** access. Two principals qualify:
   1. The application owner
-  2. Any authenticated user whose groups intersect the process's `reviewer_groups` (technical officers / assessors)
+  2. Any authenticated user whose groups intersect the process's `reviewer_groups` (technical officers responsible for initial triage and review)
 - `has_access` must **not** be used as the guard for write/mutation paths
   - `resume_application` (the interactive form URL) uses an explicit `application.owner == request.user` check so that reviewers cannot open and modify someone else's application through the form
   - `download_application` and `download_attachment` correctly use `has_access` because those are read-only operations
@@ -86,13 +101,16 @@ Development patterns, rules, and best practices for the backend codebase.
 ## Development workflows
 
 ### Backend commands
+
+**For comprehensive command reference and testing guidelines, see [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#quick-reference-common-commands).**
+
+Common management commands:
 - Run dev server: `cd backend && poetry run python manage.py runserver`
-- Run tests: `cd backend && poetry run python manage.py test`
 - Run migrations: `cd backend && poetry run python manage.py migrate`
-- Collect static: `cd backend && poetry run python manage.py collectstatic`
-- Normalise questionnaire sort order globally:
-  - `cd backend && poetry run python manage.py normalise_questionnaire_sort_order`
-  - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+- Normalise questionnaire sort order: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order`
+- Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+
+**For testing commands and best practices**, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).
 
 ## CI/CD pipeline policy
 
@@ -163,6 +181,27 @@ Development patterns, rules, and best practices for the backend codebase.
 - Safe pattern for this codebase:
   - Publish raw coverage XML from each test job as pipeline artifacts
   - Add a dedicated downstream `Coverage` job that downloads both artifacts and runs a single `PublishCodeCoverageResults@2` step
+
+## Audit logging for reviewer and assessor actions
+
+The `audit` app records all application status changes made by reviewers and assessors for regulatory compliance and investigation purposes.
+
+**Model:** `audit.models.ApplicationAuditLog`
+- Fields: `application` (FK), `user` (FK, nullable), `prev_status` (CharField), `next_status` (CharField), `timestamp` (auto_now_add)
+- Indexes: (application, -timestamp), (user, -timestamp), (-timestamp) for efficient filtering and sorting
+- Admin: read-only interface only (no add, delete, or change permissions)
+
+**Integration points:**
+- `record_application_status_change(application, user, prev_status, next_status)` — explicit helper function in `audit.models`
+- Called automatically in `ReviewerViewSet.patch()` after status change is persisted
+- No signals; explicit calls only to make audit dependencies transparent
+
+**Key principles:**
+- Status transitions logged regardless of who makes them (reviewer, assessor, system)
+- Log entries are immutable: no user can modify or delete audit history
+- Only transitions where `prev_status != next_status` are logged; no-op transitions are skipped
+- Timestamps are automatically set to UTC on creation; all sorting and analysis uses this timestamp
+- User field is nullable to accommodate future system-triggered transitions
 
 ## Change safety checklist
 

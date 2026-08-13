@@ -208,8 +208,10 @@ Follow these steps in order when preparing a new production release.
 
    ```bash
    cd backend && poetry run pytest
-   cd ../frontend && bun run test
+   cd ../frontend && npm run test:unit
    ```
+   
+   See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage) for full testing commands and coverage options.
 
 6. Commit the release changes.
    - At minimum, expect:

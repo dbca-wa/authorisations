@@ -2,6 +2,15 @@
 
 Development patterns and best practices for the frontend codebase.
 
+**See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for the comprehensive feature development checklist, testing requirements, and common commands.**
+
+## File extensions
+
+- Use `.tsx` for files that export React components with JSX
+- Use `.ts` for all other files: utilities, hooks, context setup, type definitions, constants, and services with no JSX
+- This distinction makes it immediately clear whether a file contains React components, improving code navigation and refactoring safety
+- **Type definition files must use `.ts`** — they contain only type declarations/interfaces and no JSX
+
 ## Code comment conventions
 
 - Every new function — regardless of size — must have a docstring comment directly above or inside it that explains **what the function does** and why it exists
@@ -34,20 +43,28 @@ Development patterns and best practices for the frontend codebase.
 
 - Use `dayjs` for dates with `en-au` locale
 
-## Development workflows
+## Package manager policy
 
-### Frontend commands
-- Package manager policy:
-  - Use Bun for local development workflows because it is faster and supports npm-compatible scripts
-  - Use npm for UAT, production, and CI environments to keep deployment/runtime behaviour consistent
-- Run dev server (local development): `cd frontend && bun run dev`
-- Build (UAT/production/CI): `cd frontend && npm run build`
-- Lint (UAT/production/CI): `cd frontend && npm run lint`
+**Mandatory for all contexts (development, CI, production):**
+- Use `npm` exclusively for all frontend package management: dev server, linting, testing, building, and dependency management
+- Commands: `npm run dev`, `npm run lint`, `npm run test:unit`, `npm run build`, and `npm install package-name`
+- `package-lock.json` is committed to version control and used by all environments
+
+**Why npm:**
+- **Consistency across environments**: npm's deterministic resolution ensures identical dependency trees in development, CI, and production
+- **Audit compliance**: npm is the industry standard for production environments and passes corporate/regulatory audits
+- **No version drift**: committed `package-lock.json` guarantees identical versions everywhere
+- **Bun risks**: Bun resolves optional and peer dependencies differently than npm, causing version mismatches (e.g., yaml@1.10.2 vs 2.9.0). This incompatibility breaks the requirement for identical versions across environments.
+- Prevents accidental npm usage that would undermine consistency
+
+---
+
+**See [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for comprehensive development guidelines, testing, and command reference.**
 
 ## Application sorting patterns
 
 ### Reusable sorting utilities
-- Application list pages (`MyApplications`, `Assessment`) use a reusable sorting system through `src/components/layout/main/applicationUtils.tsx`
+- Application list pages (`MyApplications`, `Review`) use a reusable sorting system through `src/components/layout/main/applicationUtils.tsx`
 - Sort options (type: `SortOrderOption`): `"application_type"` (Application Type), `"submitted_newest"` (Submitted: Newest), `"submitted_oldest"` (Submitted: Oldest), `"created_newest"` (Created: Newest), `"created_oldest"` (Created: Oldest), `"updated_newest"` (Updated: Newest), `"updated_oldest"` (Updated: Oldest)
 - Hierarchical sorting: `"application_type"` sorts by `process_sort_order` (primary) then `questionnaire_sort_order` (secondary)
 - Date-based sorting:

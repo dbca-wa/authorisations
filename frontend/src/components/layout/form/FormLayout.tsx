@@ -212,8 +212,9 @@ export const FormLayout = () => {
         document.title = `${questionnaire.process_name} / ${app.questionnaire_name} : DBCA Authorisations`;
     }, [questionnaire.process_name, app.questionnaire_name]);
 
-    // Guard against StrictMode double-invocation: only show the notice once per mount.
-    const privacyNoticeShown = React.useRef(false);
+    // Guard against StrictMode double-invocation: only show the notice once per mount
+    // for the editable applications.
+    const privacyNoticeShown = React.useRef(!userCanEdit);
 
     // Notify once on mount that personal information is being collected.
     React.useEffect(() => {
@@ -221,10 +222,10 @@ export const FormLayout = () => {
         privacyNoticeShown.current = true;
         showSnackbar(
             <>
-                DBCA will collect, use and disclose your personal information in <br />
-                accordance with applicable privacy laws and DBCA's{" "}
+                Your personal information is collected, used and disclosed in <br />
+                accordance with applicable privacy laws and our{" "}
                 <Link href="/privacy" target="_blank" rel="noopener" color="inherit" underline="always">
-                    Privacy Policy
+                    Privacy Statement
                 </Link>.
             </>,
             "info",
@@ -357,10 +358,7 @@ const AccountMenu = ({
             <Button
                 color="inherit"
                 startIcon={<ExitToAppIcon />}
-                onClick={() => {
-                    // Assuming we're in a popup window
-                    window.close();
-                }}
+                onClick={window.close}
             >Exit</Button>
         </Box>
     )

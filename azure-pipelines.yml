@@ -155,7 +155,7 @@ stages:
       displayName: Install Playwright Chromium browser
     - script: |
         cd backend
-        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure \
+        poetry run pytest e2e/tests -v --tb=short -n auto --dist loadscope --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure \
           2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/pytest-e2e.log"
         status=${PIPESTATUS[0]}
         if [ "$status" -ne 0 ]; then
@@ -167,6 +167,7 @@ stages:
         DJANGO_SECRET_KEY: $(DJANGO_SECRET_KEY)
         DJANGO_VITE_TEST_DEV_MODE: 'false'
         DJANGO_VITE_TEST_MANIFEST_PATH: 'static/manifest.json'
+        TURNSTILE_SITE_KEY: '0x0000000000000000_e2e_test_key'
     - script: |
         python scripts/collect_e2e_failure_artifacts.py \
           --backend-root "$(Build.SourcesDirectory)/backend" \

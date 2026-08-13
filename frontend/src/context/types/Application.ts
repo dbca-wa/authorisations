@@ -9,7 +9,6 @@ export type ApplicationStatus =
     | "WITHDRAWN"
     | "SUBMITTED"
     | "UNDER_REVIEW"
-    | "ACTION_REQUIRED"
     | "UNDER_ASSESSMENT"
     | "APPROVED"
     | "APPROVED_WITH_CONDITIONS"
@@ -17,13 +16,38 @@ export type ApplicationStatus =
     | "REJECTED";
 
 
-export const finalisedStatuses: ApplicationStatus[] = [
+/**
+ * Active statuses: applications currently being worked on or under review.
+ * These applications can still be modified or reviewed by relevant parties.
+ */
+export const activeStatuses: ApplicationStatus[] = [
+    "DRAFT",
+    "SUBMITTED",
+    "UNDER_REVIEW",
+    "UNDER_ASSESSMENT",
+];
+
+/**
+ * Terminated statuses: applications terminated before reaching a final decision.
+ * Terminated applications include those discarded by applicants (DISCARDED)
+ * or withdrawn by applicants after submission (WITHDRAWN).
+ */
+export const terminatedStatuses: ApplicationStatus[] = [
     "DISCARDED",
     "WITHDRAWN",
+];
+
+/**
+ * Finalised statuses: applications that have reached a final decision state.
+ * These include applications approved, rejected, approved with conditions, or deferred.
+ * Once in a finalised state, an application cannot be modified further.
+ */
+export const finalisedStatuses: ApplicationStatus[] = [
     "APPROVED",
     "APPROVED_WITH_CONDITIONS",
     "REJECTED",
-]
+    "DEFERRED",
+];
 
 /**
  * Interface for application data, which includes the answers and meta data
@@ -104,6 +128,7 @@ export interface IApplicationAttachment {
     application_key: string;
     question: string;
     name: string;
+    size: number;
     created_at: string;
     download_url: string;
 }

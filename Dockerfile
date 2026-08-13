@@ -12,15 +12,13 @@ FROM node:22-trixie-slim AS builder_frontend
 # Build frontend assets in an isolated stage.
 WORKDIR /tmp/frontend
 
-# Copy dependency manifest first so dependency install can be cached across code-only changes.
-COPY frontend/package.json ./
+# Copy dependency manifests for deterministic dependency installation.
+# package-lock.json is committed to version control.
+COPY frontend/package*.json ./
 
-# Install frontend dependencies.
-# `npm ci` is preferred when package-lock.json exists; this project currently tracks bun.lock,
-# so `npm install` is used for compatibility while keeping flags conservative:
-# - `--no-audit`: skip npm's advisory audit during image builds to avoid extra network work and log noise.
-# - `--no-fund`: suppress funding notices so CI/CD logs stay focused on actionable output.
-RUN npm install --no-audit --no-fund
+# Install frontend dependencies using npm ci for reproducibility.
+# Flags: --no-audit (skip advisory audit), --no-fund (suppress funding notices).
+RUN npm ci --no-audit --no-fund
 
 # Copy frontend source after dependency install to preserve cache efficiency.
 COPY frontend /tmp/frontend/
@@ -32,7 +30,7 @@ RUN mkdir -p /tmp/backend/applications /tmp/backend/templates
 COPY backend/applications/models.py /tmp/backend/applications/
 COPY backend/templates/application-pdf-template.html /tmp/backend/templates/
 
-# Build production frontend assets, including hash-free pdf-icons.css.
+# Build production frontend assets.
 RUN npm run build
 
 

@@ -28,6 +28,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess({ name: "Section 40" })}
         application={makeApplication({ internal_id: "s40-new-1/26-05", status: "SUBMITTED" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -36,33 +37,24 @@ describe("ApplicationCard", () => {
     expect(screen.getByText("New application (v1)")).toBeInTheDocument();
   });
 
-  it("shows continue button for editable statuses", () => {
+  it("shows continue button for drafts", () => {
     render(
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "DRAFT" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
   });
 
-  it("shows continue button for ACTION_REQUIRED status", () => {
-    render(
-      <ApplicationCard
-        process={makeProcess()}
-        application={makeApplication({ status: "ACTION_REQUIRED" })}
-      />,
-    );
-
-    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
-  });
-
-  it("hides continue button for non-editable statuses", () => {
+  it("hides continue button for submitted or finalised applications", () => {
     render(
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "SUBMITTED" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -77,6 +69,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={application}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -92,6 +85,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={application}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -104,6 +98,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "DRAFT" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 
@@ -115,6 +110,7 @@ describe("ApplicationCard", () => {
       <ApplicationCard
         process={makeProcess()}
         application={makeApplication({ status: "SUBMITTED" })}
+        onStatusChanged={vi.fn()}
       />,
     );
 

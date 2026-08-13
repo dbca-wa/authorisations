@@ -9,15 +9,15 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { createBrowserRouter } from "react-router";
 import { ErrorPage } from "./components/layout/ErrorPage";
 import { FormLayout } from "./components/layout/form/FormLayout";
-import { ApplicationAssessment } from './components/layout/main/Assessment';
+import { ApplicationReview } from './components/layout/main/Review';
 import { MainLayout } from "./components/layout/main/MainLayout";
 import { MyApplications } from './components/layout/main/MyApplications';
 import { NewApplication } from './components/layout/main/NewApplication';
-import { PrivacyPolicy } from './components/layout/main/PrivacyPolicy';
+import { PrivacyStatement } from './components/layout/main/PrivacyStatement';
 import { UserSettings } from './components/layout/main/UserSettings';
 import { ApiManager } from './context/ApiManager';
 import type { IRoute, LoaderData } from "./context/types/Generic";
-import { handleApiError } from './context/Utils';
+import { handleApiError, getResponse } from './context/Utils';
 
 
 
@@ -64,19 +64,24 @@ export const ROUTES: IRoute[] = [
 		loader: mainLoader({ questionnaires: true }),
 	},
 	{
-		label: "Assessment",
-		path: "/assessment",
+		label: "Review Queue",
+		path: "/review",
 		icon: <ChecklistRtlIcon />,
 		divider: true,
-		component: ApplicationAssessment,
+		component: ApplicationReview,
 		condition: (processes) => processes.some((process) => process.can_review),
 		loader: async (): Promise<LoaderData> => {
 			const processes = await ApiManager
 				.fetchAuthorisationProcesses()
 				.catch(handleApiError);
 
+			// Check the reviewer credentials BEFORE fetching applications
+			if (!processes.some((p) => p.can_review)) {
+				throw getResponse(404, "Not found", "The requested resource was not found on this server. ");
+			}
+
 			const applications = ApiManager
-				.fetchAssessmentApplications()
+				.fetchReviewQueueApplications()
 				.catch(handleApiError);
 
 			return { processes, applications };
@@ -91,11 +96,11 @@ export const ROUTES: IRoute[] = [
 		loader: mainLoader(),
 	},
 	{
-		label: "Privacy Policy",
+		label: "Privacy Statement",
 		path: "/privacy",
 		icon: <PolicyIcon />,
 		divider: false,
-		component: PrivacyPolicy,
+		component: PrivacyStatement,
 		loader: mainLoader(),
 		sidebar: false,
 	},

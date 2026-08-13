@@ -2,7 +2,7 @@ import axios from "axios";
 
 import type { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import { ConfigManager } from "./ConfigManager";
-import type { IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
+import type { ApplicationStatus, IApplicationAttachment, IApplicationData, IFormDocument } from "./types/Application";
 import type { IAuthorisationProcess, IQuestionnaireData } from "./types/Questionnaire";
 
 
@@ -53,14 +53,14 @@ export class ApiManager {
         questionnaireId,
         questionnaireCode,
         questionnaireVersion,
-        privacyConsentAgreed,
+        collectionNoticeAgreed,
         turnstileToken,
     }: {
         processSlug: string;
         questionnaireId: number;
         questionnaireCode: string;
         questionnaireVersion: number;
-        privacyConsentAgreed: boolean;
+        collectionNoticeAgreed: boolean;
         turnstileToken: string;
     }): Promise<IApplicationData> {
         const requestConfig = ApiManager.getRequestConfig();
@@ -69,7 +69,7 @@ export class ApiManager {
             questionnaire_id: questionnaireId,
             questionnaire_code: questionnaireCode,
             questionnaire_version: questionnaireVersion,
-            privacy_consent_agreed: privacyConsentAgreed,
+            collection_notice_agreed: collectionNoticeAgreed,
             turnstile_token: turnstileToken,
         }, requestConfig);
 
@@ -92,6 +92,28 @@ export class ApiManager {
                 status: "SUBMITTED",
                 turnstile_token: turnstileToken,
             },
+            requestConfig,
+        );
+
+        return response.data;
+    }
+
+    public static async discardApplication(key: string): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationData>(
+            `/applications/${key}`,
+            { status: "DISCARDED" },
+            requestConfig,
+        );
+
+        return response.data;
+    }
+
+    public static async revertDiscardedApplication(key: string): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationData>(
+            `/applications/${key}`,
+            { status: "DRAFT" },
             requestConfig,
         );
 
@@ -180,9 +202,33 @@ export class ApiManager {
         return response.data;
     }
 
-    public static async fetchAssessmentApplications(): Promise<IApplicationData[]> {
+    public static async fetchReviewQueueApplications(): Promise<IApplicationData[]> {
         const requestConfig = ApiManager.getRequestConfig();
-        const response = await axios.get<IApplicationData[]>("/assessment", requestConfig);
+        const response = await axios.get<IApplicationData[]>("/review", requestConfig);
+
+        return response.data;
+    }
+
+    /**
+     * Update the status of an application in the review queue.
+     * Sends a PATCH request to advance the application through review workflow states.
+     * Transition validity is enforced by the backend serialiser.
+     *
+     * @param key - The application key (UUID)
+     * @param status - The target status (must be a valid reviewer-initiated transition)
+     * @returns The updated application data
+     * @throws AxiosError if the transition is invalid or user lacks reviewer permissions
+     */
+    public static async updateReviewerApplicationStatus(
+        key: string,
+        status: ApplicationStatus,
+    ): Promise<IApplicationData> {
+        const requestConfig = ApiManager.getRequestConfig();
+        const response = await axios.patch<IApplicationData>(
+            `/review/${key}`,
+            { status },
+            requestConfig,
+        );
 
         return response.data;
     }

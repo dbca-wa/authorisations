@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.template.defaultfilters import filesizeformat
 
 from .models import Application, ApplicationAttachment
 from .forms import ApplicationForm
@@ -12,6 +13,7 @@ class ApplicationAttachmentInline(admin.TabularInline):
     fields = (
         "question",
         "name",
+        "formatted_size",
         "created_at",
         "is_deleted",
         "deleted_at",
@@ -19,6 +21,14 @@ class ApplicationAttachmentInline(admin.TabularInline):
     readonly_fields = fields
     can_delete = False
     show_change_link = True
+
+    def formatted_size(self, obj):
+        """Display the attachment size in human-readable format."""
+        if obj.size == 0:
+            return "—"
+        return filesizeformat(obj.size)
+    
+    formatted_size.short_description = "Size"
 
     def has_add_permission(self, request, obj=None):
         return False

@@ -9,7 +9,7 @@ export function assert(condition: boolean, message: string): void {
     }
 }
 
-const getResponse = (status: number, statusText: string, message: string) => {
+export const getResponse = (status: number, statusText: string, message: string) => {
     return Response.json(
         { message: message },
         { status: status, statusText: statusText }
@@ -104,4 +104,28 @@ export const getIconFromFilename = (filename: string): ReactElement => {
         default:
             return <span className="iconify-color flat-color-icons--file"></span>;
     }
+}
+
+/**
+ * Helper to format file size in bytes to human-readable format.
+ * 
+ * @param bytes - File size in bytes
+ * @returns Formatted string (e.g., "1.5 MB", "256 KB")
+ */
+export const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 B";
+    
+    const units = ["B", "KB", "MB", "GB"];
+    const size = Math.abs(bytes);
+    let unitIndex = 0;
+    let value = size;
+    
+    while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex++;
+    }
+    
+    // Round to 1 decimal place for better readability
+    const rounded = Math.round(value * 10) / 10;
+    return `${rounded} ${units[unitIndex]}`;
 }

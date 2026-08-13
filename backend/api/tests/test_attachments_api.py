@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
-
 pytestmark = [pytest.mark.api]
 
 
@@ -65,7 +64,7 @@ def test_attachments_list_returns_reviewable_application_attachments_for_reviewe
     user.groups.add(reviewer_group)
 
     reviewable_application = application_factory(owner=other_user)
-    reviewable_application.questionnaire.process.assessor_groups.add(reviewer_group)
+    reviewable_application.questionnaire.process.reviewer_groups.add(reviewer_group)
     attachment = attachment_factory(application=reviewable_application)
 
     api_client.force_authenticate(user=user)
@@ -205,3 +204,75 @@ def test_attachment_patch_rejects_file_mutation(
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "name" in response.data
+
+
+@pytest.mark.django_db
+def test_attachment_create_captures_file_size(
+    api_client,
+    user,
+    application_factory,
+):
+    """Verify file size is automatically captured during attachment creation."""
+    application = application_factory(owner=user)
+    pdf_file = _pdf_upload("test.pdf")
+    expected_size = pdf_file.size
+
+    api_client.force_authenticate(user=user)
+    response = api_client.post(
+        "/api/attachments",
+        {
+            "application_key": str(application.key),
+            "question": "0.0-0",
+            "name": "test.pdf",
+            "file": pdf_file,
+        },
+        format="multipart",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data["size"] == expected_size
+    assert response.data["size"] > 0
+
+
+@pytest.mark.django_db
+def test_attachment_list_includes_size_field(
+    api_client,
+    user,
+    attachment_factory,
+    application_factory,
+):
+    """Verify attachment list responses include size field for each attachment."""
+    attachment = attachment_factory(application=application_factory(owner=user), size=1024)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/attachments")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+    assert response.data[0]["size"] == 1024
+
+
+@pytest.mark.django_db
+def test_attachment_size_is_readonly_on_patch(
+    api_client,
+    user,
+    attachment_factory,
+    application_factory,
+):
+    """Verify size field cannot be mutated via PATCH requests."""
+    attachment = attachment_factory(application=application_factory(owner=user), size=2048)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.patch(
+        f"/api/attachments/{attachment.key}",
+        {
+            "name": "renamed.pdf",
+            "size": 9999,  # Attempt to mutate size
+        },
+        format="json",
+    )
+
+    attachment.refresh_from_db()
+    assert response.status_code == status.HTTP_200_OK
+    assert attachment.size == 2048  # Size should remain unchanged
+    assert attachment.name == "renamed.pdf"  # Name should be updated

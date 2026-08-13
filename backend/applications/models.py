@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import io
+import os
 import uuid
 from typing import Any
 
+from azure.core.exceptions import ResourceNotFoundError
 from django.conf import settings
 from django.db import models
+from django.template.defaultfilters import filesizeformat
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django_jsonform.models.fields import JSONField
@@ -13,6 +16,7 @@ from users.models import User
 
 from .prince import Prince
 from .schema import get_answers_schema
+from .statuses import ApplicationStatus
 
 
 def _boolean_checkbox(value: Any) -> str:
@@ -48,7 +52,9 @@ def _normalise_answer_value(question: dict[str, Any], value: Any) -> str | None:
     return str(value)
 
 
-def _build_grid_rows(question: dict[str, Any], raw_value: Any) -> list[list[str | None]]:
+def _build_grid_rows(
+    question: dict[str, Any], raw_value: Any
+) -> list[list[str | None]]:
     """Convert raw grid answer data into a list of cell-value rows for the PDF table.
 
     Each row is a list of display strings aligned to the question's column definitions.
@@ -80,13 +86,13 @@ def _build_grid_rows(question: dict[str, Any], raw_value: Any) -> list[list[str 
 
 _EXTENSION_TO_ICON_CLASS = {
     # Must mirror getIconFromFilename in frontend/src/context/Utils.tsx.
-    "pdf":  "vscode-icons--file-type-pdf2",
-    "doc":  "vscode-icons--file-type-word",
+    "pdf": "vscode-icons--file-type-pdf2",
+    "doc": "vscode-icons--file-type-word",
     "docx": "vscode-icons--file-type-word",
-    "xls":  "vscode-icons--file-type-excel",
+    "xls": "vscode-icons--file-type-excel",
     "xlsx": "vscode-icons--file-type-excel",
-    "png":  "flat-color-icons--image-file",
-    "jpg":  "flat-color-icons--image-file",
+    "png": "flat-color-icons--image-file",
+    "jpg": "flat-color-icons--image-file",
     "jpeg": "flat-color-icons--image-file",
 }
 _DEFAULT_ICON_CLASS = "flat-color-icons--file"
@@ -132,7 +138,9 @@ def _build_question_item(
     if question_type == "file":
         # Normalise the answer to a list of attachment keys; treat missing or
         # non-list values (e.g. unanswered questions) as an empty upload set.
-        attachment_keys: list[str] = answer_value if isinstance(answer_value, list) else []
+        attachment_keys: list[str] = (
+            answer_value if isinstance(answer_value, list) else []
+        )
         image_extensions = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "tif", "tiff"}
         image_files: list[dict[str, Any]] = []
         other_files: list[dict[str, Any]] = []
@@ -142,14 +150,16 @@ def _build_question_item(
 
             if attachment is None:
                 # Record a placeholder card so the reviewer knows a file was expected.
-                other_files.append({
-                    "name": f"Missing file ({attachment_key})",
-                    "extension": "",
-                    "is_image": False,
-                    "file_src": "",
-                    "is_missing": True,
-                    "icon_class": _DEFAULT_ICON_CLASS,
-                })
+                other_files.append(
+                    {
+                        "name": f"Missing file ({attachment_key})",
+                        "extension": "",
+                        "is_image": False,
+                        "file_src": "",
+                        "is_missing": True,
+                        "icon_class": _DEFAULT_ICON_CLASS,
+                    }
+                )
                 continue
 
             name = attachment.name
@@ -157,18 +167,35 @@ def _build_question_item(
             is_image = extension in image_extensions
             file_src = ""
             is_missing = False
+            file_size = 0
 
             if is_image:
-                # For local storage Prince reads the file via a file:// URI.
-                # For Azure (or any remote storage) fall back to the signed URL
-                # and let Prince fetch it over HTTP(S) at render time.
-                try:
-                    file_src = "file://" + attachment.file.path
-                except (ValueError, NotImplementedError, OSError):
+                # Determine storage backend based on configuration and access accordingly.
+                # Local storage: file:// URIs for Prince; remote storage: signed URLs.
+                if settings.LOCAL_MEDIA_STORAGE:
+                    # Local file storage: read file directly from filesystem.
+                    try:
+                        file_path = attachment.file.path
+                        file_size = os.path.getsize(file_path)
+                        file_src = "file://" + file_path
+                    except OSError:
+                        is_missing = True
+                        file_src = f"file://{settings.STATIC_ROOT}/images/image-not-found.png"
+                else:
+                    # Remote storage (Azure Blob): use signed URL and API calls.
                     try:
                         file_src = attachment.file.url
-                    except Exception:  # noqa: BLE001
+                        file_size = attachment.file.size
+                    except ResourceNotFoundError:
                         is_missing = True
+                        file_src = f"file://{settings.STATIC_ROOT}/images/image-not-found.png"
+            else:
+                # Non-image files: always try to get size without requiring path access
+                # this will throw OSError or ResourceNotFoundError if the file is missing.
+                try:
+                    file_size = attachment.file.size
+                except (OSError, ResourceNotFoundError):
+                    is_missing = True
 
             file_item: dict[str, Any] = {
                 "name": name,
@@ -176,10 +203,13 @@ def _build_question_item(
                 "is_image": is_image,
                 "file_src": file_src,
                 "is_missing": is_missing,
+                "file_size": filesizeformat(file_size),
                 "icon_class": _icon_class_for_extension(extension),
             }
 
-            if is_image and file_src and not is_missing:
+            # Images render inline in PDF even if missing (with placeholder).
+            # Other files are listed as named cards.
+            if is_image:
                 image_files.append(file_item)
             else:
                 other_files.append(file_item)
@@ -193,42 +223,6 @@ def _build_question_item(
     # All scalar/simple types: normalise to a display string (or None if empty).
     item["value"] = _normalise_answer_value(question, answer_value)
     return item
-
-
-class ApplicationStatus(models.TextChoices):
-    """Enumeration of possible application statuses."""
-
-    DRAFT = "DRAFT"
-    DISCARDED = "DISCARDED"
-    SUBMITTED = "SUBMITTED"
-    WITHDRAWN = "WITHDRAWN"
-    UNDER_REVIEW = "UNDER_REVIEW"
-    ACTION_REQUIRED = "ACTION_REQUIRED"
-    UNDER_ASSESSMENT = "UNDER_ASSESSMENT"
-    APPROVED = "APPROVED"
-    APPROVED_WITH_CONDITIONS = "APPROVED_WITH_CONDITIONS"
-    DEFERRED = "DEFERRED"
-    REJECTED = "REJECTED"
-
-
-# Statuses visible in the reviewer queue — applications awaiting or under active review.
-REVIEW_QUEUE_STATUSES = frozenset([
-    ApplicationStatus.SUBMITTED,
-    ApplicationStatus.UNDER_REVIEW,
-    ApplicationStatus.ACTION_REQUIRED,
-    ApplicationStatus.UNDER_ASSESSMENT,
-])
-
-# Statuses a reviewer is permitted to set; excludes applicant-only transitions (DRAFT, DISCARDED).
-REVIEWER_SETTABLE_STATUSES = frozenset([
-    ApplicationStatus.UNDER_REVIEW,
-    ApplicationStatus.ACTION_REQUIRED,
-    ApplicationStatus.UNDER_ASSESSMENT,
-    ApplicationStatus.APPROVED,
-    ApplicationStatus.APPROVED_WITH_CONDITIONS,
-    ApplicationStatus.DEFERRED,
-    ApplicationStatus.REJECTED,
-])
 
 
 class Application(models.Model):
@@ -270,8 +264,8 @@ class Application(models.Model):
     # - user, status, created_at DESC
     # - questionnaire, status, created_at DESC
     class Meta:
-        ordering = ["-created_at"]
-        indexes = [
+        ordering = ("-created_at",)
+        indexes = (
             models.Index(
                 fields=["owner", "status", "-created_at"],
                 name="apps_owner_status_idx",
@@ -280,7 +274,7 @@ class Application(models.Model):
                 fields=["questionnaire", "status", "-created_at"],
                 name="apps_questionnaire_status_idx",
             ),
-        ]
+        )
 
     def __str__(self):
         return f"Application #{self.id} by {self.owner.username} for {self.questionnaire.name}"
@@ -288,7 +282,9 @@ class Application(models.Model):
     @property
     def internal_id(self) -> str:
         """Generate a unique human-readable identifier combining process slug, questionnaire code and application id."""
-        submitted_at_suffix = self.submitted_at.strftime("/%y-%m") if self.submitted_at else ""
+        submitted_at_suffix = (
+            self.submitted_at.strftime("/%y-%m") if self.submitted_at else ""
+        )
         return f"{self.questionnaire.process.slug}-{self.questionnaire.code}-{self.id}{submitted_at_suffix}"
 
     def has_access(self, user: User) -> bool:
@@ -297,7 +293,7 @@ class Application(models.Model):
         Two principals are permitted:
         - The application owner (always has full access to their own record).
         - A reviewer / technical officer whose groups intersect with the
-          ``assessor_groups`` of the application's process.  This mirrors the
+          ``reviewer_groups`` of the application's process.  This mirrors the
           ``can_review`` annotation logic in ``AuthorisationProcessViewSet``.
 
         Note: read access does NOT imply write access.  Callers that require
@@ -316,14 +312,14 @@ class Application(models.Model):
         # are authorised to review.  We use the M2M through table directly to
         # avoid loading the full AuthorisationProcess object when only the
         # group membership check is needed.
-        from processes.models import AuthorisationProcess  # noqa: PLC0415 — avoid circular import at module level
-
-        is_reviewer = (
-            AuthorisationProcess.assessor_groups.through.objects.filter(
-                authorisationprocess_id=self.questionnaire.process_id,
-                group_id__in=user.groups.values("id"),
-            ).exists()
+        from processes.models import (
+            AuthorisationProcess,  # noqa: PLC0415 — avoid circular import at module level
         )
+
+        is_reviewer = AuthorisationProcess.reviewer_groups.through.objects.filter(
+            authorisationprocess_id=self.questionnaire.process_id,
+            group_id__in=user.groups.values("id"),
+        ).exists()
         return is_reviewer
 
     @staticmethod
@@ -334,7 +330,9 @@ class Application(models.Model):
         Reading at call-time means no server restart is needed when the CSS is
         regenerated, and Prince never has to make an HTTP request to fetch it.
         """
-        from django.contrib.staticfiles.finders import find as find_static  # noqa: PLC0415
+        from django.contrib.staticfiles.finders import (
+            find as find_static,  # noqa: PLC0415
+        )
 
         css_path = find_static("pdf-icons.css")
         if not css_path:
@@ -481,6 +479,7 @@ class ApplicationAttachment(models.Model):
     )
     question = models.CharField(max_length=100, blank=False, null=False)
     name = models.CharField(max_length=255, blank=False, null=False)
+    size = models.PositiveIntegerField(default=0, editable=False)
     file = models.FileField(
         upload_to=attachment_upload_path,
         blank=False,
@@ -491,12 +490,12 @@ class ApplicationAttachment(models.Model):
     deleted_at = models.DateTimeField(blank=True, null=True, editable=False)
 
     class Meta:
-        indexes = [
+        indexes = (
             models.Index(
                 fields=["application", "is_deleted"],
                 name="attachments_app_deleted_idx",
             ),
-        ]
+        )
 
     def __str__(self):
         return f"Attachment {self.key} for Application {self.application.id}"

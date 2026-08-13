@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## [1.1.0] - Unreleased (Requires DB Migration)
+
+### Added
+
+- Added discard and revert functionality allowing applicants to abandon draft applications by moving them to DISCARDED status, with the ability to restore them back to DRAFT for continued editing.
+- Added tab-based filtering system for My Applications page enabling applicants to organise applications by status category (Active, Terminated, Finalised), improving visibility of application lifecycle stages.
+- Added permanent links to questionnaire types on the new application page, enabling users to share and bookmark direct links to specific application types.
+- Added a full privacy statement page with section-by-section expandable content and dedicated contact details. Also updated the "Collection Notice Disclaimer" that we request applicants to acknowledge and agree prior to creating new applications.
+- Added a new favicon, replacing the default placeholder.
+- Added comprehensive feature development guide ([FEATURE-DEVELOPMENT.md](docs/FEATURE-DEVELOPMENT.md)) consolidating all mandatory best practices, testing requirements, code quality standards, and common commands in a single reference document for AI agents and developers.
+- Added new frontend as well as E2E tests for comprehensive coverage of "New application" page functionality.
+- Added formal specification of application status workflow ([STATUS-WORKFLOW.md](docs/STATUS-WORKFLOW.md)) documenting all 13 state transitions, permissions, and business rules with comprehensive test coverage across backend API (19 tests), E2E (6 tests), and frontend (10 statuses verified).
+- Added submission modal displayed after successful application submission and on page load for read-only applications, providing confirmation and options to download application PDF or exit the application.
+- Added technical officers review page workflow actions enabling reviewers to claim applications for review, reset applications to draft for applicant revision, and proceed applications to assessment stage with confirmation dialogs for each action.
+- Added audit logging for reviewer and assessor actions, recording every application status change with user, timestamp, and status transition details in an immutable audit log accessible through the Django admin interface for regulatory compliance and investigation purposes.
+- Added file size tracking and display for application attachments, automatically capturing file sizes during upload and displaying human-readable sizes (B, KB, MB) in the frontend attachment list and admin interface.
+
+### Changed
+
+- Strengthened review queue access control: non-reviewers now receive 404 responses across frontend menu, route loader, and backend routes when attempting to access the review page.
+- Renamed "Assessment" terminology to "Review" throughout the application, including API endpoints (/api/assessment → /api/review), menu navigation ("Assessment Queue" → "Review Queue"), and related components and fixtures, to align with domain conventions.
+- Standardised on npm for all frontend package management across development, CI, testing, and production environments to ensure identical dependency versions and predictable builds.
+- Disabled questionnaire tabs when only a single questionnaire to prevent user confusion from clicking non-functional tabs.
+- Improved handling of missing files and file size display in PDF generation, showing placeholder images for missing attachments and displaying human-readable file sizes alongside filenames for all file types.
+- **Dependency upgrades:** Updated 19 backend packages (Django 5.2.17, cryptography 50.0.0, djangorestframework 3.18.0, pytest-django 4.14.0) and 19 frontend packages (axios, eslint, globals, msw, typescript-eslint, and build tooling) with zero codebase modifications. Created [DEPENDENCY-UPGRADE.md](docs/DEPENDENCY-UPGRADE.md) documenting upgrade workflow and breaking-change analysis methodology.
+
+### Fixed
+
+- Fixed submit button allowing duplicate API submissions by adding loading indicator and disabled state during submission process.
+- Fixed attachment file-type icons intermittently disappearing (especially Excel) across both draft form editing and reviewer attachment views, which previously caused blank file tiles due to a static asset processing issue in production mode.
+
+### Removed
+
+- Removed `ACTION_REQUIRED` status; applications now use concrete workflow states (DRAFT → SUBMITTED → UNDER_REVIEW → UNDER_ASSESSMENT → decision outcomes) with explicit transition rules and permission boundaries.
+
 ## 1.0.3 - 2026-07-16
 
 ### Fixed
@@ -16,7 +51,6 @@ Entries should be concise, single-sentence summaries without excessive technical
 ### Changed
 
 - Removed redundant CSRF cookie settings (CSRF_COOKIE_NAME, CSRF_COOKIE_SAMESITE, CSRF_COOKIE_SECURE) as the application uses session-based CSRF protection instead.
-- Changed SESSION_COOKIE_SAMESITE from "Lax" to "Strict" unconditionally for improved security against cross-site cookie inclusion.
 
 ## 1.0.2 - 2026-07-14
 

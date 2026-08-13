@@ -15,7 +15,7 @@ import type { ApplicationStatus, IApplicationData } from "../../../context/types
 dayjs.extend(relativeTime);
 
 // ============================================================================
-// Shared Utilities (used by multiple components: ApplicationCard, AssessmentCard)
+// Shared Utilities (used by multiple components: ApplicationCard, ReviewCard)
 // ============================================================================
 
 /**

@@ -2,7 +2,6 @@
 
 import json
 
-from questionnaires.models import Questionnaire
 import pytest
 
 
@@ -14,101 +13,8 @@ def _auth_json_headers(auth_context: dict[str, object]) -> dict[str, str]:
     }
 
 
-def _build_create_payload(questionnaire: Questionnaire, privacy_consent_agreed: bool) -> dict[str, object]:
-    """Build a valid application-create payload for a questionnaire identity."""
-    return {
-        "process_slug": questionnaire.process.slug,
-        "questionnaire_id": questionnaire.id,
-        "questionnaire_code": questionnaire.code,
-        "questionnaire_version": questionnaire.version,
-        "privacy_consent_agreed": privacy_consent_agreed,
-        "turnstile_token": "e2e-turnstile-token",
-    }
 
 
-@pytest.mark.e2e
-@pytest.mark.django_db(transaction=True)
-def test_create_application_requires_privacy_consent(
-    authenticated_request_context_factory,
-    e2e_users,
-):
-    """Reject create requests when privacy consent is not explicitly acknowledged."""
-    questionnaire = Questionnaire.objects.select_related("process").get(process__slug="aec", code="new-application", version=1)
-    auth_context = authenticated_request_context_factory(e2e_users["applicant"])
-    request_context = auth_context["context"]
-
-    try:
-        response = request_context.post(
-            "/api/applications",
-            data=json.dumps(_build_create_payload(questionnaire, privacy_consent_agreed=False)),
-            headers=_auth_json_headers(auth_context),
-        )
-        status = response.status
-        payload = response.json()
-    finally:
-        request_context.dispose()
-
-    assert status == 400
-    assert "privacy_consent_agreed" in payload
-
-
-@pytest.mark.e2e
-@pytest.mark.django_db(transaction=True)
-def test_create_application_requires_turnstile_token(
-    authenticated_request_context_factory,
-    e2e_users,
-):
-    """Reject create requests that omit the verification token."""
-    questionnaire = Questionnaire.objects.select_related("process").get(process__slug="aec", code="new-application", version=1)
-    auth_context = authenticated_request_context_factory(e2e_users["applicant"])
-    request_context = auth_context["context"]
-    payload = _build_create_payload(questionnaire, privacy_consent_agreed=True)
-    payload.pop("turnstile_token")
-
-    try:
-        response = request_context.post(
-            "/api/applications",
-            data=json.dumps(payload),
-            headers=_auth_json_headers(auth_context),
-        )
-        status = response.status
-        response_payload = response.json()
-    finally:
-        request_context.dispose()
-
-    assert status == 400
-    assert "turnstile_token" in response_payload
-
-
-@pytest.mark.e2e
-@pytest.mark.django_db(transaction=True)
-def test_create_application_with_valid_payload_succeeds(
-    authenticated_request_context_factory,
-    e2e_users,
-):
-    """Create a new draft application with valid questionnaire identity and consent."""
-    questionnaire = Questionnaire.objects.select_related("process").get(process__slug="aec", code="new-application", version=1)
-    auth_context = authenticated_request_context_factory(e2e_users["applicant"])
-    request_context = auth_context["context"]
-
-    try:
-        response = request_context.post(
-            "/api/applications",
-            data=json.dumps(_build_create_payload(questionnaire, privacy_consent_agreed=True)),
-            headers=_auth_json_headers(auth_context),
-        )
-        status = response.status
-        payload = response.json()
-    finally:
-        request_context.dispose()
-
-    assert status == 201
-    assert payload["owner_email"] == "e2e-applicant@example.com"
-    assert payload["owner_fullname"] == "E2E Applicant"
-    assert payload["process_slug"] == "aec"
-    assert payload["status"] == "DRAFT"
-    assert "internal_id" in payload
-    assert payload["internal_id"]  # Ensure it's not empty
 
 
 @pytest.mark.e2e

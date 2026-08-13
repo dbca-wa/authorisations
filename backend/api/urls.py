@@ -3,10 +3,10 @@ from rest_framework import routers
 
 from .views import (
     ApplicationViewSet,
-    AssessmentViewSet,
     AttachmentViewSet,
     AuthorisationProcessViewSet,
     QuestionnaireViewSet,
+    ReviewerViewSet,
 )
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -15,7 +15,7 @@ router.register("processes", AuthorisationProcessViewSet)
 router.register("questionnaires", QuestionnaireViewSet)
 router.register("applications", ApplicationViewSet)
 router.register("attachments", AttachmentViewSet)
-router.register("assessment", AssessmentViewSet, basename="assessment")
+router.register("review", ReviewerViewSet, basename="review")
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

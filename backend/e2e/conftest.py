@@ -20,12 +20,16 @@ from django.conf import settings
 from django.core.management import call_command
 from django.db import connections
 from django.db.backends.base.base import BaseDatabaseWrapper
+from questionnaires.models import Questionnaire
 from users.models import User
 
 
 # Playwright's sync runner may keep an event loop active in the test thread.
 # Allow controlled sync DB access for pytest-django lifecycle hooks.
 os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
+# Ensure Turnstile site key is available for E2E tests - required for frontend to load Turnstile script
+os.environ.setdefault("TURNSTILE_SITE_KEY", "0x0000000000000000_e2e_test_key")
 
 
 def _timestamp() -> str:
@@ -212,6 +216,16 @@ def configure_vite_for_e2e(django_db_setup):
     manifest_path = Path(settings.BASE_DIR) / "static" / "manifest.json"
     settings.DJANGO_VITE["default"]["dev_mode"] = False
     settings.DJANGO_VITE["default"]["manifest_path"] = str(manifest_path)
+
+    # pytest-django live_server wraps the app with StaticFilesHandler, which serves
+    # static files via finder paths rather than WhiteNoise's STATIC_ROOT lookup.
+    # In static mode we therefore expose STATIC_ROOT to finders so post-processed
+    # fingerprinted assets (for example main-<hash>.<fingerprint>.css) resolve.
+    static_root = Path(settings.STATIC_ROOT)
+    if static_root.exists():
+        static_dirs = list(settings.STATICFILES_DIRS)
+        if static_root not in static_dirs:
+            settings.STATICFILES_DIRS = [*static_dirs, static_root]
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -421,7 +435,11 @@ def mock_turnstile_script():
                 body=(
                     "window.turnstile={"
                     "render:function(container,opts){"
-                    "if(opts&&typeof opts.callback==='function'){opts.callback('e2e-turnstile-token');}"
+                    "console.log('MOCK TURNSTILE RENDER CALLED');"
+                    "if(opts&&typeof opts.callback==='function'){"
+                    "console.log('MOCK TURNSTILE CALLBACK INVOKED');"
+                    "opts.callback('e2e-turnstile-token');"
+                    "}"
                     "return 'widget-e2e';"
                     "},"
                     "execute:function(){},"
@@ -430,8 +448,43 @@ def mock_turnstile_script():
                     "getResponse:function(){return 'e2e-turnstile-token';},"
                     "isExpired:function(){return false;}"
                     "};"
+                    "console.log('MOCK TURNSTILE SCRIPT LOADED');"
                 ),
             ),
         )
 
     return _attach
+
+
+@pytest.fixture
+def draft_application(authenticated_request_context_factory, e2e_users):
+    """Create a draft application via API and return its key."""
+    applicant = e2e_users["applicant"]
+    auth_context = authenticated_request_context_factory(applicant)
+    questionnaire = Questionnaire.objects.select_related("process").get(
+        process__slug="aec", code="new-application", version=1
+    )
+    request_context = auth_context["context"]
+
+    try:
+        response = request_context.post(
+            "/api/applications",
+            data=json.dumps({
+                "process_slug": questionnaire.process.slug,
+                "questionnaire_id": questionnaire.id,
+                "questionnaire_code": questionnaire.code,
+                "questionnaire_version": questionnaire.version,
+                "collection_notice_agreed": True,
+                "turnstile_token": "e2e-turnstile-token",
+            }),
+            headers={
+                str(auth_context["csrf_header"]): str(auth_context["csrf_token"]),
+                "Content-Type": "application/json",
+            },
+        )
+        assert response.status == 201
+        app_key = response.json()["key"]
+    finally:
+        request_context.dispose()
+
+    return applicant, app_key

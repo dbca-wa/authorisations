@@ -24,7 +24,7 @@ vi.mock("../../../../../router", () => ({
       divider: false,
     },
     {
-      label: "Privacy Policy",
+      label: "Privacy Statement",
       path: "/privacy",
       icon: <span>Privacy</span>,
       divider: false,
@@ -83,7 +83,7 @@ describe("MainLayout", () => {
       />,
     );
 
-    fireEvent.click(screen.getByLabelText("Privacy Policy"));
+    fireEvent.click(screen.getByLabelText("Privacy Statement"));
 
     expect(navigateMock).toHaveBeenCalledWith("/privacy", { viewTransition: true });
   });

@@ -2,6 +2,14 @@
 
 Welcome to the Authorisations documentation hub. Use the links below to find information relevant to your task.
 
+## ⚠️ Before Any Feature Development
+
+**[FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md)** — **Mandatory checklist for all feature development and bugfixes.** Read this before every session. Covers code quality, testing, documentation, CHANGELOG requirements, and common commands. AI agents must follow this unless explicitly overridden.
+
+## Command Reference
+
+**[COMMAND-REFERENCE.md](COMMAND-REFERENCE.md)** — Quick visual guide to standardized command patterns. Local dev vs CI/production, backend vs frontend, with exact commands for every task.
+
 ## Getting Started
 
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** — Setup, installation, running locally, and development workflows
@@ -14,13 +22,18 @@ Welcome to the Authorisations documentation hub. Use the links below to find inf
 
 ## Features & Workflows
 
-- **[APPLICATION-FLOWS.md](APPLICATION-FLOWS.md)** — User-facing workflows, routes, pages, and authentication
+- **[FRONTEND-API-FLOWS.md](FRONTEND-API-FLOWS.md)** — User-facing workflows, routes, pages, and authentication
+- **[STATUS-WORKFLOW.md](STATUS-WORKFLOW.md)** — Detailed definitions of application statuses and transition business logic
 - **[FILE-MANAGEMENT.md](FILE-MANAGEMENT.md)** — File attachment design and implementation
 
 ## Deployment & Release
 
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** — Kubernetes, kustomize configuration, and deployment procedures
 - **[RELEASE.md](RELEASE.md)** — Semantic versioning and production release process
+
+## Maintenance & Operations
+
+- **[DEPENDENCY-UPGRADE.md](DEPENDENCY-UPGRADE.md)** — Process-driven approach to upgrading backend and frontend dependencies, breaking-change analysis, and pending upgrade inventory
 
 ## Quality & Contributions
 

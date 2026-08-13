@@ -22,16 +22,16 @@ vi.mock("../../../../../context/Hooks", async () => {
   };
 });
 
-vi.mock("../../../../../components/layout/main/AssessmentCard", () => ({
-  AssessmentCard: ({ application }: { application: { internal_id: string } }) => (
-    <div data-testid="assessment-card">{application.internal_id}</div>
+vi.mock("../../../../../components/layout/main/ReviewCard", () => ({
+  ReviewCard: ({ application }: { application: { internal_id: string } }) => (
+    <div data-testid="review-card">{application.internal_id}</div>
   ),
 }));
 
-import { ApplicationAssessment } from "../../../../../components/layout/main/Assessment";
+import { ApplicationReview } from "../../../../../components/layout/main/Review";
 
 
-describe("ApplicationAssessment", () => {
+describe("ApplicationReview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useLoaderDataMock.mockReturnValue({
@@ -43,21 +43,21 @@ describe("ApplicationAssessment", () => {
   it("renders loading state while queue is resolving", () => {
     useResolvedPromiseMock.mockReturnValue([[], true]);
 
-    render(<ApplicationAssessment />);
+    render(<ApplicationReview />);
 
     expect(screen.getByText("One moment while we fetch that for you...")).toBeInTheDocument();
   });
 
-  it("renders empty state when no assessment applications exist", () => {
+  it("renders empty state when no review applications exist", () => {
     useResolvedPromiseMock.mockReturnValue([[], false]);
 
-    render(<ApplicationAssessment />);
+    render(<ApplicationReview />);
 
     expect(screen.getByText("Nothing to see here")).toBeInTheDocument();
     expect(screen.getByText(/We checked.*There really isn't anything hiding here/)).toBeInTheDocument();
   });
 
-  it("orders queue by submitted_oldest (default sort order for assessment)", () => {
+  it("orders queue by submitted_oldest (default sort order for review)", () => {
     useResolvedPromiseMock.mockReturnValue([
       [
         makeApplication({ internal_id: "app1", status: "SUBMITTED", submitted_at: "2026-05-12T00:00:00Z" }),
@@ -67,10 +67,10 @@ describe("ApplicationAssessment", () => {
       false,
     ]);
 
-    render(<ApplicationAssessment />);
+    render(<ApplicationReview />);
 
-    const ordered = screen.getAllByTestId("assessment-card").map((node) => node.textContent);
-    // Default sort for assessment is "submitted_oldest", so oldest submitted_at comes first
+    const ordered = screen.getAllByTestId("review-card").map((node) => node.textContent);
+    // Default sort for review is "submitted_oldest", so oldest submitted_at comes first
     expect(ordered).toEqual(["app2", "app3", "app1"]);
   });
 
@@ -83,7 +83,7 @@ describe("ApplicationAssessment", () => {
       false,
     ]);
 
-    render(<ApplicationAssessment />);
+    render(<ApplicationReview />);
 
     // Sort control should be visible with submitted options
     expect(screen.getByRole("combobox", { name: "Sort applications" })).toBeInTheDocument();
