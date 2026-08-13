@@ -11,7 +11,6 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ### Added
 
-- Added security hardening for review queue: non-reviewers now receive 404 responses when attempting to access the review page, with complete protection across frontend menu, route loader, and backend routes.
 - Added discard and revert functionality allowing applicants to abandon draft applications by moving them to DISCARDED status, with the ability to restore them back to DRAFT for continued editing.
 - Added tab-based filtering system for My Applications page enabling applicants to organise applications by status category (Active, Terminated, Finalised), improving visibility of application lifecycle stages.
 - Added permanent links to questionnaire types on the new application page, enabling users to share and bookmark direct links to specific application types.
@@ -27,6 +26,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ### Changed
 
+- Strengthened review queue access control: non-reviewers now receive 404 responses across frontend menu, route loader, and backend routes when attempting to access the review page.
 - Renamed "Assessment" terminology to "Review" throughout the application, including API endpoints (/api/assessment → /api/review), menu navigation ("Assessment Queue" → "Review Queue"), and related components and fixtures, to align with domain conventions.
 - Standardised on npm for all frontend package management across development, CI, testing, and production environments to ensure identical dependency versions and predictable builds.
 - Disabled questionnaire tabs when only a single questionnaire to prevent user confusion from clicking non-functional tabs.
