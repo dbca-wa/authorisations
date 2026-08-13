@@ -17,7 +17,7 @@ import { PrivacyStatement } from './components/layout/main/PrivacyStatement';
 import { UserSettings } from './components/layout/main/UserSettings';
 import { ApiManager } from './context/ApiManager';
 import type { IRoute, LoaderData } from "./context/types/Generic";
-import { handleApiError } from './context/Utils';
+import { handleApiError, getResponse } from './context/Utils';
 
 
 
@@ -74,6 +74,11 @@ export const ROUTES: IRoute[] = [
 			const processes = await ApiManager
 				.fetchAuthorisationProcesses()
 				.catch(handleApiError);
+
+			// Check the reviewer credentials BEFORE fetching applications
+			if (!processes.some((p) => p.can_review)) {
+				throw getResponse(404, "Not found", "The requested resource was not found on this server. ");
+			}
 
 			const applications = ApiManager
 				.fetchReviewQueueApplications()

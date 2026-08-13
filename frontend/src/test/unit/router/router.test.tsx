@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeApplication, makeProcess, makeQuestionnaire } from "../fixtures";
+import type { LoaderData } from "../../../context/types/Generic";
 
 const { apiMocks } = vi.hoisted(() => ({
   apiMocks: {
@@ -80,5 +81,51 @@ describe("router contracts", () => {
     expect(apiMocks.fetchAuthorisationProcesses).toHaveBeenCalledTimes(1);
     expect(apiMocks.fetchReviewQueueApplications).toHaveBeenCalledTimes(1);
     await expect(loaded.applications).resolves.toHaveLength(1);
+  });
+
+  describe("review route soft_404 protection", () => {
+    it("soft_404: review loader throws 404 when user has no can_review permissions", async () => {
+      apiMocks.fetchAuthorisationProcesses.mockResolvedValue([
+        makeProcess({ can_review: false }),
+      ]);
+
+      const route = ROUTES.find((currentRoute) => currentRoute.path === "/review");
+      const loader = route!.loader! as () => Promise<LoaderData>;
+
+      await expect(loader()).rejects.toThrow();
+      const error = await loader().catch((e) => e);
+      expect(error instanceof Response).toBe(true);
+      expect((error as Response).status).toBe(404);
+    });
+
+    it("soft_404: review loader does not throw when user is a reviewer", async () => {
+      apiMocks.fetchAuthorisationProcesses.mockResolvedValue([
+        makeProcess({ can_review: true }),
+      ]);
+      apiMocks.fetchReviewQueueApplications.mockResolvedValue([makeApplication()]);
+
+      const route = ROUTES.find((currentRoute) => currentRoute.path === "/review");
+      const loader = route!.loader! as () => Promise<LoaderData>;
+
+      const loaded = await loader();
+      expect(loaded).toBeDefined();
+      expect(apiMocks.fetchReviewQueueApplications).toHaveBeenCalled();
+    });
+
+    it("soft_404: review loader checks authorization before fetching applications", async () => {
+      apiMocks.fetchAuthorisationProcesses.mockResolvedValue([
+        makeProcess({ can_review: false }),
+      ]);
+
+      const route = ROUTES.find((currentRoute) => currentRoute.path === "/review");
+      const loader = route!.loader! as () => Promise<LoaderData>;
+
+      await loader().catch(() => {
+        // Expected to throw
+      });
+
+      // Verify that fetchReviewQueueApplications was NEVER called
+      expect(apiMocks.fetchReviewQueueApplications).not.toHaveBeenCalled();
+    });
   });
 });

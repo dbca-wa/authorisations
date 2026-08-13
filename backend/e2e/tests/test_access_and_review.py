@@ -104,7 +104,7 @@ def test_review_queue_is_reviewer_scoped(
     authenticated_request_context_factory,
     e2e_users,
 ):
-    """Expose review queue items only to authorised reviewers."""
+    """Return 404 for non-reviewers and expose queue only to authorised reviewers."""
     reviewer_auth = authenticated_request_context_factory(e2e_users["reviewer"])
     reviewer_context = reviewer_auth["context"]
     try:
@@ -119,15 +119,13 @@ def test_review_queue_is_reviewer_scoped(
     try:
         applicant_response = applicant_context.get("/api/review")
         applicant_status = applicant_response.status
-        applicant_payload = applicant_response.json()
     finally:
         applicant_context.dispose()
 
     assert reviewer_status == 200
     assert len(reviewer_payload) == 1
     assert reviewer_payload[0]["status"] == "SUBMITTED"
-    assert applicant_status == 200
-    assert applicant_payload == []
+    assert applicant_status == 404
 
 
 @pytest.mark.e2e
@@ -162,3 +160,40 @@ def test_review_status_transition_updates_through_api(
     assert status == 200
     assert payload["status"] == "UNDER_REVIEW"
     assert submitted_application.status == "UNDER_REVIEW"
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_review_page_soft_404_non_reviewer(
+    authenticated_browser_context_factory,
+    e2e_users,
+):
+    """Frontend soft_404: non-reviewer accessing /review page renders error page."""
+    # Reviewer user: can access /review page and loads review component
+    reviewer_context = authenticated_browser_context_factory(e2e_users["reviewer"])
+    reviewer_page = reviewer_context.new_page()
+
+    try:
+        reviewer_page.goto("/review")
+        reviewer_page.wait_for_load_state("networkidle")
+        reviewer_body = reviewer_page.content()
+    finally:
+        reviewer_page.close()
+        reviewer_context.close()
+
+    # Non-reviewer user: accesses /review page, gets SPA shell
+    # but frontend loader throws 404 and React renders ErrorPage
+    applicant_context = authenticated_browser_context_factory(e2e_users["applicant"])
+    applicant_page = applicant_context.new_page()
+
+    try:
+        applicant_page.goto("/review")
+        applicant_page.wait_for_load_state("networkidle")
+        applicant_body = applicant_page.content()
+    finally:
+        applicant_page.close()
+        applicant_context.close()
+
+    # Reviewer should not see error page; applicant should
+    assert "Review Queue" in reviewer_body
+    assert "404 - Not found" in applicant_body

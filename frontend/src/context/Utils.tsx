@@ -9,7 +9,7 @@ export function assert(condition: boolean, message: string): void {
     }
 }
 
-const getResponse = (status: number, statusText: string, message: string) => {
+export const getResponse = (status: number, statusText: string, message: string) => {
     return Response.json(
         { message: message },
         { status: status, statusText: statusText }
