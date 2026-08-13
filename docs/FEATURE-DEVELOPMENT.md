@@ -69,6 +69,12 @@ While Bun offers performance improvements, it introduces critical compatibility 
 - Attachment deletions are soft-delete; include ownership checks.
 - When adding an endpoint touching application data, explicitly decide: is this read (use `has_access`) or write (owner-only)?
 
+#### Reviewer-only routes (Frontend + Backend)
+- Protect reviewer-only routes with **defence in depth**: menu hiding + soft 404 + backend route guard
+- **Frontend**: Use route `condition` property to hide menu items and route `loader` to throw `Response(404)` before component mount for non-reviewers
+- **Backend**: Use `request.user.is_reviewer()` check on the view; always check `is_authenticated` first to avoid AttributeError on AnonymousUser
+- The soft 404 pattern returns a user-friendly "404 - Not found" error page rather than a generic 403 Forbidden, maintaining security without exposing internal role structure
+
 #### API contracts
 - Keep frontend type contracts aligned with API payloads.
 - Process and questionnaire identifiers must be explicit and unambiguous.

@@ -11,6 +11,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ### Added
 
+- Added security hardening for review queue: non-reviewers now receive 404 responses when attempting to access the review page, with complete protection across frontend menu, route loader, and backend routes.
 - Added discard and revert functionality allowing applicants to abandon draft applications by moving them to DISCARDED status, with the ability to restore them back to DRAFT for continued editing.
 - Added tab-based filtering system for My Applications page enabling applicants to organise applications by status category (Active, Terminated, Finalised), improving visibility of application lifecycle stages.
 - Added permanent links to questionnaire types on the new application page, enabling users to share and bookmark direct links to specific application types.

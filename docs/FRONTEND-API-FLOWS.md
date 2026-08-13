@@ -23,7 +23,7 @@
    - Shows questionnaire version info
    
 3. **`/review`** - ApplicationReview component
-   - Reviewer-only (conditionally shown via `can_review` flag)
+   - Reviewer-only: non-reviewers receive 404 response (backend route) and soft 404 error page (frontend)
    - Shows review queue for applications in SUBMITTED/UNDER_REVIEW/UNDER_ASSESSMENT
    - Sorted by status priority, then oldest first (FIFO)
    
