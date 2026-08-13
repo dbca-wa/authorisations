@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.1.0] - Unreleased (Requires DB Migration)
+## [1.1.0] - 2026-08-13
+
+**Requires DB Migration**
 
 ### Added
 
