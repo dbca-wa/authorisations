@@ -20,7 +20,7 @@ attribution obligations, those obligations continue to apply.
 
 | Package | Version reviewed | Licence |
 | --- | --- | --- |
-| Django | 5.2.14 | BSD-3-Clause |
+| Django | 5.2.17 | BSD-3-Clause |
 | psycopg | 3.3.4 | LGPL-3.0-only |
 | django-vite | 3.1.0 | Apache-2.0 |
 | whitenoise | 6.12.0 | MIT |
@@ -31,12 +31,12 @@ attribution obligations, those obligations continue to apply.
 | django-jsonform | 2.23.2 | BSD-3-Clause |
 | django-admin-tools | 0.9.3 | MIT |
 | frozendict | 2.4.7 | LGPL-3.0-only |
-| dbca-utils | 3.0.3 | Apache-2.0 |
-| djangorestframework | 3.17.1 | BSD-3-Clause |
+| dbca-utils | 3.0.13 | Apache-2.0 |
+| djangorestframework | 3.18.0 | BSD-3-Clause |
 | pyfsig | 1.1.1 | MIT |
 | django-storages | 1.14.6 | BSD-3-Clause |
 | django-admin-sortable2 | 2.3.1 | MIT |
-| requests | 2.33.1 | Apache-2.0 |
+| requests | 2.34.2 | Apache-2.0
 
 ### Backend compliance notes
 
