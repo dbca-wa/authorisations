@@ -307,11 +307,11 @@ npm run test:coverage
 
 ```bash
 cd backend
-# Run E2E tests only
-poetry run pytest e2e/tests -v
+# Run E2E tests (parallel execution across all CPU cores)
+poetry run pytest e2e/tests -v -n auto --dist loadscope
 
 # With diagnostic traces and screenshots
-poetry run pytest e2e/tests -v --tracing=retain-on-failure --screenshot=only-on-failure
+poetry run pytest e2e/tests -v -n auto --dist loadscope --tracing=retain-on-failure --screenshot=only-on-failure
 ```
 
 ### Backend test guidelines

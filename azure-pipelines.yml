@@ -155,7 +155,7 @@ stages:
       displayName: Install Playwright Chromium browser
     - script: |
         cd backend
-        poetry run pytest e2e/tests -v --tb=short --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure \
+        poetry run pytest e2e/tests -v --tb=short -n auto --dist loadscope --junitxml=e2e-junit.xml --browser chromium --tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure \
           2>&1 | tee "$(Build.ArtifactStagingDirectory)/e2e-debug/logs/pytest-e2e.log"
         status=${PIPESTATUS[0]}
         if [ "$status" -ne 0 ]; then
