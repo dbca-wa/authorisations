@@ -53,17 +53,23 @@ attribution obligations, those obligations continue to apply.
 | @mui/material | 9.1.2 | MIT |
 | @mui/x-data-grid | 9.7.0 | MIT |
 | @mui/x-date-pickers | 9.7.0 | MIT |
-| @tailwindcss/vite | 4.3.2 | MIT |
-| axios | 1.18.1 | MIT |
+| @tailwindcss/vite | 4.3.3 | MIT |
+| axios | 1.19.0 | MIT |
 | dayjs | 1.11.21 | MIT |
-| react | 19.2.7 | MIT |
-| react-dom | 19.2.7 | MIT |
+| eslint | 10.8.1 | MIT |
+| globals | 17.11.0 | MIT |
+| msw | 2.15.0 | MIT |
+| react | 19.2.8 | MIT |
+| react-dom | 19.2.8 | MIT |
 | react-dropzone | 15.0.0 | MIT |
 | react-hook-form | 7.80.0 | MIT |
-| react-router | 7.18.1 | MIT |
-| tailwindcss | 4.3.2 | MIT |
+| react-router | 7.18.2 | MIT |
+| tailwindcss | 4.3.3 | MIT |
+| typescript | 6.0.3 | Apache-2.0 |
+| typescript-eslint | 8.67.0 | BSD-2-Clause |
 | underscore | 1.13.8 | MIT |
 | uuid | 14.0.1 | MIT |
+| vitest | 4.1.10 | MIT |
 
 ### Frontend transitive licence notes
 
