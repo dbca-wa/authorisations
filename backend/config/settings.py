@@ -61,6 +61,10 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
+# Maintenance mode: returns a user-friendly maintenance page for all requests
+# Useful for safe deployments and database migrations.
+MAINTAINANCE_MODE = env("MAINTAINANCE_MODE", cast=bool, default=False)
+
 ALLOWED_HOSTS = [
     "localhost",
 ]
@@ -139,6 +143,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "config.maintenance_mode_middleware.MaintenanceModeMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## [1.1.1] - Unreleased
+
+### Added
+
+- Added maintenance mode feature enabling safe deployments and database migrations without displaying server errors to users. When enabled via `MAINTAINANCE_MODE=True`, all users see a friendly "Under Maintenance" page, API endpoints return 503 Service Unavailable, and file downloads are blocked.
+- Added custom template for 404 error page to provide a user-friendly interface when users navigate to non-existent routes.
+
 ## [1.1.0] - 2026-08-13
 
 **Requires DB Migration**
