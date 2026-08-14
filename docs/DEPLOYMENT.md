@@ -57,8 +57,6 @@ Also create a `.prince-license` file containing XML license content. This will b
 
 The application supports a maintenance mode for safe deployments and database migrations without displaying server errors to users.
 
-### Enabling maintenance mode
-
 Set the `MAINTAINANCE_MODE` environment variable to `True`:
 
 ```bash
@@ -75,30 +73,8 @@ When enabled:
 
 1. **Before deployment or migration:** Enable maintenance mode by redeploying with `MAINTAINANCE_MODE=True`
 2. **Perform safe operations:** Deploy changes, run database migrations, restart services
-3. **After deployment:** Disable maintenance mode by redeploying with `MAINTAINANCE_MODE=False` (default)
+3. **After deployment:** Disable maintenance mode by redeploying with `MAINTAINANCE_MODE=False` or removing the environment variable (preferred)
 
-### Example: Kubernetes deployment with maintenance mode
-
-```bash
-# Enable maintenance mode for safe deployment
-kubectl set env deployment/authorisations-backend \
-  MAINTAINANCE_MODE=True \
-  --namespace=authorisations
-
-# Verify deployment is ready
-kubectl rollout status deployment/authorisations-backend --namespace=authorisations
-
-# Run migrations or other safe operations
-# ...
-
-# Disable maintenance mode
-kubectl set env deployment/authorisations-backend \
-  MAINTAINANCE_MODE=False \
-  --namespace=authorisations
-
-# Verify deployment is ready
-kubectl rollout status deployment/authorisations-backend --namespace=authorisations
-```
 
 ## Review configuration
 
@@ -149,11 +125,23 @@ Run `kubectl` with the `-k` flag to generate resources for a given overlay.
 ### UAT
 
 ```bash
+# Verify you are connected to UAT
+kubectl config current-context
+
+# or switch context if needed
+kubectl config use-context uat
+
 # Dry run
 kubectl apply -k kustomize/overlays/uat/ --namespace=authorisations --dry-run=server
 
+# Switch to maintenance mode if needed
+kubectl set env deployment/authorisations-uat MAINTAINANCE_MODE=True --namespace=authorisations
+
 # Apply
 kubectl apply -k kustomize/overlays/uat/ --namespace=authorisations
+
+# Disable maintenance mode after deployment
+kubectl set env deployment/authorisations-uat MAINTAINANCE_MODE- --namespace=authorisations
 ```
 
 ### Production
@@ -164,11 +152,32 @@ kubectl apply -k kustomize/overlays/uat/ --namespace=authorisations
 # Verify you are connected to production
 kubectl config current-context
 
+# or switch context if needed
+kubectl config use-context PRODUCTION!
+
 # Dry run
 kubectl apply -k kustomize/overlays/prod/ --namespace=authorisations --dry-run=server
 
+# Switch to maintenance mode if needed
+kubectl set env deployment/authorisations-prod MAINTAINANCE_MODE=True --namespace=authorisations
+
 # Apply
 kubectl apply -k kustomize/overlays/prod/ --namespace=authorisations
+
+# Disable maintenance mode after deployment
+kubectl set env deployment/authorisations-prod MAINTAINANCE_MODE- --namespace=authorisations
+```
+
+## Verify deployment
+
+Run the following command to check the rollout status of the deployment:
+
+```bash
+# UAT
+kubectl rollout status deployment/authorisations-uat --namespace=authorisations
+
+# Production
+kubectl rollout status deployment/authorisations-prod --namespace=authorisations
 ```
 
 ## References
