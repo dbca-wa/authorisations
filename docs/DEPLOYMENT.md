@@ -53,6 +53,53 @@ DEBUG=False
 
 Also create a `.prince-license` file containing XML license content. This will be mounted in running pods as a ConfigMap during deployment. The file is renamed to `license.dat` in the ConfigMap key and on the mounted filesystem.
 
+## Maintenance mode
+
+The application supports a maintenance mode for safe deployments and database migrations without displaying server errors to users.
+
+### Enabling maintenance mode
+
+Set the `MAINTAINANCE_MODE` environment variable to `True`:
+
+```bash
+MAINTAINANCE_MODE=True
+```
+
+When enabled:
+- All users (including authenticated reviewers) see a user-friendly "Under Maintenance" page
+- API endpoints return HTTP 503 Service Unavailable with JSON response
+- File downloads (applications and attachments) are blocked
+- No database queries are performed to serve the maintenance page
+
+### Typical workflow
+
+1. **Before deployment or migration:** Enable maintenance mode by redeploying with `MAINTAINANCE_MODE=True`
+2. **Perform safe operations:** Deploy changes, run database migrations, restart services
+3. **After deployment:** Disable maintenance mode by redeploying with `MAINTAINANCE_MODE=False` (default)
+
+### Example: Kubernetes deployment with maintenance mode
+
+```bash
+# Enable maintenance mode for safe deployment
+kubectl set env deployment/authorisations-backend \
+  MAINTAINANCE_MODE=True \
+  --namespace=authorisations
+
+# Verify deployment is ready
+kubectl rollout status deployment/authorisations-backend --namespace=authorisations
+
+# Run migrations or other safe operations
+# ...
+
+# Disable maintenance mode
+kubectl set env deployment/authorisations-backend \
+  MAINTAINANCE_MODE=False \
+  --namespace=authorisations
+
+# Verify deployment is ready
+kubectl rollout status deployment/authorisations-backend --namespace=authorisations
+```
+
 ## Review configuration
 
 Review the built resource output using `kustomize`:

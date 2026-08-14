@@ -12,12 +12,7 @@
   {% vite_hmr_client %}
   {% vite_asset 'src/main.tsx' %}
   <title>DBCA Authorisations</title>
-  {% if json_data is not None %}
-  {{ json_data|json_script:'json-data' }}
-  {% endif %}
-  {% if config is not None %}
-  {{ config|b64encode|json_script:'config' }}
-  {% endif %}
+  {% if config is not None %}{{ config|b64encode|json_script:'config' }}{% endif %}
 </head>
 
 <body>
