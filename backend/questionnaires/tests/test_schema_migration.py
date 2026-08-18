@@ -1,7 +1,14 @@
-"""Unit tests for questionnaire schema migration framework (Phase 2).
+"""Unit tests for questionnaire schema migration framework.
 
-Tests verify that QuestionnaireSerialiser enforces strict schema version
+Phase 2: Tests verify that QuestionnaireSerialiser enforces strict schema version
 validation at write time, and provides actionable error messages for old versions.
+
+Phase 3: Tests verify that the migration infrastructure (loader, utilities) works
+correctly for discovering, validating, and applying schema transformations.
+
+Note: Migration-specific tests (for 0001_initial.py transforms, hard-coded schemas,
+idempotency, etc.) are in test_schema_migration_0001.py. This module focuses on
+infrastructure (loader, path finding, validation utility).
 """
 
 import pytest
@@ -9,6 +16,12 @@ from rest_framework.exceptions import ValidationError
 
 from questionnaires.models import QuestionnaireSerialiser
 from questionnaires.schema import SCHEMA_VERSION
+from questionnaires.schema_migrations_loader import (
+    get_migration,
+    list_migrations,
+    find_path,
+)
+from questionnaires.schema_migration_utils import validate_transform
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db]
@@ -108,3 +121,129 @@ def test_questionnaire_serialiser_validate_document_rejects_edge_cases():
     # Test non-dict inputs (list)
     with pytest.raises(ValidationError):
         serializer.validate_document([])
+
+
+# ============================================================================
+# PHASE 3: Migration Infrastructure Tests
+# ============================================================================
+
+
+class TestMigrationLoader:
+    """Test migration file discovery and loading (schema_migrations_loader.py)."""
+
+    def test_get_migration_loads_0001_initial(self):
+        """Load migration 0001 and verify it has required components."""
+        migration = get_migration("0001")
+
+        assert hasattr(migration, "SCHEMA_VERSION")
+        assert migration.SCHEMA_VERSION == "1"
+        assert hasattr(migration, "previous_schema")
+        assert hasattr(migration, "target_schema")
+        assert hasattr(migration, "migrate_forward")
+        assert hasattr(migration, "migrate_backward")
+
+    def test_get_migration_missing_raises_error(self):
+        """Raise FileNotFoundError when migration number not found."""
+        with pytest.raises(FileNotFoundError):
+            get_migration("9999")
+
+    def test_list_migrations_includes_0001(self):
+        """list_migrations() returns available migration numbers."""
+        migrations = list_migrations()
+
+        assert "0001" in migrations
+        assert isinstance(migrations, list)
+        # Should be sorted
+        assert migrations == sorted(migrations)
+
+    def test_find_path_forward_0001_to_0001(self):
+        """Find path from 0001 to itself returns single element."""
+        path = find_path("0001", "0001")
+
+        assert path == ["0001"]
+
+    def test_find_path_raises_on_missing_migration(self):
+        """Raise ValueError when trying to find path with non-existent migration."""
+        with pytest.raises(ValueError):
+            find_path("0001", "9999")
+
+        with pytest.raises(ValueError):
+            find_path("9999", "0001")
+
+
+class TestValidationUtility:
+    """Test validation utility for schema transforms."""
+
+    def test_validate_transform_accepts_valid_doc(self):
+        """validate_transform returns (True, []) for valid document."""
+        migration = get_migration("0001")
+        doc = {
+            "schema_version": SCHEMA_VERSION,
+            "steps": [
+                {
+                    "title": "Step 1",
+                    "description": "",
+                    "sections": [
+                        {
+                            "title": "Section 1",
+                            "description": "",
+                            "questions": [
+                                {
+                                    "label": "Q1",
+                                    "type": "text",
+                                    "is_required": False,
+                                    "description": "",
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+
+        is_valid, errors = validate_transform(
+            doc,
+            "2025.07-1",
+            SCHEMA_VERSION,
+            migration.previous_schema(),
+            migration.target_schema(),
+        )
+
+        assert is_valid is True
+        assert errors == []
+
+    def test_validate_transform_rejects_wrong_version(self):
+        """validate_transform rejects document with mismatched version."""
+        migration = get_migration("0001")
+        doc = {
+            "schema_version": "0",  # Wrong version
+            "steps": [],
+        }
+
+        is_valid, errors = validate_transform(
+            doc,
+            "2025.07-1",
+            SCHEMA_VERSION,
+            migration.previous_schema(),
+            migration.target_schema(),
+        )
+
+        assert is_valid is False
+        assert len(errors) > 0
+        assert any("schema_version" in str(e).lower() for e in errors)
+
+    def test_validate_transform_rejects_non_dict(self):
+        """validate_transform rejects non-dict inputs."""
+        migration = get_migration("0001")
+        is_valid, errors = validate_transform(
+            "not a dict",
+            "1",
+            "2",
+            migration.previous_schema(),
+            migration.target_schema(),
+        )
+
+        assert is_valid is False
+        assert len(errors) > 0
+        assert "must be a dict" in errors[0]
+

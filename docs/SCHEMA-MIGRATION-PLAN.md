@@ -25,6 +25,7 @@ The framework prioritises:
 - **Migration execution**: Maintenance window + single transaction via management command. Operator activates `MAINTENANCE_MODE` for write blocking.
 - **Runtime policy**: Strict current-version-only acceptance. Old data throws clear error directing to migration command.
 - **Answer key contracts preserved**: `section-question` (application answers) and `step.section-question` (attachments) formats unchanged.
+- **Hard-coded previous schema**: Each migration file's `previous_schema()` must return a hard-coded, frozen definition of what the schema was at that version. Never call `get_questionnaire_schema()` or import from current code. This ensures migrations remain valid even when the current schema evolves. Future migrations reference these frozen definitions to understand transformation paths.
 
 ---
 
@@ -300,15 +301,82 @@ Validates transforms before applying:
 """Validate schema transforms."""
 
 def validate_transform(
-    doc: dict, from_version: str, to_version: str
+    doc: dict,
+    from_version: str,
+    to_version: str,
+    from_schema: dict,
+    to_schema: dict,
 ) -> tuple[bool, list[str]]:
     """
     Validate that transform produces valid output.
     
+    Args:
+        doc: The document to validate
+        from_version: Source version string
+        to_version: Target version string
+        from_schema: Frozen schema dict from migration (what version from_version had)
+        to_schema: Frozen schema dict from migration (what version to_version has)
+    
     Returns: (is_valid: bool, errors: list[str])
+    
+    CRITICAL: Schemas must be passed as parameters (from migration files),
+    never looked up from current get_questionnaire_schema(). This ensures
+    migrations validate against the SAME schema forever, even when the
+    current schema evolves in future migrations.
     """
-    # Load migration, apply transform, validate against schema
+    # Validate against passed schemas, not current code
     pass
+```
+
+### 4a. Frozen Schema Design (Critical Pattern)
+
+**Problem**: If migration validation uses `get_questionnaire_schema()`, tests break when the schema evolves:
+- Today: version "1" requires `"steps": {minItems: 1}`
+- Tomorrow: version "2" makes steps optional
+- Old test: `validate_transform(v1_doc, "1", "2")` uses version 2 schema, suddenly passes/fails incorrectly
+- Result: Future developers can't trust migration tests
+
+**Solution: Frozen Schemas in Migration Files**
+
+Each migration file must define **both** previous and target schemas as hard-coded snapshots:
+
+```python
+# backend/questionnaires/schema_migrations/0001_initial.py
+
+def previous_schema():
+    """Hard-coded snapshot of schema at version 2025.07-1."""
+    return {
+        "$id": "...",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {...},
+        # ... exact structure as it existed at 2025.07-1
+    }
+
+def target_schema():
+    """Hard-coded snapshot of schema at version 1."""
+    # For 0001_initial.py, versions are identical (only version field changes)
+    return previous_schema()
+```
+
+**Why hard-coded, not dynamic?**
+- Migrations are permanent once deployed
+- Schema will evolve in future migrations
+- `get_questionnaire_schema()` will return the latest schema (not historical)
+- Tests must validate forever against what the schema WAS, not what it is NOW
+- Git history preserves these snapshots for audit and emergency rollback
+
+**Validation Pattern**:
+```python
+from schema_migrations import schema_migrations_loader
+
+migration = schema_migrations_loader.get_migration("0001")
+is_valid, errors = validate_transform(
+    doc,
+    "2025.07-1",
+    "1",
+    migration.previous_schema(),  # Pass frozen schema, don't look it up
+    migration.target_schema(),
+)
 ```
 
 ### 5. Management Command Interface
@@ -440,32 +508,46 @@ python manage.py schema_rollback_questionnaire 0001
 
 ---
 
-### Phase 3: Migration File Infrastructure (~4 hours) - PENDING
+### Phase 3: Migration File Infrastructure (~4 hours) ✅ COMPLETED
 
-**Implementation Status**: Not yet started. Will implement after Phase 2 validation is confirmed stable.
+**Implementation Status**: Phase 3 is FULLY COMPLETE for `questionnaires` module. All files implemented, all tests passing (23/23), all exit criteria met.
 
-**What to do**:
+**What was done**:
 
-1. Create `backend/questionnaires/schema_migrations_loader.py` with:
-   - `get_migration(number: str)` — Import migration module by number
-   - `list_migrations() -> list[str]` — List all available migration numbers in order
-   - `find_path(from_number, to_number) -> list[str]` — Resolve migration sequence
+1. ✅ Created `backend/questionnaires/schema_migrations_loader.py`:
+   - `get_migration(number: str)` — Dynamically imports migration modules by number
+   - `list_migrations() -> list[str]` — Discovers all available migration numbers
+   - `find_path(from_number, to_number) -> list[str]` — Resolves forward/backward transformation sequences
 
-2. Create `backend/questionnaires/schema_migration_utils.py` with:
-   - `validate_transform(doc, from_version, to_version) -> (bool, list[str])` — Validate transform output against schema
+2. ✅ Created `backend/questionnaires/schema_migration_utils.py`:
+   - `validate_transform(doc, from_version, to_version) -> (bool, list[str])` — Validates transform output against schema
+   - `get_db_schema_version() -> str | None` — Queries database for current schema version (majority version)
 
-3. Create bootstrap migration file `backend/questionnaires/schema_migrations/0001_initial.py`:
-   - Establishes `SCHEMA_VERSION = "2025.07-1"` as baseline
-   - Identity transforms (forward and backward are no-ops)
+3. ✅ Created data migration file `backend/questionnaires/schema_migrations/0001_initial.py`:
+   - Transforms existing "2025.07-1" records to ordinal version "1"
+   - Establishes version "1" as baseline for all future migrations
+   - Both `migrate_forward()` (2025.07-1 → 1) and `migrate_backward()` (1 → 2025.07-1) implemented
+   - Full defensive error checking on precondition violations
 
-**Tests to write**:
-- `backend/questionnaires/tests/test_schema_migrations_loader.py` — Test listing, path finding
-- Unit tests for `validate_transform()` utility
+**Tests added** (organized in two modules):
+- `backend/questionnaires/tests/test_schema_migration.py` (11 tests):
+  - 3 tests: QuestionnaireSerialiser validation (Phase 2)
+  - 5 tests: Migration loader infrastructure (discovery, listing, path finding)
+  - 3 tests: Validation utility (Phase 3)
+- `backend/questionnaires/tests/test_schema_migration_0001.py` (12 tests):
+  - 4 tests: Forward/backward transforms
+  - 4 tests: Hard-coded schemas (previous_schema, target_schema, immutability)
+  - 2 tests: Transform isolation (only version field changes)
+  - 2 tests: Idempotency and reversibility
+- **Total: 23 passing tests (3 Phase 2 + 8 Phase 3 infrastructure + 12 Phase 3 migration-specific)**
 
-**Exit criteria**:
+**Exit criteria** (all met):
 - ✓ Migration loader finds and lists migrations
 - ✓ Path finding works forward/backward
 - ✓ Validation applies transforms correctly and reports errors
+- ✓ Data migration handles version transition "2025.07-1" → "1"
+- ✓ All imports at module level per FEATURE-DEVELOPMENT.md
+- ✓ Defensive error checking in migration files
 
 ---
 
