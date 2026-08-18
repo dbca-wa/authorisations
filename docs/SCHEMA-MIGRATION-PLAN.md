@@ -12,12 +12,14 @@ The framework prioritises:
 - **repeatability** — reusable migration pattern for future schema changes
 - **safe codebase rollback** — migration files permanently stored in git history; code changes can be reverted independently of data transforms
 
+**Implementation Strategy**: Phase framework implemented first for `questionnaires` module only. Once the framework is proven reliable and well-tested, the same patterns will be applied to `applications` module.
+
 ---
 
 ## Confirmed Decisions (Simplified Approach)
 
 - **No backup columns**: Transactions provide atomicity. On failure, entire transaction rolls back. Previous schema definitions kept in git/codebase for emergency rollback.
-- **No database state tracking**: Single text file (`.schema_version.txt`) tracks current version. No Django migration table equivalent.
+- **No database state tracking**: Single text file (`.schema_version.txt`) ~~tracks current version~~ (**Updated**: Python constant in schema module tracks current version. Simpler, no file I/O required).
 - **Single-version production code**: Only `get_questionnaire_schema()` and `get_answers_schema()` exist; always return current schema.
 - **Migrations as code**: Transform functions (`migrate_forward()`, `migrate_backward()`) stored in migration files alongside schema definitions.
 - **Migration execution**: Maintenance window + single transaction via management command. Operator activates `MAINTENANCE_MODE` for write blocking.
@@ -28,39 +30,29 @@ The framework prioritises:
 
 ## `.schema_version.txt` Explained
 
+### **UPDATED: Schema Version as Python Constant**
+
+**Previous design** (text file `.schema_version.txt`) has been simplified:
+
+- **Current implementation**: Schema version is a Python constant `SCHEMA_VERSION` in `backend/questionnaires/schema.py`
+- **Reason**: No file I/O required, no text file delivery concerns, simpler to import and use
+- **Location**: `backend/questionnaires/schema.py#L11`:
+  ```python
+  SCHEMA_VERSION = "2025.07-1"
+  ```
+- **Usage**: Import directly:
+  ```python
+  from questionnaires.schema import SCHEMA_VERSION
+  ```
+
 ### Purpose
 
 Track the **current schema version** that all records in the database should conform to. Single source of truth for:
-- Operators: "Where are we?" (`--status` command reads this)
-- Management commands: What version to migrate from/to
+- Operators: "Where are we?" (from `schema_status_questionnaire` command)
+- Management commands: What version is current in the codebase
 - Runtime validation: What version to expect in documents
 - Tests: What version fixtures should use
-- Git history: When versions changed (commits show diffs)
-
-### Content
-
-Single line per file with version identifier:
-
-```
-backend/questionnaires/.schema_version.txt
-2025.07-1
-
-backend/applications/.schema_version.txt
-2025.09-1
-```
-
-### Why Text File (Not Database Table)?
-
-1. **Simplicity**: No database schema overhead. Humans can read/edit if needed.
-2. **Django alignment**: Migrations are code files; version is a code fact.
-3. **Git-friendly**: Commit history shows when versions changed. Easy rollback: revert commit → revert version file → re-run migration backward.
-4. **No deployment complexity**: No need to migrate state tracking schema itself.
-
-### Updated When
-
-- **Migration execute** (e.g., `schema_migrate_questionnaire 0002`): Updated to target version after all transforms succeed in transaction
-- **Migration fails**: Entire transaction rolls back; version file unchanged
-- **Rollback procedure**: See [Rollback Procedures](#rollback-procedures) section (critical: migration files are never deleted from git; codebase changes are reverted independently)
+- Git history: When versions changed (commits show diffs in constant)
 
 ---
 
@@ -131,55 +123,100 @@ def migrate_backward(doc: dict) -> dict:
     pass
 ```
 
-**Example**: `backend/questionnaires/schema_migrations/0001_initial.py` (bootstrap)
+**Example**: `backend/questionnaires/schema_migrations/0001_initial.py` (versioning baseline transition)
 
 ```python
-"""Migration: Bootstrap - establishes baseline schema version 2025.07-1."""
+"""Migration 0001: Versioning baseline transition (2025.07-1 → 1).
 
-SCHEMA_VERSION = "2025.07-1"
+Transforms existing questionnaires from calendar-based versioning to ordinal versioning.
+This is the first official migration and establishes version "1" as the anchor point
+for all future schema changes.
+
+Note: The migration command checks current DB version before running this migration.
+This ensures idempotency: running the same migration twice is a safe no-op.
+"""
+
+from copy import deepcopy
+
+SCHEMA_VERSION = "1"  # Ordinal versioning starts here
+
 
 def previous_schema():
-    """No previous schema; this is the baseline."""
+    """Return the schema structure under calendar version 2025.07-1 for reference."""
     from questionnaires.schema import get_questionnaire_schema
+    # Schema structure is identical; only version number differs
     return get_questionnaire_schema()
 
+
 def migrate_forward(doc: dict) -> dict:
-    """Identity transform (already at baseline)."""
+    """Transform: calendar versioning (2025.07-1) → ordinal versioning (1).
+    
+    Precondition: This function is called only when document.schema_version == "2025.07-1".
+    The management command verifies this before calling migrate_forward().
+    """
+    if doc.get("schema_version") != "2025.07-1":
+        raise ValueError(
+            f"Expected schema_version 2025.07-1, got {doc.get('schema_version')}"
+        )
+    
+    doc = deepcopy(doc)
+    doc["schema_version"] = "1"
     return doc
 
+
 def migrate_backward(doc: dict) -> dict:
-    """Identity transform (already at baseline)."""
+    """Transform: ordinal versioning (1) → calendar versioning (2025.07-1).
+    
+    Rollback support: restores documents to pre-migration state.
+    """
+    if doc.get("schema_version") != "1":
+        raise ValueError(
+            f"Expected schema_version 1, got {doc.get('schema_version')}"
+        )
+    
+    doc = deepcopy(doc)
+    doc["schema_version"] = "2025.07-1"
     return doc
 ```
 
 **Example**: `backend/questionnaires/schema_migrations/0002_extra_attributes_consolidation.py` (real change)
 
 ```python
-"""Migration: Consolidate question extra_* fields into single extra_attributes object."""
+"""Migration 0002: Consolidate question extra_* fields into extra_attributes object (1 → 2).
 
-SCHEMA_VERSION = "2025.07-2"
+Note: The migration command checks current DB version before running.
+This ensures idempotency: running twice is safe (first time transforms, second time skips).
+"""
+
+from copy import deepcopy
+
+SCHEMA_VERSION = "2"
 
 def previous_schema():
-    """Return 2025.07-1 schema definition (old flat structure)."""
+    """Return schema definition for version 1 (old flat structure)."""
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
-            "schema_version": {"type": "string", "default": "2025.07-1"},
+            "schema_version": {"type": "string", "default": "1"},
             "steps": {"type": "array", "items": {"$ref": "#/$defs/step"}},
         },
-        # ... (rest of old schema)
+        # ... (rest of schema structure)
     }
 
 def migrate_forward(doc: dict) -> dict:
-    """Transform: flat extra_* fields → extra_attributes object."""
-    if doc.get("schema_version") != "2025.07-1":
+    """Transform: flat extra_* fields → extra_attributes object (1 → 2).
+    
+    Precondition: This function is called only when document.schema_version == "1".
+    The management command verifies this before calling migrate_forward().
+    """
+    if doc.get("schema_version") != "1":
         raise ValueError(
-            f"Expected schema 2025.07-1, got {doc.get('schema_version')}"
+            f"Expected schema_version 1, got {doc.get('schema_version')}"
         )
     
-    doc = doc.copy()
-    doc["schema_version"] = "2025.07-2"
+    doc = deepcopy(doc)
+    doc["schema_version"] = "2"
     
     # Transform each question in each section of each step
     for step in doc.get("steps", []):
@@ -204,14 +241,17 @@ def migrate_forward(doc: dict) -> dict:
     return doc
 
 def migrate_backward(doc: dict) -> dict:
-    """Transform: extra_attributes object → flat extra_* fields."""
-    if doc.get("schema_version") != "2025.07-2":
+    """Transform: extra_attributes object → flat extra_* fields (2 → 1).
+    
+    Rollback support: restores documents to pre-migration state.
+    """
+    if doc.get("schema_version") != "2":
         raise ValueError(
-            f"Expected schema 2025.07-2, got {doc.get('schema_version')}"
+            f"Expected schema_version 2, got {doc.get('schema_version')}"
         )
     
-    doc = doc.copy()
-    doc["schema_version"] = "2025.07-1"
+    doc = deepcopy(doc)
+    doc["schema_version"] = "1"
     
     # Expand extra_attributes back to flat fields
     for step in doc.get("steps", []):
@@ -321,134 +361,252 @@ python manage.py schema_rollback_questionnaire 0001
 
 ## Implementation Phases (Detailed & Actionable)
 
-### Phase 1: Schema Version Tracking (~2 hours)
+### Phase 1: Schema Version Tracking (~2 hours) ✅ COMPLETED
 
-**What to do**:
+**Implementation Status**: Phase 1 is complete for `questionnaires` module.
 
-1. Create `.schema_version.txt` files:
-   ```
-   echo "2025.07-1" > backend/questionnaires/.schema_version.txt
-   echo "2025.09-1" > backend/applications/.schema_version.txt
-   ```
+**What was done**:
 
-2. Add `get_current_schema_version()` function to both schema modules (imports at module level per FEATURE-DEVELOPMENT.md):
+1. ✅ Added `SCHEMA_VERSION` Python constant to `backend/questionnaires/schema.py` using pure ordinal format:
    ```python
-   # At module level (top of file)
-   import os
-   
-   def get_current_schema_version() -> str:
-       """Read and return current schema version from .schema_version.txt."""
-       version_file = os.path.join(os.path.dirname(__file__), ".schema_version.txt")
-       with open(version_file) as f:
-           return f.read().strip()
+   # Current version of the schema (pure ordinal: 1, 2, 3, ...)
+   # Previous versions are maintained in schema_migrations/ directory
+   SCHEMA_VERSION = "1"
    ```
 
-3. Create migration directories:
+2. ✅ Created migration directories:
    ```
    mkdir -p backend/questionnaires/schema_migrations
    touch backend/questionnaires/schema_migrations/__init__.py
-   mkdir -p backend/applications/schema_migrations
-   touch backend/applications/schema_migrations/__init__.py
    ```
 
-4. Add version comments to schema modules (e.g., `backend/questionnaires/schema.py#L15`):
-   ```python
-   # Current schema version: 2025.07-1
-   # Previous versions are maintained in schema_migrations/ directory
-   ```
+3. ✅ Added version comments to schema module
 
-**Tests to write**:
-- `backend/questionnaires/tests/test_schema_version.py` — Verify `get_current_schema_version()` returns correct value
-- `backend/applications/tests/test_schema_version.py` — Same
+**Why Python constant instead of text file?**
+- No file I/O required at runtime
+- Imported directly: `from questionnaires.schema import SCHEMA_VERSION`
+- No file delivery concerns (text files may not be included in deployments)
+- Simpler to test and reason about
+- Git history shows version changes in commits
 
-**Exit criteria**:
-- ✓ Version files exist and readable
-- ✓ `get_current_schema_version()` works for both modules
-- ✓ Migration directories exist and importable
+**Exit criteria** (met):
+- ✓ Schema version tracked as Python constant
+- ✓ Constant importable from schema module
+- ✓ Migration directories created
+- ✓ No custom file reading function needed
 
 ---
 
-### Phase 2: Runtime Schema Validation (Strict Mode) (~3 hours)
+### Phase 2: Runtime Schema Validation (Strict Mode) ✅ COMPLETED
 
-**What to do**:
+**Implementation Status**: Phase 2 is complete for `questionnaires` module.
 
-1. Update `ApplicationSerialiser.validate_document()` in `backend/applications/serialisers.py` (~line 321-328). Import at module level:
+**What was done**:
+
+1. ✅ Updated `QuestionnaireSerialiser.validate_document()` in `backend/questionnaires/models.py` (lines 129-140):
    ```python
-   # At module level (top of file)
-   from applications.schema import get_current_schema_version
-   
-   # In the validate_document method:
    def validate_document(self, value):
-       current_version = get_current_schema_version()
        doc_version = value.get("schema_version") if isinstance(value, dict) else None
-       
-       if doc_version != current_version:
-           raise serializers.ValidationError(
-               f"Document schema version must be '{current_version}', but got '{doc_version}'. "
-               f"Run migration: python manage.py schema_migrate_application {current_version}"
-           )
-       
-       schema = get_answers_schema()
-       return self._validate_document(value, schema)
-   ```
 
-2. Update `QuestionnaireSerialiser.validate_document()` in `backend/questionnaires/models.py` (~line 127-134). Import at module level:
-   ```python
-   # At module level (top of file)
-   from questionnaires.schema import get_current_schema_version
-   
-   # In the validate_document method:
-   def validate_document(self, value):
-       current_version = get_current_schema_version()
-       doc_version = value.get("schema_version") if isinstance(value, dict) else None
-       
-       if doc_version != current_version:
+       if doc_version != SCHEMA_VERSION:
            raise serializers.ValidationError(
-               f"Document schema version must be '{current_version}', but got '{doc_version}'. "
-               f"Run migration: python manage.py schema_migrate_questionnaire {current_version}"
+               f"Document schema version must be '{SCHEMA_VERSION}', but got '{doc_version}'. "
+               f"Run migration: python manage.py schema_migrate_questionnaire {SCHEMA_VERSION}"
            )
-       
+
+       # Validate and return with the JSON schema
        schema = get_questionnaire_schema()
        return self._validate_document(value, schema)
    ```
 
-**Tests to write**:
-- `backend/api/tests/test_application_serializer_strict_version.py` — Reject old schema_version
-- `backend/questionnaires/tests/test_questionnaire_strict_version.py` — Same
+2. ✅ Imports at module level:
+   ```python
+   from .schema import SCHEMA_VERSION, get_questionnaire_schema
+   ```
 
-**Exit criteria**:
-- ✓ API rejects documents with mismatched schema_version
+3. ✅ Comprehensive test coverage added (3 focused tests in `backend/questionnaires/tests/test_schema_migration.py`):
+   - `test_questionnaire_serialiser_validate_document_accepts_current_schema_version` — Current version accepted
+   - `test_questionnaire_serialiser_validate_document_rejects_mismatched_version` — Old version rejected with actionable error message
+   - `test_questionnaire_serialiser_validate_document_rejects_edge_cases` — Null, missing, and non-dict inputs rejected
+
+**Important Note**: The API endpoint for questionnaires is currently read-only (`ReadOnlyModelViewSet` with GET/OPTIONS/HEAD only). The validation will be used when write methods (POST/PATCH) are enabled in the future. The validation is already in place and tested for future compatibility.
+
+**Exit criteria** (met):
+- ✓ API serializer checks schema_version
 - ✓ Error messages guide to migration command
-- ✓ Existing tests pass
+- ✓ 3 focused, non-redundant tests pass
+- ✓ All imports at module level per FEATURE-DEVELOPMENT.md
+- ✓ Tests organized in dedicated test_schema_migration.py module
 
 ---
 
-### Phase 3: Migration File Infrastructure (~4 hours)
+### Phase 3: Migration File Infrastructure (~4 hours) - PENDING
+
+**Implementation Status**: Not yet started. Will implement after Phase 2 validation is confirmed stable.
 
 **What to do**:
 
-1. Create `backend/questionnaires/schema_migrations_loader.py` and `backend/applications/schema_migrations_loader.py` with:
-   - `get_migration(version: str)` — Import migration module by version
-   - `list_migrations() -> list[str]` — List all available versions in order
-   - `find_path(from_version, to_version) -> list[str]` — Resolve version chain
+1. Create `backend/questionnaires/schema_migrations_loader.py` with:
+   - `get_migration(number: str)` — Import migration module by number
+   - `list_migrations() -> list[str]` — List all available migration numbers in order
+   - `find_path(from_number, to_number) -> list[str]` — Resolve migration sequence
 
-2. Create `backend/questionnaires/schema_migration_utils.py` and `backend/applications/schema_migration_utils.py` with:
-   - `validate_transform(doc, from_version, to_version) -> (bool, list[str])` — Validate transform output
+2. Create `backend/questionnaires/schema_migration_utils.py` with:
+   - `validate_transform(doc, from_version, to_version) -> (bool, list[str])` — Validate transform output against schema
 
-3. Create bootstrap migration files `0001_initial.py` in each app (identity transform, establishes baseline)
+3. Create bootstrap migration file `backend/questionnaires/schema_migrations/0001_initial.py`:
+   - Establishes `SCHEMA_VERSION = "2025.07-1"` as baseline
+   - Identity transforms (forward and backward are no-ops)
 
 **Tests to write**:
 - `backend/questionnaires/tests/test_schema_migrations_loader.py` — Test listing, path finding
-- `backend/applications/tests/test_schema_migrations_loader.py` — Same
+- Unit tests for `validate_transform()` utility
 
 **Exit criteria**:
 - ✓ Migration loader finds and lists migrations
 - ✓ Path finding works forward/backward
-- ✓ Validation applies transforms correctly
+- ✓ Validation applies transforms correctly and reports errors
 
 ---
 
-### Phase 4: Management Commands (~6 hours)
+## Idempotency Design
+
+**Critical requirement**: Running the same migration multiple times must be safe (idempotent).
+
+### Problem
+
+If migration files raise errors on precondition mismatch, you cannot safely retry:
+
+```bash
+python manage.py schema_migrate_questionnaire 0001  # First run: ✓ Success
+python manage.py schema_migrate_questionnaire 0001  # Second run: ❌ ERROR (precondition failed)
+```
+
+This violates idempotency and breaks safe retry semantics.
+
+### Solution: Command-Level Precondition Check
+
+The **management command** (not the migration file) handles idempotency by checking database state before invoking the migration transform:
+
+```python
+# backend/questionnaires/management/commands/schema_migrate_questionnaire.py
+
+def get_db_schema_version() -> str | None:
+    """Find most common schema_version in database.
+    
+    Returns:
+        - "1" if all/most questionnaires at version 1
+        - "2025.07-1" if all/most at old calendar version
+        - None if database is empty or mixed (error state)
+    """
+    from django.db.models import Count
+    from questionnaires.models import Questionnaire
+    
+    versions = (
+        Questionnaire.objects
+        .values('document__schema_version')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    
+    if not versions:
+        return None
+    
+    return versions[0]['document__schema_version']
+
+
+class Command(BaseCommand):
+    def handle(self, migration_number, dry_run=False, **options):
+        # Get current state
+        current_db_version = get_db_schema_version()
+        migration = get_migration(migration_number)
+        target_version = migration.SCHEMA_VERSION
+        
+        # IDEMPOTENCY CHECK: Already at target?
+        if current_db_version == target_version:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Already at version {target_version}. No migration needed."
+                )
+            )
+            return  # Safe no-op; can retry infinitely
+        
+        # PRECONDITION: Verify DB state matches what migration expects
+        # (For migration 0001: expects 2025.07-1; For 0002: expects 1)
+        expected_previous = get_expected_previous_version(migration_number)
+        
+        if current_db_version != expected_previous:
+            raise CommandError(
+                f"Cannot migrate {migration_number}:\n"
+                f"  Current DB version: {current_db_version}\n"
+                f"  Expected input: {expected_previous}\n"
+                f"  Will produce: {target_version}\n"
+                f"  Run 'python manage.py schema_status_questionnaire' to diagnose."
+            )
+        
+        # Run transformation (migration file assumes precondition met)
+        self._transform_all_documents(migration, dry_run)
+```
+
+### Idempotent Behavior Examples
+
+**Scenario 1: First migration run (transforms data)**
+```bash
+$ python manage.py schema_status_questionnaire
+Current schema version: 2025.07-1
+  2025.07-1: 147 questionnaires
+
+$ python manage.py schema_migrate_questionnaire 0001
+Found 147 questionnaires at version 2025.07-1
+Migrating to version 1...
+✓ Migrated 147/147 questionnaires. Updated schema version to 1
+
+$ python manage.py schema_migrate_questionnaire 0001
+Already at version 1. No migration needed.
+```
+
+**Scenario 2: Running same command twice (safe idempotent retry)**
+```bash
+$ python manage.py schema_migrate_questionnaire 0002
+Already at version 2. No migration needed.
+```
+
+**Scenario 3: Mixed database state (error state - cannot migrate)**
+```bash
+$ python manage.py schema_migrate_questionnaire 0002
+Cannot migrate 0002:
+  Current DB version: mixed
+  Expected input: 1
+  Will produce: 2
+  Run 'python manage.py schema_status_questionnaire' to diagnose.
+```
+
+### Migration File Design (Assumes Precondition Met)
+
+Migration files can assume the management command verified all preconditions:
+
+```python
+def migrate_forward(doc: dict) -> dict:
+    """Transform version 1 → 2.
+    
+    The management command verified the precondition before calling this.
+    This check is defensive; should never fail in normal operation.
+    """
+    if doc.get("schema_version") != "1":
+        raise ValueError(f"Unexpected version: {doc.get('schema_version')}")
+    
+    doc = deepcopy(doc)
+    doc["schema_version"] = "2"
+    return doc
+```
+
+**Key point**: Migration files are **simple and focused** because the command layer handles all precondition logic.
+
+---
+
+### Phase 4: Management Commands (~6 hours) - PENDING
+
+**Implementation Status**: Not yet started. Will implement after Phase 3 infrastructure is solid.
 
 **What to do**:
 
@@ -457,37 +615,83 @@ python manage.py schema_rollback_questionnaire 0001
    - `backend/questionnaires/management/commands/schema_rollback_questionnaire.py`
    - `backend/questionnaires/management/commands/schema_status_questionnaire.py`
 
-2. Create identical three commands for applications:
-   - `backend/applications/management/commands/schema_migrate_application.py`
-   - `backend/applications/management/commands/schema_rollback_application.py`
-   - `backend/applications/management/commands/schema_status_application.py`
-
 **Command implementation details**:
 
 - **Arguments**: Migration number only (e.g., `0002`), not version strings. Loader maps number → migration file → reads SCHEMA_VERSION
+- **Idempotency**: Command calls `get_db_schema_version()` before running; if already at target version, returns success (no-op, safe to retry)
+- **Precondition validation**: Ensures current DB version matches migration's expected input version; fails with clear error if state mismatch
 - **Forward migrate**: Applies all forward transforms from current version to target version in a single transaction
 - **Backward migrate** (rollback): Applies all backward transforms from current version to target version in a single transaction
-- **Status**: Lists current version, shows record distribution by schema_version, lists available migration numbers
+- **Status**: Lists current version, shows record distribution by schema_version, lists available migration numbers, detects mixed-version state
 - **Dry-run option** (`--dry-run`): Tests transforms without writing; only valid with migrate/rollback, not with status
 - **Single transaction**: All records transformed within one database transaction; fail-fast on first error with clear error message showing which record failed
-- **Atomic version update**: `.schema_version.txt` updated to target version **only after** all transforms succeed and transaction commits. On failure, entire transaction rolls back and version file unchanged.
+- **Atomic version update**: `SCHEMA_VERSION` constant updated **only after** all transforms succeed and transaction commits (via git commit or code deployment)
+- **Helper function** `get_db_schema_version()`: Queries database for most common schema_version across questionnaires; handles mixed-state detection
 
 **Tests to write**:
-- `backend/questionnaires/tests/test_schema_migrate_command.py` — Test migrate forward with/without dry-run
-- `backend/questionnaires/tests/test_schema_rollback_command.py` — Test rollback with/without dry-run
-- `backend/questionnaires/tests/test_schema_status_command.py` — Test status output
-- Same for applications
+- `backend/questionnaires/tests/test_schema_migrate_command.py` — Test migrate forward with/without dry-run, idempotency, precondition validation
+- `backend/questionnaires/tests/test_schema_rollback_command.py` — Test rollback with/without dry-run, idempotency
+- `backend/questionnaires/tests/test_schema_status_command.py` — Test status output, mixed-version detection
 
 **Exit criteria**:
 - ✓ All commands parse arguments correctly
+- ✓ Idempotent: running same migration twice is safe (second run is no-op)
+- ✓ Precondition validation: clear error if DB state mismatches migration expectation
 - ✓ Dry-run produces zero database changes
-- ✓ Migrate/rollback update `.schema_version.txt` correctly
+- ✓ Migrate/rollback update version tracking correctly
 - ✓ Transaction rollback on any transform error
 - ✓ Error messages identify which record failed and why
+- ✓ `get_db_schema_version()` helper detects mixed-version state
 
 ---
 
-### Phase 5: Fixtures & Test Data (~2 hours)
+### Phase 5: Fixtures & Test Data (~2 hours) - PENDING
+
+**Implementation Status**: Not yet started. Will implement after Phase 4 commands are working.
+
+**What to do**:
+
+1. Verify existing fixtures in `backend/conftest.py`, `backend/questionnaires/tests/fixtures.py` already use current schema version
+
+2. Create migration test fixtures for old versions (for testing transforms)
+
+**Exit criteria**:
+- ✓ Fixtures verified at current version
+- ✓ Old-version test fixtures created for command tests
+
+---
+
+### Phase 6: Integration Tests & Documentation (~4 hours) - PENDING
+
+**Implementation Status**: Not yet started. Will implement after all other phases are complete.
+
+**What to do**:
+
+1. Create integration tests:
+   - `backend/questionnaires/tests/test_migration_integration.py` — Full lifecycle: create old-version record → migrate → verify
+
+2. Update documentation:
+   - **`docs/DEPLOYMENT.md`** — Add "Schema Migrations" section with operator runbook
+   - **`docs/BACKEND-CONVENTIONS.md`** — Add "JSON Schema Migrations" section
+   - **`docs/TESTING.md`** — Add migration testing patterns
+
+**Exit criteria**:
+- ✓ Integration tests pass full lifecycle
+- ✓ Operator runbook is clear and actionable
+- ✓ Developer guide explains writing future migrations
+
+---
+
+## Applications Module - Future Implementation
+
+The migration framework will be implemented for `Questionnaire.document` first. Once the framework is proven reliable and well-tested in production use, it will be applied to `Application.document` using identical patterns.
+
+**Timeline**: Applications implementation planned after questionnaires framework is stable and any adjustments from real-world use are incorporated.
+
+**Future phases for applications**:
+- Phase 1: Add `SCHEMA_VERSION` constant to `backend/applications/schema.py`
+- Phase 2: Add schema version validation to `ApplicationSerialiser.validate_document()`
+- Phase 3-6: Same as questionnaires (migration infrastructure, commands, fixtures, integration tests)
 
 **What to do**:
 
@@ -563,15 +767,17 @@ python manage.py schema_rollback_questionnaire 0001
 
 ## Example: Extra Attributes Consolidation Migration
 
-This section demonstrates applying the framework to the real first schema change.
+This section demonstrates how the framework will be applied to the first real schema change in questionnaires.
 
-### Current State (Schema 2025.07-1)
+**Status**: Example planned for future implementation. Will demonstrate migration after Phase 4 commands are complete.
+
+### Current State (Schema 1)
 
 Questions have flat extra fields in [backend/questionnaires/serialisers.py](backend/questionnaires/serialisers.py#L98-L135):
 
 ```json
 {
-  "schema_version": "2025.07-1",
+  "schema_version": "1",
   "steps": [{
     "sections": [{
       "questions": [{
@@ -589,13 +795,13 @@ Questions have flat extra fields in [backend/questionnaires/serialisers.py](back
 }
 ```
 
-### Target State (Schema 2025.07-2)
+### Target State (Schema 2)
 
 Consolidate into single `extra_attributes` object:
 
 ```json
 {
-  "schema_version": "2025.07-2",
+  "schema_version": "2",
   "steps": [{
     "sections": [{
       "questions": [{
@@ -615,59 +821,47 @@ Consolidate into single `extra_attributes` object:
 }
 ```
 
-### Migration Implementation
+### Migration Implementation (Planned)
 
 **Step 1**: Create migration file `backend/questionnaires/schema_migrations/0002_extra_attributes_consolidation.py` (see Architecture section above for full code)
 
 **Step 2**: Update serializer in `backend/questionnaires/serialisers.py`:
 - Remove commented-out `QuestionExtraAttrs` (uncomment and activate)
-- Remove individual `select_options`, `grid_columns`, `grid_max_rows`, `dependent_step`, `file_max_attachments` fields from `QuestionSerialiser`
+- Remove individual flat fields from `QuestionSerialiser`
 - Add `extra_attributes = QuestionExtraAttrs(required=False, allow_null=True, default=None)`
 
 **Step 3**: Update JSON schema in `backend/questionnaires/schema.py` — add `extra_attributes` property to question definition
 
-**Step 4**: Update frontend types in `frontend/src/context/types/Questionnaire.ts`:
-```typescript
-export interface IQuestion {
-    label: string;
-    type: string;
-    is_required?: boolean;
-    description?: string;
-    extra_attributes?: {
-        select_options?: string[];
-        grid_columns?: IGridQuestionColumn[];
-        grid_max_rows?: number;
-        dependent_step?: number;
-        file_max_attachments?: number;
-    };
-}
+**Step 4**: Update `SCHEMA_VERSION` constant in `backend/questionnaires/schema.py`:
+```python
+SCHEMA_VERSION = "2"
 ```
 
-**Step 5**: Execute migration:
+**Step 5**: Update frontend types in `frontend/src/context/types/Questionnaire.ts`
+
+**Step 6**: Execute migration (after Phase 4 management commands are implemented):
 ```bash
 # Check status
 python manage.py schema_status_questionnaire
-# Output: Current schema version: 2025.07-1
-#         2025.07-1: 147 questionnaires
-#         Available migrations: 0001, 0002, 0003
+# Output: Current schema version: 1
+#         1: 147 questionnaires
 
 # Dry run
 python manage.py schema_migrate_questionnaire 0002 --dry-run
-# Output: Found 147 questionnaires at version 2025.07-1
-#         DRY RUN: Would migrate to schema version 2025.07-2...
+# Output: Found 147 questionnaires at version 1
+#         DRY RUN: Would migrate to schema version 2...
 #         Would transform 147/147 successfully
 
 # Migrate
 python manage.py schema_migrate_questionnaire 0002
-# Output: Found 147 questionnaires at version 2025.07-1
-#         Migrating to schema version 2025.07-2...
-#         ✓ Migrated 147/147 questionnaires. Updated .schema_version.txt to 2025.07-2
+# Output: Found 147 questionnaires at version 1
+#         Migrating to schema version 2...
+#         ✓ Migrated 147/147 questionnaires. Updated version to 2
 
 # Verify
 python manage.py schema_status_questionnaire
-# Output: Current schema version: 2025.07-2
-#         2025.07-2: 147 questionnaires
-#         Available migrations: 0001, 0002, 0003
+# Output: Current schema version: 2
+#         2: 147 questionnaires
 ```
 
 ---
