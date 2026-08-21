@@ -1,4 +1,10 @@
-"""Tests for questionnaire management commands."""
+"""Tests for normalise_questionnaire_sort_order management command.
+
+Tests the questionnaire sort order normalisation command which rebuilds the sort_order
+field for the latest version of each questionnaire within each process. Historical
+versions are pushed out of view (sort_order = 0) to maintain clean UI ordering while
+preserving all version history.
+"""
 
 from io import StringIO
 

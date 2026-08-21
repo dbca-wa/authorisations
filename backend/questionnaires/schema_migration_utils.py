@@ -7,7 +7,9 @@ valid output against frozen schema definitions passed from migration files.
 from typing import Tuple
 
 from api.serialisers import JsonSchemaSerialiserMixin
-from django.db.models import Count
+from django.db.models import Count, F
+from django.db.models.functions import Cast
+from django.db.models import TextField
 from jsonschema import ValidationError
 from rest_framework import serializers
 
@@ -71,27 +73,52 @@ def validate_transform(
 
 
 def get_db_schema_version() -> str | None:
-    """Find the most common schema_version across questionnaires in database.
+    """Get the current schema version from the database.
     
-    Queries the database and returns the schema version that appears most
-    frequently. Used to detect current migration state.
+    ALL records must be at the same schema version. If the database contains
+    records at different versions, raises an exception. This is a consistency
+    requirement: migrations only work on uniform database states.
     
     Returns:
-        - Most common schema_version string (e.g., "1" or "2025.07-1")
+        - Schema version string (e.g., "1" or "2025.07-1") if all records match
         - None if database is empty
     
+    Raises:
+        RuntimeError: If database contains records at different schema versions.
+        This indicates a failed or partial migration that requires manual recovery.
+    
     Notes:
-        - Returns majority version (useful for detecting mixed-state issues).
+        - Does NOT use majority voting. Database state must be uniform.
         - Called by management commands to check precondition before migration.
+        - If this raises RuntimeError, run schema_status_questionnaire to diagnose.
     """
     versions = (
         Questionnaire.objects
-        .values('document__schema_version')
+        .annotate(
+            schema_version_str=Cast(
+                F('document__schema_version'), output_field=TextField()
+            )
+        )
+        .values('schema_version_str')
         .annotate(count=Count('id'))
-        .order_by('-count')
+        .order_by('document__schema_version')  # Order by original JSON value (numeric ordering)
     )
     
     if not versions:
         return None
     
-    return versions[0]['document__schema_version']
+    # Extract all distinct versions (explicitly cast from database)
+    distinct_versions = [v['schema_version_str'] for v in versions]
+    
+    # If more than one version exists, database is in an inconsistent state
+    if len(distinct_versions) > 1:
+        version_counts = {v['schema_version_str']: v['count'] for v in versions}
+        raise RuntimeError(
+            f"Database contains records at multiple schema versions: {version_counts}.\n"
+            f"This indicates a failed or partial migration. All records must be at "
+            f"the same version before proceeding.\n"
+            f"Run 'python manage.py schema_status_questionnaire' to diagnose."
+        )
+    
+    # Single version: safe to return it
+    return distinct_versions[0]

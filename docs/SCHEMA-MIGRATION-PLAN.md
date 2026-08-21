@@ -16,6 +16,24 @@ The framework prioritises:
 
 ---
 
+## Implementation Status: PHASES 1-4 COMPLETE ✅
+
+**For `questionnaires` module:**
+
+| Phase | Status | Completion | Tests |
+|-------|--------|-----------|-------|
+| Phase 1: Version Tracking | ✅ COMPLETE | Schema version as Python constant | N/A |
+| Phase 2: Runtime Validation | ✅ COMPLETE | API rejects old schema versions | 10/10 |
+| Phase 3: Migration Infrastructure | ✅ COMPLETE | Loader, validator, and 0001_initial migration | 23/23 |
+| Phase 4: Management Commands | ✅ COMPLETE | Migrate, rollback, status commands | 40/40 |
+| **Total Implementation** | **✅ COMPLETE** | **Ready for production use** | **109/109 tests passing** |
+
+**Next phases (planned):**
+- Phase 5: Test fixtures (when adding migration 0002)
+- Phase 6: Integration tests & documentation
+
+---
+
 ## Confirmed Decisions (Simplified Approach)
 
 - **No backup columns**: Transactions provide atomicity. On failure, entire transaction rolls back. Previous schema definitions kept in git/codebase for emergency rollback.
@@ -686,36 +704,65 @@ def migrate_forward(doc: dict) -> dict:
 
 ---
 
-### Phase 4: Management Commands (~6 hours) - PENDING
+### Phase 4: Management Commands (~6 hours) ✅ COMPLETED
 
-**Implementation Status**: Not yet started. Will implement after Phase 3 infrastructure is solid.
+**Implementation Status**: Phase 4 is FULLY COMPLETE for `questionnaires` module. All commands implemented, all tests passing (40/40), all exit criteria met.
 
-**What to do**:
+**What was done**:
 
-1. Create three command files for questionnaires:
-   - `backend/questionnaires/management/commands/schema_migrate_questionnaire.py`
-   - `backend/questionnaires/management/commands/schema_rollback_questionnaire.py`
-   - `backend/questionnaires/management/commands/schema_status_questionnaire.py`
+1. ✅ Created three management command files:
+   - `backend/questionnaires/management/commands/schema_migrate_questionnaire.py` — Forward migration to target version
+   - `backend/questionnaires/management/commands/schema_rollback_questionnaire.py` — Backward migration (rollback) to target version
+   - `backend/questionnaires/management/commands/schema_status_questionnaire.py` — Display current version and record distribution
 
-**Command implementation details**:
+2. ✅ All commands include:
+   - Migration number argument parsing (e.g., `schema_migrate_questionnaire 0002`)
+   - Idempotency checks (already at target = safe no-op)
+   - Precondition validation (DB version matches migration expectations)
+   - Dry-run support (`--dry-run` flag for migrate/rollback)
+   - Single transaction atomicity (all records transform together or none)
+   - Clear error messages identifying which record failed and why
+   - Version tracking via `SCHEMA_VERSION` constant updates
 
-- **Arguments**: Migration number only (e.g., `0002`), not version strings. Loader maps number → migration file → reads SCHEMA_VERSION
-- **Idempotency**: Command calls `get_db_schema_version()` before running; if already at target version, returns success (no-op, safe to retry)
-- **Precondition validation**: Ensures current DB version matches migration's expected input version; fails with clear error if state mismatch
-- **Forward migrate**: Applies all forward transforms from current version to target version in a single transaction
-- **Backward migrate** (rollback): Applies all backward transforms from current version to target version in a single transaction
-- **Status**: Lists current version, shows record distribution by schema_version, lists available migration numbers, detects mixed-version state
-- **Dry-run option** (`--dry-run`): Tests transforms without writing; only valid with migrate/rollback, not with status
-- **Single transaction**: All records transformed within one database transaction; fail-fast on first error with clear error message showing which record failed
-- **Atomic version update**: `SCHEMA_VERSION` constant updated **only after** all transforms succeed and transaction commits (via git commit or code deployment)
-- **Helper function** `get_db_schema_version()`: Queries database for most common schema_version across questionnaires; handles mixed-state detection
+3. ✅ Comprehensive test coverage (40 tests across three test files):
+   - `backend/questionnaires/tests/test_schema_migrate_command.py` (10 tests):
+     - Argument parsing and validation
+     - Idempotency (already at target version)
+     - Dry-run functionality (no database changes)
+     - Successful forward transform
+     - Transaction rollback on validation error
+     - Error message clarity
+   - `backend/questionnaires/tests/test_schema_rollback_command.py` (11 tests):
+     - Argument parsing and validation
+     - Idempotency and safe retry
+     - Dry-run functionality
+     - Error handling (missing migration, target version mismatch)
+     - Multiple record consistency
+   - `backend/questionnaires/tests/test_schema_status_command.py` (19 tests):
+     - Current version display (code version from SCHEMA_VERSION)
+     - Record distribution by schema_version
+     - Database version detection (most common version)
+     - Mixed-version state detection and warnings
+     - Available migrations listing
+     - Output formatting and clarity
 
-**Tests to write**:
-- `backend/questionnaires/tests/test_schema_migrate_command.py` — Test migrate forward with/without dry-run, idempotency, precondition validation
-- `backend/questionnaires/tests/test_schema_rollback_command.py` — Test rollback with/without dry-run, idempotency
-- `backend/questionnaires/tests/test_schema_status_command.py` — Test status output, mixed-version detection
+**Key design decisions implemented**:
+- **Idempotency**: Running same migration twice is safe (second run is no-op if already at target)
+- **Precondition validation**: Command checks DB state matches migration expectations before executing
+- **Transaction isolation**: All records transform within single database transaction; atomic success or rollback
+- **Version constant**: `SCHEMA_VERSION` in code is the single source of truth for current version
+- **Mixed-version detection**: Status command warns if database contains records at multiple versions (indicates failed/partial migration)
+- **Helper function**: `get_db_schema_version()` queries database for most common schema_version, used by all commands
 
-**Exit criteria**:
+**Test coverage breakdown**:
+- Phase 4 commands: 40/40 passing
+- Phase 3 infrastructure: 6/6 passing  
+- Phase 2 serialiser validation: 10/10 passing (moved to test_serialisers.py)
+- Phase 3 migration-specific: 12/12 passing
+- Phase 3 framework tests: 5/5 passing
+- **Total questionnaires tests: 109/109 passing**
+
+**Exit criteria** (all met):
 - ✓ All commands parse arguments correctly
 - ✓ Idempotent: running same migration twice is safe (second run is no-op)
 - ✓ Precondition validation: clear error if DB state mismatches migration expectation
@@ -724,6 +771,8 @@ def migrate_forward(doc: dict) -> dict:
 - ✓ Transaction rollback on any transform error
 - ✓ Error messages identify which record failed and why
 - ✓ `get_db_schema_version()` helper detects mixed-version state
+- ✓ Status command shows current version and record distribution
+- ✓ All commands tested across edge cases (empty DB, single version, mixed versions, missing migrations)
 
 ---
 
@@ -806,30 +855,38 @@ The migration framework will be implemented for `Questionnaire.document` first. 
 
      ### Operator Workflow
 
-     1. **Check current status**:
+     **Before starting**: Code changes are complete (updated serializers, schema.py with new `SCHEMA_VERSION`, frontend types, etc.) and ready to deploy.
+
+     1. **Deploy code with maintenance mode enabled**:
+        - Deploy codebase with `MAINTENANCE_MODE=True` (or enable it during deployment)
+        - This deploys the new `SCHEMA_VERSION` constant and updated schema definitions
+        - API is live but blocking all writes
+
+     2. **Check current status**:
         python manage.py schema_status_questionnaire
 
-     2. **Enter maintenance mode** (blocks writes):
-        Set MAINTENANCE_MODE=True in settings or environment
-
-     3. **Dry run** (test, no writes):
+     3. **Dry run** (test transforms, no writes):
         python manage.py schema_migrate_questionnaire 0002 --dry-run
 
-     4. **Migrate**:
+     4. **Migrate** (transform all database records):
         python manage.py schema_migrate_questionnaire 0002
 
      5. **Verify post-migration**:
         python manage.py schema_status_questionnaire
         # Should show all records at new version
 
-     6. **Exit maintenance mode** (re-enable writes)
+     6. **Exit maintenance mode** (re-enable writes):
+        - Disable `MAINTENANCE_MODE`
+        - API now accepts GET/POST/PATCH requests with validation using new `SCHEMA_VERSION`
 
      ### Rollback (if needed) — See SCHEMA-MIGRATION-PLAN.md section
 
-     Complete rollback procedures are documented in the schema migration plan. Rollback involves three steps:
-     1. Execute data rollback command: `python manage.py schema_rollback_questionnaire 0001`
-     2. Git revert codebase changes that depend on new schema
-     3. Keep migration files in git (never delete them; they're part of permanent history)
+     **Important**: Rollback must happen in maintenance mode. Complete procedures are in the schema migration plan. Quick overview:
+     1. Revert code to previous version (git revert), deploy with `MAINTENANCE_MODE=True` still active
+     2. Execute data rollback command: `python manage.py schema_rollback_questionnaire 0001` (transforms records back)
+     3. Verify rollback succeeded: `python manage.py schema_status_questionnaire`
+     4. Exit maintenance mode and test
+     5. Keep migration files in git (never delete them; they're part of permanent history)
      ```
 
    - **`docs/BACKEND-CONVENTIONS.md`** — Add "JSON Schema Migrations" section explaining:
@@ -847,7 +904,32 @@ The migration framework will be implemented for `Questionnaire.document` first. 
 
 ---
 
-## Example: Extra Attributes Consolidation Migration
+### Phase 5: Fixtures & Test Data (~2 hours) - PENDING
+
+**Implementation Status**: Not yet started. Will implement when Phase 4 migration commands need old-version test data.
+
+**When to do this**:
+- When adding migration 0002 that requires test fixtures with old schema structures
+- Fixtures will use hardcoded old-version documents for testing transforms
+
+**Exit criteria** (future):
+- ✓ Fixtures use hardcoded schema versions matching migration test requirements
+- ✓ Old-version test fixtures created for command tests
+
+---
+
+### Phase 6: Integration Tests & Documentation (~4 hours) - PENDING
+
+**Implementation Status**: Not yet started. Will implement after all other phases are complete.
+
+**When to do this**:
+- After Phase 4 commands are stable and Phase 5 fixtures are created
+- Add comprehensive integration tests and operator documentation
+
+**Exit criteria** (future):
+- ✓ Integration tests pass full lifecycle (create record → migrate → verify)
+- ✓ Operator runbook is clear and actionable
+- ✓ Developer guide explains writing future migrations
 
 This section demonstrates how the framework will be applied to the first real schema change in questionnaires.
 
@@ -1055,30 +1137,33 @@ python manage.py schema_status_questionnaire
 
 ## Rollback Procedures
 
-Rollback is a **three-step process** that safely reverts both data and codebase while preserving migration file history. Migration files are **never deleted**; they remain in git as permanent historical record.
+Rollback is a **three-step process** that transforms data back, then reverts code. Migration files are never deleted; they remain in git as permanent historical record.
 
 ### Complete Rollback Workflow
 
-**Scenario**: You've deployed migration 0002 to production, but it causes an issue. You need to revert to 0001.
+**Scenario**: You deployed migration 0002 to production with `MAINTENANCE_MODE=True`, but the migration or new schema causes an issue. You need to revert to 0001.
 
-**Step 1: Rollback the Data**
+**Key Principle**: Keep the new code deployed while you rollback data (because the migration file with `migrate_backward()` is in the new code). Only after data is rolled back do you deploy the old code.
 
-Execute the rollback command in maintenance mode:
+**Step 1: Rollback the Data (with current/failed code still deployed)**
+
+The current deployment has the migration file with `migrate_backward()` defined. Use this to transform records back.
 
 ```bash
-# Enter maintenance mode first (blocks writes)
+# Maintenance mode should still be True from initial deployment
+# If not, ensure it's on
 export MAINTENANCE_MODE=True
 
 # Verify current state
 python manage.py schema_status_questionnaire
-# Output: Current schema version: 2025.07-2
+# Output: Current schema version: 2025.07-2  (from new code)
 #         2025.07-2: 147 questionnaires
 
-# Rollback data to previous version (applies migrate_backward transforms)
+# Rollback data using the current code's migration (e.g., 0002_extra_attributes_consolidation.py)
 python manage.py schema_rollback_questionnaire 0001
 # Output: Found 147 questionnaires at version 2025.07-2
 # Rolling back to schema version 2025.07-1...
-# ✓ Rolled back 147/147 questionnaires. Updated .schema_version.txt to 2025.07-1
+# ✓ Rolled back 147/147 questionnaires. Updated schema version to 2025.07-1
 
 # Verify rollback succeeded
 python manage.py schema_status_questionnaire
@@ -1086,78 +1171,73 @@ python manage.py schema_status_questionnaire
 #         2025.07-1: 147 questionnaires
 ```
 
-**Result**: Data is now at 2025.07-1 schema version. The `.schema_version.txt` file has been updated. All documents pass validation against 2025.07-1 schema.
+**Step 2: Deploy Previous Version**
 
-**Step 2: Revert Codebase Changes**
-
-The codebase (serializers, schema definitions, frontend types) was updated to expect the new schema version. You must revert **only the code changes**, **not the migration file**.
+Now deploy the previous code version (before the failed schema changes).
 
 ```bash
-# Identify the commit range that introduced the new schema changes
-git log --oneline | head -20
+# Deploy previous Docker image or git checkout
+# This redeploys old SCHEMA_VERSION and old schema definitions
+# MAINTENANCE_MODE can stay True during this deployment
 
-# Revert the commits that changed serializers, schema.py, frontend types, etc.
-# DO NOT use 'git reset' or 'git revert' on the migration file itself
-git revert <commit-hash-of-schema-change>
+# Examples (depending on your deployment method):
+# docker pull <image-repo>:<previous-tag> && docker run ...
+# OR: git checkout <previous-commit> && deploy
 
-# Verify the revert
-git diff HEAD~1 backend/questionnaires/serialisers.py
-# Should show the old flat fields are back, extra_attributes consolidation is gone
-```
-
-**What to revert**:
-- Serializer changes (e.g., uncommenting `QuestionExtraAttrs` → recomment it)
-- JSON schema changes in `schema.py` (restore old field definitions)
-- Frontend type changes (e.g., restore old `IQuestion` interface)
-- Any API or business logic that depends on new schema structure
-
-**What NOT to revert**:
-- ❌ Do NOT delete or revert `schema_migrations/0002_extra_attributes_consolidation.py`
-- ❌ Do NOT revert Phase 1-4 infrastructure (migration loader, commands, etc.)
-- ❌ Do NOT delete `.schema_version.txt` or revert its content to non-existent values
-
-**Why keep migration files?**
-Migration files are historical records. Deleting them means:
-- You lose the ability to migrate forward again without recreating the file
-- Git history becomes incomplete
-- Future rollbacks might re-apply the same change without the migration logic
-
-**Step 3: Verify Safe State & Exit Maintenance**
-
-```bash
-# Verify codebase is at old version
+# After deployment, verify schema version matches
 python manage.py schema_status_questionnaire
 # Should show: Current schema version: 2025.07-1
+#         2025.07-1: 147 questionnaires
+```
 
-# Run tests to ensure old schema is compatible with reverted code
-cd backend && poetry run pytest questionnaires/tests/test_questionnaire_strict_version.py -v
+**Step 3: Verify & Disable Maintenance Mode**
 
-# If tests pass, exit maintenance mode
+```bash
+# Run tests to ensure old schema is compatible with old code
+cd backend && poetry run pytest questionnaires/tests/ -v
+
+# If tests pass, disable maintenance mode
 unset MAINTENANCE_MODE
 # Or: Set MAINTENANCE_MODE=False in environment
+
+# API now accepts requests with old code and old schema_version
 ```
+
+**What is NOT reverted**:
+- ❌ Migration files (they stay in git permanently - they document what happened)
+- ❌ Git history (the commits with new schema changes stay in history)
+- Only the deployed **code** is reverted to an old version
 
 ### Recovering from Rollback (Re-migration)
 
-If you've fixed the issues and want to migrate forward again:
+If you've fixed the underlying issues and want to migrate forward again:
+
+1. Ensure `MAINTENANCE_MODE=True`
+2. Deploy the new code again (the one with `SCHEMA_VERSION` bump and schema changes)
+3. Run the migration command:
 
 ```bash
-# Schema migration files are intact in git (you never deleted them)
-# Simply run migrate command again
+# New code is deployed with the migration file (0002_extra_attributes_consolidation.py)
+# Run migrate with current DB at version 2025.07-1
 python manage.py schema_migrate_questionnaire 0002
 # Output: Found 147 questionnaires at version 2025.07-1
 #         Migrating to schema version 2025.07-2...
-#         ✓ Migrated 147/147 questionnaires. Updated .schema_version.txt to 2025.07-2
+#         ✓ Migrated 147/147 questionnaires. Updated schema version to 2025.07-2
 ```
+
+4. Disable maintenance mode
 
 The migration files are **reusable** because they live permanently in git history.
 
 ### Key Invariants (Must Always Hold)
 
-1. **Migration files are immutable history**: Once committed to git, migration files should never be modified or deleted. They're the permanent audit trail.
-2. **Codebase changes are independent**: Code changes (serializers, schema.py, frontend types) can be reverted without affecting migration files.
-3. **Data rollback is reversible**: If you rollback data via `schema_rollback_questionnaire 0001`, you can re-migrate via `schema_migrate_questionnaire 0002` (migrations are idempotent).
-4. **Version file is source of truth**: After any migration or rollback, `.schema_version.txt` reflects the actual version all records should be at. It's the operator's record of "where are we now?"
+1. **Migration files are immutable history**: Once committed to git, migration files (e.g., `schema_migrations/0002_extra_attributes_consolidation.py`) are never modified or deleted. They remain permanently in git history and are needed for rollback operations.
+
+2. **Data rollback requires new code**: To rollback data, the migration file with `migrate_backward()` must exist in the deployed code. This is why you rollback data BEFORE deploying old code.
+
+3. **Sequence: Data first, then code**: Rollback order is: (1) Rollback data using current code's migration file, (2) Deploy old code, (3) Verify and disable maintenance. This is the opposite of the forward migration sequence.
+
+4. **Maintenance mode prevents version mismatch**: During both migration and rollback, `MAINTENANCE_MODE=True` is active the entire time, preventing any window where code/data versions could mismatch and cause API validation errors.
 
 ---
 

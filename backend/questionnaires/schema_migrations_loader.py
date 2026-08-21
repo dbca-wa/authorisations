@@ -84,9 +84,12 @@ def list_migrations() -> list[str]:
 def find_path(from_number: str, to_number: str) -> list[str]:
     """Find transformation path between two migration numbers.
     
+    Handles the special case of "0000" which represents the pre-migration
+    baseline version (e.g., "2025.07-1" before migration 0001 is applied).
+    
     Args:
-        from_number: Starting migration number (e.g., "0001").
-        to_number: Target migration number (e.g., "0003").
+        from_number: Starting migration number (e.g., "0001") or "0000" for baseline.
+        to_number: Target migration number (e.g., "0003") or "0000" for baseline.
     
     Returns:
         Sorted list of migration numbers representing the path.
@@ -98,18 +101,110 @@ def find_path(from_number: str, to_number: str) -> list[str]:
     """
     available = list_migrations()
     
-    if from_number not in available:
+    # Handle special "0000" marker for pre-migration baseline
+    if from_number == "0000":
+        from_idx = -1  # Before all migrations
+    elif from_number not in available:
         raise ValueError(f"Migration {from_number} not found in available migrations")
-    
-    if to_number not in available:
-        raise ValueError(f"Migration {to_number} not found in available migrations")
-    
-    from_idx = available.index(from_number)
-    to_idx = available.index(to_number)
-    
-    if from_idx <= to_idx:
-        # Forward path
-        return available[from_idx : to_idx + 1]
     else:
-        # Backward path (reversed)
-        return available[to_idx : from_idx + 1][::-1]
+        from_idx = available.index(from_number)
+    
+    if to_number == "0000":
+        to_idx = -1  # Before all migrations
+    elif to_number not in available:
+        raise ValueError(f"Migration {to_number} not found in available migrations")
+    else:
+        to_idx = available.index(to_number)
+    
+    if from_idx < to_idx:
+        # Forward path
+        start_idx = 0 if from_idx == -1 else from_idx
+        return available[start_idx : to_idx + 1]
+    elif from_idx > to_idx:
+        # Backward path
+        end_idx = -1 if to_idx == -1 else to_idx
+        if end_idx == -1:
+            # Backward from some migration to baseline: return all from that migration down
+            return available[from_idx : :-1]
+        else:
+            return available[to_idx : from_idx + 1][::-1]
+    else:
+        # Same position
+        return [from_number] if from_number != "0000" else []
+
+
+def find_migration_by_output_version(target_version: str) -> str:
+    """Find which migration number produces a given schema version.
+    
+    Given a schema version string (e.g., "1"), returns the migration number
+    that produces it as output (e.g., "0001"). Handles the special case of the
+    pre-migration baseline version (e.g., "2025.07-1") which is not produced
+    by any migration but is the input to migration 0001.
+    
+    Args:
+        target_version: Schema version string to find (e.g., "1", "2", "2025.07-1").
+    
+    Returns:
+        Migration number that produces this version (e.g., "0001"), or special
+        marker "0000" if this is the pre-migration baseline version.
+    
+    Raises:
+        ValueError: If no migration produces the given version and it's not a known baseline.
+    """
+    available = list_migrations()
+    
+    # Check if this version is produced by any migration
+    for migration_number in available:
+        migration = get_migration(migration_number)
+        if migration.SCHEMA_VERSION == target_version:
+            return migration_number
+    
+    # Special case: Check if this is the input version of the first migration (baseline)
+    if available:
+        first_migration = get_migration(available[0])
+        first_schema = first_migration.previous_schema()
+        baseline_version = first_schema.get("properties", {}).get("schema_version", {}).get("default")
+        
+        if baseline_version == target_version:
+            # This is the pre-migration baseline version
+            return "0000"
+    
+    raise ValueError(
+        f"No migration found that produces schema version '{target_version}'. "
+        f"Available migrations produce versions: "
+        f"{[get_migration(m).SCHEMA_VERSION for m in available]}"
+    )
+
+
+def get_migration_previous_version(migration_number: str) -> str:
+    """Get the schema version of the migration before the target migration.
+    
+    Used by management commands to verify preconditions: the database should be
+    at the previous version before migrating to the target version.
+    
+    Args:
+        migration_number: Target migration number (e.g., "0002").
+    
+    Returns:
+        SCHEMA_VERSION from the previous migration (e.g., "1" for migration 0002).
+    
+    Raises:
+        ValueError: If migration_number is 0001 (no previous migration) or not found.
+    """
+    available = list_migrations()
+    
+    if migration_number not in available:
+        raise ValueError(f"Migration {migration_number} not found")
+    
+    idx = available.index(migration_number)
+    
+    if idx == 0:
+        raise ValueError(
+            f"Migration {migration_number} is the first migration (0001). "
+            f"No previous version exists."
+        )
+    
+    previous_number = available[idx - 1]
+    previous_migration = get_migration(previous_number)
+    
+    return previous_migration.SCHEMA_VERSION
