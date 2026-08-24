@@ -32,6 +32,9 @@ The framework prioritises:
 - Phase 5: Test fixtures (when adding migration 0002)
 - Phase 6: Integration tests & documentation
 
+**Library extraction:**
+- See [MIGRATION-FRAMEWORK-LIBRARY-PLAN.md](MIGRATION-FRAMEWORK-LIBRARY-PLAN.md) for comprehensive plan to externalize this framework as a reusable Django plugin
+
 ---
 
 ## Confirmed Decisions (Simplified Approach)
