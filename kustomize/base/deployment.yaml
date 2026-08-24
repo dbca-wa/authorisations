@@ -22,6 +22,8 @@ spec:
             runAsUser: 5000
             privileged: false
             allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
             capabilities:
               drop:
                 - ALL
