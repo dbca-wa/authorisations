@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.1.1] - Unreleased
+## [1.2.0] - Unreleased
 
 ### Added
 
+- Added schema migration framework providing safe, auditable updates to application form structures with automatic data transformation and full rollback capability, significantly reducing risk when evolving the system.
 - Added maintenance mode feature enabling safe deployments and database migrations without displaying server errors to users. When enabled via `MAINTAINANCE_MODE=True`, all users see a friendly "Under Maintenance" page, API endpoints return 503 Service Unavailable, and file downloads are blocked.
 - Added custom template for 404 error page to provide a user-friendly interface when users navigate to non-existent routes.
 - Added AKS pod security admission compatibility updates to the shared deployment configuration, including a RuntimeDefault seccomp profile so the application remains compliant with the restricted security policy.
