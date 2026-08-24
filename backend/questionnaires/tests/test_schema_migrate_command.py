@@ -93,8 +93,9 @@ class TestSchemaMigrateDryRun:
     def test_dryrun_makes_no_changes(self, questionnaire_factory):
         """--dry-run tests migration without writing."""
         questionnaire = questionnaire_factory()
+        questionnaire.document["schema_version"] = "2025.07-1"
+        questionnaire.save()
         
-        # Get current version (factory creates with "2025.07-1")
         version_before = questionnaire.document["schema_version"]
 
         # Run dry-run
@@ -108,12 +109,16 @@ class TestSchemaMigrateDryRun:
         version_after = questionnaire.document["schema_version"]
 
         assert version_before == version_after
-        assert version_after == "2025.07-1"
 
     def test_dryrun_shows_would_transform_count(self, questionnaire_factory):
         """--dry-run reports how many records would transform."""
-        questionnaire_factory()
-        questionnaire_factory()
+        q1 = questionnaire_factory()
+        q1.document["schema_version"] = "2025.07-1"
+        q1.save()
+        
+        q2 = questionnaire_factory()
+        q2.document["schema_version"] = "2025.07-1"
+        q2.save()
 
         out = StringIO()
         call_command(
