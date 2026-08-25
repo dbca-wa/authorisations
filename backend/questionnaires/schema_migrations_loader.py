@@ -141,23 +141,23 @@ def find_path(from_number: str, to_number: str) -> list[str]:
         return [from_number] if from_number != "0000" else []
 
 
-def find_migration_by_output_version(target_version: str) -> str:
+def find_migration_by_output_version(target_version: int) -> str:
     """Find which migration number produces a given schema version.
     
-    Given a schema version string (e.g., "1"), returns the migration number
+    Given a schema version integer (e.g., 1, 2), returns the migration number
     that produces it as output (e.g., "0001"). Handles the special case of the
-    pre-migration baseline version (e.g., "2025.07-1") which is not produced
-    by any migration but is the input to migration 0001.
+    pre-migration baseline version (0) which is not produced by any migration
+    but is the input to migration 0001.
     
     Args:
-        target_version: Schema version string to find (e.g., "1", "2", "2025.07-1").
+        target_version: Schema version integer to find (e.g., 0, 1, 2).
     
     Returns:
         Migration number that produces this version (e.g., "0001"), or special
-        marker "0000" if this is the pre-migration baseline version.
+        marker "0000" if this is the pre-migration baseline version (0).
     
     Raises:
-        ValueError: If no migration produces the given version and it's not a known baseline.
+        ValueError: If no migration produces the given version and it's not the baseline.
     """
     available = list_migrations()
     
@@ -167,15 +167,9 @@ def find_migration_by_output_version(target_version: str) -> str:
         if migration.SCHEMA_VERSION == target_version:
             return migration_number
     
-    # Special case: Check if this is the input version of the first migration (baseline)
-    if available:
-        first_migration = get_migration(available[0])
-        first_schema = first_migration.previous_schema()
-        baseline_version = first_schema.get("properties", {}).get("schema_version", {}).get("default")
-        
-        if baseline_version == target_version:
-            # This is the pre-migration baseline version
-            return "0000"
+    # Special case: Check if this is the baseline version (0)
+    if target_version == 0:
+        return "0000"
     
     raise ValueError(
         f"No migration found that produces schema version '{target_version}'. "
@@ -184,7 +178,7 @@ def find_migration_by_output_version(target_version: str) -> str:
     )
 
 
-def get_migration_previous_version(migration_number: str) -> str:
+def get_migration_previous_version(migration_number: str) -> int:
     """Get the schema version of the migration before the target migration.
     
     Used by management commands to verify preconditions: the database should be
@@ -194,7 +188,7 @@ def get_migration_previous_version(migration_number: str) -> str:
         migration_number: Target migration number (e.g., "0002").
     
     Returns:
-        SCHEMA_VERSION from the previous migration (e.g., "1" for migration 0002).
+        SCHEMA_VERSION from the previous migration as integer (e.g., 1 for migration 0002).
     
     Raises:
         ValueError: If migration_number is 0001 (no previous migration) or not found.

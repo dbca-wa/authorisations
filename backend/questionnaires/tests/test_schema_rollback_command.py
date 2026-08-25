@@ -42,7 +42,7 @@ class TestSchemaRollbackIdempotency:
         """Rolling back to current version is no-op."""
         questionnaire_factory(
             document={
-                "schema_version": "1",
+                "schema_version": 1,
                 "steps": [
                     {
                         "title": "Step 1",
@@ -77,7 +77,7 @@ class TestSchemaRollbackIdempotency:
         """Running same rollback twice shows no-op."""
         questionnaire_factory(
             document={
-                "schema_version": "1",
+                "schema_version": 1,
                 "steps": [
                     {
                         "title": "Step 1",
@@ -177,7 +177,7 @@ class TestSchemaRollbackMultipleRecords:
         for i in range(3):
             questionnaire_factory(
                 document={
-                    "schema_version": "1",
+                    "schema_version": 1,
                     "steps": [
                         {
                             "title": f"Step {i}",
@@ -212,7 +212,7 @@ class TestSchemaRollbackMultipleRecords:
         """All records end at same version after rollback."""
         questionnaire_factory(
             document={
-                "schema_version": "1",
+                "schema_version": 1,
                 "steps": [
                     {
                         "title": "Step 1",
@@ -237,7 +237,7 @@ class TestSchemaRollbackMultipleRecords:
         )
         questionnaire_factory(
             document={
-                "schema_version": "1",
+                "schema_version": 1,
                 "steps": [
                     {
                         "title": "Step 1",
@@ -269,4 +269,4 @@ class TestSchemaRollbackMultipleRecords:
         from questionnaires.models import Questionnaire
         versions = {q.document.get("schema_version") for q in Questionnaire.objects.all()}
         assert len(versions) == 1
-        assert "1" in versions
+        assert 1 in versions

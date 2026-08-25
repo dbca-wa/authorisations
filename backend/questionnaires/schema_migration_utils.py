@@ -7,7 +7,7 @@ valid output against frozen schema definitions passed from migration files.
 from typing import Tuple
 
 from api.serialisers import JsonSchemaSerialiserMixin
-from django.db.models import Count, F
+from django.db.models import Count
 from jsonschema import ValidationError
 from rest_framework import serializers
 
@@ -70,7 +70,7 @@ def validate_transform(
     return len(errors) == 0, errors
 
 
-def get_db_schema_version() -> str | None:
+def get_db_schema_version() -> int | None:
     """Get the current schema version from the database.
     
     ALL records must be at the same schema version. If the database contains
@@ -78,21 +78,20 @@ def get_db_schema_version() -> str | None:
     requirement: migrations only work on uniform database states.
     
     Returns:
-        - Schema version string (e.g., "1" or "2025.07-1") if all records match
+        - Schema version as unsigned integer (e.g., 0, 1, 2) if all records match
         - None if database is empty
     
     Raises:
         RuntimeError: If database contains records at different schema versions.
         This indicates a failed or partial migration that requires manual recovery.
+        TypeError: If schema_version value is not an integer.
     
     Notes:
         - Does NOT use majority voting. Database state must be uniform.
         - Called by management commands to check precondition before migration.
         - If this raises RuntimeError, run schema_status_questionnaire to diagnose.
-        - Database backend agnostic: handles PostgreSQL JSON quote representation.
+        - All schema_version values must be unsigned integers. Type mismatches will raise TypeError.
     """
-    # Query without Cast to avoid database backend differences
-    # (PostgreSQL Cast returns '"2025.07-1"' with quotes, SQLite returns '2025.07-1')
     versions_data = (
         Questionnaire.objects
         .values('document__schema_version')
@@ -103,11 +102,16 @@ def get_db_schema_version() -> str | None:
     if not versions_data:
         return None
     
-    # Extract versions
+    # Extract versions (must be integers)
     version_counts = {}
     
     for v in versions_data:
         raw_version = v['document__schema_version']
+        # Enforce that all versions are integers; no silent conversions
+        if not isinstance(raw_version, int):
+            raise TypeError(
+                f"Expected schema_version to be integer, got {type(raw_version).__name__}: {raw_version!r}"
+            )
         version_counts[raw_version] = v['count']
     
     # If more than one version exists, database is in an inconsistent state

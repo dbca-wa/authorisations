@@ -64,10 +64,6 @@ class Command(BaseCommand):
                     f"\n⚠️  MIXED STATE: Records at {len(distribution)} different versions!"
                 )
             )
-            self.stdout.write(
-                "  This may indicate a failed migration. "
-                "Contact support or manually review database state.\n"
-            )
 
         # Available migrations
         self.stdout.write("\nAvailable migrations:")

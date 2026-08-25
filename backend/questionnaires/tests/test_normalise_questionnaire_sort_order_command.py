@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 def _document():
     """Return a minimal valid questionnaire document payload for command tests."""
     return {
-        "schema_version": "2025.07-1",
+        "schema_version": 1,
         "steps": [
             {
                 "title": "Step 1",

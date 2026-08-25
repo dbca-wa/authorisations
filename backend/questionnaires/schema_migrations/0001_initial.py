@@ -1,8 +1,8 @@
-"""Migration 0001: Versioning baseline transition (2025.07-1 → 1).
+"""Migration 0001: Versioning baseline transition (0 → 1).
 
-Transforms existing questionnaires from calendar-based versioning to ordinal
-versioning. This is the first official migration and establishes version "1"
-as the anchor point for all future schema changes.
+Transforms existing questionnaires from legacy baseline version (0) to
+ordinal versioning. This is the first official migration and establishes
+version 1 as the anchor point for all future schema changes.
 
 Note: The management command checks current DB version before running this
 migration. This ensures idempotency: running the same migration twice is a
@@ -11,7 +11,7 @@ safe no-op.
 
 from copy import deepcopy
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = 1
 
 
 
@@ -94,7 +94,6 @@ def target_schema():
     forever validate against the same target schema, regardless of future
     schema evolution.
     """
-    # Version 1 schema: identical structure to 2025.07-1, but default is "1"
     return {
         "$id": "https://example.com/arrays.schema.json",
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -103,9 +102,10 @@ def target_schema():
         "type": "object",
         "properties": {
             "schema_version": {
-                "type": "string",
+                "type": "integer",
+                "minimum": 0,
                 "title": "Schema version",
-                "default": "1",  # Version 1's default
+                "default": SCHEMA_VERSION,
                 "readOnly": True,
                 "description": "The version of the questionnaire schema.",
             },
@@ -161,49 +161,49 @@ def target_schema():
 
 
 def migrate_forward(doc: dict) -> dict:
-    """Transform: calendar versioning (2025.07-1) → ordinal versioning (1).
+    """Transform: baseline version (0) → ordinal versioning (1).
     
-    Precondition: This function is called only when document.schema_version == "2025.07-1".
+    Precondition: This function is called only when document.schema_version == 0.
     The management command verifies this before calling migrate_forward().
     
     Args:
-        doc: Questionnaire document with schema_version = "2025.07-1"
+        doc: Questionnaire document with schema_version = 0
     
     Returns:
-        Transformed document with schema_version = "1"
+        Transformed document with schema_version = 1
     
     Raises:
-        ValueError: If precondition not met (defensive check).
+        TypeError: If precondition not met (defensive check).
     """
-    if doc.get("schema_version") != "2025.07-1":
-        raise ValueError(
-            f"Expected schema_version 2025.07-1, got {doc.get('schema_version')}"
+    if doc.get("schema_version") != 0:
+        raise TypeError(
+            f"Expected schema_version 0, got {doc.get('schema_version')}"
         )
     
     doc = deepcopy(doc)
-    doc["schema_version"] = "1"
+    doc["schema_version"] = SCHEMA_VERSION
     return doc
 
 
 def migrate_backward(doc: dict) -> dict:
-    """Transform: ordinal versioning (1) → calendar versioning (2025.07-1).
+    """Transform: ordinal versioning (1) → baseline version (0).
     
     Rollback support: restores documents to pre-migration state.
     
     Args:
-        doc: Questionnaire document with schema_version = "1"
+        doc: Questionnaire document with schema_version = 1
     
     Returns:
-        Transformed document with schema_version = "2025.07-1"
+        Transformed document with schema_version = 0
     
     Raises:
-        ValueError: If precondition not met (defensive check).
+        TypeError: If precondition not met (defensive check).
     """
-    if doc.get("schema_version") != "1":
-        raise ValueError(
+    if doc.get("schema_version") != SCHEMA_VERSION:
+        raise TypeError(
             f"Expected schema_version 1, got {doc.get('schema_version')}"
         )
     
     doc = deepcopy(doc)
-    doc["schema_version"] = "2025.07-1"
+    doc["schema_version"] = 0
     return doc

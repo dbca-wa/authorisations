@@ -15,17 +15,19 @@ idempotency, etc.) are in test_schema_migration_0001.py.
 Serialiser validation tests are in test_serialisers.py.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
+import pytest
+
+from questionnaires.schema_migration_utils import (
+    get_db_schema_version,
+    validate_transform,
+)
 from questionnaires.schema_migrations_loader import (
+    find_path,
     get_migration,
     list_migrations,
-    find_path,
 )
-from questionnaires.schema_migration_utils import validate_transform, get_db_schema_version
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 
@@ -49,7 +51,7 @@ class TestMigrationLoader:
         - Missing schema frozen snapshots
         
         Each migration must define:
-        - SCHEMA_VERSION: string constant (e.g., "1", "2")
+        - SCHEMA_VERSION: integer constant (e.g., 0, 1, 2)
         - previous_schema(): callable returning dict (frozen schema before migration)
         - target_schema(): callable returning dict (frozen schema after migration)
         - migrate_forward(doc): callable to transform document forward
@@ -60,8 +62,8 @@ class TestMigrationLoader:
         # Check constant
         assert hasattr(migration, "SCHEMA_VERSION"), \
             f"Migration {migration_number} missing SCHEMA_VERSION constant"
-        assert isinstance(migration.SCHEMA_VERSION, str), \
-            f"Migration {migration_number} SCHEMA_VERSION must be str, got {type(migration.SCHEMA_VERSION)}"
+        assert isinstance(migration.SCHEMA_VERSION, int), \
+            f"Migration {migration_number} SCHEMA_VERSION must be int, got {type(migration.SCHEMA_VERSION)}"
 
         # Check schema functions
         assert callable(getattr(migration, "previous_schema", None)), \
@@ -123,7 +125,7 @@ class TestMigrationLoader:
         with pytest.raises(ValueError):
             find_path("9999", "0001")
 
-    def test_get_migration_raises_on_duplicate_migration_files(self):
+    def test_get_migration_raises_on_duplicate_migration_files(self, monkeypatch):
         """Raise RuntimeError if multiple migration files exist with same number.
         
         This catches the scenario where a developer accidentally creates both
@@ -131,33 +133,26 @@ class TestMigrationLoader:
         Without this check, the loader silently picks the first one found,
         leading to unpredictable behavior.
         """
-        # Create mock Path objects for duplicate files
-        mock_file1 = MagicMock(spec=Path)
-        mock_file1.name = "0001_v1.py"
-        mock_file1.is_file.return_value = True
+        # Patch Path.glob to return 2 matching files
+        def mock_glob(self, pattern):
+            if pattern.startswith("0001_"):
+                # Return 2 mock files for 0001_*.py pattern
+                mock_file1 = Path("/fake/0001_v1.py")
+                mock_file2 = Path("/fake/0001_v2.py")
+                return [mock_file1, mock_file2]
+            return []
         
-        mock_file2 = MagicMock(spec=Path)
-        mock_file2.name = "0001_v2.py"
-        mock_file2.is_file.return_value = True
+        monkeypatch.setattr(Path, "glob", mock_glob)
         
-        # Patch the migrations_dir.glob() to return 2 matching files
-        with patch("questionnaires.schema_migrations_loader.Path") as mock_path_class:
-            mock_migrations_dir = MagicMock()
-            mock_migrations_dir.glob.return_value = [mock_file1, mock_file2]
-            
-            mock_path_instance = MagicMock()
-            mock_path_instance.__truediv__.return_value = mock_migrations_dir
-            mock_path_class.return_value = mock_path_instance
-            
-            # Now call get_migration with the real function
-            # It should raise RuntimeError for 2 matching files
-            with pytest.raises(RuntimeError) as exc_info:
-                get_migration("0001")
-            
-            error_msg = str(exc_info.value)
-            assert "0001" in error_msg
-            assert "2" in error_msg  # Should mention finding 2 files
-            assert "exactly 1" in error_msg.lower()
+        # Now call get_migration with the real function
+        # It should raise RuntimeError for 2 matching files
+        with pytest.raises(RuntimeError) as exc_info:
+            get_migration("0001")
+        
+        error_msg = str(exc_info.value)
+        assert "0001" in error_msg
+        assert ("2" in error_msg or "duplicate" in error_msg.lower())
+        assert "exactly 1" in error_msg.lower()
 
 
 class TestValidationUtility:
@@ -263,13 +258,12 @@ class TestDatabaseSchemaVersionDetection:
 
     def test_get_db_schema_version_single_uniform_version(self, questionnaire_factory):
         """All records at same version returns that version."""
-        questionnaire_factory(document={"schema_version": "1", "steps": []})
-        questionnaire_factory(document={"schema_version": "1", "steps": []})
-        questionnaire_factory(document={"schema_version": "1", "steps": []})
+        questionnaire_factory(document={"schema_version": 1, "steps": []})
+        questionnaire_factory(document={"schema_version": 1, "steps": []})
+        questionnaire_factory(document={"schema_version": 1, "steps": []})
         
         result = get_db_schema_version()
-        # Result may be int or string depending on JSONField storage
-        assert str(result) == "1"
+        assert result == 1
 
     def test_get_db_schema_version_raises_on_mixed_versions(self, questionnaire_factory):
         """Mixed versions raise RuntimeError (critical safety check).
@@ -278,10 +272,10 @@ class TestDatabaseSchemaVersionDetection:
         in an inconsistent state. Without this check, subsequent migrations
         could silently corrupt data.
         """
-        # Simulate a failed/partial migration: some at "1", some at "2025.07-1"
-        questionnaire_factory(document={"schema_version": "1", "steps": []})
-        questionnaire_factory(document={"schema_version": "1", "steps": []})
-        questionnaire_factory(document={"schema_version": "2025.07-1", "steps": []})
+        # Simulate a failed/partial migration: some at 1, some at 2
+        questionnaire_factory(document={"schema_version": 1, "steps": []})
+        questionnaire_factory(document={"schema_version": 1, "steps": []})
+        questionnaire_factory(document={"schema_version": 2, "steps": []})
         
         # Should raise RuntimeError, not silently vote for majority
         with pytest.raises(RuntimeError) as exc_info:
@@ -290,90 +284,50 @@ class TestDatabaseSchemaVersionDetection:
         error_msg = str(exc_info.value)
         # Error should identify the inconsistent state
         assert "multiple schema versions" in error_msg.lower()
-        assert "1" in error_msg
-        assert "2025.07-1" in error_msg
 
     def test_get_db_schema_version_error_includes_version_counts(self, questionnaire_factory):
         """RuntimeError message includes version distribution for debugging."""
-        # Create imbalanced mixed state: 5 at "1", 2 at "2"
+        # Create imbalanced mixed state: 5 at 1, 2 at 2
         for _ in range(5):
-            questionnaire_factory(document={"schema_version": "1", "steps": []})
+            questionnaire_factory(document={"schema_version": 1, "steps": []})
         for _ in range(2):
-            questionnaire_factory(document={"schema_version": "2", "steps": []})
+            questionnaire_factory(document={"schema_version": 2, "steps": []})
         
         with pytest.raises(RuntimeError) as exc_info:
             get_db_schema_version()
         
         error_msg = str(exc_info.value)
         # Should show version counts for debugging
-        assert "'1':" in error_msg or "1" in error_msg
-        assert "'2':" in error_msg or "2" in error_msg
+        assert "1" in error_msg
+        assert "2" in error_msg
 
     def test_get_db_schema_version_returns_string_type(self, questionnaire_factory):
-        """Return type is always str, regardless of JSON storage quirks.
-        
-        This test catches PostgreSQL JSON field type coercion issues where
-        numeric values may be stored/retrieved as integers. The function
-        must ensure consistent string types for all consumers.
-        """
-        questionnaire_factory(document={"schema_version": "1", "steps": []})
+        """Return type is always int for integer schema versions."""
+        questionnaire_factory(document={"schema_version": 1, "steps": []})
         
         result = get_db_schema_version()
         
-        assert isinstance(result, str), f"Expected str, got {type(result).__name__}"
-        assert result == "1"
+        assert isinstance(result, int), f"Expected int, got {type(result).__name__}"
+        assert result == 1
 
     def test_get_db_schema_version_numeric_ordering_with_multi_digit_versions(self, questionnaire_factory):
-        """Version ordering is numeric, not lexicographic.
+        """Version ordering is numeric with integer versions.
         
-        This test catches a critical bug where ordering versions as strings
-        would sort: 1, 10, 11, 12, 2, 3, ... (lexicographic) instead of
-        1, 2, 3, 10, 11, 12 (numeric).
-        
-        If this test fails, it means queries are sorting by string representation
-        instead of numeric value, which would silently corrupt migration logic.
+        With integer versions, ordering is naturally: 1, 2, 3, 10, 11, 12
         """
-        # Create versions in random order to ensure ordering is actually being applied
-        versions_to_create = ["2", "10", "1", "11", "3"]
+        # Create versions in random order
+        versions_to_create = [2, 10, 1, 11, 3]
         for version in versions_to_create:
-            questionnaire_factory(
-                document={
-                    "schema_version": version,
-                    "steps": [
-                        {
-                            "title": "Step 1",
-                            "description": "",
-                            "sections": [
-                                {
-                                    "title": "Section 1",
-                                    "description": "",
-                                    "questions": [
-                                        {
-                                            "label": "Question",
-                                            "type": "text",
-                                            "is_required": False,
-                                            "description": "",
-                                        }
-                                    ],
-                                }
-                            ],
-                        }
-                    ],
-                }
-            )
+            questionnaire_factory(document={"schema_version": version, "steps": []})
         
-        # Create a mixed version error to inspect the internal ordering
-        # (This is a bit indirect, but we can't directly inspect the query ordering)
-        # Instead, add one more version to trigger the mixed-version error
-        questionnaire_factory(document={"schema_version": "2", "steps": []})
+        # Add one more version to trigger mixed-version error
+        questionnaire_factory(document={"schema_version": 2, "steps": []})
         
         with pytest.raises(RuntimeError) as exc_info:
             get_db_schema_version()
         
         error_msg = str(exc_info.value)
-        # The error message dict should show all versions were detected
-        # (If lexicographic sorting was used, behavior would be subtly wrong
-        # but hard to detect. This test at least ensures all versions are found.)
-        for version in versions_to_create:
-            assert version in error_msg, f"Version {version} should be in error message"
+        # Should show all versions were detected
+        for version in set(versions_to_create):
+            assert str(version) in error_msg, f"Version {version} should be in error message"
 

@@ -48,7 +48,7 @@ class TestSchemaStatusCurrentVersion:
         call_command("schema_status_questionnaire", stdout=out)
         output = out.getvalue()
 
-        assert SCHEMA_VERSION in output
+        assert str(SCHEMA_VERSION) in output
         assert "Code schema version" in output
 
     def test_version_string_format(self):
@@ -75,8 +75,8 @@ class TestSchemaStatusRecordDistribution:
 
     def test_single_version_distribution(self, questionnaire_factory):
         """Shows records all at same version."""
-        questionnaire_factory(document={"schema_version": "1", "title": "Test 1", "pages": []})
-        questionnaire_factory(document={"schema_version": "1", "title": "Test 2", "pages": []})
+        questionnaire_factory(document={"schema_version": 1, "title": "Test 1", "pages": []})
+        questionnaire_factory(document={"schema_version": 1, "title": "Test 2", "pages": []})
 
         out = StringIO()
         call_command("schema_status_questionnaire", stdout=out)
@@ -88,7 +88,7 @@ class TestSchemaStatusRecordDistribution:
     def test_version_count_accuracy(self, questionnaire_factory):
         """Record count matches actual records."""
         for i in range(5):
-            questionnaire_factory(document={"schema_version": "1", "title": f"Test {i}", "pages": []})
+            questionnaire_factory(document={"schema_version": 1, "title": f"Test {i}", "pages": []})
 
         out = StringIO()
         call_command("schema_status_questionnaire", stdout=out)
@@ -115,8 +115,8 @@ class TestSchemaStatusMixedVersionDetection:
 
     def test_mixed_versions_warning(self, questionnaire_factory):
         """Shows warning when records at different versions."""
-        questionnaire_factory(document={"schema_version": "1", "title": "Test 1", "pages": []})
-        questionnaire_factory(document={"schema_version": "999-different", "title": "Test 2", "pages": []})
+        questionnaire_factory(document={"schema_version": 1, "title": "Test 1", "pages": []})
+        questionnaire_factory(document={"schema_version": 9999, "title": "Test 2", "pages": []})
 
         out = StringIO()
         call_command("schema_status_questionnaire", stdout=out)
@@ -127,8 +127,8 @@ class TestSchemaStatusMixedVersionDetection:
 
     def test_mixed_state_shows_all_versions(self, questionnaire_factory):
         """Lists all versions present when mixed state detected."""
-        questionnaire_factory(document={"schema_version": "1", "title": "Test 1", "pages": []})
-        questionnaire_factory(document={"schema_version": "2", "title": "Test 2", "pages": []})
+        questionnaire_factory(document={"schema_version": 1, "title": "Test 1", "pages": []})
+        questionnaire_factory(document={"schema_version": 2, "title": "Test 2", "pages": []})
 
         out = StringIO()
         call_command("schema_status_questionnaire", stdout=out)
@@ -138,22 +138,10 @@ class TestSchemaStatusMixedVersionDetection:
         assert "1:" in output
         assert "2:" in output
 
-    def test_mixed_state_contact_support_message(self, questionnaire_factory):
-        """Helpful message suggests contacting support for mixed state."""
-        questionnaire_factory(document={"schema_version": "1", "title": "Test 1", "pages": []})
-        questionnaire_factory(document={"schema_version": "999", "title": "Test 2", "pages": []})
-
-        out = StringIO()
-        call_command("schema_status_questionnaire", stdout=out)
-        output = out.getvalue()
-
-        # Should suggest support/manual review
-        assert "contact" in output.lower() or "support" in output.lower()
-
     def test_no_warning_for_single_version(self, questionnaire_factory):
         """No mixed-state warning when all records same version."""
         for i in range(3):
-            questionnaire_factory(document={"schema_version": "1", "title": f"Test {i}", "pages": []})
+            questionnaire_factory(document={"schema_version": 1, "title": f"Test {i}", "pages": []})
 
         out = StringIO()
         call_command("schema_status_questionnaire", stdout=out)
@@ -208,7 +196,7 @@ class TestSchemaStatusDatabaseVersion:
 
     def test_displays_database_version(self, questionnaire_factory):
         """Shows database schema version."""
-        questionnaire_factory(document={"schema_version": "1", "title": "Test", "pages": []})
+        questionnaire_factory(document={"schema_version": 1, "title": "Test", "pages": []})
 
         out = StringIO()
         call_command("schema_status_questionnaire", stdout=out)
@@ -230,10 +218,10 @@ class TestSchemaStatusDatabaseVersion:
     def test_db_version_matches_most_common(self, questionnaire_factory):
         """Database version is most common among records."""
         # Create 2 at version "1"
-        questionnaire_factory(document={"schema_version": "1", "title": "Test 1", "pages": []})
-        questionnaire_factory(document={"schema_version": "1", "title": "Test 2", "pages": []})
+        questionnaire_factory(document={"schema_version": 1, "title": "Test 1", "pages": []})
+        questionnaire_factory(document={"schema_version": 1, "title": "Test 2", "pages": []})
         # Create 1 at version "2"
-        questionnaire_factory(document={"schema_version": "2", "title": "Test 3", "pages": []})
+        questionnaire_factory(document={"schema_version": 2, "title": "Test 3", "pages": []})
 
         out = StringIO()
         call_command("schema_status_questionnaire", stdout=out)

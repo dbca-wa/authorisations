@@ -175,7 +175,7 @@ This ensures idempotency: running the same migration twice is a safe no-op.
 
 from copy import deepcopy
 
-SCHEMA_VERSION = "1"  # Ordinal versioning starts here
+SCHEMA_VERSION = 1  # Ordinal versioning starts here (integer, not string)
 
 
 def previous_schema():

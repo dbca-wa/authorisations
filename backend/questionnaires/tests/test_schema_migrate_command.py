@@ -49,7 +49,7 @@ class TestSchemaMigrateIdempotency:
         # Create a record at version "1"
         questionnaire_factory(
             document={
-                "schema_version": "1",
+                "schema_version": 1,
                 "steps": [],
             }
         )
@@ -72,7 +72,7 @@ class TestSchemaMigratePathFinding:
         # Create record at unknown version (not in any migration)
         questionnaire_factory(
             document={
-                "schema_version": "999-invalid",
+                "schema_version": 9999,
                 "steps": [],
             }
         )
@@ -93,7 +93,7 @@ class TestSchemaMigrateDryRun:
     def test_dryrun_makes_no_changes(self, questionnaire_factory):
         """--dry-run tests migration without writing."""
         questionnaire = questionnaire_factory()
-        questionnaire.document["schema_version"] = "2025.07-1"
+        questionnaire.document["schema_version"] = 0
         questionnaire.save()
         
         version_before = questionnaire.document["schema_version"]
@@ -113,11 +113,11 @@ class TestSchemaMigrateDryRun:
     def test_dryrun_shows_would_transform_count(self, questionnaire_factory):
         """--dry-run reports how many records would transform."""
         q1 = questionnaire_factory()
-        q1.document["schema_version"] = "2025.07-1"
+        q1.document["schema_version"] = 0
         q1.save()
         
         q2 = questionnaire_factory()
-        q2.document["schema_version"] = "2025.07-1"
+        q2.document["schema_version"] = 0
         q2.save()
 
         out = StringIO()
@@ -138,7 +138,7 @@ class TestSchemaMigrateSuccessfulTransform:
         """Migrated record has new version in schema_version field."""
         questionnaire = questionnaire_factory(
             document={
-                "schema_version": "2025.07-1",
+                "schema_version": 0,
                 "steps": [
                     {
                         "title": "Step 1",
@@ -162,13 +162,13 @@ class TestSchemaMigrateSuccessfulTransform:
             }
         )
 
-        # Migrate from 2025.07-1 to 1
+        # Migrate from 0 to 1
         out = StringIO()
         call_command("schema_migrate_questionnaire", "0001", stdout=out)
 
         questionnaire.refresh_from_db()
         # Should now be at version 1
-        assert questionnaire.document.get("schema_version") == "1"
+        assert questionnaire.document.get("schema_version") == 1
 
 
 @pytest.mark.django_db
@@ -179,7 +179,7 @@ class TestSchemaMigrateTransactionRollback:
         """If any record fails, migration doesn't corrupt data."""
         questionnaire = questionnaire_factory(
             document={
-                "schema_version": "2025.07-1",
+                "schema_version": 0,
                 "steps": [
                     {
                         "title": "Step 1",

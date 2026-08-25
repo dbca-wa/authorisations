@@ -1,4 +1,4 @@
-"""Unit tests for migration 0001: Versioning baseline transition (2025.07-1 → 1).
+"""Unit tests for migration 0001: Versioning baseline transition (0 → 1).
 
 Tests specific to the 0001_initial migration file, including:
 - Migration transforms (forward and backward)
@@ -20,48 +20,48 @@ class TestMigration0001Transforms:
     """Test migration 0001 forward/backward transforms (0001_initial.py)."""
 
     def test_0001_migrate_forward_transforms_version(self):
-        """migrate_forward transforms schema_version 2025.07-1 → 1."""
+        """migrate_forward transforms schema_version 0 → 1."""
         migration = get_migration("0001")
-        doc = {"schema_version": "2025.07-1", "steps": []}
+        doc = {"schema_version": 0, "steps": []}
 
         result = migration.migrate_forward(doc)
 
-        assert result["schema_version"] == "1"
+        assert result["schema_version"] == 1
         # Original should not be modified
-        assert doc["schema_version"] == "2025.07-1"
+        assert doc["schema_version"] == 0
 
     def test_0001_migrate_forward_fails_on_wrong_version(self):
-        """migrate_forward raises ValueError if document not at 2025.07-1."""
+        """migrate_forward raises TypeError if document not at version 0."""
         migration = get_migration("0001")
-        doc = {"schema_version": "2", "steps": []}
+        doc = {"schema_version": 2, "steps": []}
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(TypeError) as exc_info:
             migration.migrate_forward(doc)
 
-        assert "2025.07-1" in str(exc_info.value)
+        assert "0" in str(exc_info.value)
         assert "2" in str(exc_info.value)
 
     def test_0001_migrate_backward_transforms_version(self):
-        """migrate_backward transforms schema_version 1 → 2025.07-1."""
+        """migrate_backward transforms schema_version 1 → 0."""
         migration = get_migration("0001")
-        doc = {"schema_version": "1", "steps": []}
+        doc = {"schema_version": 1, "steps": []}
 
         result = migration.migrate_backward(doc)
 
-        assert result["schema_version"] == "2025.07-1"
+        assert result["schema_version"] == 0
         # Original should not be modified
-        assert doc["schema_version"] == "1"
+        assert doc["schema_version"] == 1
 
     def test_0001_migrate_backward_fails_on_wrong_version(self):
-        """migrate_backward raises ValueError if document not at version 1."""
+        """migrate_backward raises TypeError if document not at version 1."""
         migration = get_migration("0001")
-        doc = {"schema_version": "2025.07-1", "steps": []}
+        doc = {"schema_version": 0, "steps": []}
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(TypeError) as exc_info:
             migration.migrate_backward(doc)
 
         assert "1" in str(exc_info.value)
-        assert "2025.07-1" in str(exc_info.value)
+        assert "0" in str(exc_info.value)
 
 
 class TestMigration0001PreviousSchemaCorrectness:
@@ -91,12 +91,12 @@ class TestMigration0001PreviousSchemaCorrectness:
         assert "required" in schema1
 
     def test_target_schema_has_correct_version_default(self):
-        """target_schema() must have default set to "1" (the target version)."""
+        """target_schema() must have default set to 1 (the target version)."""
         migration = get_migration("0001")
         schema = migration.target_schema()
 
-        # Must have default set to "1" (target version for this migration)
-        assert schema["properties"]["schema_version"]["default"] == "1"
+        # Must have default set to 1 (target version for this migration)
+        assert schema["properties"]["schema_version"]["default"] == 1
 
     def test_target_schema_is_hard_coded_not_imported(self):
         """Verify target_schema() doesn't call external functions (frozen in time)."""
@@ -122,7 +122,7 @@ class TestMigration0001TransformOnlyVersionChanges:
         migration = get_migration("0001")
         
         doc = {
-            "schema_version": "2025.07-1",
+            "schema_version": 0,
             "steps": [
                 {
                     "title": "Test",
@@ -148,7 +148,7 @@ class TestMigration0001TransformOnlyVersionChanges:
         result = migration.migrate_forward(doc)
         
         # All fields except schema_version must be identical
-        assert result["schema_version"] == "1"
+        assert result["schema_version"] == 1
         assert result["steps"] == doc["steps"]
         # Verify deep equality of nested structure
         for key in doc:
@@ -160,7 +160,7 @@ class TestMigration0001TransformOnlyVersionChanges:
         migration = get_migration("0001")
         
         doc = {
-            "schema_version": "1",
+            "schema_version": 1,
             "steps": [
                 {
                     "title": "Test",
@@ -173,7 +173,7 @@ class TestMigration0001TransformOnlyVersionChanges:
         result = migration.migrate_backward(doc)
         
         # All fields except schema_version must be identical
-        assert result["schema_version"] == "2025.07-1"
+        assert result["schema_version"] == 0
         assert result["steps"] == doc["steps"]
 
 
@@ -185,15 +185,15 @@ class TestMigration0001Idempotency:
         migration = get_migration("0001")
         
         doc = {
-            "schema_version": "2025.07-1",
+            "schema_version": 0,
             "steps": [{"title": "S", "description": "", "sections": []}],
         }
         
-        # Forward: 2025.07-1 → 1
+        # Forward: 0 → 1
         forward_result = migration.migrate_forward(deepcopy(doc))
-        assert forward_result["schema_version"] == "1"
+        assert forward_result["schema_version"] == 1
         
-        # Backward: 1 → 2025.07-1
+        # Backward: 1 → 0
         backward_result = migration.migrate_backward(forward_result)
         
         # Must match original exactly
@@ -204,15 +204,15 @@ class TestMigration0001Idempotency:
         migration = get_migration("0001")
         
         doc = {
-            "schema_version": "1",
+            "schema_version": 1,
             "steps": [{"title": "S", "description": "", "sections": []}],
         }
         
-        # Backward: 1 → 2025.07-1
+        # Backward: 1 → 0
         backward_result = migration.migrate_backward(deepcopy(doc))
-        assert backward_result["schema_version"] == "2025.07-1"
+        assert backward_result["schema_version"] == 0
         
-        # Forward: 2025.07-1 → 1
+        # Forward: 0 → 1
         forward_result = migration.migrate_forward(backward_result)
         
         # Must match original exactly
