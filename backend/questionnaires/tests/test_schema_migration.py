@@ -8,6 +8,7 @@ Infrastructure includes:
 - Path finding for forward/backward migrations
 - Validation utility for schema transforms
 - Database schema version detection with consistency checks
+- Version/migration number conversion utilities
 
 Migration-specific tests (for 0001_initial.py transforms, hard-coded schemas,
 idempotency, etc.) are in test_schema_migration_0001.py.
@@ -27,6 +28,8 @@ from questionnaires.schema_migrations_loader import (
     find_path,
     get_migration,
     list_migrations,
+    migration_number_to_version,
+    version_to_migration_number,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db]
@@ -42,28 +45,22 @@ class TestMigrationLoader:
 
     @pytest.mark.parametrize("migration_number", list_migrations())
     def test_all_migrations_have_required_components(self, migration_number):
-        """Verify every migration file has all required functions and constants.
+        """Verify every migration file has all required functions.
         
         This catches common errors when adding new migrations:
-        - Missing SCHEMA_VERSION constant
         - Misspelled function names (migrate_backwards vs migrate_backward)
         - Missing rollback function (migrate_backward)
         - Missing schema frozen snapshots
         
         Each migration must define:
-        - SCHEMA_VERSION: integer constant (e.g., 0, 1, 2)
         - previous_schema(): callable returning dict (frozen schema before migration)
         - target_schema(): callable returning dict (frozen schema after migration)
         - migrate_forward(doc): callable to transform document forward
         - migrate_backward(doc): callable to transform document backward
+        
+        Schema version is derived from migration file prefix (e.g., 0001 → 1).
         """
         migration = get_migration(migration_number)
-
-        # Check constant
-        assert hasattr(migration, "SCHEMA_VERSION"), \
-            f"Migration {migration_number} missing SCHEMA_VERSION constant"
-        assert isinstance(migration.SCHEMA_VERSION, int), \
-            f"Migration {migration_number} SCHEMA_VERSION must be int, got {type(migration.SCHEMA_VERSION)}"
 
         # Check schema functions
         assert callable(getattr(migration, "previous_schema", None)), \
@@ -155,14 +152,67 @@ class TestMigrationLoader:
         assert "exactly 1" in error_msg.lower()
 
 
+class TestVersionConversion:
+    """Test bidirectional version/migration number conversion utilities."""
+
+    @pytest.mark.parametrize("migration_number,expected_version", [
+        ("0001", 1),
+        ("0002", 2),
+        ("0010", 10),
+        ("0100", 100),
+        ("9999", 9999),
+    ])
+    def test_migration_number_to_version_converts_correctly(
+        self, migration_number, expected_version
+    ):
+        """Verify migration_number_to_version converts "NNNN" → N correctly."""
+        result = migration_number_to_version(migration_number)
+        assert result == expected_version
+        assert isinstance(result, int)
+
+    @pytest.mark.parametrize("version,expected_migration", [
+        (1, "0001"),
+        (2, "0002"),
+        (10, "0010"),
+        (100, "0100"),
+        (9999, "9999"),
+    ])
+    def test_version_to_migration_number_converts_correctly(
+        self, version, expected_migration
+    ):
+        """Verify version_to_migration_number converts N → "NNNN" with zero-padding."""
+        result = version_to_migration_number(version)
+        assert result == expected_migration
+        assert isinstance(result, str)
+        assert len(result) == 4
+
+    @pytest.mark.parametrize("invalid_input", [
+        "abcd",
+        "00ab",
+        "123a",
+        "",
+        "not_a_number",
+    ])
+    def test_migration_number_to_version_raises_on_invalid_input(self, invalid_input):
+        """Verify migration_number_to_version raises ValueError for non-numeric input."""
+        with pytest.raises(ValueError):
+            migration_number_to_version(invalid_input)
+
+    def test_version_to_migration_number_zero_pads(self):
+        """Verify version_to_migration_number produces 4-digit zero-padded strings."""
+        assert version_to_migration_number(0) == "0000"
+        assert version_to_migration_number(5) == "0005"
+        assert version_to_migration_number(42) == "0042"
+
+
 class TestValidationUtility:
     """Test validation utility for schema transforms."""
 
     def test_validate_transform_accepts_valid_doc(self):
         """validate_transform returns (True, []) for valid document matching frozen migration schema.
         
-        Tests with migration 0001's frozen target schema (migration.SCHEMA_VERSION = "1").
-        This validation is independent of the current production SCHEMA_VERSION, which may
+        Tests with migration 0001's frozen target schema (version 1).
+        This validation is independent of the current production schema version, which may
         differ as new migrations are added. The test verifies that validate_transform correctly
         checks document structure against the frozen schema passed from a migration file.
         
@@ -170,8 +220,9 @@ class TestValidationUtility:
         test using that migration's frozen schemas.
         """
         migration = get_migration("0001")
+        target_version = migration_number_to_version("0001")
         doc = {
-            "schema_version": migration.SCHEMA_VERSION,
+            "schema_version": target_version,
             "steps": [
                 {
                     "title": "Step 1",
@@ -197,7 +248,7 @@ class TestValidationUtility:
         is_valid, errors = validate_transform(
             doc,
             "0000",  # Previous version (not validated against doc)
-            migration.SCHEMA_VERSION,  # Must match doc's schema_version
+            target_version,  # Must match doc's schema_version
             migration.previous_schema(),
             migration.target_schema(),
         )
@@ -212,13 +263,14 @@ class TestValidationUtility:
         Tests that version validation is the first check, regardless of migration.
         """
         migration = get_migration(migration_number)
+        target_version = migration_number_to_version(migration_number)
         # Create a minimal doc - we're testing version checking, not structure
         doc = {"schema_version": "wrong_version"}
         
         is_valid, errors = validate_transform(
             doc,
             "ignored_old_version",
-            migration.SCHEMA_VERSION,  # Expect this version
+            target_version,  # Expect this version
             migration.previous_schema(),
             migration.target_schema(),
         )
@@ -231,10 +283,11 @@ class TestValidationUtility:
     def test_validate_transform_rejects_non_dict_for_all_migrations(self, migration_number):
         """validate_transform rejects non-dict inputs for any migration."""
         migration = get_migration(migration_number)
+        target_version = migration_number_to_version(migration_number)
         is_valid, errors = validate_transform(
             "not a dict",
             "0",
-            migration.SCHEMA_VERSION,
+            target_version,
             migration.previous_schema(),
             migration.target_schema(),
         )

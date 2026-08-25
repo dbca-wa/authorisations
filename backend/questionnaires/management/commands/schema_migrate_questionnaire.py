@@ -33,6 +33,7 @@ from questionnaires.schema_migrations_loader import (
     find_migration_by_output_version,
     find_path,
     get_migration,
+    migration_number_to_version,
 )
 
 
@@ -67,12 +68,13 @@ class Command(BaseCommand):
         Raises:
             CommandError: If migration cannot proceed (version mismatch, validation error, etc.)
         """
+        # Validate the requested migration exists
         try:
-            target_migration = get_migration(migration_number)
+            get_migration(migration_number)
         except FileNotFoundError:
             raise CommandError(f"Migration {migration_number} not found")
 
-        target_version = target_migration.SCHEMA_VERSION
+        target_version = migration_number_to_version(migration_number)
         current_db_version = get_db_schema_version()
 
         # IDEMPOTENCY CHECK: Already at target version?
@@ -134,7 +136,7 @@ class Command(BaseCommand):
         current_version = current_db_version
         for migration_num in migrations_to_apply:
             migration = get_migration(migration_num)
-            next_version = migration.SCHEMA_VERSION
+            next_version = migration_number_to_version(migration_num)
 
             self.stdout.write(f"Applying migration {migration_num} ({current_version} → {next_version})...")
 

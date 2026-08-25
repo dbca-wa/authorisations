@@ -1,13 +1,46 @@
 """Load and manage schema migration files for questionnaires module.
 
 Provides utilities to discover, load, and resolve transformation paths between
-schema versions. All migration files must be stored in the schema_migrations/
-directory and contain a SCHEMA_VERSION constant.
+schema versions. Schema versions are derived from migration file prefixes
+(e.g., "0001" → version 1, "0002" → version 2).
 """
 
 import importlib.util
 import sys
 from pathlib import Path
+
+
+def migration_number_to_version(migration_number: str) -> int:
+    """Convert migration number to schema version integer.
+    
+    Args:
+        migration_number: Migration number as string (e.g., "0001", "0002").
+    
+    Returns:
+        Schema version as integer (e.g., 1, 2).
+    
+    Raises:
+        ValueError: If migration_number cannot be converted.
+    """
+    try:
+        return int(migration_number)
+    except ValueError:
+        raise ValueError(
+            f"Invalid migration number '{migration_number}'. "
+            f"Must be numeric string (e.g., '0001', '0002')"
+        )
+
+
+def version_to_migration_number(version: int) -> str:
+    """Convert schema version integer to migration number string.
+    
+    Args:
+        version: Schema version as integer (e.g., 1, 2).
+    
+    Returns:
+        Migration number as 4-digit zero-padded string (e.g., "0001", "0002").
+    """
+    return f"{version:04d}"
 
 
 def get_migration(migration_number: str):
@@ -18,12 +51,12 @@ def get_migration(migration_number: str):
                          Used to locate schema_migrations/XXXX_*.py file.
     
     Returns:
-        Loaded migration module with SCHEMA_VERSION, previous_schema(),
+        Loaded migration module with previous_schema(), target_schema(),
         migrate_forward(), and migrate_backward() defined.
     
     Raises:
         FileNotFoundError: If migration file not found.
-        AttributeError: If migration missing required SCHEMA_VERSION constant.
+        ImportError: If migration fails to load.
     """
     migrations_dir = Path(__file__).parent / "schema_migrations"
     
@@ -56,12 +89,6 @@ def get_migration(migration_number: str):
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    
-    # Verify required components exist
-    if not hasattr(module, "SCHEMA_VERSION"):
-        raise AttributeError(
-            f"Migration {migration_number} missing SCHEMA_VERSION constant"
-        )
     
     return module
 
@@ -149,6 +176,9 @@ def find_migration_by_output_version(target_version: int) -> str:
     pre-migration baseline version (0) which is not produced by any migration
     but is the input to migration 0001.
     
+    Schema versions are derived from migration file prefixes. Migration 0001
+    produces version 1, migration 0002 produces version 2, etc.
+    
     Args:
         target_version: Schema version integer to find (e.g., 0, 1, 2).
     
@@ -157,25 +187,28 @@ def find_migration_by_output_version(target_version: int) -> str:
         marker "0000" if this is the pre-migration baseline version (0).
     
     Raises:
-        ValueError: If no migration produces the given version and it's not the baseline.
+        ValueError: If target_version is negative or no valid migration exists.
     """
-    available = list_migrations()
+    if target_version < 0:
+        raise ValueError(
+            f"Schema version must be non-negative, got {target_version}"
+        )
     
-    # Check if this version is produced by any migration
-    for migration_number in available:
-        migration = get_migration(migration_number)
-        if migration.SCHEMA_VERSION == target_version:
-            return migration_number
-    
-    # Special case: Check if this is the baseline version (0)
+    # Special case: baseline version (0) is pre-migration
     if target_version == 0:
         return "0000"
     
-    raise ValueError(
-        f"No migration found that produces schema version '{target_version}'. "
-        f"Available migrations produce versions: "
-        f"{[get_migration(m).SCHEMA_VERSION for m in available]}"
-    )
+    # For any positive version, convert directly
+    available = list_migrations()
+    migration_number = version_to_migration_number(target_version)
+    
+    if migration_number not in available:
+        raise ValueError(
+            f"No migration produces schema version {target_version}. "
+            f"Available migrations: {available}"
+        )
+    
+    return migration_number
 
 
 def get_migration_previous_version(migration_number: str) -> int:

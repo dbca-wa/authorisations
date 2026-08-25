@@ -61,7 +61,7 @@ The framework prioritises:
 - **Why**: No file I/O required, no file delivery concerns, simpler to import and use, git history shows version changes
 - **Location**: `backend/questionnaires/schema.py`:
   ```python
-  SCHEMA_VERSION = "1"  # Ordinal versioning
+  SCHEMA_VERSION = 1  # Ordinal versioning
   ```
 - **Usage**: Import directly:
   ```python
@@ -117,16 +117,20 @@ The constant serves as the **single source of truth** for current schema version
 **What exists**:
 - `backend/questionnaires/schema.py` — `SCHEMA_VERSION` Python constant and `get_questionnaire_schema()` function
 - `backend/applications/schema.py` — `get_answers_schema()` returns current schema
-- Management commands use `SCHEMA_VERSION` to track current version (no custom getter function needed)
+- Management commands use code-level `SCHEMA_VERSION` to determine migration targets
 
 ### 2. Migration File Structure
 
-Each migration file contains four elements:
+Each migration file contains four required functions (no SCHEMA_VERSION constant):
 
 ```python
-"""Migration: Brief description of what changes."""
+"""Migration: Brief description of what changes.
 
-SCHEMA_VERSION = "2"  # The version this migration establishes (ordinal format)
+The schema version is automatically derived from the migration filename:
+- 0001_initial.py → version 1
+- 0002_add_fields.py → version 2
+- etc.
+"""
 
 def previous_schema():
     """Return hard-coded snapshot of previous schema version definition.
@@ -134,25 +138,31 @@ def previous_schema():
     CRITICAL: This must be a frozen hard-coded dict snapshot, never a dynamic lookup.
     This ensures migrations remain valid as the current schema evolves.
     """
-    pass
+    return {
+        # ... version N-1 schema ...
+    }
 
 def target_schema():
     """Return hard-coded snapshot of target schema version definition.
     
     CRITICAL: This must be a frozen hard-coded dict snapshot, never a dynamic lookup.
     """
-    pass
+    return {
+        # ... version N schema (where N is derived from filename) ...
+    }
 
 def migrate_forward(doc: dict) -> dict:
-    """Transform from previous version to SCHEMA_VERSION.
+    """Transform document from previous version to this migration's version.
     
     Precondition: Called only after management command validates version match.
     Applied when migrating forward.
+    
+    Version number is automatically derived from migration filename.
     """
     pass
 
 def migrate_backward(doc: dict) -> dict:
-    """Revert from SCHEMA_VERSION to previous version.
+    """Revert document from this migration's version to previous version.
     
     Precondition: Called only after management command validates version match.
     Applied when rolling back.
@@ -162,74 +172,106 @@ def migrate_backward(doc: dict) -> dict:
 
 **Example**: `backend/questionnaires/schema_migrations/0001_initial.py` (versioning baseline transition)
 
+**Important Note on `schema_zero` Temporary Utility**:
+
+Before migration 0001 could operate, legacy calendar-based versions (`"2025.07-1"` as strings) needed to be converted to a baseline integer format. The temporary management command `backend/questionnaires/management/commands/schema_zero.py` was used to pre-convert all records:
+
+```bash
+# Convert existing calendar versions to integer 0 (baseline)
+python manage.py schema_zero
+# Output: Converted 147 records: '2025.07-1' → 0
+
+# Then migration 0001 takes those from version 0 → 1 (both integers)
+python manage.py schema_migrate_questionnaire 0001
+```
+
+The `schema_zero` command is **temporary infrastructure only**. It was used once during the initial transition and remains in the codebase for emergency rollback if needed (`--revert` flag), but is not part of the normal migration workflow.
+
+**Migration 0001 implementation** (after schema_zero has pre-converted records):
+
 ```python
-"""Migration 0001: Versioning baseline transition (2025.07-1 → 1).
+"""Migration 0001: Versioning baseline transition (0 → 1).
 
-Transforms existing questionnaires from calendar-based versioning to ordinal versioning.
-This is the first official migration and establishes version "1" as the anchor point
-for all future schema changes.
+Transforms questionnaires from baseline version 0 (integer) to ordinal versioning
+(version 1). Establishes version 1 as the anchor point for all future schema changes.
 
-Note: The migration command checks current DB version before running this migration.
-This ensures idempotency: running the same migration twice is a safe no-op.
+Note: The schema_zero management command pre-converted legacy calendar versions 
+('2025.07-1' strings) to version 0 (integer) before this migration is run.
+The migration command checks current DB version before running. This ensures 
+idempotency: running the same migration twice is a safe no-op.
 """
 
 from copy import deepcopy
 
-SCHEMA_VERSION = 1  # Ordinal versioning starts here (integer, not string)
-
 
 def previous_schema():
-    """Hard-coded snapshot of schema at version 2025.07-1 for reference."""
-    # This is a frozen definition - never call get_questionnaire_schema() here
-    # Schema structure is identical to current; only version number differs
+    """Hard-coded snapshot of schema at version 0 (baseline after schema_zero conversion)."""
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
-            "schema_version": {"type": "string", "default": "2025.07-1"},
+            "schema_version": {"type": "integer", "default": 0},
             "steps": {"type": "array", "items": {"$ref": "#/$defs/step"}}
         },
         "$defs": {
-            # ... exact structure as it existed at 2025.07-1
+            # ... exact structure after schema_zero converted calendar → integer 0
+        }
+    }
+
+
+def target_schema():
+    """Hard-coded snapshot of schema at version 1."""
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "schema_version": {"type": "integer", "default": 1},
+            "steps": {"type": "array", "items": {"$ref": "#/$defs/step"}}
+        },
+        "$defs": {
+            # ... exact structure at version 1
         }
     }
 
 
 def migrate_forward(doc: dict) -> dict:
-    """Transform: calendar versioning (2025.07-1) → ordinal versioning (1).
+    """Transform: baseline version (0) → ordinal versioning (1).
     
-    Precondition: This function is called only when document.schema_version == "2025.07-1".
+    Precondition: This function is called only when document.schema_version == 0.
     The management command verifies this before calling migrate_forward().
     """
-    if doc.get("schema_version") != "2025.07-1":
-        raise ValueError(
-            f"Expected schema_version 2025.07-1, got {doc.get('schema_version')}"
+    if doc.get("schema_version") != 0:
+        raise TypeError(
+            f"Expected schema_version 0, got {doc.get('schema_version')}"
         )
     
     doc = deepcopy(doc)
-    doc["schema_version"] = "1"
+    doc["schema_version"] = 1
     return doc
 
 
 def migrate_backward(doc: dict) -> dict:
-    """Transform: ordinal versioning (1) → calendar versioning (2025.07-1).
+    """Transform: ordinal versioning (1) → baseline version (0).
     
     Rollback support: restores documents to pre-migration state.
     """
-    if doc.get("schema_version") != "1":
-        raise ValueError(
+    if doc.get("schema_version") != 1:
+        raise TypeError(
             f"Expected schema_version 1, got {doc.get('schema_version')}"
         )
     
     doc = deepcopy(doc)
-    doc["schema_version"] = "2025.07-1"
+    doc["schema_version"] = 0
     return doc
 ```
 
-**Example**: `backend/questionnaires/schema_migrations/0002_extra_attributes_consolidation.py` (real change)
+**Example**: `backend/questionnaires/schema_migrations/0002_extra_attributes_consolidation.py` (version 2 migration)
 
 ```python
-"""Migration 0002: Consolidate question extra_* fields into extra_attributes object (1 → 2).
+"""Migration 0002: Consolidate question extra_* fields into extra_attributes object.
+
+Automatically version 2 (derived from filename 0002).
+No SCHEMA_VERSION constant needed.
 
 Transforms flat extra fields (select_options, grid_columns, etc.) into a consolidated
 extra_attributes object. Reduces schema verbosity and improves structure.
@@ -240,8 +282,6 @@ Second run with same migration is a no-op if already at target.
 
 from copy import deepcopy
 
-SCHEMA_VERSION = "2"
-
 def previous_schema():
     """Hard-coded snapshot of schema at version 1 (old flat structure).
     
@@ -251,7 +291,7 @@ def previous_schema():
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
-            "schema_version": {"type": "string", "default": "1"},
+            "schema_version": {"type": "integer", "default": 1},
             "steps": {"type": "array", "items": {"$ref": "#/$defs/step"}},
         },
         "$defs": {
@@ -357,8 +397,8 @@ def list_migrations() -> list[str]:
 
 def find_path(from_version: str, to_version: str) -> list[str]:
     """Find transformation path between versions."""
-    # Example: find_path("2025.07-1", "2025.07-2") → ["2025.07-1", "2025.07-2"]
-    # Example: find_path("2025.07-2", "2025.07-1") → ["2025.07-2", "2025.07-1"]
+    # Example: find_path("0", "1") → ["0", "1"]
+    # Example: find_path("1", "0") → ["1", "0"]
     pass
 ```
 
@@ -415,12 +455,12 @@ Each migration file must define **both** previous and target schemas as hard-cod
 # backend/questionnaires/schema_migrations/0001_initial.py
 
 def previous_schema():
-    """Hard-coded snapshot of schema at version 2025.07-1."""
+    """Hard-coded snapshot of schema at version 0 (baseline after schema_zero conversion)."""
     return {
         "$id": "...",
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {...},
-        # ... exact structure as it existed at 2025.07-1
+        # ... exact structure as it existed at version 0
     }
 
 def target_schema():
@@ -443,7 +483,7 @@ from schema_migrations import schema_migrations_loader
 migration = schema_migrations_loader.get_migration("0001")
 is_valid, errors = validate_transform(
     doc,
-    "2025.07-1",
+    "schema_version": 0,
     "1",
     migration.previous_schema(),  # Pass frozen schema, don't look it up
     migration.target_schema(),
@@ -508,9 +548,9 @@ python manage.py schema_rollback_questionnaire 0001
 
 1. ✅ Added `SCHEMA_VERSION` Python constant to `backend/questionnaires/schema.py` using ordinal format:
    ```python
-   # Current version of the schema (ordinal: "1", "2", "3", ...)
+   # Current version of the schema (ordinal: 1, 2, 3, ...)
    # Previous versions are maintained in schema_migrations/ directory for reference
-   SCHEMA_VERSION = "1"
+   SCHEMA_VERSION = 1
    ```
 
 2. ✅ Created migration directories structure:
@@ -531,7 +571,7 @@ python manage.py schema_rollback_questionnaire 0001
 - Git history shows version changes in commits
 
 **Exit criteria** (met):
-- ✓ Schema version tracked as Python constant
+- ✓ Schema version tracked as Python constant (integer format)
 - ✓ Constant importable from schema module
 - ✓ Migration directories created
 - ✓ No custom file reading function needed
@@ -597,9 +637,9 @@ python manage.py schema_rollback_questionnaire 0001
    - `get_db_schema_version() -> str | None` — Queries database for current schema version (majority version)
 
 3. ✅ Created data migration file `backend/questionnaires/schema_migrations/0001_initial.py`:
-   - Transforms existing "2025.07-1" records to ordinal version "1"
-   - Establishes version "1" as baseline for all future migrations
-   - Both `migrate_forward()` (2025.07-1 → 1) and `migrate_backward()` (1 → 2025.07-1) implemented
+   - Transforms existing version 0 records (pre-converted by `schema_zero`) to ordinal version 1
+   - Establishes version 1 as baseline for all future migrations
+   - Both `migrate_forward()` (0 → 1) and `migrate_backward()` (1 → 0) implemented
    - Full defensive error checking on precondition violations
 
 **Tests added** (organized in two modules):
@@ -618,7 +658,7 @@ python manage.py schema_rollback_questionnaire 0001
 - ✓ Migration loader finds and lists migrations
 - ✓ Path finding works forward/backward
 - ✓ Validation applies transforms correctly and reports errors
-- ✓ Data migration handles version transition "2025.07-1" → "1"
+- ✓ Data migration handles version transition 0 → 1
 - ✓ All imports at module level per FEATURE-DEVELOPMENT.md
 - ✓ Defensive error checking in migration files
 
@@ -651,7 +691,7 @@ def get_db_schema_version() -> str | None:
     
     Returns:
         - "1" if all/most questionnaires at version 1
-        - "2025.07-1" if all/most at old calendar version
+        - 0 if all/most at baseline version
         - None if database is empty or mixed (error state)
     """
     from django.db.models import Count
@@ -687,7 +727,7 @@ class Command(BaseCommand):
             return  # Safe no-op; can retry infinitely
         
         # PRECONDITION: Verify DB state matches what migration expects
-        # (For migration 0001: expects 2025.07-1; For 0002: expects 1)
+        # (For migration 0001: expects 0; For 0002: expects 1)
         expected_previous = get_expected_previous_version(migration_number)
         
         if current_db_version != expected_previous:
@@ -843,8 +883,8 @@ def migrate_forward(doc: dict) -> dict:
    - Imported `SCHEMA_VERSION` from `questionnaires.schema`
 
 2. Fixed migration command tests to be fixture-independent:
-   - `test_schema_migrate_command.py::test_dryrun_makes_no_changes` — Explicitly overrides schema_version to "2025.07-1"
-   - `test_schema_migrate_command.py::test_dryrun_shows_would_transform_count` — Explicitly overrides schema_version to "2025.07-1"
+   - `test_schema_migrate_command.py::test_dryrun_makes_no_changes` — Explicitly overrides schema_version to 0
+   - `test_schema_migrate_command.py::test_dryrun_shows_would_transform_count` — Explicitly overrides schema_version to 0
    - Tests no longer fail when fixtures change versions
 
 3. Schema migration tests remain independent:
@@ -1086,7 +1126,7 @@ Consolidate into single `extra_attributes` object:
 
 **Step 4**: Update `SCHEMA_VERSION` constant in `backend/questionnaires/schema.py`:
 ```python
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = 2
 ```
 
 **Step 5**: Update frontend types in `frontend/src/context/types/Questionnaire.ts`
@@ -1122,21 +1162,23 @@ python manage.py schema_status_questionnaire
 
 ### What does `0001_initial.py` represent?
 
-`0001_initial.py` is the **baseline bootstrap migration** that establishes the initial schema version. For this project, it transforms existing data from calendar-based versioning ("2025.07-1") to ordinal versioning ("1"), establishing "1" as the anchor point.
+`0001_initial.py` is the **baseline bootstrap migration** that establishes the initial schema version. For this project, it transforms existing data from baseline version 0 (integer, pre-converted by `schema_zero`) to ordinal versioning (1), establishing version 1 as the anchor point.
 
 **Key characteristics**:
-- `SCHEMA_VERSION = "1"` (the version this migration establishes)
-- `migrate_forward()` transforms version "2025.07-1" → "1" (calendar to ordinal versioning)
-- `migrate_backward()` transforms version "1" → "2025.07-1" (supports safe rollback)
-- `previous_schema()` returns hard-coded snapshot of schema at version "2025.07-1"
+- Migration number **0001** automatically produces **version 1** (derived from filename, no constant needed)
+- `migrate_forward()` transforms version 0 → 1 (ordinal versioning baseline)
+- `migrate_backward()` transforms version 1 → 0 (supports safe rollback)
+- `previous_schema()` returns hard-coded snapshot of schema at version 0
+- `target_schema()` returns hard-coded snapshot of schema at version 1
 - Serves as the anchor point for all future migrations
 - Never modified after creation; permanent record in git history
 
 **Why this design?**
-- Establishes a permanent record that version "1" is our baseline (using ordinal versioning)
+- Establishes a permanent record that version 1 is our baseline (using ordinal versioning)
 - Enables operators to run `schema_migrate_questionnaire 0001` safely and idempotently
 - Provides reversibility: `schema_rollback_questionnaire 0001` restores exact pre-migration state
 - Migration files are immutable history; future migrations reference these frozen schemas
+- Version is automatically derived from filename (0001 → 1), eliminating duplicate specification
 
 ### How to implement new migrations
 
@@ -1146,54 +1188,72 @@ python manage.py schema_status_questionnaire
 
 1. **Plan the change**: Document what's being removed, added, or restructured in the document JSON structure.
 
-2. **Create the migration file**: Name it `000N_description.py` (increment the number).
+2. **Create the migration file**: Name it `000N_description.py` (increment the number). The version is automatically derived from the filename prefix:
+   - `0001_initial.py` → produces version 1
+   - `0002_add_fields.py` → produces version 2
+   - `0003_rename_keys.py` → produces version 3
 
-3. **Implement `SCHEMA_VERSION`**: Set to the **new** version string your migration establishes (e.g., `"2025.07-2"`).
+3. **Implement `previous_schema()`**: Return the schema definition **before** your migration. This is purely for reference and rollback context; it doesn't need to parse anything—just return the old schema dict.
 
-4. **Implement `previous_schema()`**: Return the schema definition **before** your migration. This is purely for reference and rollback context; it doesn't need to parse anything—just return the old schema dict.
+4. **Implement `target_schema()`**: Return the schema definition **after** your migration (the new/updated schema).
 
 5. **Implement `migrate_forward(doc: dict) -> dict`**:
-   - Check that `doc.get("schema_version")` matches the **previous** version (e.g., `"2025.07-1"`). Raise `ValueError` if mismatch.
-   - Make a copy of the document: `doc = doc.copy()` (avoid mutating input)
+   - Check that `doc.get("schema_version")` matches the **previous** version (one less than your migration number). Raise `TypeError` if mismatch.
+   - Make a deep copy of the document: `doc = deepcopy(doc)` (avoid mutating input)
    - Apply your transformation logic (add/remove/restructure fields)
-   - Update `doc["schema_version"]` to your new version
+   - Update `doc["schema_version"]` to your migration's version (derived from filename)
    - Return the transformed document
    - **Guideline**: Import all dependencies at module level; transformations should be simple, readable logic (loops, conditionals, basic dict/list operations)
 
 6. **Implement `migrate_backward(doc: dict) -> dict`**:
    - Mirror the forward transform in reverse
-   - Check that `doc.get("schema_version")` matches your **new** version. Raise `ValueError` if mismatch.
+   - Check that `doc.get("schema_version")` matches your migration's version. Raise `TypeError` if mismatch.
    - Undo the forward changes (restore removed fields, flatten consolidated objects, etc.)
    - Update `doc["schema_version"]` back to the previous version
    - Return the un-transformed document
 
-7. **Test the migration**:
+7. **Update code-level schema version**: After creating migration file 000N, bump `SCHEMA_VERSION` constant in `backend/questionnaires/schema.py` to match:
+   ```python
+   # backend/questionnaires/schema.py
+   SCHEMA_VERSION = N  # Matches migration 000N
+   ```
+
+8. **Test the migration**:
    - Create test fixtures with documents at the previous version
    - Apply `migrate_forward()` to each, verify against current schema
    - Apply `migrate_backward()` to each, verify they match original state
    - Test edge cases: missing fields, null values, empty collections
 
-8. **Example structure**:
+9. **Example structure** (migration `0002_consolidate_fields.py`):
    ```python
-   \"\"\"Migration: Consolidate question fields into extra_attributes.\"\"\"
+   \"\"\"Migration 0002: Consolidate question fields into extra_attributes.
+   
+   This migration is automatically version 2 (derived from filename 0002).
+   No SCHEMA_VERSION constant needed in migration files.
+   \"\"\"
    
    # Module-level imports (per FEATURE-DEVELOPMENT.md)
    from copy import deepcopy
-   from questionnaires.schema import get_questionnaire_schema
-   
-   SCHEMA_VERSION = "2025.07-2"
    
    def previous_schema():
-       \"\"\"Return 2025.07-1 schema definition for reference.\"\"\"
-       return { ... }  # Old schema dict
+       \"\"\"Return version 1 schema definition for reference.\"\"\"
+       return {
+           # ... version 1 schema dict ...
+       }
+   
+   def target_schema():
+       \"\"\"Return version 2 schema definition (after this migration).\"\"\"
+       return {
+           # ... version 2 schema dict with consolidated fields ...
+       }
    
    def migrate_forward(doc: dict) -> dict:
-       \"\"\"Consolidate flat fields into extra_attributes object.\"\"\"
-       if doc.get("schema_version") != "2025.07-1":
-           raise ValueError(f"Expected 2025.07-1, got {doc.get('schema_version')}")
+       \"\"\"Transform document from version 1 → 2.\"\"\"
+       if doc.get("schema_version") != 1:
+           raise TypeError(f"Expected version 1, got {doc.get('schema_version')}")
        
        doc = deepcopy(doc)
-       doc["schema_version"] = "2025.07-2"
+       doc["schema_version"] = 2  # Target version (derived from filename 0002)
        
        # Apply transformation logic
        for step in doc.get("steps", []):
@@ -1205,18 +1265,18 @@ python manage.py schema_status_questionnaire
        return doc
    
    def migrate_backward(doc: dict) -> dict:
-       \"\"\"Undo consolidation: expand extra_attributes back to flat fields.\"\"\"
-       if doc.get("schema_version") != "2025.07-2":
-           raise ValueError(f"Expected 2025.07-2, got {doc.get('schema_version')}")
+       \"\"\"Transform document from version 2 → 1 (rollback).\"\"\"
+       if doc.get("schema_version") != 2:
+           raise TypeError(f"Expected version 2, got {doc.get('schema_version')}")
        
        doc = deepcopy(doc)
-       doc["schema_version"] = "2025.07-1"
+       doc["schema_version"] = 1
        
-       # Reverse transformation logic
+       # Undo the transformation (reverse logic)
        for step in doc.get("steps", []):
            for section in step.get("sections", []):
                for question in section.get("questions", []):
-                   # Your specific reverse changes here
+                   # Reverse your specific changes here
                    pass
        
        return doc
@@ -1245,19 +1305,19 @@ export MAINTENANCE_MODE=True
 
 # Verify current state
 python manage.py schema_status_questionnaire
-# Output: Current schema version: 2025.07-2  (from new code)
-#         2025.07-2: 147 questionnaires
+# Output: Current schema version: 1  (after migration 0001)
+#         1: 147 questionnaires
 
-# Rollback data using the current code's migration (e.g., 0002_extra_attributes_consolidation.py)
-python manage.py schema_rollback_questionnaire 0001
-# Output: Found 147 questionnaires at version 2025.07-2
-# Rolling back to schema version 2025.07-1...
-# ✓ Rolled back 147/147 questionnaires. Updated schema version to 2025.07-1
+# Rollback data using the current code's migration (e.g., 0001_initial.py)
+python manage.py schema_rollback_questionnaire 0000
+# Output: Found 147 questionnaires at version 1
+# Rolling back to schema version 0...
+# ✓ Rolled back 147/147 questionnaires. Updated schema version to 0
 
 # Verify rollback succeeded
 python manage.py schema_status_questionnaire
-# Output: Current schema version: 2025.07-1
-#         2025.07-1: 147 questionnaires
+# Output: Current schema version: 0
+#         0: 147 questionnaires
 ```
 
 **Step 2: Deploy Previous Version**
@@ -1275,8 +1335,8 @@ Now deploy the previous code version (before the failed schema changes).
 
 # After deployment, verify schema version matches
 python manage.py schema_status_questionnaire
-# Should show: Current schema version: 2025.07-1
-#         2025.07-1: 147 questionnaires
+# Should show: Current schema version: 0
+#         0: 147 questionnaires
 ```
 
 **Step 3: Verify & Disable Maintenance Mode**
@@ -1306,12 +1366,12 @@ If you've fixed the underlying issues and want to migrate forward again:
 3. Run the migration command:
 
 ```bash
-# New code is deployed with the migration file (0002_extra_attributes_consolidation.py)
-# Run migrate with current DB at version 2025.07-1
-python manage.py schema_migrate_questionnaire 0002
-# Output: Found 147 questionnaires at version 2025.07-1
-#         Migrating to schema version 2025.07-2...
-#         ✓ Migrated 147/147 questionnaires. Updated schema version to 2025.07-2
+# New code is deployed with the migration file (0001_initial.py)
+# Run migrate with current DB at version 0
+python manage.py schema_migrate_questionnaire 0001
+# Output: Found 147 questionnaires at version 0
+#         Migrating to schema version 1...
+#         ✓ Migrated 147/147 questionnaires. Updated schema version to 1
 ```
 
 4. Disable maintenance mode

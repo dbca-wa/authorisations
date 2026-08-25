@@ -11,9 +11,6 @@ safe no-op.
 
 from copy import deepcopy
 
-SCHEMA_VERSION = 1
-
-
 
 def previous_schema():
     """Return the schema structure that existed at version 2025.07-1.
@@ -105,7 +102,7 @@ def target_schema():
                 "type": "integer",
                 "minimum": 0,
                 "title": "Schema version",
-                "default": SCHEMA_VERSION,
+                "default": 1,
                 "readOnly": True,
                 "description": "The version of the questionnaire schema.",
             },
@@ -179,9 +176,9 @@ def migrate_forward(doc: dict) -> dict:
         raise TypeError(
             f"Expected schema_version 0, got {doc.get('schema_version')}"
         )
-    
+
     doc = deepcopy(doc)
-    doc["schema_version"] = SCHEMA_VERSION
+    doc["schema_version"] = 1
     return doc
 
 
@@ -199,7 +196,7 @@ def migrate_backward(doc: dict) -> dict:
     Raises:
         TypeError: If precondition not met (defensive check).
     """
-    if doc.get("schema_version") != SCHEMA_VERSION:
+    if doc.get("schema_version") != 1:
         raise TypeError(
             f"Expected schema_version 1, got {doc.get('schema_version')}"
         )

@@ -31,6 +31,7 @@ from questionnaires.schema_migrations_loader import (
     get_migration,
     find_path,
     find_migration_by_output_version,
+    migration_number_to_version,
 )
 from questionnaires.schema_migration_utils import validate_transform, get_db_schema_version
 
@@ -66,12 +67,13 @@ class Command(BaseCommand):
         Raises:
             CommandError: If rollback cannot proceed (version mismatch, validation error, etc.)
         """
+        # Validate the requested migration exists
         try:
-            target_migration = get_migration(migration_number)
+            get_migration(migration_number)
         except FileNotFoundError:
             raise CommandError(f"Migration {migration_number} not found")
 
-        target_version = target_migration.SCHEMA_VERSION
+        target_version = migration_number_to_version(migration_number)
         current_db_version = get_db_schema_version()
 
         # IDEMPOTENCY CHECK: Already at target version?

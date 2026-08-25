@@ -44,14 +44,14 @@ A schema migration transforms all documents in a database from one schema versio
 
 #### 1. Schema Version
 
-A string identifier representing the structure of a document. Currently:
-- **Calendar-based** (legacy): `"2025.07-1"` (YYYY.MM-N format)
-- **Ordinal-based** (current): `"1"`, `"2"`, `"3"` (simple integers as strings)
+An integer identifier representing the structure of a document. Currently:
+- **Baseline** (legacy): `0` (integer, deprecated)
+- **Ordinal-based** (current): `1`, `2`, `3`, etc. (integers)
 
 The current schema version is stored as a Python constant:
 ```python
 # backend/questionnaires/schema.py
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = 1
 ```
 
 All documents in the database must conform to `SCHEMA_VERSION`. The API rejects documents with mismatched versions, directing users to run the migration command.
@@ -63,17 +63,18 @@ Each migration is a Python module in the `schema_migrations/` directory:
 ```
 backend/questionnaires/schema_migrations/
 ├── __init__.py
-├── 0001_initial.py          # Versioning baseline (2025.07-1 → 1)
-├── 0002_consolidate_attrs.py # Future migration (1 → 2)
-└── 0003_rename_fields.py     # Future migration (2 → 3)
+├── 0001_initial.py          # Versioning baseline (version 0 → 1)
+├── 0002_consolidate_attrs.py # Future migration (version 1 → 2)
+└── 0003_rename_fields.py     # Future migration (version 2 → 3)
 ```
 
-Each migration file contains:
-- `SCHEMA_VERSION` constant (the version this migration establishes)
+Each migration file contains four required functions (version derived from filename):
 - `previous_schema()` function (hard-coded schema snapshot from previous version)
 - `target_schema()` function (hard-coded schema snapshot for this version)
 - `migrate_forward(doc)` function (transforms document to new version)
 - `migrate_backward(doc)` function (transforms document back to previous version)
+
+**Note**: The schema version is automatically derived from the migration filename (e.g., `0001_initial.py` → version 1). You do NOT need to add a `SCHEMA_VERSION` constant in migration files.
 
 #### 3. Frozen Schemas
 
@@ -97,7 +98,7 @@ def previous_schema():
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
-            "schema_version": {"type": "string"},
+            "schema_version": {"type": "integer"},
             "steps": {"type": "array"},
             # ... (rest of schema as it was in version 1)
         }
@@ -192,15 +193,15 @@ ls backend/questionnaires/schema_migrations/
 Create `backend/questionnaires/schema_migrations/000N_descriptive_name.py`:
 
 ```python
-"""Migration 000N: Brief description of changes (VERSION_A → VERSION_B).
+"""Migration 0002: Consolidate question attributes (version 1 → 2).
 
 Detailed explanation of what the migration does and why.
 Include the business context if relevant.
+
+Version 2 is automatically derived from filename (0002).
 """
 
 from copy import deepcopy
-
-SCHEMA_VERSION = "2"  # The version this migration establishes
 
 
 def previous_schema():
@@ -213,7 +214,7 @@ def previous_schema():
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
-            "schema_version": {"type": "string", "default": "1"},
+            "schema_version": {"type": "integer", "default": 1},
             "steps": {
                 "type": "array",
                 "items": {"$ref": "#/$defs/step"}
@@ -263,7 +264,7 @@ def target_schema():
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
-            "schema_version": {"type": "string", "default": "2"},
+            "schema_version": {"type": "integer", "default": 2},
             "steps": {
                 "type": "array",
                 "items": {"$ref": "#/$defs/step"}
@@ -312,18 +313,18 @@ def target_schema():
 def migrate_forward(document: dict) -> dict:
     """Transform: version 1 → version 2 (consolidate extra_* → extra_attributes).
     
-    Precondition: Called only when document.schema_version == "1".
+    Precondition: Called only when document.schema_version == 1.
     The management command verifies this before calling migrate_forward().
     
-    If this precondition is violated, raise ValueError with a clear message.
+    If this precondition is violated, raise TypeError with a clear message.
     """
-    if document.get("schema_version") != "1":
-        raise ValueError(
+    if document.get("schema_version") != 1:
+        raise TypeError(
             f"Expected schema_version 1, got {document.get('schema_version')}"
         )
     
     document = deepcopy(document)
-    document["schema_version"] = "2"
+    document["schema_version"] = 2
     
     # Transform each question in each section of each step
     for step in document.get("steps", []):
@@ -347,13 +348,13 @@ def migrate_backward(document: dict) -> dict:
     
     Rollback support: Restores documents to pre-migration state.
     """
-    if document.get("schema_version") != "2":
-        raise ValueError(
+    if document.get("schema_version") != 2:
+        raise TypeError(
             f"Expected schema_version 2, got {document.get('schema_version')}"
         )
     
     document = deepcopy(document)
-    document["schema_version"] = "1"
+    document["schema_version"] = 1
     
     # Expand consolidated object back to flat fields
     for step in document.get("steps", []):
@@ -372,7 +373,7 @@ Once your migration is ready, update the version constant in the schema module:
 
 ```python
 # backend/questionnaires/schema.py
-SCHEMA_VERSION = "2"  # Updated from "1" to "2"
+SCHEMA_VERSION = 2  # Updated from 1 to 2
 ```
 
 Also update the schema definition itself (if the schema is changing):
@@ -476,14 +477,15 @@ Before running on the database, test the transform in isolation:
 # Interactive Python shell (backend/)
 from questionnaires.schema_migrations.0002_consolidate_attrs import migrate_forward, migrate_backward
 from questionnaires.tests.factories import questionnaire_factory
+from copy import deepcopy
 
 # Create test document at version 1
-q = questionnaire_factory(document={"schema_version": "1", "steps": [...]})
+q = questionnaire_factory(document={"schema_version": 1, "steps": [...]})
 old_doc = q.document
 
 # Test forward transform
 new_doc = migrate_forward(deepcopy(old_doc))
-assert new_doc["schema_version"] == "2"
+assert new_doc["schema_version"] == 2
 assert new_doc["steps"][0]["sections"][0]["questions"][0].get("extra_attributes") is not None
 
 # Test backward transform
@@ -853,11 +855,11 @@ class TestSchemaMigration0002:
 **TODO**: When implementing Phase 6, add integration test for multi-step migration chain:
 
 ```python
-# TODO: test_multi_step_migration_chain_0001_to_0002_to_0003
+# TODO: test_multi_step_migration_chain_baseline_to_version_1
 # 
-# Test: Create questionnaire at version "2025.07-1" → migrate to 0002 → migrate to 0003
-# Verify: Final document conforms to version 3 schema with all fields intact
-# Purpose: Validate that migration chaining works end-to-end with realistic data
+# Test: Create questionnaire at version 0 (baseline) → migrate to 0001 → verify version 1
+# Verify: Final document conforms to version 1 schema with all fields intact
+# Purpose: Validate that migration execution works end-to-end with realistic data
 ```
 
 Full integration tests validate the complete workflow:
