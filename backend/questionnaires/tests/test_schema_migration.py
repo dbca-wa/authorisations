@@ -16,6 +16,8 @@ Serialiser validation tests are in test_serialisers.py.
 """
 
 import pytest
+from pathlib import Path
+from unittest.mock import patch, MagicMock
 
 from questionnaires.schema_migrations_loader import (
     get_migration,
@@ -120,6 +122,42 @@ class TestMigrationLoader:
 
         with pytest.raises(ValueError):
             find_path("9999", "0001")
+
+    def test_get_migration_raises_on_duplicate_migration_files(self):
+        """Raise RuntimeError if multiple migration files exist with same number.
+        
+        This catches the scenario where a developer accidentally creates both
+        0001_initial.py and 0001_alternate.py in the same directory.
+        Without this check, the loader silently picks the first one found,
+        leading to unpredictable behavior.
+        """
+        # Create mock Path objects for duplicate files
+        mock_file1 = MagicMock(spec=Path)
+        mock_file1.name = "0001_v1.py"
+        mock_file1.is_file.return_value = True
+        
+        mock_file2 = MagicMock(spec=Path)
+        mock_file2.name = "0001_v2.py"
+        mock_file2.is_file.return_value = True
+        
+        # Patch the migrations_dir.glob() to return 2 matching files
+        with patch("questionnaires.schema_migrations_loader.Path") as mock_path_class:
+            mock_migrations_dir = MagicMock()
+            mock_migrations_dir.glob.return_value = [mock_file1, mock_file2]
+            
+            mock_path_instance = MagicMock()
+            mock_path_instance.__truediv__.return_value = mock_migrations_dir
+            mock_path_class.return_value = mock_path_instance
+            
+            # Now call get_migration with the real function
+            # It should raise RuntimeError for 2 matching files
+            with pytest.raises(RuntimeError) as exc_info:
+                get_migration("0001")
+            
+            error_msg = str(exc_info.value)
+            assert "0001" in error_msg
+            assert "2" in error_msg  # Should mention finding 2 files
+            assert "exactly 1" in error_msg.lower()
 
 
 class TestValidationUtility:

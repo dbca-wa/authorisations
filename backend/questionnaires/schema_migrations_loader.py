@@ -35,6 +35,14 @@ def get_migration(migration_number: str):
             f"Migration {migration_number} not found in {migrations_dir}"
         )
     
+    # Check for duplicate migration files (ambiguous state)
+    if len(matching_files) > 1:
+        raise RuntimeError(
+            f"Expected exactly 1 migration file for {migration_number}, "
+            f"found {len(matching_files)}: {[f.name for f in matching_files]}. "
+            f"Migration numbers must be unique."
+        )
+    
     migration_file = matching_files[0]
     
     # Dynamically import the migration module
