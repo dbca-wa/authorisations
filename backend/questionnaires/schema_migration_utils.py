@@ -8,8 +8,6 @@ from typing import Tuple
 
 from api.serialisers import JsonSchemaSerialiserMixin
 from django.db.models import Count, F
-from django.db.models.functions import Cast
-from django.db.models import TextField
 from jsonschema import ValidationError
 from rest_framework import serializers
 
@@ -91,28 +89,29 @@ def get_db_schema_version() -> str | None:
         - Does NOT use majority voting. Database state must be uniform.
         - Called by management commands to check precondition before migration.
         - If this raises RuntimeError, run schema_status_questionnaire to diagnose.
+        - Database backend agnostic: handles PostgreSQL JSON quote representation.
     """
-    versions = (
+    # Query without Cast to avoid database backend differences
+    # (PostgreSQL Cast returns '"2025.07-1"' with quotes, SQLite returns '2025.07-1')
+    versions_data = (
         Questionnaire.objects
-        .annotate(
-            schema_version_str=Cast(
-                F('document__schema_version'), output_field=TextField()
-            )
-        )
-        .values('schema_version_str')
+        .values('document__schema_version')
         .annotate(count=Count('id'))
-        .order_by('document__schema_version')  # Order by original JSON value (numeric ordering)
+        .order_by('document__schema_version')
     )
     
-    if not versions:
+    if not versions_data:
         return None
     
-    # Extract all distinct versions (explicitly cast from database)
-    distinct_versions = [v['schema_version_str'] for v in versions]
+    # Extract versions
+    version_counts = {}
+    
+    for v in versions_data:
+        raw_version = v['document__schema_version']
+        version_counts[raw_version] = v['count']
     
     # If more than one version exists, database is in an inconsistent state
-    if len(distinct_versions) > 1:
-        version_counts = {v['schema_version_str']: v['count'] for v in versions}
+    if len(version_counts) > 1:
         raise RuntimeError(
             f"Database contains records at multiple schema versions: {version_counts}.\n"
             f"This indicates a failed or partial migration. All records must be at "
@@ -121,4 +120,4 @@ def get_db_schema_version() -> str | None:
         )
     
     # Single version: safe to return it
-    return distinct_versions[0]
+    return next(iter(version_counts))
