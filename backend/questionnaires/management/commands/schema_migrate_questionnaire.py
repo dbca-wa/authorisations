@@ -33,6 +33,7 @@ from questionnaires.schema_migrations_loader import (
     find_migration_by_output_version,
     find_path,
     get_migration,
+    list_migrations,
     migration_number_to_version,
 )
 
@@ -96,13 +97,22 @@ class Command(BaseCommand):
             return
 
         # Find which migration number produces current version
-        try:
-            current_migration_number = find_migration_by_output_version(current_db_version)
-        except ValueError as e:
-            raise CommandError(
-                f"Cannot determine migration path:\n{str(e)}\n"
-                f"Run 'python manage.py schema_status_questionnaire' to diagnose."
-            )
+        # Special case: version 0 is baseline (before any migrations)
+        if current_db_version == 0:
+            available_migrations = list_migrations()
+            if not available_migrations:
+                raise CommandError(
+                    "No migrations available to apply."
+                )
+            current_migration_number = available_migrations[0]
+        else:
+            try:
+                current_migration_number = find_migration_by_output_version(current_db_version)
+            except ValueError as e:
+                raise CommandError(
+                    f"Cannot determine migration path:\n{str(e)}\n"
+                    f"Run 'python manage.py schema_status_questionnaire' to diagnose."
+                )
 
         # Find path from current to target
         try:
@@ -111,8 +121,8 @@ class Command(BaseCommand):
             raise CommandError(f"Cannot find migration path: {str(e)}")
 
         # Remove the first migration (already applied, current state)
-        # EXCEPT if we're starting from baseline ("0000"), in which case we need all migrations
-        if current_migration_number == "0000":
+        # EXCEPT if we're starting from baseline (version 0), in which case we need all migrations
+        if current_db_version == 0:
             migrations_to_apply = path
         else:
             migrations_to_apply = path[1:]

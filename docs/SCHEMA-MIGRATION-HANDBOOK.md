@@ -1003,6 +1003,40 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
    python manage.py schema_rollback_questionnaire 0001
    ```
 
+### Issue: "Migration framework blocked — database in inconsistent state (emergency recovery)"
+
+**Cause**: Data corruption, failed partial migration, or unable to use normal migration commands.
+
+**Resolution (Emergency Only):**
+
+**⚠️ WARNING: Only use this under guidance from development team.**
+
+The temporary `schema_zero` command can manually reset schema_version unconditionally when the migration framework cannot be used:
+
+```bash
+# EMERGENCY: Unconditionally set all records to integer 0
+python manage.py schema_zero
+# Output: [EMERGENCY] Unconditionally converted 147 records: (any) → 0
+
+# Then attempt recovery using normal migration commands
+python manage.py schema_migrate_questionnaire 0001  # Or appropriate target
+```
+
+**Backward recovery (if needed):**
+```bash
+# EMERGENCY: Unconditionally revert all records to legacy version
+python manage.py schema_zero --revert
+# Output: [EMERGENCY] Unconditionally converted 147 records: 0 → '2025.07-1'
+```
+
+**After using schema_zero:**
+1. Contact development team immediately
+2. Verify data consistency (run full test suite)
+3. Restore from backup if data is corrupted
+4. Document the incident
+
+**Important**: This command **bypasses all validation and idempotency checks**. Use only in true emergency scenarios where normal migration workflow is blocked.
+
 ---
 
 ## Reference

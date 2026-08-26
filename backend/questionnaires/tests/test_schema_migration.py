@@ -25,6 +25,7 @@ from questionnaires.schema_migration_utils import (
     validate_transform,
 )
 from questionnaires.schema_migrations_loader import (
+    find_migration_by_output_version,
     find_path,
     get_migration,
     list_migrations,
@@ -121,6 +122,13 @@ class TestMigrationLoader:
 
         with pytest.raises(ValueError):
             find_path("9999", "0001")
+        
+        # "0000" is not a valid migration number
+        with pytest.raises(ValueError):
+            find_path("0000", "0001")
+        
+        with pytest.raises(ValueError):
+            find_path("0001", "0000")
 
     def test_get_migration_raises_on_duplicate_migration_files(self, monkeypatch):
         """Raise RuntimeError if multiple migration files exist with same number.
@@ -203,6 +211,18 @@ class TestVersionConversion:
         assert version_to_migration_number(0) == "0000"
         assert version_to_migration_number(5) == "0005"
         assert version_to_migration_number(42) == "0042"
+
+    def test_find_migration_by_output_version_rejects_version_zero(self):
+        """Reject version 0 (no migration produces it)."""
+        with pytest.raises(ValueError) as exc_info:
+            find_migration_by_output_version(0)
+        assert "positive" in str(exc_info.value).lower()
+
+    def test_find_migration_by_output_version_rejects_negative(self):
+        """Reject negative versions."""
+        with pytest.raises(ValueError) as exc_info:
+            find_migration_by_output_version(-1)
+        assert "positive" in str(exc_info.value).lower()
 
 
 class TestValidationUtility:

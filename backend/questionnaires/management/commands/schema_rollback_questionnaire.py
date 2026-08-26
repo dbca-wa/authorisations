@@ -76,6 +76,13 @@ class Command(BaseCommand):
         target_version = migration_number_to_version(migration_number)
         current_db_version = get_db_schema_version()
 
+        # Rollback to version 0 is not supported (no migration file exists for baseline)
+        if target_version == 0:
+            raise CommandError(
+                f"Cannot rollback to version 0 (baseline). Version 0 has no migration file.\n"
+                f"The earliest rollback target is version 1 (migration 0001)."
+            )
+
         # IDEMPOTENCY CHECK: Already at target version?
         if current_db_version == target_version:
             self.stdout.write(

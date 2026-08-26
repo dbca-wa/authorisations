@@ -119,12 +119,9 @@ def list_migrations() -> list[str]:
 def find_path(from_number: str, to_number: str) -> list[str]:
     """Find transformation path between two migration numbers.
     
-    Handles the special case of "0000" which represents the pre-migration
-    baseline version (e.g., "2025.07-1" before migration 0001 is applied).
-    
     Args:
-        from_number: Starting migration number (e.g., "0001") or "0000" for baseline.
-        to_number: Target migration number (e.g., "0003") or "0000" for baseline.
+        from_number: Starting migration number (e.g., "0001").
+        to_number: Target migration number (e.g., "0003").
     
     Returns:
         Sorted list of migration numbers representing the path.
@@ -136,69 +133,49 @@ def find_path(from_number: str, to_number: str) -> list[str]:
     """
     available = list_migrations()
     
-    # Handle special "0000" marker for pre-migration baseline
-    if from_number == "0000":
-        from_idx = -1  # Before all migrations
-    elif from_number not in available:
+    if from_number not in available:
         raise ValueError(f"Migration {from_number} not found in available migrations")
-    else:
-        from_idx = available.index(from_number)
     
-    if to_number == "0000":
-        to_idx = -1  # Before all migrations
-    elif to_number not in available:
+    if to_number not in available:
         raise ValueError(f"Migration {to_number} not found in available migrations")
-    else:
-        to_idx = available.index(to_number)
+    
+    from_idx = available.index(from_number)
+    to_idx = available.index(to_number)
     
     if from_idx < to_idx:
         # Forward path
-        start_idx = 0 if from_idx == -1 else from_idx
-        return available[start_idx : to_idx + 1]
+        return available[from_idx : to_idx + 1]
     elif from_idx > to_idx:
         # Backward path
-        end_idx = -1 if to_idx == -1 else to_idx
-        if end_idx == -1:
-            # Backward from some migration to baseline: return all from that migration down
-            return available[from_idx : :-1]
-        else:
-            return available[to_idx : from_idx + 1][::-1]
+        return available[to_idx : from_idx + 1][::-1]
     else:
         # Same position
-        return [from_number] if from_number != "0000" else []
+        return [from_number]
 
 
 def find_migration_by_output_version(target_version: int) -> str:
     """Find which migration number produces a given schema version.
     
     Given a schema version integer (e.g., 1, 2), returns the migration number
-    that produces it as output (e.g., "0001"). Handles the special case of the
-    pre-migration baseline version (0) which is not produced by any migration
-    but is the input to migration 0001.
+    that produces it as output (e.g., "0001").
     
     Schema versions are derived from migration file prefixes. Migration 0001
     produces version 1, migration 0002 produces version 2, etc.
     
     Args:
-        target_version: Schema version integer to find (e.g., 0, 1, 2).
+        target_version: Schema version integer to find (e.g., 1, 2).
     
     Returns:
-        Migration number that produces this version (e.g., "0001"), or special
-        marker "0000" if this is the pre-migration baseline version (0).
+        Migration number that produces this version (e.g., "0001").
     
     Raises:
         ValueError: If target_version is negative or no valid migration exists.
     """
-    if target_version < 0:
+    if target_version < 1:
         raise ValueError(
-            f"Schema version must be non-negative, got {target_version}"
+            f"Schema version must be positive (version 1 or higher), got {target_version}"
         )
     
-    # Special case: baseline version (0) is pre-migration
-    if target_version == 0:
-        return "0000"
-    
-    # For any positive version, convert directly
     available = list_migrations()
     migration_number = version_to_migration_number(target_version)
     

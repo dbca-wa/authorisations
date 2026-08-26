@@ -179,13 +179,19 @@ Before migration 0001 could operate, legacy calendar-based versions (`"2025.07-1
 ```bash
 # Convert existing calendar versions to integer 0 (baseline)
 python manage.py schema_zero
-# Output: Converted 147 records: '2025.07-1' → 0
+# Output: [EMERGENCY] Unconditionally converted 147 records: (any) → 0
 
 # Then migration 0001 takes those from version 0 → 1 (both integers)
 python manage.py schema_migrate_questionnaire 0001
 ```
 
-The `schema_zero` command is **temporary infrastructure only**. It was used once during the initial transition and remains in the codebase for emergency rollback if needed (`--revert` flag), but is not part of the normal migration workflow.
+The `schema_zero` command is **temporary emergency recovery tool only**. It performs **unconditional** schema_version conversion without validation:
+- **Forward** (`python manage.py schema_zero`): Sets ALL records to `0` (integer) regardless of current state
+- **Backward** (`python manage.py schema_zero --revert`): Sets ALL records to `"2025.07-1"` (string) regardless of current state
+
+**Normal workflow**: Use `schema_migrate_questionnaire` and `schema_rollback_questionnaire` (idempotent, validated).
+
+**Manual recovery only**: If migration framework is blocked or data is inconsistent, contact development team. This command bypasses all validation and is **NOT** part of the standard migration workflow.
 
 **Migration 0001 implementation** (after schema_zero has pre-converted records):
 
@@ -1308,8 +1314,8 @@ python manage.py schema_status_questionnaire
 # Output: Current schema version: 1  (after migration 0001)
 #         1: 147 questionnaires
 
-# Rollback data using the current code's migration (e.g., 0001_initial.py)
-python manage.py schema_rollback_questionnaire 0000
+# Rollback data using the current code's migration
+python manage.py schema_rollback_questionnaire 0001
 # Output: Found 147 questionnaires at version 1
 # Rolling back to schema version 0...
 # ✓ Rolled back 147/147 questionnaires. Updated schema version to 0

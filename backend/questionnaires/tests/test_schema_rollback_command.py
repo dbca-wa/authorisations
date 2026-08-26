@@ -28,6 +28,12 @@ class TestSchemaRollbackCommandBasic:
             call_command("schema_rollback_questionnaire", "9999")
         assert "not found" in str(exc_info.value).lower()
 
+    def test_command_rejects_migration_0000(self):
+        """Command rejects '0000' as invalid migration number."""
+        with pytest.raises(CommandError) as exc_info:
+            call_command("schema_rollback_questionnaire", "0000")
+        assert "not found" in str(exc_info.value).lower()
+
     def test_command_rejects_missing_argument(self):
         """Command requires migration number argument."""
         with pytest.raises(CommandError):
