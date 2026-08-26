@@ -13,9 +13,9 @@ Design:
 - Path resolution: Finds transformation sequences (forward/backward)
 - Validator: Validates transforms against frozen schema definitions
 - Executor: Applies migrations in transaction-scoped, idempotent manner
-- Registry: Placeholder for Phase 8 (configurable multi-target support via settings)
+- Registry: Configurable multi-target support via Django settings (Phase 8+)
 
-Version storage (Phase 7): In-document only (document["schema_version"]).
+Version storage (Phase 7-11): In-document only (document["schema_version"]).
 Future: Will support dedicated DB field (decision not yet made).
 
 NOT INCLUDED: schema_zero emergency tool (standalone command, not framework).
@@ -28,6 +28,13 @@ from .loader import (
     version_to_migration_number,
 )
 from .pathing import find_path
+from .registry import (
+    RegistryError,
+    get_target,
+    list_target_keys,
+    load_targets,
+)
+from .types import MigrationTarget
 from .validator import validate_transform
 
 __all__ = [
@@ -37,4 +44,9 @@ __all__ = [
     "version_to_migration_number",
     "find_path",
     "validate_transform",
+    "load_targets",
+    "get_target",
+    "list_target_keys",
+    "RegistryError",
+    "MigrationTarget",
 ]

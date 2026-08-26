@@ -16,9 +16,9 @@ The framework prioritises:
 
 ---
 
-## Implementation Status: PHASES 1-6 COMPLETE ✅ | INTERNAL EXTRACTION PHASES PLANNED
+## Implementation Status: PHASES 1-7 COMPLETE ✅ | PHASES 8-11 PLANNED
 
-**For `questionnaires` module:**
+**For `questionnaires` module (Phases 1-6 + Framework):**
 
 | Phase | Status | Completion | Tests |
 |-------|--------|-----------|-------|
@@ -28,15 +28,29 @@ The framework prioritises:
 | Phase 4: Management Commands | ✅ COMPLETE | Migrate, rollback, status commands | 40/40 |
 | Phase 5: Fixtures & Test Data | ✅ COMPLETE | Fixtures at current SCHEMA_VERSION | 109/109 |
 | Phase 6: Integration Tests & Handbook | ✅ COMPLETE | Comprehensive handbook and migration framework implementation guidance finalised | 109/109 |
-| **Total Implementation** | **✅ PRODUCTION READY** | **Framework fully functional** | **109/109 tests passing** |
+| **Phase 7: Internal Framework Extraction** | **✅ COMPLETE** | **Reusable `schema_migration_framework/` module with 5 core files** | **47/47 tests passing** |
+| **Phase 8: Configurable Registry** | ⏳ PLANNED | Settings-based target registration | TBD |
+| **Phase 9: Generic Management Commands** | ⏳ PLANNED | `--target` flag commands + wrappers | TBD |
+| **Phase 10: Apply to Both Apps** | ⏳ PLANNED | questionnaires + applications on shared framework | TBD |
+| **Phase 11: Hardening & Sign-Off** | ⏳ PLANNED | Internal reuse ready for public extraction | TBD |
+| **Total Framework** | **✅ PHASE 7 READY** | **Internal extraction complete** | **176/176 tests passing** |
 
 **Documentation:**
 - **[SCHEMA-MIGRATION-HANDBOOK.md](SCHEMA-MIGRATION-HANDBOOK.md)** — Comprehensive guide for developers and operators (how to create, execute, test, and rollback migrations)
 - **[MIGRATION-FRAMEWORK-LIBRARY-PLAN.md](MIGRATION-FRAMEWORK-LIBRARY-PLAN.md)** — Strategic plan to externalize this framework as a reusable Django plugin (~20 hours)
 
-**Next phases (planned):**
-- Internal extraction phases (Phase 7 onwards) to make the framework reusable for multiple JSONField targets without code duplication.
-- Library extraction: Execute MIGRATION-FRAMEWORK-LIBRARY-PLAN.md to make framework generic and publishable.
+**Phase 7 Completion Summary:**
+- ✅ Extracted `backend/schema_migration_framework/` with 5 core modules (loader, pathing, validator, executor, registry)
+- ✅ 47 unit tests for framework core, all passing
+- ✅ Questionnaires app unchanged (129/129 tests still passing)
+- ✅ Framework is generic, reusable, zero app dependencies
+- ✅ Ready for Phase 8: Configurable registry via Django settings
+
+**Next phases (in progress):**
+- Phase 8: Implement settings-based target registration for multi-target support
+- Phase 9: Create generic management commands (`--target` flag)
+- Phase 10: Refactor questionnaires + add applications to framework
+- Phase 11: Hardening and operational sign-off before library extraction
 
 ---
 
