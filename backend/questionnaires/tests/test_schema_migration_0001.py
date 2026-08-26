@@ -65,15 +65,16 @@ class TestMigration0001Transforms:
 
 
 class TestMigration0001PreviousSchemaCorrectness:
-    """Verify previous_schema() is hard-coded correctly for 2025.07-1."""
+    """Verify previous_schema() is hard-coded correctly for version 0 (baseline)."""
 
     def test_previous_schema_has_correct_version_default(self):
-        """previous_schema() must explicitly show it's the 2025.07-1 schema."""
+        """previous_schema() must explicitly show it's version 0 (baseline) schema."""
         migration = get_migration("0001")
         schema = migration.previous_schema()
 
-        # Must have default set to 2025.07-1 (not "1" or missing)
-        assert schema["properties"]["schema_version"]["default"] == "2025.07-1"
+        # Must have default set to 0 (integer, not "2025.07-1" string)
+        assert schema["properties"]["schema_version"]["default"] == 0
+        assert schema["properties"]["schema_version"]["type"] == "integer"
 
     def test_previous_schema_is_hard_coded_not_imported(self):
         """Verify previous_schema() doesn't call external functions (frozen in time)."""

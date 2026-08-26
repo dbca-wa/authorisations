@@ -13,11 +13,11 @@ from copy import deepcopy
 
 
 def previous_schema():
-    """Return the schema structure that existed at version 2025.07-1.
+    """Return the schema structure that existed at version 0 (baseline).
     
-    This is a frozen snapshot of the schema at 2025.07-1. Hard-coded to ensure
-    it never changes, even if the current schema evolves. Future migrations
-    reference this to understand the previous schema state.
+    This is a frozen snapshot of version 0. Hard-coded to ensure it never changes,
+    even if the current schema evolves. IDENTICAL to target_schema() except for
+    schema_version default (0 instead of 1).
     """
     return {
         "$id": "https://example.com/arrays.schema.json",
@@ -27,9 +27,10 @@ def previous_schema():
         "type": "object",
         "properties": {
             "schema_version": {
-                "type": "string",
+                "type": "integer",
+                "minimum": 0,
                 "title": "Schema version",
-                "default": "2025.07-1",
+                "default": 0,
                 "readOnly": True,
                 "description": "The version of the questionnaire schema.",
             },
@@ -46,39 +47,172 @@ def previous_schema():
             "step": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string"},
-                    "description": {"type": "string"},
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Title",
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "title": "Description",
+                    },
                     "sections": {
                         "type": "array",
                         "items": {"$ref": "#/$defs/section"},
+                        "minItems": 1,
+                        "title": "Sections",
                     },
                 },
-                "required": ["title", "description", "sections"],
-                "additionalProperties": False,
+                "required": ["title", "sections"],
             },
             "section": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string"},
-                    "description": {"type": "string"},
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Title",
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 3000,
+                        "title": "Description",
+                    },
                     "questions": {
                         "type": "array",
                         "items": {"$ref": "#/$defs/question"},
+                        "minItems": 1,
+                        "title": "Questions",
                     },
                 },
-                "required": ["title", "description", "questions"],
-                "additionalProperties": False,
+                "required": ["title", "questions"],
             },
             "question": {
                 "type": "object",
                 "properties": {
-                    "label": {"type": "string"},
-                    "type": {"type": "string"},
-                    "is_required": {"type": "boolean"},
-                    "description": {"type": "string"},
+                    "label": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "title": "Label",
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "text",
+                            "textarea",
+                            "number",
+                            "checkbox",
+                            "select",
+                            "date",
+                            "file",
+                            "grid",
+                        ],
+                        "enumNames": [
+                            "Text",
+                            "Textarea Multi-line",
+                            "Numeric",
+                            "Checkbox",
+                            "Multiple Choice Select",
+                            "Date",
+                            "File Upload",
+                            "Grid (Matrix of options)",
+                        ],
+                        "title": "Type",
+                    },
+                    "is_required": {
+                        "type": "boolean",
+                        "title": "Is required",
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "title": "Description",
+                    },
+                    "select_options": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 100,
+                            "minLength": 1,
+                        },
+                        "maxItems": 50,
+                        "title": "Select options",
+                    },
+                    "grid_columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "minLength": 1,
+                                    "title": "Label",
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "text",
+                                        "textarea",
+                                        "number",
+                                        "checkbox",
+                                        "select",
+                                        "date",
+                                    ],
+                                    "enumNames": [
+                                        "Text",
+                                        "Textarea Multi-line",
+                                        "Numeric",
+                                        "Checkbox",
+                                        "Multiple Choice Select",
+                                        "Date",
+                                    ],
+                                    "title": "Type",
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "title": "Description",
+                                },
+                                "select_options": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                    },
+                                    "maxItems": 50,
+                                    "title": "Select options",
+                                },
+                            },
+                            "required": ["label", "type"],
+                        },
+                        "maxItems": 10,
+                        "title": "Grid columns",
+                    },
+                    "grid_max_rows": {
+                        "type": ["integer", "null"],
+                        "minimum": 1,
+                        "maximum": 20,
+                        "title": "Grid max rows",
+                    },
+                    "dependent_step": {
+                        "type": ["integer", "null"],
+                        "minimum": 1,
+                        "maximum": 10,
+                        "title": "Dependent step",
+                    },
+                    "file_max_attachments": {
+                        "type": ["integer", "null"],
+                        "minimum": 1,
+                        "maximum": 20,
+                        "title": "File max attachments",
+                    },
                 },
-                "required": ["label", "type", "is_required", "description"],
-                "additionalProperties": False,
+                "required": ["label", "type"],
             },
         },
     }
@@ -89,7 +223,7 @@ def target_schema():
     
     This is a frozen snapshot of version 1. Hard-coded to ensure migrations
     forever validate against the same target schema, regardless of future
-    schema evolution.
+    schema evolution. This is IDENTICAL to the production schema with version 1.
     """
     return {
         "$id": "https://example.com/arrays.schema.json",
@@ -119,39 +253,172 @@ def target_schema():
             "step": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string"},
-                    "description": {"type": "string"},
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Title",
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "title": "Description",
+                    },
                     "sections": {
                         "type": "array",
                         "items": {"$ref": "#/$defs/section"},
+                        "minItems": 1,
+                        "title": "Sections",
                     },
                 },
-                "required": ["title", "description", "sections"],
-                "additionalProperties": False,
+                "required": ["title", "sections"],
             },
             "section": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string"},
-                    "description": {"type": "string"},
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Title",
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 3000,
+                        "title": "Description",
+                    },
                     "questions": {
                         "type": "array",
                         "items": {"$ref": "#/$defs/question"},
+                        "minItems": 1,
+                        "title": "Questions",
                     },
                 },
-                "required": ["title", "description", "questions"],
-                "additionalProperties": False,
+                "required": ["title", "questions"],
             },
             "question": {
                 "type": "object",
                 "properties": {
-                    "label": {"type": "string"},
-                    "type": {"type": "string"},
-                    "is_required": {"type": "boolean"},
-                    "description": {"type": "string"},
+                    "label": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "title": "Label",
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "text",
+                            "textarea",
+                            "number",
+                            "checkbox",
+                            "select",
+                            "date",
+                            "file",
+                            "grid",
+                        ],
+                        "enumNames": [
+                            "Text",
+                            "Textarea Multi-line",
+                            "Numeric",
+                            "Checkbox",
+                            "Multiple Choice Select",
+                            "Date",
+                            "File Upload",
+                            "Grid (Matrix of options)",
+                        ],
+                        "title": "Type",
+                    },
+                    "is_required": {
+                        "type": "boolean",
+                        "title": "Is required",
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "title": "Description",
+                    },
+                    "select_options": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 100,
+                            "minLength": 1,
+                        },
+                        "maxItems": 50,
+                        "title": "Select options",
+                    },
+                    "grid_columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "minLength": 1,
+                                    "title": "Label",
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "text",
+                                        "textarea",
+                                        "number",
+                                        "checkbox",
+                                        "select",
+                                        "date",
+                                    ],
+                                    "enumNames": [
+                                        "Text",
+                                        "Textarea Multi-line",
+                                        "Numeric",
+                                        "Checkbox",
+                                        "Multiple Choice Select",
+                                        "Date",
+                                    ],
+                                    "title": "Type",
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "maxLength": 255,
+                                    "title": "Description",
+                                },
+                                "select_options": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                    },
+                                    "maxItems": 50,
+                                    "title": "Select options",
+                                },
+                            },
+                            "required": ["label", "type"],
+                        },
+                        "maxItems": 10,
+                        "title": "Grid columns",
+                    },
+                    "grid_max_rows": {
+                        "type": ["integer", "null"],
+                        "minimum": 1,
+                        "maximum": 20,
+                        "title": "Grid max rows",
+                    },
+                    "dependent_step": {
+                        "type": ["integer", "null"],
+                        "minimum": 1,
+                        "maximum": 10,
+                        "title": "Dependent step",
+                    },
+                    "file_max_attachments": {
+                        "type": ["integer", "null"],
+                        "minimum": 1,
+                        "maximum": 20,
+                        "title": "File max attachments",
+                    },
                 },
-                "required": ["label", "type", "is_required", "description"],
-                "additionalProperties": False,
+                "required": ["label", "type"],
             },
         },
     }
