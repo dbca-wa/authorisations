@@ -207,8 +207,7 @@ Commands:
 cd frontend
 npm run build
 
-cd ../backend
-poetry run python manage.py collectstatic --noinput
+cd ../backend && poetry run python manage.py collectstatic --noinput
 
 # Run E2E tests against built assets
 DJANGO_VITE_TEST_DEV_MODE=false DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json \
@@ -421,7 +420,7 @@ Recommended Validate stage order:
 
 E2E CI checklist:
 - Ensure frontend is built: `npm run build` in CI before E2E job runs.
-- Ensure Django collects static assets: `python manage.py collectstatic --noinput` in CI.
+- Ensure Django collects static assets: `cd backend && poetry run python manage.py collectstatic --noinput` in CI.
 - Set environment variables for static mode: `DJANGO_VITE_TEST_DEV_MODE=false` and `DJANGO_VITE_TEST_MANIFEST_PATH=static/manifest.json`.
 - Ensure Playwright browser install step exists: `poetry run playwright install --with-deps chromium`.
 - Ensure pytest writes JUnit XML when PublishTestResults expects it.

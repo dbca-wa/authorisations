@@ -224,16 +224,16 @@ Before migration 0001 could operate, legacy calendar-based versions (`"2025.07-1
 
 ```bash
 # Convert existing calendar versions to integer 0 (baseline)
-python manage.py schema_zero
+cd backend && poetry run python manage.py schema_zero
 # Output: [EMERGENCY] Unconditionally converted 147 records: (any) → 0
 
 # Then migration 0001 takes those from version 0 → 1 (both integers)
-python manage.py schema_migrate_questionnaire 0001
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0001
 ```
 
 The `schema_zero` command is **temporary emergency recovery tool only**. It performs **unconditional** schema_version conversion without validation:
-- **Forward** (`python manage.py schema_zero`): Sets ALL records to `0` (integer) regardless of current state
-- **Backward** (`python manage.py schema_zero --revert`): Sets ALL records to `"2025.07-1"` (string) regardless of current state
+- **Forward** (`cd backend && poetry run python manage.py schema_zero`): Sets ALL records to `0` (integer) regardless of current state
+- **Backward** (`cd backend && poetry run python manage.py schema_zero --revert`): Sets ALL records to `"2025.07-1"` (string) regardless of current state
 
 **Normal workflow**: Use `schema_migrate_questionnaire` and `schema_rollback_questionnaire` (idempotent, validated).
 
@@ -554,28 +554,28 @@ is_valid, errors = validate_transform(
 
 ```bash
 # Show current version and record distribution
-python manage.py schema_status_questionnaire
+cd backend && poetry run python manage.py schema_status_questionnaire
 # Output:
 # Current schema version: 1
 #   1: 147 questionnaires
 # Available migrations: 0001 (you are here), 0002, 0003
 
 # Dry run: test transform to specific migration number, no writes
-python manage.py schema_migrate_questionnaire 0002 --dry-run
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0002 --dry-run
 # Output:
 # Found 147 questionnaires at version 1
 # DRY RUN: Would migrate to schema version 2...
 # Would transform 147/147 successfully
 
 # Actually migrate to specific migration number
-python manage.py schema_migrate_questionnaire 0002
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0002
 # Output:
 # Found 147 questionnaires at version "1"
 # Migrating to schema version "2"...
 # ✓ Migrated 147/147 questionnaires. Updated SCHEMA_VERSION to "2"
 
 # Rollback to previous migration (backward)
-python manage.py schema_rollback_questionnaire 0001
+cd backend && poetry run python manage.py schema_rollback_questionnaire 0001
 # Output:
 # Found 147 questionnaires at version "2"
 # Rolling back to schema version "1"...
@@ -644,7 +644,7 @@ python manage.py schema_rollback_questionnaire 0001
        if doc_version != SCHEMA_VERSION:
            raise serializers.ValidationError(
                f"Document schema version must be '{SCHEMA_VERSION}', but got '{doc_version}'. "
-               f"Run migration: python manage.py schema_migrate_questionnaire {SCHEMA_VERSION}"
+               f"Run migration: cd backend && poetry run python manage.py schema_migrate_questionnaire {SCHEMA_VERSION}"
            )
 
        # Validate and return with the JSON schema
@@ -725,8 +725,8 @@ python manage.py schema_rollback_questionnaire 0001
 If migration files raise errors on precondition mismatch, you cannot safely retry:
 
 ```bash
-python manage.py schema_migrate_questionnaire 0001  # First run: ✓ Success
-python manage.py schema_migrate_questionnaire 0001  # Second run: ❌ ERROR (precondition failed)
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0001  # First run: ✓ Success
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0001  # Second run: ❌ ERROR (precondition failed)
 ```
 
 This violates idempotency and breaks safe retry semantics.
@@ -788,7 +788,7 @@ class Command(BaseCommand):
                 f"  Current DB version: {current_db_version}\n"
                 f"  Expected input: {expected_previous}\n"
                 f"  Will produce: {target_version}\n"
-                f"  Run 'python manage.py schema_status_questionnaire' to diagnose."
+                f"  Run 'cd backend && poetry run python manage.py schema_status_questionnaire' to diagnose."
             )
         
         # Run transformation (migration file assumes precondition met)
@@ -799,33 +799,33 @@ class Command(BaseCommand):
 
 **Scenario 1: First migration run (transforms data from old to new version)**
 ```bash
-$ python manage.py schema_status_questionnaire
+$ cd backend && poetry run python manage.py schema_status_questionnaire
 Current schema version: 1
   1: 147 questionnaires
 
-$ python manage.py schema_migrate_questionnaire 0002
+$ cd backend && poetry run python manage.py schema_migrate_questionnaire 0002
 Found 147 questionnaires at version 1
 Migrating to version 2...
 ✓ Migrated 147/147 questionnaires. Updated SCHEMA_VERSION to 2
 
-$ python manage.py schema_migrate_questionnaire 0002
+$ cd backend && poetry run python manage.py schema_migrate_questionnaire 0002
 Already at version 2. No migration needed.
 ```
 
 **Scenario 2: Running same command twice (safe idempotent retry)**
 ```bash
-$ python manage.py schema_migrate_questionnaire 0002
+$ cd backend && poetry run python manage.py schema_migrate_questionnaire 0002
 Already at version 2. No migration needed.
 ```
 
 **Scenario 3: Mixed database state (error state - cannot migrate)**
 ```bash
-$ python manage.py schema_migrate_questionnaire 0002
+$ cd backend && poetry run python manage.py schema_migrate_questionnaire 0002
 Cannot migrate 0002:
   Current DB version: mixed
   Expected input: 1
   Will produce: 2
-  Run 'python manage.py schema_status_questionnaire' to diagnose.
+  Run 'cd backend && poetry run python manage.py schema_status_questionnaire' to diagnose.
 ```
 
 ### Migration File Design (Assumes Precondition Met)
@@ -1242,24 +1242,24 @@ SCHEMA_VERSION = 2
 **Step 6**: Execute migration (after Phase 4 management commands are implemented):
 ```bash
 # Check status
-python manage.py schema_status_questionnaire
+cd backend && poetry run python manage.py schema_status_questionnaire
 # Output: Current schema version: 1
 #         1: 147 questionnaires
 
 # Dry run
-python manage.py schema_migrate_questionnaire 0002 --dry-run
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0002 --dry-run
 # Output: Found 147 questionnaires at version 1
 #         DRY RUN: Would migrate to schema version 2...
 #         Would transform 147/147 successfully
 
 # Migrate
-python manage.py schema_migrate_questionnaire 0002
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0002
 # Output: Found 147 questionnaires at version 1
 #         Migrating to schema version 2...
 #         ✓ Migrated 147/147 questionnaires. Updated version to 2
 
 # Verify
-python manage.py schema_status_questionnaire
+cd backend && poetry run python manage.py schema_status_questionnaire
 # Output: Current schema version: 2
 #         2: 147 questionnaires
 ```
@@ -1412,18 +1412,18 @@ The current deployment has the migration file with `migrate_backward()` defined.
 export MAINTENANCE_MODE=True
 
 # Verify current state
-python manage.py schema_status_questionnaire
+cd backend && poetry run python manage.py schema_status_questionnaire
 # Output: Current schema version: 1  (after migration 0001)
 #         1: 147 questionnaires
 
 # Rollback data using the current code's migration
-python manage.py schema_rollback_questionnaire 0001
+cd backend && poetry run python manage.py schema_rollback_questionnaire 0001
 # Output: Found 147 questionnaires at version 1
 # Rolling back to schema version 0...
 # ✓ Rolled back 147/147 questionnaires. Updated schema version to 0
 
 # Verify rollback succeeded
-python manage.py schema_status_questionnaire
+cd backend && poetry run python manage.py schema_status_questionnaire
 # Output: Current schema version: 0
 #         0: 147 questionnaires
 ```
@@ -1442,7 +1442,7 @@ Now deploy the previous code version (before the failed schema changes).
 # OR: git checkout <previous-commit> && deploy
 
 # After deployment, verify schema version matches
-python manage.py schema_status_questionnaire
+cd backend && poetry run python manage.py schema_status_questionnaire
 # Should show: Current schema version: 0
 #         0: 147 questionnaires
 ```
@@ -1476,7 +1476,7 @@ If you've fixed the underlying issues and want to migrate forward again:
 ```bash
 # New code is deployed with the migration file (0001_initial.py)
 # Run migrate with current DB at version 0
-python manage.py schema_migrate_questionnaire 0001
+cd backend && poetry run python manage.py schema_migrate_questionnaire 0001
 # Output: Found 147 questionnaires at version 0
 #         Migrating to schema version 1...
 #         ✓ Migrated 147/147 questionnaires. Updated schema version to 1

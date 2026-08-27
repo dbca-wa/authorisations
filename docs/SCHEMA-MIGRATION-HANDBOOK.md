@@ -110,8 +110,8 @@ def previous_schema():
 **Rule**: Running the same migration command multiple times must be safe (idempotent).
 
 ```bash
-python manage.py schema_migrate --target questionnaires 0002  # First run: transforms data
-python manage.py schema_migrate --target questionnaires 0002  # Second run: no-op (already at version 2)
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0002  # First run: transforms data
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0002  # Second run: no-op (already at version 2)
 ```
 
 The management command enforces this by checking the database version before executing any transforms. If already at the target version, it returns immediately with a "no operation needed" message.
@@ -514,7 +514,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for maintenance mode setup.
 ### Step 1: Check Current Status
 
 ```bash
-python manage.py schema_status --target questionnaires
+cd backend && poetry run python manage.py schema_status --target questionnaires
 
 # Output:
 # Current schema version: 1
@@ -525,7 +525,7 @@ python manage.py schema_status --target questionnaires
 ### Step 2: Dry Run (Test Without Writing)
 
 ```bash
-python manage.py schema_migrate --target questionnaires 0002 --dry-run
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0002 --dry-run
 
 # Output:
 # Found 147 questionnaires at version 1
@@ -543,7 +543,7 @@ python manage.py schema_migrate --target questionnaires 0002 --dry-run
 ### Step 3: Execute Migration
 
 ```bash
-python manage.py schema_migrate --target questionnaires 0002
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0002
 
 # Output:
 # Found 147 questionnaires at version 1
@@ -556,7 +556,7 @@ python manage.py schema_migrate --target questionnaires 0002
 ### Step 4: Verify Post-Migration
 
 ```bash
-python manage.py schema_status --target questionnaires
+cd backend && poetry run python manage.py schema_status --target questionnaires
 
 # Output:
 # Current schema version: 2
@@ -595,7 +595,7 @@ If something goes wrong after a migration, you can safely rollback to the previo
 ### Step 1: Verify Current State
 
 ```bash
-python manage.py schema_status --target questionnaires
+cd backend && poetry run python manage.py schema_status --target questionnaires
 
 # Output should show all records at the version you migrated to
 # Current schema version: 2
@@ -605,7 +605,7 @@ python manage.py schema_status --target questionnaires
 ### Step 2: Dry Run Rollback
 
 ```bash
-python manage.py schema_rollback --target questionnaires 0001
+cd backend && poetry run python manage.py schema_rollback --target questionnaires 0001
 
 # Output:
 # Found 147 questionnaires at version 2
@@ -618,7 +618,7 @@ python manage.py schema_rollback --target questionnaires 0001
 ### Step 3: Execute Rollback
 
 ```bash
-python manage.py schema_rollback --target questionnaires 0001
+cd backend && poetry run python manage.py schema_rollback --target questionnaires 0001
 
 # Output:
 # Found 147 questionnaires at version 2
@@ -631,7 +631,7 @@ python manage.py schema_rollback --target questionnaires 0001
 ### Step 4: Verify Rollback
 
 ```bash
-python manage.py schema_status --target questionnaires
+cd backend && poetry run python manage.py schema_status --target questionnaires
 
 # Output:
 # Current schema version: 1
@@ -947,7 +947,7 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
 **Resolution**:
 1. Check status to identify the problematic records:
    ```bash
-   python manage.py schema_status --target questionnaires
+   cd backend && poetry run python manage.py schema_status --target questionnaires
    # Output shows distribution by version
    ```
 2. Investigate why records are at different versions
@@ -965,11 +965,11 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
 1. Increase timeout in your command execution:
    ```bash
    # Example: 5-minute timeout
-   timeout 300 python manage.py schema_migrate --target questionnaires 0002
+   cd backend && timeout 300 poetry run python manage.py schema_migrate --target questionnaires 0002
    ```
 2. Or run in background with nohup:
    ```bash
-   nohup python manage.py schema_migrate --target questionnaires 0002 > migration.log 2>&1 &
+   cd backend && nohup poetry run python manage.py schema_migrate --target questionnaires 0002 > migration.log 2>&1 &
    ```
 3. Monitor the log to ensure completion:
    ```bash
@@ -995,12 +995,12 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
 **Resolution**:
 1. Check current state:
    ```bash
-   python manage.py schema_status --target questionnaires
+   cd backend && poetry run python manage.py schema_status --target questionnaires
    ```
 2. Verify you're rolling back from the correct version:
    ```bash
    # If currently at version 2, roll back to version 1
-   python manage.py schema_rollback --target questionnaires 0001
+   cd backend && poetry run python manage.py schema_rollback --target questionnaires 0001
    ```
 
 ### Issue: "Migration framework blocked — database in inconsistent state (emergency recovery)"
@@ -1015,17 +1015,17 @@ The temporary `schema_zero` command can manually reset schema_version unconditio
 
 ```bash
 # EMERGENCY: Unconditionally set all records to integer 0
-python manage.py schema_zero
+cd backend && poetry run python manage.py schema_zero
 # Output: [EMERGENCY] Unconditionally converted 147 records: (any) → 0
 
 # Then attempt recovery using normal migration commands
-python manage.py schema_migrate --target questionnaires 0001  # Or appropriate target
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0001  # Or appropriate target
 ```
 
 **Backward recovery (if needed):**
 ```bash
 # EMERGENCY: Unconditionally revert all records to legacy version
-python manage.py schema_zero --revert
+cd backend && poetry run python manage.py schema_zero --revert
 # Output: [EMERGENCY] Unconditionally converted 147 records: 0 → '2025.07-1'
 ```
 
@@ -1075,9 +1075,9 @@ backend/
 
 | Command | Purpose | Syntax |
 |---------|---------|--------|
-| `schema_status` | Show current version and record distribution | `python manage.py schema_status --target questionnaires` |
-| `schema_migrate` | Migrate to target version | `python manage.py schema_migrate --target questionnaires 0002 [--dry-run]` |
-| `schema_rollback` | Rollback to target version | `python manage.py schema_rollback --target questionnaires 0001 [--dry-run]` |
+| `schema_status` | Show current version and record distribution | `cd backend && poetry run python manage.py schema_status --target questionnaires` |
+| `schema_migrate` | Migrate to target version | `cd backend && poetry run python manage.py schema_migrate --target questionnaires 0002 [--dry-run]` |
+| `schema_rollback` | Rollback to target version | `cd backend && poetry run python manage.py schema_rollback --target questionnaires 0001 [--dry-run]` |
 
 **Note**: The `--target` flag specifies which model to migrate. Use `questionnaires` for questionnaire documents. Additional targets can be configured via `SCHEMA_MIGRATION_TARGETS` in Django settings.
 
