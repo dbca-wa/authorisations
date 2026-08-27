@@ -14,6 +14,7 @@ Migration modules must provide:
 import importlib.util
 import sys
 from pathlib import Path
+from types import ModuleType
 
 
 def migration_number_to_version(migration_number: str) -> int:
@@ -49,7 +50,7 @@ def version_to_migration_number(version: int) -> str:
     return f"{version:04d}"
 
 
-def get_migration(migration_number: str, migrations_package_path: str):
+def get_migration(migration_number: str, migrations_package_path: str) -> ModuleType:
     """Load and return a migration module by number.
     
     Args:
@@ -126,3 +127,40 @@ def list_migrations(migrations_package_path: str) -> list[str]:
     )
     
     return migration_numbers
+
+
+def find_migration_by_output_version(target_version: int, migrations_package_path: str) -> str:
+    """Find which migration number produces a given schema version.
+
+    Given a schema version integer (e.g., 1, 2), returns the migration number
+    that produces it as output (e.g., "0001").
+
+    Schema versions are derived from migration file prefixes. Migration 0001
+    produces version 1, migration 0002 produces version 2, etc.
+
+    Args:
+        target_version: Schema version integer to find (e.g., 1, 2).
+        migrations_package_path: Absolute filesystem path to migrations package
+
+    Returns:
+        Migration number that produces this version (e.g., "0001").
+
+    Raises:
+        ValueError: If target_version is negative or no valid migration exists.
+    """
+    if target_version < 1:
+        raise ValueError(
+            f"Invalid target version {target_version}. "
+            f"Only positive integers >= 1 are valid. Version 0 is the baseline (no migration)."
+        )
+
+    target_migration_number = version_to_migration_number(target_version)
+    available = list_migrations(migrations_package_path)
+
+    if target_migration_number not in available:
+        raise ValueError(
+            f"No migration found that produces version {target_version}. "
+            f"Available migrations: {', '.join(available) if available else '(none)'}"
+        )
+
+    return target_migration_number

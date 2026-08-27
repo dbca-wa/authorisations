@@ -6,7 +6,9 @@ Provides helpers for validation testing, transform application, and error report
 
 from copy import deepcopy
 from typing import Any, Callable
+import importlib
 
+from django.apps import apps
 from django.db import transaction
 
 
@@ -160,3 +162,90 @@ def execute_atomic_transaction(operation: Callable[[], None]) -> None:
     """
     with transaction.atomic():
         operation()
+
+
+def get_target_model(target: dict[str, str]) -> type:
+    """Dynamically load Django model from target registry entry.
+    
+    Args:
+        target: Target configuration dict with 'model' key (e.g., "questionnaires.Questionnaire").
+    
+    Returns:
+        Django model class.
+    
+    Raises:
+        LookupError: If app_label or model_name not found.
+        ValueError: If model format is invalid.
+    """
+    model_path = target["model"]
+    
+    if "." not in model_path:
+        raise ValueError(
+            f"Invalid model format: {model_path!r}. Expected 'app_label.ModelName'."
+        )
+    
+    app_label, model_name = model_path.rsplit(".", 1)
+    return apps.get_model(app_label, model_name)
+
+
+def get_schema_version_from_document(document: dict, version_path: str) -> int | None:
+    """Extract schema version from document using dot-notation path.
+    
+    Supports nested paths like "metadata.schema.version" by traversing dot-separated keys.
+    
+    Args:
+        document: JSON document dict.
+        version_path: Path to version field using dot notation (e.g., "schema_version" or "metadata.version").
+    
+    Returns:
+        Schema version value if found, None if path doesn't exist.
+    
+    Raises:
+        TypeError: If traversal encounters non-dict intermediate value (path invalid for document structure).
+    """
+    parts = version_path.split(".")
+    current = document
+    
+    for i, part in enumerate(parts):
+        if not isinstance(current, dict):
+            raise TypeError(
+                f"Cannot traverse version_path {version_path!r}: "
+                f"part '{'.'.join(parts[:i])}' is not a dict, got {type(current).__name__}"
+            )
+        
+        current = current.get(part)
+        
+        # If intermediate part doesn't exist, return None (allows optional nested fields)
+        if current is None:
+            return None
+    
+    return current
+
+
+def get_migrations_package_path(migrations_package: str) -> str:
+    """Convert dotted package path to filesystem path.
+    
+    Args:
+        migrations_package: Dotted import path (e.g., "questionnaires.schema_migrations").
+    
+    Returns:
+        Filesystem path to package directory.
+    
+    Raises:
+        ModuleNotFoundError: If package cannot be imported.
+        AttributeError: If package doesn't have __path__ (not a valid package).
+    """
+    parts = migrations_package.rsplit(".", 1)
+    if len(parts) == 1:
+        module = importlib.import_module(migrations_package)
+    else:
+        module = importlib.import_module(parts[0])
+        module = getattr(module, parts[1])
+    
+    if not hasattr(module, "__path__"):
+        raise AttributeError(
+            f"{migrations_package} is not a valid package (no __path__)"
+        )
+    
+    return str(module.__path__[0])
+

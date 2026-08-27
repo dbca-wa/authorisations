@@ -36,6 +36,11 @@ from .registry import (
 )
 from .types import MigrationTarget
 from .validator import validate_transform
+from .executor import (
+    get_target_model,
+    get_schema_version_from_document,
+    get_migrations_package_path,
+)
 
 __all__ = [
     "get_migration",
@@ -49,4 +54,7 @@ __all__ = [
     "list_target_keys",
     "RegistryError",
     "MigrationTarget",
+    "get_target_model",
+    "get_schema_version_from_document",
+    "get_migrations_package_path",
 ]
