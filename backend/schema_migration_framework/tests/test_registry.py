@@ -1,6 +1,7 @@
 """Unit tests for schema_migration_framework.registry module."""
 
 import pytest
+from django.conf import settings
 from django.test import override_settings
 
 from schema_migration_framework.registry import (
@@ -44,11 +45,12 @@ def valid_targets(valid_target):
 class TestLoadTargets:
     """Tests for load_targets() function."""
 
-    def test_load_targets_missing_setting_raises_error(self):
+    def test_load_targets_missing_setting_raises_error(self, monkeypatch):
         """Raise error if SCHEMA_MIGRATION_TARGETS setting not defined."""
-        with pytest.raises(
-            RegistryError, match="SCHEMA_MIGRATION_TARGETS setting not found"
-        ):
+        # Temporarily remove the setting to test the error case
+        monkeypatch.delattr(settings, "SCHEMA_MIGRATION_TARGETS", raising=False)
+        
+        with pytest.raises(RegistryError, match="SCHEMA_MIGRATION_TARGETS setting not found"):
             load_targets()
 
     def test_load_targets_not_a_list_raises_error(self):

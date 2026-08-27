@@ -47,7 +47,6 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--verbose",
-            "-v",
             action="store_true",
             help="Show detailed progress per record",
         )

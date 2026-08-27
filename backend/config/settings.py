@@ -134,6 +134,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_jsonform",
+    "schema_migration_framework",
     "users",
     "processes",
     "questionnaires",
@@ -314,6 +315,20 @@ REST_FRAMEWORK = {
     ],
     "UPLOADED_FILES_USE_URL": False,
 }
+
+# Schema Migration Framework configuration
+# Defines migration targets for schema versioning and evolution.
+# Each target specifies how to locate and transform documents for a specific model.
+SCHEMA_MIGRATION_TARGETS = [
+    {
+        "key": "questionnaires",
+        "model": "questionnaires.Questionnaire",
+        "json_field": "document",
+        "schema_provider": "questionnaires.schema.SCHEMA_VERSION",
+        "migrations_package": "questionnaires.schema_migrations",
+        "version_path": "schema_version",
+    },
+]
 
 # --- Private Media Storage for Secure File Uploads ---
 

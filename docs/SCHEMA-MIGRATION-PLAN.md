@@ -31,9 +31,9 @@ The framework prioritises:
 | **Phase 7: Internal Framework Extraction** | **✅ COMPLETE** | **Reusable `schema_migration_framework/` module with 5 core files** | **47/47 tests passing** |
 | **Phase 8: Configurable Registry** | **✅ COMPLETE** | **Settings-based target registration for multi-target support** | **29/29 tests passing** |
 | **Phase 9: Generic Management Commands** | **✅ COMPLETE** | **`--target` flag commands + base class + 13 tests for nested version_path** | **13/13 tests passing** |
-| **Phase 10: Apply to Both Apps** | ⏳ PLANNED | questionnaires + applications on shared framework | TBD |
-| **Phase 11: Hardening & Sign-Off** | ⏳ PLANNED | Internal reuse ready for public extraction | TBD |
-| **Total Framework** | **✅ PHASES 1-9 COMPLETE** | **Generic commands with --target flag, ready for applications** | **218/218 tests passing** |
+| **Phase 10: Questionnaires → Generic Framework** | ⏳ PLANNED | Remove app-specific code, keep migration files in questionnaires folder, configure via SCHEMA_MIGRATION_TARGETS | TBD |
+| **Phase 11: Applications → Generic Framework** | ⏳ PLANNED | Create applications migrations folder, add SCHEMA_VERSION, configure via SCHEMA_MIGRATION_TARGETS | TBD |
+| **Total Framework** | **✅ PHASES 1-9 COMPLETE** | **Generic commands with --target flag, ready for questionnaires + applications** | **218/218 tests passing** |
 
 **Documentation:**
 - **[SCHEMA-MIGRATION-HANDBOOK.md](SCHEMA-MIGRATION-HANDBOOK.md)** — Comprehensive guide for developers and operators (how to create, execute, test, and rollback migrations)
@@ -81,8 +81,8 @@ The framework prioritises:
 - ✅ Ready for Phase 10: Apply to both questionnaires and applications modules
 
 **Next phases (continuation in next session):**
-- Phase 10: Refactor questionnaires + add applications to framework - READY TO START
-- Phase 11: Hardening and operational sign-off before library extraction
+- Phase 10: Migrate questionnaires to generic framework (delete app-specific code, keep migration files in questionnaires folder) - READY TO START
+- Phase 11: Migrate applications to generic framework (create schema_migrations folder, add SCHEMA_VERSION, create 0001 migration) - DEFERRED
 
 ---
 
@@ -1065,49 +1065,105 @@ def migrate_forward(doc: dict) -> dict:
 - Commands run successfully for any configured target.
 - Existing operator command names continue to work.
 
-### Phase 10: Apply Shared Framework to `questionnaires` and `applications`
+### Phase 10: Migrate `questionnaires` to Generic Framework (Schema Migration Layer Only)
 
-**Objective**: Remove duplicated migration orchestration logic from app modules and use the shared framework for both apps.
+**Objective**: Remove duplicated migration orchestration code from `questionnaires` module and configure it to use the shared framework, while keeping migration files in their app-specific location (`questionnaires/schema_migrations/`).
 
-**Implementation steps**:
-
-1. Point `questionnaires` commands and migration utilities to shared module.
-2. Create/align `applications` migration package and command wrappers.
-3. Keep serializer behaviour as-is in each app:
-    - schema validation uses `jsonschema`
-    - DRF `ValidationError` remains in API layer code only
-4. Add app-level integration tests:
-    - status distribution
-    - dry-run no-write guarantees
-    - migrate success path
-    - rollback success path
-    - mixed-version failure path
-
-**Exit criteria**:
-
-- Both apps use one shared execution engine.
-- No duplicated loader/validator/executor code remains in app modules.
-
-### Phase 11: Hardening and Internal Reuse Sign-Off
-
-**Objective**: Finalise internal reuse quality so any developer or agent can execute migrations on new configured JSONFields without ambiguity.
+**Key principle**: Migration files remain in their app-specific folders. The `migrations_package` setting in `SCHEMA_MIGRATION_TARGETS` points the generic framework to where they live.
 
 **Implementation steps**:
 
-1. Update documentation:
-    - add target registration examples in settings
-    - add command usage examples for generic and wrapper commands
-    - add troubleshooting for misconfiguration and mixed-version states
-2. Add focused failure-mode tests:
-    - invalid migration module layout
-    - schema validation failures
-    - command precondition mismatches
-3. Run backend quality checks and affected tests per FEATURE-DEVELOPMENT.md.
+1. **Delete questionnaires app-specific migration infrastructure** (duplication):
+   - `backend/questionnaires/schema_migrations_loader.py` (222 LOC duplicate of framework/loader.py)
+   - `backend/questionnaires/schema_migration_utils.py` (127 LOC duplicate of framework/validator.py)
+   - `backend/questionnaires/management/commands/schema_status_questionnaire.py` (app-specific wrapper)
+   - `backend/questionnaires/management/commands/schema_migrate_questionnaire.py` (app-specific wrapper)
+   - `backend/questionnaires/management/commands/schema_rollback_questionnaire.py` (app-specific wrapper)
+   - Migration-specific tests that duplicate framework tests (45+ tests)
+
+2. **Keep questionnaires migration files in their location**:
+   - `backend/questionnaires/schema_migrations/0001_initial.py` — **STAYS** in questionnaires folder (does NOT move to generic framework)
+   - `backend/questionnaires/schema_migrations/__init__.py` — Remains as-is
+   - Framework discovers migrations via `migrations_package` setting pointing to `questionnaires.schema_migrations`
+
+3. **Configure questionnaires in SCHEMA_MIGRATION_TARGETS**:
+   ```python
+   # backend/config/settings.py
+   SCHEMA_MIGRATION_TARGETS = [
+       {
+           "key": "questionnaires",
+           "model": "questionnaires.Questionnaire",
+           "json_field": "document",
+           "schema_provider": "questionnaires.schema.get_questionnaire_schema",
+           "migrations_package": "questionnaires.schema_migrations",  # Points to app-specific folder
+           "version_path": "schema_version",
+       },
+   ]
+   ```
+
+4. **Update questionnaires tests**:
+   - Keep `backend/questionnaires/tests/test_schema_migration_0001.py` (verification tests for 0001 migration)
+   - Update to work with generic framework if needed (call framework functions directly to load/execute migration)
+   - Delete duplicate framework tests that are no longer needed
+
+5. **Do NOT modify questionnaires serializers, API views, or validation logic**:
+   - questionnaires models, serializers, views, admin remain unchanged
+   - Only schema migration layer changes
+
+**Commands after Phase 10**:
+- Old app-specific commands removed: ❌ `schema_status_questionnaire`, `schema_migrate_questionnaire`, `schema_rollback_questionnaire`
+- New generic commands available: ✅ `schema_status --target questionnaires`, `schema_migrate --target questionnaires 0001`, `schema_rollback --target questionnaires 0001`
 
 **Exit criteria**:
 
-- Internal module is reusable, configurable, and documented end-to-end.
-- Migration execution for `Questionnaire.document` and `Application.document` is operational without code duplication.
+- questionnaires uses generic framework entirely for schema migration
+- No duplicated loader/validator/executor code in questionnaires module
+- questionnaires/schema_migrations/0001_initial.py remains in app folder (not moved)
+- Generic framework loads migrations from `questionnaires.schema_migrations` via settings
+- Verification test `test_schema_migration_0001.py` updated and passing
+- questionnaires API, models, serializers unmodified
+- Phase 10 is questionnaires only; applications deferred to Phase 11
+
+### Phase 11: Add `applications` to Generic Framework (Deferred)
+
+**Objective**: Apply the same generic framework pattern to `applications` module, creating migration support for `Application.document` schema evolution.
+
+**Implementation steps** (similar to Phase 10 but for applications):
+
+1. **Create applications migration infrastructure**:
+   - `backend/applications/schema_migrations/__init__.py` (directory)
+   - `backend/applications/schema_migrations/0001_initial.py` (baseline migration 0 → 1, copied from questionnaires 0001 logic exactly)
+
+2. **Update applications/schema.py**:
+   - Add `SCHEMA_VERSION = 1` constant
+   - Update `get_answers_schema()` to return schema with `schema_version` integer field (not calendar string format)
+
+3. **Configure applications in SCHEMA_MIGRATION_TARGETS**:
+   ```python
+   # backend/config/settings.py - add to existing list
+   {
+       "key": "applications",
+       "model": "applications.Application",
+       "json_field": "document",
+       "schema_provider": "applications.schema.get_answers_schema",
+       "migrations_package": "applications.schema_migrations",  # Points to app-specific folder
+       "version_path": "schema_version",
+   },
+   ```
+
+4. **Add applications verification tests**:
+   - `backend/applications/tests/test_schema_migration_0001.py` (similar to questionnaires)
+
+5. **Do NOT modify applications models, views, serializers outside schema migration layer**
+
+**Exit criteria**:
+
+- applications uses generic framework for schema migration
+- applications/schema_migrations/0001_initial.py in app folder (not moved)
+- Generic framework loads migrations from `applications.schema_migrations` via settings
+- Verification tests updated and passing
+- Both questionnaires and applications now use shared generic framework
+- No code duplication in migration infrastructure between apps
 
 ---
 

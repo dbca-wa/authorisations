@@ -235,12 +235,8 @@ def get_migrations_package_path(migrations_package: str) -> str:
         ModuleNotFoundError: If package cannot be imported.
         AttributeError: If package doesn't have __path__ (not a valid package).
     """
-    parts = migrations_package.rsplit(".", 1)
-    if len(parts) == 1:
-        module = importlib.import_module(migrations_package)
-    else:
-        module = importlib.import_module(parts[0])
-        module = getattr(module, parts[1])
+    # Import the full dotted path directly
+    module = importlib.import_module(migrations_package)
     
     if not hasattr(module, "__path__"):
         raise AttributeError(

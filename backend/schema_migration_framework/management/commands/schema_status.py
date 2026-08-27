@@ -11,6 +11,7 @@ from schema_migration_framework import (
     get_schema_version_from_document,
     get_target,
     get_target_model,
+    get_migrations_package_path,
     list_migrations,
     load_targets,
 )
@@ -117,9 +118,10 @@ class Command(BaseCommand):
         # Available migrations
         self.stdout.write("\nAvailable migrations:")
         try:
-            migrations = list_migrations(
+            migrations_pkg_path = get_migrations_package_path(
                 target_config["migrations_package"]
             )
+            migrations = list_migrations(migrations_pkg_path)
         except Exception as e:
             self.stdout.write(f"  (error loading migrations: {str(e)})")
             migrations = []

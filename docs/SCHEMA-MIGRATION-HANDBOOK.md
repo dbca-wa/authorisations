@@ -2,9 +2,9 @@
 
 This handbook provides comprehensive guidance on creating, executing, testing, and rolling back schema migrations for documents in Django models.
 
-**Scope**: This guide is written generically to apply to any Django model with JSON schema versioning. Currently implemented for `Questionnaire.document` only. The framework design is reusable and can be applied to other models (e.g., `Application.document`) following the same patterns documented here.
+**Scope**: This guide applies to JSON schema versioning in Django models. Currently implemented for `Questionnaire.document` via the generic `schema_migration_framework`. The same framework can be applied to other models (e.g., `Application.document`) following the patterns documented here.
 
-**Note on library extraction**: The management command names and module paths shown in this handbook are questionnaire-specific (e.g., `schema_migrate_questionnaire`). When this framework is extracted as a standalone library, these commands and paths will be generalized. See cross-references to [SCHEMA-MIGRATION-PLAN.md](SCHEMA-MIGRATION-PLAN.md) and [MIGRATION-FRAMEWORK-LIBRARY-PLAN.md](MIGRATION-FRAMEWORK-LIBRARY-PLAN.md) for strategic planning.
+**Framework**: As of Phase 10, all schema migrations use the generic `schema_migration_framework` module. App-specific migration commands have been consolidated to use the `--target` flag, simplifying the command interface and eliminating code duplication.
 
 ---
 
@@ -110,8 +110,8 @@ def previous_schema():
 **Rule**: Running the same migration command multiple times must be safe (idempotent).
 
 ```bash
-python manage.py schema_migrate_questionnaire 0002  # First run: transforms data
-python manage.py schema_migrate_questionnaire 0002  # Second run: no-op (already at version 2)
+python manage.py schema_migrate --target questionnaires 0002  # First run: transforms data
+python manage.py schema_migrate --target questionnaires 0002  # Second run: no-op (already at version 2)
 ```
 
 The management command enforces this by checking the database version before executing any transforms. If already at the target version, it returns immediately with a "no operation needed" message.
@@ -514,7 +514,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for maintenance mode setup.
 ### Step 1: Check Current Status
 
 ```bash
-python manage.py schema_status_questionnaire
+python manage.py schema_status --target questionnaires
 
 # Output:
 # Current schema version: 1
@@ -525,7 +525,7 @@ python manage.py schema_status_questionnaire
 ### Step 2: Dry Run (Test Without Writing)
 
 ```bash
-python manage.py schema_migrate_questionnaire 0002 --dry-run
+python manage.py schema_migrate --target questionnaires 0002 --dry-run
 
 # Output:
 # Found 147 questionnaires at version 1
@@ -543,7 +543,7 @@ python manage.py schema_migrate_questionnaire 0002 --dry-run
 ### Step 3: Execute Migration
 
 ```bash
-python manage.py schema_migrate_questionnaire 0002
+python manage.py schema_migrate --target questionnaires 0002
 
 # Output:
 # Found 147 questionnaires at version 1
@@ -556,7 +556,7 @@ python manage.py schema_migrate_questionnaire 0002
 ### Step 4: Verify Post-Migration
 
 ```bash
-python manage.py schema_status_questionnaire
+python manage.py schema_status --target questionnaires
 
 # Output:
 # Current schema version: 2
@@ -595,7 +595,7 @@ If something goes wrong after a migration, you can safely rollback to the previo
 ### Step 1: Verify Current State
 
 ```bash
-python manage.py schema_status_questionnaire
+python manage.py schema_status --target questionnaires
 
 # Output should show all records at the version you migrated to
 # Current schema version: 2
@@ -605,7 +605,7 @@ python manage.py schema_status_questionnaire
 ### Step 2: Dry Run Rollback
 
 ```bash
-python manage.py schema_rollback_questionnaire 0001
+python manage.py schema_rollback --target questionnaires 0001
 
 # Output:
 # Found 147 questionnaires at version 2
@@ -618,7 +618,7 @@ python manage.py schema_rollback_questionnaire 0001
 ### Step 3: Execute Rollback
 
 ```bash
-python manage.py schema_rollback_questionnaire 0001
+python manage.py schema_rollback --target questionnaires 0001
 
 # Output:
 # Found 147 questionnaires at version 2
@@ -631,7 +631,7 @@ python manage.py schema_rollback_questionnaire 0001
 ### Step 4: Verify Rollback
 
 ```bash
-python manage.py schema_status_questionnaire
+python manage.py schema_status --target questionnaires
 
 # Output:
 # Current schema version: 1
@@ -903,7 +903,7 @@ def test_full_migration_lifecycle_with_realistic_questionnaire():
     )
     
     # Run migrate command
-    call_command("schema_migrate_questionnaire", "0002")
+    call_command("schema_migrate", "--target", "questionnaires", "0002")
     
     # Verify
     q.refresh_from_db()
@@ -947,7 +947,7 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
 **Resolution**:
 1. Check status to identify the problematic records:
    ```bash
-   python manage.py schema_status_questionnaire
+   python manage.py schema_status --target questionnaires
    # Output shows distribution by version
    ```
 2. Investigate why records are at different versions
@@ -965,11 +965,11 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
 1. Increase timeout in your command execution:
    ```bash
    # Example: 5-minute timeout
-   timeout 300 python manage.py schema_migrate_questionnaire 0002
+   timeout 300 python manage.py schema_migrate --target questionnaires 0002
    ```
 2. Or run in background with nohup:
    ```bash
-   nohup python manage.py schema_migrate_questionnaire 0002 > migration.log 2>&1 &
+   nohup python manage.py schema_migrate --target questionnaires 0002 > migration.log 2>&1 &
    ```
 3. Monitor the log to ensure completion:
    ```bash
@@ -995,12 +995,12 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
 **Resolution**:
 1. Check current state:
    ```bash
-   python manage.py schema_status_questionnaire
+   python manage.py schema_status --target questionnaires
    ```
 2. Verify you're rolling back from the correct version:
    ```bash
    # If currently at version 2, roll back to version 1
-   python manage.py schema_rollback_questionnaire 0001
+   python manage.py schema_rollback --target questionnaires 0001
    ```
 
 ### Issue: "Migration framework blocked — database in inconsistent state (emergency recovery)"
@@ -1019,7 +1019,7 @@ python manage.py schema_zero
 # Output: [EMERGENCY] Unconditionally converted 147 records: (any) → 0
 
 # Then attempt recovery using normal migration commands
-python manage.py schema_migrate_questionnaire 0001  # Or appropriate target
+python manage.py schema_migrate --target questionnaires 0001  # Or appropriate target
 ```
 
 **Backward recovery (if needed):**
@@ -1054,24 +1054,32 @@ backend/
 │   │   ├── 0001_initial.py — Baseline migration
 │   │   ├── 0002_consolidate_attrs.py — Future migration
 │   │   └── ...
-│   ├── management/commands/
-│   │   ├── schema_migrate_questionnaire.py — Execute forward migration
-│   │   ├── schema_rollback_questionnaire.py — Execute rollback
-│   │   └── schema_status_questionnaire.py — Display status
 │   └── tests/
-│       ├── test_schema_migration.py — Framework tests
 │       ├── test_schema_migration_0001.py — Migration 0001 tests
-│       ├── test_schema_migration_000N.py — Migration N tests
+│       ├── test_schema_migration_000N.py — Migration N tests (future)
 │       └── test_schema_migration_integration.py — Integration tests (future)
-```
+│
+├── schema_migration_framework/
+│   ├── loader.py — Migration discovery and dynamic importing
+│   ├── pathing.py — Forward/backward path resolution
+│   ├── executor.py — Transaction-scoped execution
+│   ├── validator.py — Schema validation
+│   ├── registry.py — Settings-based target configuration
+│   ├── management/commands/
+│   │   ├── schema_status.py — Display current version (generic, --target flag)
+│   │   ├── schema_migrate.py — Execute forward migration (generic)
+│   │   └── schema_rollback.py — Execute rollback (generic)
+│   └── tests/ — Framework tests (unit, path finding, validator, registry)
 
 ### Command Reference
 
 | Command | Purpose | Syntax |
 |---------|---------|--------|
-| `schema_status_questionnaire` | Show current version and record distribution | `python manage.py schema_status_questionnaire` |
-| `schema_migrate_questionnaire` | Migrate to target version | `python manage.py schema_migrate_questionnaire 0002 [--dry-run]` |
-| `schema_rollback_questionnaire` | Rollback to target version | `python manage.py schema_rollback_questionnaire 0001 [--dry-run]` |
+| `schema_status` | Show current version and record distribution | `python manage.py schema_status --target questionnaires` |
+| `schema_migrate` | Migrate to target version | `python manage.py schema_migrate --target questionnaires 0002 [--dry-run]` |
+| `schema_rollback` | Rollback to target version | `python manage.py schema_rollback --target questionnaires 0001 [--dry-run]` |
+
+**Note**: The `--target` flag specifies which model to migrate. Use `questionnaires` for questionnaire documents. Additional targets can be configured via `SCHEMA_MIGRATION_TARGETS` in Django settings.
 
 ### Key Files
 
