@@ -85,7 +85,7 @@ class Command(BaseCommand):
         else:
             # FORWARD: Unconditionally set to 0 (integer)
             target_version = 0
-            direction = f"(any) → 0"
+            direction = "(any) → 0"
             for record in records:
                 record.document["schema_version"] = target_version
                 record.save()

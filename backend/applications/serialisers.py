@@ -326,17 +326,18 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         """
         from applications.schema import SCHEMA_VERSION
         
-        # Check schema version first
-        doc_version = value.get("schema_version") if isinstance(value, dict) else None
-        if doc_version != SCHEMA_VERSION:
-            raise exceptions.ValidationError(
-                f"Document schema version must be {SCHEMA_VERSION}, but got {doc_version}. "
-                f"Run: cd backend && poetry run python manage.py schema_migrate --target applications {SCHEMA_VERSION}"
-            )
-        
+        # Check status first (original behavior - prevents modification of non-DRAFT applications)
         if self.instance.status != ApplicationStatus.DRAFT:
             raise exceptions.ValidationError(
                 f"Cannot modify document with status '{self.instance.status}'"
+            )
+        
+        # Then check schema version
+        doc_version = value.get("schema_version") if isinstance(value, dict) else None
+        if doc_version != SCHEMA_VERSION:
+            raise exceptions.ValidationError(
+                f"Schema version mismatch: expected {SCHEMA_VERSION}, got {doc_version}. "
+                f"Run: cd backend && poetry run python manage.py schema_migrate --target applications {SCHEMA_VERSION}"
             )
 
         # Validate and return with the JSON schema
