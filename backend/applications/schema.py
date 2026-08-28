@@ -3,6 +3,9 @@ from copy import deepcopy
 from frozendict import frozendict
 from jsonschema import Draft202012Validator
 
+# Ordinal versioning: 1 is the baseline for applications schema evolution
+SCHEMA_VERSION = 1
+
 _PRIMITIVE_TYPES = [
     {"type": "string"},
     {"type": "integer", "minimum": 0},
@@ -24,9 +27,10 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
         "required": ["schema_version", "active_step", "steps"],
         "properties": {
             "schema_version": {
-                "type": "string",
+                "type": "integer",
+                "minimum": 0,
                 "title": "Schema version",
-                "default": "2025.09-1",  # Current version of the schema
+                "default": SCHEMA_VERSION,
                 "readOnly": True,
                 "description": "The version of the application answers schema.",
             },

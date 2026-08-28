@@ -328,6 +328,14 @@ SCHEMA_MIGRATION_TARGETS = [
         "migrations_package": "questionnaires.schema_migrations",
         "version_path": "schema_version",
     },
+    {
+        "key": "applications",
+        "model": "applications.Application",
+        "json_field": "document",
+        "schema_provider": "applications.schema.SCHEMA_VERSION",
+        "migrations_package": "applications.schema_migrations",
+        "version_path": "schema_version",
+    },
 ]
 
 # --- Private Media Storage for Secure File Uploads ---
