@@ -1,9 +1,10 @@
-"""Comprehensive tests for Phase 9 generic management commands.
+"""Unit tests for schema migration framework core helpers and loader functions.
 
 Tests cover:
 - Nested version_path support (2+ levels, 3+ levels) - CRITICAL
-- Core helper functions used by commands
-- Type hints and imports in command files
+- get_schema_version_from_document() helper function
+- find_migration_by_output_version() loader function
+- Command base class structure and imports
 """
 
 import pytest
