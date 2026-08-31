@@ -4,7 +4,7 @@ from frozendict import frozendict
 from jsonschema import Draft202012Validator
 
 # Ordinal versioning: 1 is the baseline for applications schema evolution
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 0
 
 _PRIMITIVE_TYPES = [
     {"type": "string"},
