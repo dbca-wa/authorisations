@@ -218,28 +218,32 @@ def migrate_backward(doc: dict) -> dict:
 
 **Example**: `backend/questionnaires/schema_migrations/0001_initial.py` (versioning baseline transition)
 
-**Important Note on `schema_zero` Temporary Utility**:
+**Migration 0000: Calendar → Ordinal Bridge**:
 
-Before migration 0001 could operate, legacy calendar-based versions (`"2025.07-1"` as strings) needed to be converted to a baseline integer format. The temporary management command `backend/questionnaires/management/commands/schema_zero.py` was used to pre-convert all records:
+Before ordinal migrations can operate, legacy calendar-based versions (`"2025.07-1"` as strings) must be converted to the baseline integer format (0). The framework migration 0000 provides this conversion as a validated, transactional bridge:
 
 ```bash
-# Convert existing calendar versions to integer 0 (baseline)
-cd backend && poetry run python manage.py schema_zero
-# Output: [EMERGENCY] Unconditionally converted 147 records: (any) → 0
-
-# Then migration 0001 takes those from version 0 → 1 (both integers)
-cd backend && poetry run python manage.py schema_migrate_questionnaire 0001
+# Migrate from calendar version to ordinal versioning
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0001
+# Execution sequence: 0000 (calendar "2025.07-1" → integer 0), then 0001 (0 → 1)
+# Output: Successfully migrated 97 records to version 1
 ```
 
-The `schema_zero` command is **temporary emergency recovery tool only**. It performs **unconditional** schema_version conversion without validation:
-- **Forward** (`cd backend && poetry run python manage.py schema_zero`): Sets ALL records to `0` (integer) regardless of current state
-- **Backward** (`cd backend && poetry run python manage.py schema_zero --revert`): Sets ALL records to `"2025.07-1"` (string) regardless of current state
+**Migration 0000 is forward-only**:
+- **Forward**: Transforms calendar string version (e.g., `"2025.07-1"`) → integer 0
+- **Backward**: NOT IMPLEMENTED — Calendar versions are pre-migration baseline states, not outputs of the versioning system. Once at ordinal versioning (v0+), you cannot rollback to calendar strings.
 
-**Normal workflow**: Use `schema_migrate_questionnaire` and `schema_rollback_questionnaire` (idempotent, validated).
+**Important design principle**: Calendar versions represent data that predates the framework. They are INPUT to migrations, never OUTPUT. The framework transforms FROM calendar versions INTO ordinal versioning, with no path back to calendar format.
 
-**Manual recovery only**: If migration framework is blocked or data is inconsistent, contact development team. This command bypasses all validation and is **NOT** part of the standard migration workflow.
+**Why no bidirectional 0000**:
+- Ordinal versions (0, 1, 2, ...) are the canonical state within the framework
+- Calendar versions ("2025.07-1", "2025.09-1") are legacy external formats
+- Once migrated to ordinal, data is managed through ordinal versioning
+- Rollback from ordinal versions follows the standard path (e.g., v1 → v0) via their respective migrations
 
-**Migration 0001 implementation** (after schema_zero has pre-converted records):
+This eliminates the need for the temporary `schema_zero` command. Migration 0000 provides safe, validated, transactional conversion from calendar to ordinal versioning.
+
+**Migration 0001 implementation** (after 0000 bridge has converted records):
 
 ```python
 """Migration 0001: Versioning baseline transition (0 → 1).
@@ -247,10 +251,9 @@ The `schema_zero` command is **temporary emergency recovery tool only**. It perf
 Transforms questionnaires from baseline version 0 (integer) to ordinal versioning
 (version 1). Establishes version 1 as the anchor point for all future schema changes.
 
-Note: The schema_zero management command pre-converted legacy calendar versions 
-('2025.07-1' strings) to version 0 (integer) before this migration is run.
-The migration command checks current DB version before running. This ensures 
-idempotency: running the same migration twice is a safe no-op.
+Note: Migration 0000 converts legacy calendar versions ('2025.07-1' strings) to 
+version 0 (integer) before this migration runs. The schema_migrate command chains 
+them automatically. Idempotency: running the same migration twice is a safe no-op.
 """
 
 from copy import deepcopy

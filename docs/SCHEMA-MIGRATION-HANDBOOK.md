@@ -11,13 +11,14 @@ This handbook provides comprehensive guidance on creating, executing, testing, a
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Creating a New Migration](#creating-a-new-migration)
-3. [Writing Migration Code](#writing-migration-code)
-4. [Executing a Migration](#executing-a-migration)
-5. [Rolling Back a Migration](#rolling-back-a-migration)
-6. [Testing Migrations](#testing-migrations)
-7. [Troubleshooting](#troubleshooting)
-8. [Reference](#reference)
+2. [Special Migration 0000: Calendar → Ordinal Bridge](#special-migration-0000-calendar--ordinal-bridge)
+3. [Creating a New Migration](#creating-a-new-migration)
+4. [Writing Migration Code](#writing-migration-code)
+5. [Executing a Migration](#executing-a-migration)
+6. [Rolling Back a Migration](#rolling-back-a-migration)
+7. [Testing Migrations](#testing-migrations)
+8. [Troubleshooting](#troubleshooting)
+9. [Reference](#reference)
 
 ---
 
@@ -115,6 +116,130 @@ cd backend && poetry run python manage.py schema_migrate --target questionnaires
 ```
 
 The management command enforces this by checking the database version before executing any transforms. If already at the target version, it returns immediately with a "no operation needed" message.
+
+---
+
+## Special Migration 0000: Calendar → Ordinal Bridge
+
+**Purpose**: Migration 0000 is a framework-provided bridge migration that transforms legacy calendar-versioned data to the ordinal baseline.
+
+**When to use**: If your database contains documents with string schema versions (e.g., `"2025.07-1"`), running forward migrations automatically applies 0000 first.
+
+### Calendar Versioning Context
+
+Legacy systems may store schema versions as calendar strings:
+- Questionnaires: `"2025.07-1"` (July 2025, release 1)
+- Applications: `"2025.09-1"` (September 2025, release 1)
+
+The ordinal versioning system used by the framework represents versions as integers (0, 1, 2, ...), which simplifies comparison and ordering logic.
+
+### Forward Transformation: Calendar → Ordinal
+
+Migration 0000 transforms calendar versions to ordinal baseline:
+
+```python
+# Input (calendar version)
+{
+    "schema_version": "2025.07-1",
+    "steps": [...]
+}
+
+# After migration 0000
+{
+    "schema_version": 0,
+    "steps": [...]
+}
+```
+
+Automatically executed when migrating forward:
+
+```bash
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0001
+
+# Execution sequence:
+# 1. Detects calendar version "2025.07-1"
+# 2. Applies migration 0000 (calendar → 0)
+# 3. Applies migration 0001 (0 → 1)
+# Result: All records at version 1 (integer)
+```
+
+### Why 0000 Is Forward-Only (No Backward/Rollback)
+
+Migration 0000 does **NOT** support rollback:
+
+```bash
+# This will be rejected:
+cd backend && poetry run python manage.py schema_rollback --target questionnaires 0000
+# Error: Cannot rollback from calendar version. Calendar versions are pre-migration baselines.
+```
+
+**Design rationale**:
+- **Calendar versions are pre-migration state**: They represent data before entering the framework versioning system
+- **Ordinal versions are canonical**: Once in the framework, data is managed exclusively through ordinal versioning
+- **No backward path**: The framework transforms FROM calendar INTO ordinal, never in reverse
+- **Data immutability of origin format**: After migration, the original calendar version information is not preserved; transformation is one-way
+
+If you need to examine the exact transformation 0000 performs, see [Migration 0000 Implementation](#migration-0000-implementation) below.
+
+### Migration 0000 Implementation
+
+Located in:
+- `backend/questionnaires/schema_migrations/0000_rollback.py` (questionnaires target)
+- `backend/applications/schema_migrations/0000_rollback.py` (applications target)
+
+```python
+"""Migration 0000: Bridge from calendar to ordinal versioning.
+
+Forward-only migration that transforms calendar versioning ("2025.07-1")
+to ordinal versioning (0, 1, 2, ...).
+
+Note: This migration handles forward transformation only. Calendar versions
+are pre-migration baseline states, not outputs of the versioning system.
+"""
+
+from copy import deepcopy
+import importlib.util
+import sys
+from pathlib import Path
+
+
+def target_schema():
+    """Return the schema for version 0 (integer baseline).
+    
+    Identical to 0001's previous_schema (the v0 integer state).
+    """
+    # Dynamically loaded reference to 0001_initial
+    return _migration_0001.previous_schema()
+
+
+def migrate_forward(doc: dict) -> dict:
+    """Transform: calendar version ("2025.07-1") → version 0 (ordinal).
+    
+    Args:
+        doc: Document with schema_version = "2025.07-1"
+    
+    Returns:
+        Document with schema_version = 0
+    
+    Raises:
+        TypeError: If schema_version is not "2025.07-1"
+    """
+    if doc.get("schema_version") != _CALENDAR_VERSION:
+        raise TypeError(
+            f"Expected schema_version '{_CALENDAR_VERSION}', "
+            f"got {doc.get('schema_version')}"
+        )
+    
+    doc = deepcopy(doc)
+    doc["schema_version"] = 0
+    return doc
+```
+
+**Key implementation notes**:
+- `migrate_forward()` validates input is the expected calendar version
+- `target_schema()` returns v0 schema (matching 0001's starting point)
+- No `migrate_backward()` — the migration is not reversible
+- No `previous_schema()` — not needed for forward-only migrations
 
 ---
 
@@ -1007,35 +1132,40 @@ cd backend && poetry run pytest questionnaires/tests/test_schema_migration*.py -
 
 **Cause**: Data corruption, failed partial migration, or unable to use normal migration commands.
 
-**Resolution (Emergency Only):**
+**Handling Calendar Versions (Pre-Migration Legacy Data):**
 
-**⚠️ WARNING: Only use this under guidance from development team.**
-
-The temporary `schema_zero` command can manually reset schema_version unconditionally when the migration framework cannot be used:
+If the database contains calendar-versioned records (string schema_version like `"2025.07-1"`), the framework automatically handles the transition through migration 0000:
 
 ```bash
-# EMERGENCY: Unconditionally set all records to integer 0
-cd backend && poetry run python manage.py schema_zero
-# Output: [EMERGENCY] Unconditionally converted 147 records: (any) → 0
+# Standard forward migration from calendar version
+cd backend && poetry run python manage.py schema_migrate --target questionnaires 0001
 
-# Then attempt recovery using normal migration commands
-cd backend && poetry run python manage.py schema_migrate --target questionnaires 0001  # Or appropriate target
+# Internally executes: 0000 (calendar "2025.07-1" → 0) → 0001 (0 → 1)
+# Validation ensures proper transformation at each step
+# Transactional: all records or none
 ```
 
-**Backward recovery (if needed):**
-```bash
-# EMERGENCY: Unconditionally revert all records to legacy version
-cd backend && poetry run python manage.py schema_zero --revert
-# Output: [EMERGENCY] Unconditionally converted 147 records: 0 → '2025.07-1'
-```
+**Migration 0000: Forward-Only Bridge**
 
-**After using schema_zero:**
-1. Contact development team immediately
-2. Verify data consistency (run full test suite)
-3. Restore from backup if data is corrupted
-4. Document the incident
+Migration 0000 provides safe, validated transformation from calendar versions to ordinal baseline (v0). It is **forward-only**:
+- **Input**: Calendar version (string, e.g., `"2025.07-1"`)
+- **Output**: Ordinal version 0 (integer)
+- **Backward**: NOT SUPPORTED — Calendar versions are pre-migration baselines, not outputs of the versioning system
 
-**Important**: This command **bypasses all validation and idempotency checks**. Use only in true emergency scenarios where normal migration workflow is blocked.
+**Design rationale**: 
+- Calendar versions represent legacy external data formats
+- Ordinal versioning (0, 1, 2, ...) is the canonical framework state
+- Once migrated to ordinal, data is managed exclusively through ordinal versioning
+- No rollback path exists from ordinal back to calendar versions
+
+**Emergency Recovery (if migration framework fails):**
+
+If the migration command encounters unrecoverable errors, contact the development team. Do NOT attempt manual schema_version manipulation. The migration framework includes comprehensive error handling and validation to prevent data corruption.
+
+**After Migration:**
+1. Verify data consistency: `schema_status --target questionnaires`
+2. Run test suite to confirm API acceptance
+3. Monitor application logs for version-related errors
 
 ---
 

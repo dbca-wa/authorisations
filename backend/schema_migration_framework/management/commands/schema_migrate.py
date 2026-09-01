@@ -152,10 +152,14 @@ class Command(BaseCommand):
         except ValueError as e:
             raise CommandError(f"Cannot find migration path: {str(e)}")
 
-        # Remove the first migration (already applied, current state)
-        if current_db_version == 0:
+        # Remove the first migration only if it's already applied (current state).
+        # For calendar versions (strings), never skip - they're input to 0000, not migration output.
+        # For ordinal versions (integers), skip the first if it matches current state.
+        if isinstance(current_db_version, str):
+            # Calendar version: apply all migrations in path (including 0000 bridge)
             migrations_to_apply = path
         else:
+            # Ordinal version: skip the first (current state marker)
             migrations_to_apply = path[1:]
 
         if not migrations_to_apply:
@@ -245,7 +249,6 @@ class Command(BaseCommand):
                     transformed,
                     from_version,
                     to_version,
-                    migration.previous_schema(),
                     to_schema,
                 )
 

@@ -66,13 +66,8 @@ class Command(BaseCommand):
         Raises:
             CommandError: If rollback cannot proceed.
         """
-        # Prevent rollback to version 0 (no migration file exists before baseline)
+        # Convert migration number to version for validation checks
         target_version = migration_number_to_version(migration_number)
-        if target_version == 0:
-            raise CommandError(
-                "Cannot rollback to version 0 (baseline). Version 0 exists only before "
-                "any migrations are applied. To reset data, use schema_zero tool instead."
-            )
 
         # Load and look up target (trust startup validation)
         try:
@@ -135,11 +130,21 @@ class Command(BaseCommand):
             return
 
         # Validate rollback direction (must go backwards)
-        if current_db_version < target_version:
+        # Handle string versions (calendar) vs integer versions (ordinal)
+        if isinstance(current_db_version, str):
+            # Calendar versions are pre-migration baselines, cannot rollback from them
             raise CommandError(
-                f"Cannot rollback from version {current_db_version} to {target_version}. "
-                f"Target version is newer. Use schema_migrate to go forward instead."
+                f"Cannot rollback from calendar version '{current_db_version}'. "
+                f"Calendar versions are pre-migration baselines. "
+                f"Use 'schema_migrate' to migrate forward to an ordinal version first."
             )
+        else:
+            # Integer versions: standard comparison
+            if current_db_version < target_version:
+                raise CommandError(
+                    f"Cannot rollback from version {current_db_version} to {target_version}. "
+                    f"Target version is newer. Use schema_migrate to go forward instead."
+                )
 
         # Load available migrations
         available_migrations = list_migrations(migrations_package_path)
@@ -147,7 +152,9 @@ class Command(BaseCommand):
             raise CommandError("No migrations available.")
 
         # Find current migration number
-        if current_db_version == 0:
+        # If current_db_version is a string (calendar), it will map to 0000 via find_migration_by_output_version
+        # If current_db_version is 0 (integer baseline), we cannot rollback further
+        if isinstance(current_db_version, int) and current_db_version == 0:
             raise CommandError(
                 "Database is at version 0 (baseline). Cannot rollback further. "
                 "No migration file exists before baseline."
@@ -163,7 +170,7 @@ class Command(BaseCommand):
                 f"Run 'python manage.py schema_status --target {target}' to diagnose."
             )
 
-        # Find path from current backwards to target
+        # Find path from current to target
         try:
             forward_path = find_path(
                 current_migration_number, migration_number, available_migrations
@@ -171,11 +178,9 @@ class Command(BaseCommand):
         except ValueError as e:
             raise CommandError(f"Cannot find rollback path: {str(e)}")
 
-        # Reverse the path for backward application
-        backward_path = list(reversed(forward_path))
-        
-        # Remove the first migration (already at current state)
-        migrations_to_rollback = backward_path[1:]
+        # To rollback, apply migrate_backward() on each migration in the path,
+        # excluding the target (which we'll reach by applying all prior migrations backward)
+        migrations_to_rollback = forward_path[:-1]
 
         if not migrations_to_rollback:
             self.stdout.write(
@@ -188,16 +193,20 @@ class Command(BaseCommand):
         self.stdout.write(
             f"Found {record_count} {target} record(s) at version {current_db_version}"
         )
-        self.stdout.write(f"Rollback path: {' ← '.join(backward_path)}\n")
+        self.stdout.write(f"Rollback path: {' → '.join(forward_path)}\n")
 
         # Apply each rollback migration in sequence
         current_version = current_db_version
+        print(f'Migrations to rollback: {migrations_to_rollback}')
         for migration_num in migrations_to_rollback:
             migration = get_migration(migration_num, migrations_package_path)
-            next_version = migration_number_to_version(migration_num)
+            
+            # For rollback, the target version comes from the previous_schema (what we're rolling back TO)
+            previous_schema = migration.previous_schema()
+            next_version = previous_schema["properties"]["schema_version"]["default"]
 
             self.stdout.write(
-                f"Rolling back migration {migration_num} ({current_version} ← {next_version})..."
+                f"Rolling back migration {migration_num} ({current_version} → {next_version})..."
             )
 
             if dry_run:
@@ -262,10 +271,9 @@ class Command(BaseCommand):
                 # Validate backward-transformed document against previous schema
                 is_valid, errors = validate_transform(
                     transformed,
-                    to_version,
                     from_version,
+                    to_version,
                     previous_schema,
-                    migration.target_schema(),
                 )
 
                 if not is_valid:
