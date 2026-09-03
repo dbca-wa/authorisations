@@ -320,7 +320,7 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
 
     def validate_document(self, value):
         """Validate document schema version and structure.
-        
+
         Enforces that the document has schema_version matching the current
         application schema version (SCHEMA_VERSION from applications.schema).
         """
@@ -329,13 +329,12 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
             raise exceptions.ValidationError(
                 f"Cannot modify document with status '{self.instance.status}'"
             )
-        
+
         # Then check schema version
         doc_version = value.get("schema_version") if isinstance(value, dict) else None
         if doc_version != SCHEMA_VERSION:
             raise exceptions.ValidationError(
                 f"Schema version mismatch: expected {SCHEMA_VERSION}, got {doc_version}. "
-                f"Run: cd backend && poetry run python manage.py schema_migrate --target applications {SCHEMA_VERSION}"
             )
 
         # Validate and return with the JSON schema
