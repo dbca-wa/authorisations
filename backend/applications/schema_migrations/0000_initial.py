@@ -1,23 +1,35 @@
+"""Migration 0000: Bridge from calendar to ordinal versioning.
+
+Forward-only migration that transforms calendar versioning ("2025.09-1")
+to ordinal versioning (0, 1, 2, ...).
+
+Usage:
+    python manage.py schema_migrate --target applications 0001
+    Transforms "2025.09-1" → version 0 → version 1
+
+Note: This migration handles forward transformation only. Once at ordinal
+versioning (v0+), you cannot rollback to calendar versions. Calendar versions
+are pre-migration baseline states, not outputs of the versioning system.
+
+This eliminates the need for the separate schema_zero command.
+"""
+
 from copy import deepcopy
 
-from frozendict import frozendict
-from jsonschema import Draft202012Validator
 
-# Ordinal versioning: 1 is the baseline for applications schema evolution
-SCHEMA_VERSION = 0
+def target_schema():
+    """Return the schema structure for version 0 (integer baseline).
+    
+    Hard-coded schema snapshot matching the v0 baseline state.
+    """
+    _PRIMITIVE_TYPES = [
+        {"type": "string"},
+        {"type": "integer", "minimum": 0},
+        {"type": "boolean"},
+        {"type": "null"},
+    ]
 
-_PRIMITIVE_TYPES = [
-    {"type": "string"},
-    {"type": "integer", "minimum": 0},
-    {"type": "boolean"},
-    {"type": "null"},
-]
-
-
-# This should never be modified on runtime, therefore we use frozendict
-# (and django-jsonform does modify it when passed as a field construct param)
-_SCHEMA_ANSWERS: frozendict = frozendict(
-    {
+    return {
         "$id": "https://example.com/arrays.schema.json",
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "JSON Schema definition for an application answers to a questionnaire.",
@@ -30,7 +42,7 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                 "type": "integer",
                 "minimum": 0,
                 "title": "Schema version",
-                "default": SCHEMA_VERSION,
+                "default": 0,
                 "readOnly": True,
                 "description": "The version of the application answers schema.",
             },
@@ -46,9 +58,7 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                 "minItems": 1,
             },
         },
-        # Additional definitions for complex types
         "$defs": {
-            # The state for a step and its answers
             "step_state": {
                 "type": "object",
                 "title": "Step State",
@@ -59,29 +69,21 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                     "answers": {"$ref": "#/$defs/answers"},
                 },
             },
-            # Answers for the whole step (all sections)
             "answers": {
                 "type": "object",
                 "title": "Answers",
                 "additionalProperties": False,
                 "properties": {},
                 "patternProperties": {
-                    # The regex matches the question key format
-                    # e.g. [section]-[question]
                     r"^\d+\-\d+$": {
-                        # Primitive type or a grid question answer
                         "oneOf": [
-                            # Unpack primitive types for regular questions
                             *_PRIMITIVE_TYPES,
-                            # A grid question answer
                             {"$ref": "#/$defs/grid_answer"},
-                            # File attachments
                             {"$ref": "#/$defs/file_attachments"},
                         ],
                     },
                 },
             },
-            # An answer to a grid question is an array of objects
             "grid_answer": {
                 "type": "array",
                 "items": {
@@ -89,7 +91,6 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
                     "additionalProperties": {"oneOf": _PRIMITIVE_TYPES},
                 },
             },
-            # List of UUIDs for file attachments
             "file_attachments": {
                 "type": "array",
                 "items": {"type": "string", "format": "uuid"},
@@ -98,19 +99,40 @@ _SCHEMA_ANSWERS: frozendict = frozendict(
             },
         },
     }
-)
 
 
-def get_answers_schema() -> dict:
-    """Always return a deepcopy of the schema to avoid modifications
-    to the original schema (yes, django-jsonform does that).
-
-    TODO: Implement schema versioning in the future.
+def migrate_forward(doc: dict) -> dict:
+    """Transform: calendar version ("2025.09-1") → version 0 (ordinal).
+    
+    Precondition: document.schema_version is "2025.09-1" (calendar).
+    This migration bridges from legacy calendar versioning to ordinal baseline.
+    
+    Args:
+        doc: Application document at calendar version
+    
+    Returns:
+        Transformed document with schema_version = 0
+    
+    Raises:
+        TypeError: If precondition not met (schema_version != "2025.09-1").
     """
-    schema: dict = deepcopy(dict(_SCHEMA_ANSWERS))
-    # schema["properties"]["schema_version"]["default"] = "2025.09-1"
-    return schema
+    _CALENDAR_VERSION = "2025.09-1"
+
+    doc = deepcopy(doc)
+    schema_version = doc.get("schema_version")
+
+    # migrate from legacy calendar versioning to ordinal baseline
+    if schema_version == _CALENDAR_VERSION:
+        doc["schema_version"] = schema_version = 0
+
+    # just make sure we are running for document's version 0, otherwise raise an error
+    if schema_version != 0:
+        raise TypeError(
+            f"Expected schema_version '0', got {schema_version}"
+        )
+
+    return doc
 
 
-# Do check the schema validation at the startup
-Draft202012Validator.check_schema(get_answers_schema())
+
+

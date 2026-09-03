@@ -6,6 +6,12 @@ from jsonschema.validators import Draft202012Validator
 
 from .serialisers import QuestionSerialiser, SectionSerialiser, StepSerialiser
 
+# Current version of the schema (unsigned integer: 0, 1, 2, 3, ...)
+# Version 0: legacy baseline (2025.07-1)
+# Version 1+: ordinal migrations
+# Previous versions are maintained in schema_migrations/ directory
+SCHEMA_VERSION = 1
+
 # This should never be modified on runtime, therefore we use frozendict
 # (and django-jsonform does modify it when passed as a field construct param)
 _SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
@@ -17,9 +23,10 @@ _SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
         "type": "object",
         "properties": {
             "schema_version": {
-                "type": "string",
+                "type": "integer",
+                "minimum": 0,
                 "title": "Schema version",
-                "default": "2025.07-1",  # Current version of the schema
+                "default": SCHEMA_VERSION,
                 "readOnly": True,
                 "description": "The version of the questionnaire schema.",
             },
@@ -44,11 +51,8 @@ _SCHEMA_QUESTIONNAIRE: frozendict = frozendict(
 def get_questionnaire_schema() -> dict:
     """Always return a deepcopy of the schema to avoid modifications
     to the original schema (yes, django-jsonform does that).
-
-    TODO: Implement schema versioning in the future.
     """
     schema: dict = deepcopy(dict(_SCHEMA_QUESTIONNAIRE))
-    schema["properties"]["schema_version"]["default"] = "2025.07-1"
     return schema
 
 

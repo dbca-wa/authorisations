@@ -1,6 +1,7 @@
 """Unit tests for questionnaire serialisers and schema helpers."""
 
 import pytest
+from rest_framework.exceptions import ValidationError
 
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
 from questionnaires.serialisers import (
@@ -19,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 def _document():
     """Return a valid questionnaire document for serializer representation tests."""
     return {
-        "schema_version": "2025.07-1",
+        "schema_version": 1,
         "steps": [
             {
                 "title": "Step 1",
@@ -147,6 +148,74 @@ def test_step_serialiser_requires_at_least_one_section():
 
     assert not serialiser.is_valid()
     assert "sections" in serialiser.errors
+
+
+def test_questionnaire_serialiser_validate_document_accepts_current_schema_version():
+    """Accept documents with schema_version matching document structure."""
+    serialiser = QuestionnaireSerialiser()
+    valid_doc = _document()
+
+    # Should not raise ValidationError
+    result = serialiser.validate_document(valid_doc)
+
+    assert result["schema_version"] == valid_doc["schema_version"]
+
+
+def test_questionnaire_serialiser_validate_document_rejects_mismatched_version():
+    """Reject documents with mismatched schema_version and provide actionable error guidance.
+
+    Verifies that:
+    - Old schema versions are rejected
+    - Error message includes what version is required
+    - Error message includes what version was provided
+    - Error message includes the migration command to run
+    """
+    serialiser = QuestionnaireSerialiser()
+    old_doc = _document()
+    old_doc["schema_version"] = "0"  # Old version
+
+    with pytest.raises(ValidationError) as exc_info:
+        serialiser.validate_document(old_doc)
+
+    error_message = str(exc_info.value.detail[0])
+
+    # Verify error message is actionable
+    assert "'0'" in error_message  # Provided version
+    assert "python manage.py schema_migrate_questionnaire" in error_message  # Migration command
+    assert "schema version" in error_message.lower()
+
+
+def test_questionnaire_serialiser_validate_document_rejects_edge_cases():
+    """Reject documents with null, missing, or non-dict schema_version values.
+
+    Verifies edge cases are handled gracefully:
+    - null schema_version
+    - missing schema_version
+    - non-dict input values (string, list, etc.)
+    """
+    serialiser = QuestionnaireSerialiser()
+
+    # Test null schema_version
+    null_doc = _document()
+    null_doc["schema_version"] = None
+
+    with pytest.raises(ValidationError):
+        serialiser.validate_document(null_doc)
+
+    # Test missing schema_version
+    missing_doc = _document()
+    del missing_doc["schema_version"]
+
+    with pytest.raises(ValidationError):
+        serialiser.validate_document(missing_doc)
+
+    # Test non-dict inputs (string)
+    with pytest.raises(ValidationError):
+        serialiser.validate_document("not a dict")
+
+    # Test non-dict inputs (list)
+    with pytest.raises(ValidationError):
+        serialiser.validate_document([])
 
 
 def test_reference_field_converter_builds_expected_ref_path():

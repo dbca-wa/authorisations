@@ -453,13 +453,13 @@ poetry run pytest e2e/tests -v
 python -m mypy --config-file=pyproject.toml path/to/file.py
 
 # Dev server
-poetry run python manage.py runserver
+cd backend && poetry run python manage.py runserver
 
 # Migrations
-poetry run python manage.py migrate
+cd backend && poetry run python manage.py migrate
 
 # Create superuser
-poetry run python manage.py createsuperuser
+cd backend && poetry run python manage.py createsuperuser
 ```
 
 ### Frontend

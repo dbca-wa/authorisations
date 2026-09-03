@@ -15,7 +15,7 @@ from .models import (
     Application,
     ApplicationAttachment,
 )
-from .schema import get_answers_schema
+from .schema import SCHEMA_VERSION, get_answers_schema
 from .statuses import (
     REVIEW_QUEUE_STATUSES,
     ApplicationStatus,
@@ -319,9 +319,22 @@ class ApplicationSerialiser(JsonSchemaSerialiserMixin, serializers.ModelSerializ
         return value
 
     def validate_document(self, value):
+        """Validate document schema version and structure.
+
+        Enforces that the document has schema_version matching the current
+        application schema version (SCHEMA_VERSION from applications.schema).
+        """
+        # Check status first (original behavior - prevents modification of non-DRAFT applications)
         if self.instance.status != ApplicationStatus.DRAFT:
             raise exceptions.ValidationError(
                 f"Cannot modify document with status '{self.instance.status}'"
+            )
+
+        # Then check schema version
+        doc_version = value.get("schema_version") if isinstance(value, dict) else None
+        if doc_version != SCHEMA_VERSION:
+            raise exceptions.ValidationError(
+                f"Schema version mismatch: expected {SCHEMA_VERSION}, got {doc_version}. "
             )
 
         # Validate and return with the JSON schema

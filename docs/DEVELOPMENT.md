@@ -82,13 +82,13 @@ Poetry automatically creates a virtual environment within the same directory, wh
 Apply the database migrations:
 
 ```bash
-poetry run python manage.py migrate
+cd backend && poetry run python manage.py migrate
 ```
 
 Create a superuser to access the admin interface on development environment:
 
 ```bash
-poetry run python manage.py createsuperuser
+cd backend && poetry run python manage.py createsuperuser
 ```
 
 ### Activate the virtual environment
@@ -116,10 +116,10 @@ npm install
 
 ### Backend
 
-Run the Django development server (within the `backend` directory):
+Run the Django development server:
 
 ```bash
-poetry run python manage.py runserver
+cd backend && poetry run python manage.py runserver
 ```
 
 ### Frontend
@@ -155,11 +155,11 @@ Quick start:
 
 Common Django management commands used in development:
 
-- `poetry run python manage.py runserver` — Run dev server
-- `poetry run python manage.py migrate` — Apply migrations
-- `poetry run python manage.py collectstatic` — Collect static files
-- `poetry run python manage.py normalise_questionnaire_sort_order` — Rebuild questionnaire sort order globally
-  - Dry-run mode: `poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+- `cd backend && poetry run python manage.py runserver` — Run dev server
+- `cd backend && poetry run python manage.py migrate` — Apply migrations
+- `cd backend && poetry run python manage.py collectstatic` — Collect static files
+- `cd backend && poetry run python manage.py normalise_questionnaire_sort_order` — Rebuild questionnaire sort order globally
+  - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
 
 **For full testing commands, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).**
 
