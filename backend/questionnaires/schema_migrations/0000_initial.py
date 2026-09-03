@@ -226,25 +226,32 @@ def migrate_forward(doc: dict) -> dict:
     
     Precondition: document.schema_version is "2025.07-1" (calendar).
     This migration bridges from legacy calendar versioning to ordinal baseline.
+    Also serves as identity when already at v0 (idempotent at baseline).
     
     Args:
-        doc: Questionnaire document at calendar version
+        doc: Questionnaire document at calendar version or v0
     
     Returns:
         Transformed document with schema_version = 0
     
     Raises:
-        TypeError: If precondition not met (schema_version != "2025.07-1").
+        TypeError: If precondition not met (schema_version != "2025.07-1" and != 0).
     """
     _CALENDAR_VERSION = "2025.07-1"
     
-    if doc.get("schema_version") != _CALENDAR_VERSION:
-        raise TypeError(
-            f"Expected schema_version '{_CALENDAR_VERSION}', got {doc.get('schema_version')}"
-        )
-    
     doc = deepcopy(doc)
-    doc["schema_version"] = 0
+    schema_version = doc.get("schema_version")
+
+    # migrate from legacy calendar versioning to ordinal baseline
+    if schema_version == _CALENDAR_VERSION:
+        doc["schema_version"] = schema_version = 0
+
+    # just make sure we are running for document's version 0, otherwise raise an error
+    if schema_version != 0:
+        raise TypeError(
+            f"Expected schema_version '{_CALENDAR_VERSION}' or '0', got {schema_version}"
+        )
+
     return doc
 
 
