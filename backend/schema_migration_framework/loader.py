@@ -129,43 +129,23 @@ def list_migrations(migrations_package_path: str) -> list[str]:
     return migration_numbers
 
 
-def find_migration_by_output_version(target_version, migrations_package_path: str) -> str:
+def find_migration_by_output_version(target_version: int, migrations_package_path: str) -> str:
     """Find which migration number produces a given schema version.
 
-    Given a schema version (integer or calendar string), returns the migration number
-    that produces it as output.
-
-    For integer versions: Migration 0001 produces version 1, 0002 produces version 2, etc.
-    For calendar string versions: Only migration 0000 can transform from calendar versioning.
+    Converts an ordinal schema version to its corresponding migration number
+    (e.g., version 1 → "0001", version 2 → "0002") and validates that the
+    migration exists in the available migrations.
 
     Args:
-        target_version: Schema version to find (int like 1, 2 or string like "2025.07-1").
-        migrations_package_path: Absolute filesystem path to migrations package
+        target_version: Ordinal schema version as integer (e.g., 1, 2, 3).
+        migrations_package_path: Absolute filesystem path to migrations package.
 
     Returns:
-        Migration number that produces this version (e.g., "0001" or "0000").
+        Migration number as 4-digit zero-padded string (e.g., "0001", "0002").
 
     Raises:
-        ValueError: If no valid migration exists for this version.
+        ValueError: If the migration for target_version does not exist in available migrations.
     """
-    # Handle string versions (calendar versioning) - only 0000 can transform from these
-    if isinstance(target_version, str):
-        available = list_migrations(migrations_package_path)
-        if "0000" not in available:
-            raise ValueError(
-                f"Cannot find migration for calendar version '{target_version}'. "
-                f"Migration 0000 (calendar → ordinal bridge) not available. "
-                f"Available migrations: {', '.join(available) if available else '(none)'}"
-            )
-        return "0000"
-
-    # Handle integer versions (ordinal versioning)
-    if target_version < 1:
-        raise ValueError(
-            f"Invalid target version {target_version}. "
-            f"Only positive integers >= 1 are valid. Version 0 is the baseline (no migration)."
-        )
-
     target_migration_number = version_to_migration_number(target_version)
     available = list_migrations(migrations_package_path)
 

@@ -383,7 +383,7 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
     def test_migrate_v0_to_v3_executes_all_steps_forward(self):
         """Forward migration from v0 to v3 executes 0→1→2→3 in sequence.
         
-        Path: 0001→0002→0003 (3 steps forward)
+        Path: 0000→0001→0002→0003 (4 steps: 0000 is baseline identity, then 3 forward)
         """
         q = Questionnaire.objects.create(
             process=self.process,
@@ -395,6 +395,7 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         )
 
         mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),  # Baseline identity migration
             "0001": create_mock_migration(0, 1, "0001"),
             "0002": create_mock_migration(1, 2, "0002"),
             "0003": create_mock_migration(2, 3, "0003"),
@@ -407,15 +408,8 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         def mock_list_migrations(path):
             return sorted(mock_migrations.keys())
 
-        def mock_find_migration_by_output_version(version, path):
-            version_map = {1: "0001", 2: "0002", 3: "0003", 4: "0004"}
-            if version in version_map:
-                return version_map[version]
-            raise ValueError(f"No migration for version {version}")
-
         with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
-             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations), \
-             patch('schema_migration_framework.management.commands.schema_migrate.find_migration_by_output_version', mock_find_migration_by_output_version):
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
             
             out = StringIO()
             call_command(
@@ -455,15 +449,8 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         def mock_list_migrations(path):
             return sorted(mock_migrations.keys())
 
-        def mock_find_migration_by_output_version(version, path):
-            version_map = {1: "0001", 2: "0002", 3: "0003"}
-            if version in version_map:
-                return version_map[version]
-            raise ValueError(f"No migration for version {version}")
-
         with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
-             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations), \
-             patch('schema_migration_framework.management.commands.schema_migrate.find_migration_by_output_version', mock_find_migration_by_output_version):
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
             
             out = StringIO()
             call_command(
@@ -477,9 +464,9 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         assert q.document.get("schema_version") == 2
 
     def test_migrate_v0_to_v4_executes_all_four_steps(self):
-        """Forward migration v0→v4 executes all 4 steps: 0001→0002→0003→0004.
+        """Forward migration v0→v4 executes all 5 steps: 0000→0001→0002→0003→0004.
         
-        Verifies that migration path can span 4 consecutive migrations.
+        Verifies that migration path can span 5 consecutive migrations from baseline.
         """
         q = Questionnaire.objects.create(
             process=self.process,
@@ -491,6 +478,7 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         )
 
         mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),  # Baseline identity migration
             "0001": create_mock_migration(0, 1, "0001"),
             "0002": create_mock_migration(1, 2, "0002"),
             "0003": create_mock_migration(2, 3, "0003"),
@@ -503,15 +491,8 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         def mock_list_migrations(path):
             return sorted(mock_migrations.keys())
 
-        def mock_find_migration_by_output_version(version, path):
-            version_map = {1: "0001", 2: "0002", 3: "0003", 4: "0004"}
-            if version in version_map:
-                return version_map[version]
-            raise ValueError(f"No migration for version {version}")
-
         with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
-             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations), \
-             patch('schema_migration_framework.management.commands.schema_migrate.find_migration_by_output_version', mock_find_migration_by_output_version):
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
             
             out = StringIO()
             call_command(
@@ -528,7 +509,7 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         """Dry-run for multi-step forward migration shows all transforms.
         
         Verifies that dry-run correctly tests all intermediate migrations
-        without applying any changes.
+        without applying any changes. Starts from v0 baseline.
         """
         q = Questionnaire.objects.create(
             process=self.process,
@@ -540,6 +521,7 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         )
 
         mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),  # Baseline identity migration
             "0001": create_mock_migration(0, 1, "0001"),
             "0002": create_mock_migration(1, 2, "0002"),
             "0003": create_mock_migration(2, 3, "0003"),
@@ -551,15 +533,8 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         def mock_list_migrations(path):
             return sorted(mock_migrations.keys())
 
-        def mock_find_migration_by_output_version(version, path):
-            version_map = {1: "0001", 2: "0002", 3: "0003"}
-            if version in version_map:
-                return version_map[version]
-            raise ValueError(f"No migration for version {version}")
-
         with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
-             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations), \
-             patch('schema_migration_framework.management.commands.schema_migrate.find_migration_by_output_version', mock_find_migration_by_output_version):
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
             
             out = StringIO()
             call_command(
@@ -579,7 +554,7 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         
         This tests the scenario where intermediate migrations work but
         the target migration doesn't exist. The command should:
-        1. Execute 0001, 0002, 0003, 0004 successfully
+        1. Execute 0000, 0001, 0002, 0003, 0004 successfully
         2. Attempt to find 0005 and fail with clear error
         3. Leave records at v4 (last successful state)
         """
@@ -592,8 +567,9 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
             created_by=self.user
         )
 
-        # Only have migrations up to v4 (0001-0004)
+        # Only have migrations up to v4 (0000-0004)
         mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),  # Baseline identity migration
             "0001": create_mock_migration(0, 1, "0001"),
             "0002": create_mock_migration(1, 2, "0002"),
             "0003": create_mock_migration(2, 3, "0003"),
@@ -606,16 +582,8 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         def mock_list_migrations(path):
             return sorted(mock_migrations.keys())
 
-        def mock_find_migration_by_output_version(version, path):
-            version_map = {1: "0001", 2: "0002", 3: "0003", 4: "0004"}
-            if version in version_map:
-                return version_map[version]
-            # v5 does not exist
-            raise ValueError(f"No migration found with output version {version}")
-
         with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
-             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations), \
-             patch('schema_migration_framework.management.commands.schema_migrate.find_migration_by_output_version', mock_find_migration_by_output_version):
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
             
             # Migration to v5 should fail because v5 target doesn't exist
             with pytest.raises(CommandError) as exc_info:
@@ -631,3 +599,501 @@ class TestSchemaMigrateMultiStepMockedMigrations(TestCase):
         q.refresh_from_db()
         # Record should still be at v0 (transaction rolled back on error)
         assert q.document.get("schema_version") == 0
+
+
+@pytest.mark.django_db
+class TestSchemaMigrationStrictVersionMatching(TestCase):
+    """Test strict version-to-migration matching requirements.
+    
+    These tests validate the new migration logic:
+    - Each migration must match exactly: from_version == from_migration_number
+    - Migration 0000 is required for starting at v0
+    - Each migration sets its own version (0000→v0, 0001→v1, etc.)
+    - Gap in migrations = failure
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up test data."""
+        super().setUpClass()
+        cls.user = User.objects.create_user(username="testuser_strict", password="testpass")
+        cls.process = AuthorisationProcess.objects.create(
+            slug="test_strict",
+            name="Test Strict Version Matching"
+        )
+
+    def test_migrate_from_v0_requires_0000_migration(self):
+        """Starting at v0 requires migration 0000 in available migrations.
+        
+        If database is at v0 but 0000 migration is missing, migration fails.
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test V0 Missing 0000",
+            code="test_v0_missing_0000",
+            version=1,
+            document={"schema_version": 0, "steps": []},
+            created_by=self.user
+        )
+
+        # Only have 0001-0003, missing 0000
+        mock_migrations = {
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+            "0003": create_mock_migration(2, 3, "0003"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            # Should fail because v0 requires 0000
+            with pytest.raises(CommandError) as exc_info:
+                call_command(
+                    "schema_migrate",
+                    "--target", "questionnaires",
+                    "0003",
+                )
+            
+            error = str(exc_info.value)
+            assert "Cannot find migration for current version 0" in error
+
+    def test_migrate_from_v2_requires_0002_migration(self):
+        """Starting at v2 requires migration 0002 to exist.
+        
+        Cannot migrate from v2 if 0002 migration is missing.
+        Validates strict version-to-migration-number matching.
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test V2 Missing 0002",
+            code="test_v2_missing_0002",
+            version=1,
+            document={"schema_version": 2, "steps": []},
+            created_by=self.user
+        )
+
+        # Have 0003 but missing 0002
+        mock_migrations = {
+            "0003": create_mock_migration(2, 3, "0003"),
+            "0004": create_mock_migration(3, 4, "0004"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            # Should fail because v2 requires 0002
+            with pytest.raises(CommandError) as exc_info:
+                call_command(
+                    "schema_migrate",
+                    "--target", "questionnaires",
+                    "0003",
+                )
+            
+            error = str(exc_info.value)
+            assert "Cannot find migration for current version 2" in error
+
+    def test_0000_is_identity_migration_at_baseline(self):
+        """Migration 0000 is identity: transforms v0 → v0.
+        
+        0000 is the baseline starting point. It sets schema_version to 0
+        (no actual transformation needed, just marks the ordinal baseline).
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test 0000 Identity",
+            code="test_0000_identity",
+            version=1,
+            document={"schema_version": 0, "steps": []},
+            created_by=self.user
+        )
+
+        # Only 0000 migration
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),  # v0 → v0 (identity)
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            out = StringIO()
+            call_command(
+                "schema_migrate",
+                "--target", "questionnaires",
+                "0000",
+                stdout=out
+            )
+
+        q.refresh_from_db()
+        # Should remain at v0 (already at target)
+        assert q.document.get("schema_version") == 0
+
+    def test_each_migration_sets_own_version(self):
+        """Each migration sets its own version in document.
+        
+        0000 sets v0, 0001 sets v1, 0002 sets v2, etc.
+        Validates that the mock migrations do this correctly.
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test Each Sets Version",
+            code="test_each_sets_version",
+            version=1,
+            document={"schema_version": 0, "steps": []},
+            created_by=self.user
+        )
+
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            # Migrate through all versions
+            for target_version, target_migration in [("0001", "0001"), ("0002", "0002")]:
+                out = StringIO()
+                call_command(
+                    "schema_migrate",
+                    "--target", "questionnaires",
+                    target_migration,
+                    stdout=out
+                )
+                
+                q.refresh_from_db()
+                # Verify document has correct version after each step
+                assert q.document.get("schema_version") == int(target_version)
+
+
+@pytest.mark.django_db
+class TestSchemaMigrateChainCases(TestCase):
+    """Test migration changing cases: intermediate starting versions, large forward jumps, etc."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up test data."""
+        super().setUpClass()
+        cls.user = User.objects.create_user(username="testuser_edge", password="testpass")
+        cls.process = AuthorisationProcess.objects.create(
+            slug="test_edge",
+            name="Test Edge Cases"
+        )
+
+    def test_migrate_from_v3_skips_0000_to_0002_in_long_chain(self):
+        """Database at v3 with migrations 0→5: should execute from 0003, skip 0000-0002.
+        
+        This is the edge case the user specifically requested:
+        - DB schema_version: 3
+        - Available migrations: 0000, 0001, 0002, 0003, 0004, 0005
+        - Target: 0005
+        - Expected execution: 0003 → 0004 → 0005 (skips 0000, 0001, 0002)
+        
+        Validates that find_migrations_to_apply correctly skips already-applied
+        migrations when starting at an intermediate version.
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test V3 Skip Early Migrations",
+            code="test_v3_skip_early",
+            version=1,
+            document={"schema_version": 3, "steps": []},
+            created_by=self.user
+        )
+
+        # All migrations from 0 to 5
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+            "0003": create_mock_migration(2, 3, "0003"),
+            "0004": create_mock_migration(3, 4, "0004"),
+            "0005": create_mock_migration(4, 5, "0005"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            out = StringIO()
+            call_command(
+                "schema_migrate",
+                "--target", "questionnaires",
+                "0005",
+                stdout=out
+            )
+
+        q.refresh_from_db()
+        # Should now be at v5
+        assert q.document.get("schema_version") == 5
+
+    def test_migrate_from_v2_forward_to_v5_with_full_chain(self):
+        """Database at v2, migrate forward to v5 in chain of 6 migrations.
+        
+        - DB schema_version: 2
+        - Available migrations: 0000, 0001, 0002, 0003, 0004, 0005
+        - Target: 0005
+        - Expected execution: 0003 → 0004 → 0005 (skips 0002 since already applied)
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test V2 to V5",
+            code="test_v2_to_v5",
+            version=1,
+            document={"schema_version": 2, "steps": []},
+            created_by=self.user
+        )
+
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+            "0003": create_mock_migration(2, 3, "0003"),
+            "0004": create_mock_migration(3, 4, "0004"),
+            "0005": create_mock_migration(4, 5, "0005"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            out = StringIO()
+            call_command(
+                "schema_migrate",
+                "--target", "questionnaires",
+                "0005",
+                stdout=out
+            )
+
+        q.refresh_from_db()
+        # Should now be at v5
+        assert q.document.get("schema_version") == 5
+
+    def test_migrate_from_v2_partial_forward_to_v4(self):
+        """Database at v2, migrate forward to v4 (skip 0002, execute 0003-0004).
+        
+        - DB schema_version: 2
+        - Available migrations: 0000, 0001, 0002, 0003, 0004, 0005
+        - Target: 0004
+        - Expected execution: 0003 → 0004 (skips 0002 since already applied)
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test V2 to V4",
+            code="test_v2_to_v4",
+            version=1,
+            document={"schema_version": 2, "steps": []},
+            created_by=self.user
+        )
+
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+            "0003": create_mock_migration(2, 3, "0003"),
+            "0004": create_mock_migration(3, 4, "0004"),
+            "0005": create_mock_migration(4, 5, "0005"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            out = StringIO()
+            call_command(
+                "schema_migrate",
+                "--target", "questionnaires",
+                "0004",
+                stdout=out
+            )
+
+        q.refresh_from_db()
+        # Should now be at v4
+        assert q.document.get("schema_version") == 4
+
+    def test_intermediate_version_already_at_target_is_noop(self):
+        """Database at v3, migrate to v3 (target already reached) = no-op.
+        
+        - DB schema_version: 3
+        - Available migrations: 0000-0005
+        - Target: 0003
+        - Expected: No migrations executed (already at target)
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test Already at V3",
+            code="test_already_v3",
+            version=1,
+            document={"schema_version": 3, "steps": []},
+            created_by=self.user
+        )
+
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+            "0003": create_mock_migration(2, 3, "0003"),
+            "0004": create_mock_migration(3, 4, "0004"),
+            "0005": create_mock_migration(4, 5, "0005"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            out = StringIO()
+            call_command(
+                "schema_migrate",
+                "--target", "questionnaires",
+                "0003",
+                stdout=out
+            )
+
+        q.refresh_from_db()
+        # Should remain at v3 (already there)
+        assert q.document.get("schema_version") == 3
+
+    def test_migrate_fails_when_target_migration_not_found(self):
+        """Migration fails when target migration number does not exist.
+        
+        - DB schema_version: 2
+        - Available migrations: 0000, 0001, 0002, 0003, 0004
+        - Target: 0010 (does not exist)
+        - Expected: CommandError (target migration not found)
+        
+        Even if we can reach intermediate versions, if the target migration
+        number itself doesn't exist, the command should fail.
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test Target Migration Not Found",
+            code="test_target_not_found",
+            version=1,
+            document={"schema_version": 2, "steps": []},
+            created_by=self.user
+        )
+
+        # Only have migrations up to 0004
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+            "0003": create_mock_migration(2, 3, "0003"),
+            "0004": create_mock_migration(3, 4, "0004"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            # Should fail because 0010 doesn't exist
+            with pytest.raises(CommandError) as exc_info:
+                call_command(
+                    "schema_migrate",
+                    "--target", "questionnaires",
+                    "0010",
+                )
+            
+            error = str(exc_info.value)
+            # Error should mention 0010 not found
+            assert "0010" in error or "not found" in error.lower()
+
+    def test_migrate_fails_when_starting_version_has_no_migration(self):
+        """Migration fails when current DB version has no matching migration.
+        
+        - DB schema_version: 3
+        - Available migrations: 0000, 0001, 0002, [MISSING 0003], 0004, 0005
+        - Target: 0005
+        - Expected: CommandError (cannot find migration for v3)
+        
+        Strict version matching requires a migration numbered 0003 for v3,
+        but it's missing from the available migrations.
+        """
+        q = Questionnaire.objects.create(
+            process=self.process,
+            name="Test Missing Starting Migration",
+            code="test_missing_start_migration",
+            version=1,
+            document={"schema_version": 3, "steps": []},
+            created_by=self.user
+        )
+
+        # Missing 0003 (current version)
+        mock_migrations = {
+            "0000": create_mock_migration(0, 0, "0000"),
+            "0001": create_mock_migration(0, 1, "0001"),
+            "0002": create_mock_migration(1, 2, "0002"),
+            # 0003 is MISSING (but DB is at v3)
+            "0004": create_mock_migration(3, 4, "0004"),
+            "0005": create_mock_migration(4, 5, "0005"),
+        }
+
+        def mock_get_migration(num, path):
+            return mock_migrations.get(num)
+
+        def mock_list_migrations(path):
+            return sorted(mock_migrations.keys())
+
+        with patch('schema_migration_framework.management.commands.schema_migrate.get_migration', mock_get_migration), \
+             patch('schema_migration_framework.management.commands.schema_migrate.list_migrations', mock_list_migrations):
+            
+            # Should fail because v3 requires migration 0003 which doesn't exist
+            with pytest.raises(CommandError) as exc_info:
+                call_command(
+                    "schema_migrate",
+                    "--target", "questionnaires",
+                    "0005",
+                )
+            
+            error = str(exc_info.value)
+            # Error should mention version 3 cannot be found
+            assert "Cannot find migration for current version 3" in error

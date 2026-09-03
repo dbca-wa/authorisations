@@ -27,7 +27,7 @@ from .loader import (
     migration_number_to_version,
     version_to_migration_number,
 )
-from .pathing import find_path
+from .pathing import find_migrations_to_apply, find_path
 from .registry import (
     RegistryError,
     get_target,
@@ -48,6 +48,7 @@ __all__ = [
     "migration_number_to_version",
     "version_to_migration_number",
     "find_path",
+    "find_migrations_to_apply",
     "validate_transform",
     "load_targets",
     "get_target",

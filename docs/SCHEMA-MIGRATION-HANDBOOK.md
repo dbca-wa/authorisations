@@ -117,13 +117,54 @@ cd backend && poetry run python manage.py schema_migrate --target questionnaires
 
 The management command enforces this by checking the database version before executing any transforms. If already at the target version, it returns immediately with a "no operation needed" message.
 
+#### 5. Strict Version-to-Migration Matching
+
+**Critical rule**: Your database version must have an exact corresponding migration number.
+
+The framework requires **strict matching**:
+- Database at v0 → requires migration "0000"
+- Database at v1 → requires migration "0001"
+- Database at v2 → requires migration "0002"
+- Non-ordinal versions (strings like `"2025.07-1"`) → require migration "0000"
+
+**Why strict?** This prevents ambiguous migration states:
+- No gaps: If database is at v2 but only migrations [0001, 0003, 0004] exist, migration fails
+- Deterministic: Each migration knows exactly what version it starts from (matched to database)
+- Clear errors: Missing migrations are immediately detected and reported
+
+**Each migration sets its own version** in the document:
+```python
+# 0000 sets schema_version to 0
+def migrate_forward(doc: dict) -> dict:
+    doc["schema_version"] = 0
+    return doc
+
+# 0001 sets schema_version to 1
+def migrate_forward(doc: dict) -> dict:
+    doc["schema_version"] = 1
+    return doc
+```
+
+**Error if starting version has no migration**:
+```
+CommandError: Cannot determine migration path:
+  Cannot find migration for current version 2. 
+  Available migrations: 0001, 0003, 0004
+```
+
+Resolution: Create the missing migration file (0002 in this example).
+
 ---
 
 ## Special Migration 0000: Calendar → Ordinal Bridge
 
-**Purpose**: Migration 0000 is a framework-provided bridge migration that transforms legacy calendar-versioned data to the ordinal baseline.
+**Purpose**: Migration 0000 serves two roles:
+1. **Mapping point for non-ordinal versions**: Any non-integer schema_version (calendar strings, dates, etc.) automatically maps to migration 0000
+2. **Baseline identity migration**: Sets `schema_version = 0` as the ordinal baseline
 
-**When to use**: If your database contains documents with string schema versions (e.g., `"2025.07-1"`), running forward migrations automatically applies 0000 first.
+**When to use**: 
+- If your database contains calendar-versioned documents (e.g., `"2025.07-1"`), migration 0000 bridges to ordinal v0
+- If you need a starting point for ordinal versioning, 0000 provides the baseline identity transformation
 
 ### Calendar Versioning Context
 

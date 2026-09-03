@@ -243,6 +243,102 @@ cd backend && poetry run python manage.py schema_migrate --target questionnaires
 
 This eliminates the need for the temporary `schema_zero` command. Migration 0000 provides safe, validated, transactional conversion from calendar to ordinal versioning.
 
+---
+
+## Strict Version-to-Migration Matching Rule
+
+**Critical requirement**: Each database version must have an exact corresponding migration file.
+
+### The Matching Requirement
+
+The `find_migrations_to_apply()` function requires a **strict match** between:
+- **Current database schema_version** (integer or non-ordinal value)
+- **Available migration number** that produces that version
+
+**Mapping**:
+- Database at v0 → requires migration "0000" (`migration_number_to_version("0000") == 0`)
+- Database at v1 → requires migration "0001" (`migration_number_to_version("0001") == 1`)
+- Database at v2 → requires migration "0002" (`migration_number_to_version("0002") == 2`)
+- Database at v6 → requires migration "0006" (`migration_number_to_version("0006") == 6`)
+
+**Non-ordinal versions** (calendar strings, dates, etc.) automatically map to "0000".
+
+### Why Strict Matching?
+
+This design prevents ambiguous migration states:
+- **No gaps allowed**: If database is at v2 but only migrations 0001, 0003, 0004 exist, migration fails (missing 0002)
+- **Starting point must exist**: Cannot migrate from v0 without migration 0000, from v3 without migration 0003, etc.
+- **Deterministic execution**: Each migration file knows its input version (derived from matching with database version) and output version (derived from filename)
+
+### Each Migration Sets Its Own Version
+
+Each migration file is responsible for setting the document schema_version to match its target:
+
+```python
+# Migration 0000_bridge.py
+def migrate_forward(doc: dict) -> dict:
+    """Transform any non-ordinal version → integer 0."""
+    doc = deepcopy(doc)
+    doc["schema_version"] = 0  # 0000 sets v0
+    return doc
+
+# Migration 0001_initial.py
+def migrate_forward(doc: dict) -> dict:
+    """Transform: version 0 → version 1."""
+    doc = deepcopy(doc)
+    # ... transformation logic ...
+    doc["schema_version"] = 1  # 0001 sets v1
+    return doc
+
+# Migration 0002_consolidate.py
+def migrate_forward(doc: dict) -> dict:
+    """Transform: version 1 → version 2."""
+    doc = deepcopy(doc)
+    # ... transformation logic ...
+    doc["schema_version"] = 2  # 0002 sets v2
+    return doc
+```
+
+### Error Scenarios
+
+**Scenario 1: Missing migration 0000 (database at v0)**
+```
+$ python manage.py schema_migrate --target questionnaires 0003
+
+CommandError: Cannot determine migration path:
+  Cannot find migration for current version 0. 
+  Available migrations: 0001, 0002, 0003
+  
+Resolution: Create migration 0000 (baseline identity or bridge from non-ordinal versions)
+```
+
+**Scenario 2: Missing migration in chain (database at v2, no 0002)**
+```
+$ python manage.py schema_migrate --target questionnaires 0004
+
+CommandError: Cannot determine migration path:
+  Cannot find migration for current version 2.
+  Available migrations: 0001, 0003, 0004
+  
+Resolution: Create migration 0002 (fills the gap in the migration sequence)
+```
+
+**Scenario 3: Gap in forward migration path (database at v1, target v4, missing 0002)**
+```
+$ python manage.py schema_migrate --target questionnaires 0004
+
+Execution:
+  1. Find starting migration for v1: 0001 ✓
+  2. Build path: 0001 → 0002 → 0003 → 0004
+  3. Attempt to load 0002: NOT FOUND ✗
+  
+CommandError: Migration 0002 not found
+
+Resolution: Ensure all migrations in path exist before targeting higher versions
+```
+
+---
+
 **Migration 0001 implementation** (after 0000 bridge has converted records):
 
 ```python

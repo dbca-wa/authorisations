@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from schema_migration_framework import (
-    find_path,
+    find_migrations_to_apply,
     get_migration,
     get_migrations_package_path,
     get_schema_version_from_document,
@@ -19,7 +19,6 @@ from schema_migration_framework import (
     migration_number_to_version,
     validate_transform,
 )
-from schema_migration_framework.loader import find_migration_by_output_version
 
 
 class Command(BaseCommand):
@@ -51,7 +50,14 @@ class Command(BaseCommand):
             help="Show detailed progress per record",
         )
 
-    def handle(self, target: str, migration_number: str, dry_run: bool = False, verbose: bool = False, **options: Any) -> None:
+    def handle(
+        self,
+        target: str,
+        migration_number: str,
+        dry_run: bool = False,
+        verbose: bool = False,
+        **options: Any,
+    ) -> None:
         """Execute schema migration to target version.
 
         Automatically finds and applies all intermediate migrations in sequence.
@@ -128,39 +134,20 @@ class Command(BaseCommand):
             )
             return
 
-        # Find migration path - load available migrations first
+        # Find migrations to apply (handles version lookup and path filtering)
         available_migrations = list_migrations(migrations_package_path)
         if not available_migrations:
             raise CommandError("No migrations available to apply.")
 
-        if current_db_version == 0:
-            current_migration_number = available_migrations[0]
-        else:
-            try:
-                current_migration_number = find_migration_by_output_version(
-                    current_db_version, migrations_package_path
-                )
-            except ValueError as e:
-                raise CommandError(
-                    f"Cannot determine migration path:\n{str(e)}\n"
-                    f"Run 'python manage.py schema_status --target {target}' to diagnose."
-                )
-
-        # Find path from current to target
         try:
-            path = find_path(current_migration_number, migration_number, available_migrations)
+            migrations_to_apply = find_migrations_to_apply(
+                current_db_version, migration_number, available_migrations
+            )
         except ValueError as e:
-            raise CommandError(f"Cannot find migration path: {str(e)}")
-
-        # Remove the first migration only if it's already applied (current state).
-        # For calendar versions (strings), never skip - they're input to 0000, not migration output.
-        # For ordinal versions (integers), skip the first if it matches current state.
-        if isinstance(current_db_version, str):
-            # Calendar version: apply all migrations in path (including 0000 bridge)
-            migrations_to_apply = path
-        else:
-            # Ordinal version: skip the first (current state marker)
-            migrations_to_apply = path[1:]
+            raise CommandError(
+                f"Cannot determine migration path:\n{str(e)}\n"
+                f"Run 'python manage.py schema_status --target {target}' to diagnose."
+            )
 
         if not migrations_to_apply:
             self.stdout.write(
@@ -173,7 +160,7 @@ class Command(BaseCommand):
         self.stdout.write(
             f"Found {record_count} {target} record(s) at version {current_db_version}"
         )
-        self.stdout.write(f"Migration path: {' → '.join(path)}\n")
+        self.stdout.write(f"Migration path: {' → '.join(migrations_to_apply)}\n")
 
         # Apply each migration in sequence
         current_version = current_db_version
@@ -219,7 +206,12 @@ class Command(BaseCommand):
         )
 
     def _test_transforms(
-        self, records: list[Any], migration: Any, from_version: int | str, to_version: int | str, verbose: bool
+        self,
+        records: list[Any],
+        migration: Any,
+        from_version: int | str,
+        to_version: int | str,
+        verbose: bool,
     ) -> None:
         """Validate all transforms before applying.
 
@@ -238,7 +230,11 @@ class Command(BaseCommand):
         failed_records = []
 
         for record in records:
-            doc = record.document if hasattr(record, "document") else record.__dict__.get("document")
+            doc = (
+                record.document
+                if hasattr(record, "document")
+                else record.__dict__.get("document")
+            )
 
             try:
                 transformed = deepcopy(doc)
@@ -263,7 +259,9 @@ class Command(BaseCommand):
             except Exception as e:
                 failed_records.append((record.id, str(e)))
                 if verbose:
-                    self.stdout.write(self.style.WARNING(f"    ✗ Record {record.id}: {str(e)}"))
+                    self.stdout.write(
+                        self.style.WARNING(f"    ✗ Record {record.id}: {str(e)}")
+                    )
 
         self.stdout.write(f"Tested {success_count}/{len(records)}")
 
@@ -275,7 +273,9 @@ class Command(BaseCommand):
                 f"Validation failed for {len(failed_records)} record(s):\n{errors}"
             )
 
-    def _apply_transforms(self, records: list[Any], migration: Any, json_field: str) -> None:
+    def _apply_transforms(
+        self, records: list[Any], migration: Any, json_field: str
+    ) -> None:
         """Apply transformation to all records (called within transaction).
 
         Args:
@@ -288,7 +288,9 @@ class Command(BaseCommand):
             setattr(record, json_field, migration.migrate_forward(doc))
             record.save(update_fields=[json_field])
 
-    def _get_db_version(self, records: list[Any], json_field: str, version_path: str) -> int:
+    def _get_db_version(
+        self, records: list[Any], json_field: str, version_path: str
+    ) -> int:
         """Get current schema version from records using version_path.
 
         Args:
