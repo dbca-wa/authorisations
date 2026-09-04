@@ -74,7 +74,7 @@ describe("FileInput", () => {
     const question = makeQuestion({
       type: "file",
       label: "Upload files",
-      file_max_attachments: 2,
+      config: { file_max_attachments: 2 },
       description: "Attach evidence",
     });
 
@@ -99,7 +99,7 @@ describe("FileInput", () => {
     const question = makeQuestion({
       type: "file",
       label: "Upload files",
-      file_max_attachments: 1,
+      config: { file_max_attachments: 1 },
     });
 
     renderWithForm({
@@ -134,7 +134,7 @@ describe("FileInput", () => {
     const question = makeQuestion({
       type: "file",
       label: "Upload files",
-      file_max_attachments: 2,
+      config: { file_max_attachments: 2 },
     });
 
     renderWithForm({
@@ -168,7 +168,7 @@ describe("FileInput", () => {
     const question = makeQuestion({
       type: "file",
       label: "Upload files",
-      file_max_attachments: 1,
+      config: { file_max_attachments: 1 },
     });
 
     renderWithForm({
@@ -192,7 +192,7 @@ describe("FileInput", () => {
     const question = makeQuestion({
       type: "file",
       label: "Upload files",
-      file_max_attachments: 1,
+      config: { file_max_attachments: 1 },
     });
 
     renderWithForm({

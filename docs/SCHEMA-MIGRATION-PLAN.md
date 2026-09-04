@@ -33,7 +33,8 @@ The framework prioritises:
 | **Phase 9: Generic Management Commands** | **✅ COMPLETE** | **`--target` flag commands + base class + 13 tests for nested version_path** | **13/13 tests passing** |
 | **Phase 10: Questionnaires → Generic Framework** | **✅ COMPLETE** | **Deleted app-specific code, recovered integration tests, generic framework configured** | **134/134 tests passing** |
 | **Phase 11: Applications → Generic Framework** | ⏳ PLANNED | Create applications migrations folder, add SCHEMA_VERSION, configure via SCHEMA_MIGRATION_TARGETS | TBD |
-| **Total Framework** | **✅ PHASES 1-10 COMPLETE** | **Generic commands with --target flag, full integration test suite, questionnaires configured** | **300/300 tests passing** |
+| **Phase 12: Question Config Consolidation (Migration 0001)** | **✅ COMPLETE** | **Consolidated 5 config fields into nested `config` object. Schema v0→v1 migration with forward/backward transforms. All backend (316) + frontend (292) tests passing (608 total).** | **17/17 migration tests passing** |
+| **Total Framework** | **✅ PHASES 1-10 + PHASE 12 COMPLETE** | **Generic commands with --target flag, full integration test suite, questionnaires configured, first schema evolution (0001) delivered** | **608/608 tests passing** |
 
 **Documentation:**
 - **[SCHEMA-MIGRATION-HANDBOOK.md](SCHEMA-MIGRATION-HANDBOOK.md)** — Comprehensive guide for developers and operators (how to create, execute, test, and rollback migrations)

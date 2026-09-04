@@ -58,66 +58,14 @@ class GridQuestionColumnSerialiser(serializers.Serializer):
     )
 
 
-# class QuestionExtraAttrs(serializers.Serializer):
-#     select_options = serializers.ListField(
-#         child=serializers.CharField(max_length=100),
-#         max_length=50,
-#         required=False,
-#         allow_null=True,
-#         allow_empty=False,
-#     )
-#     grid_columns = serializers.ListField(
-#         child=SerializerJSONField(GridQuestionColumnSerialiser),
-#         max_length=10,
-#         required=False,
-#         allow_null=True,
-#         allow_empty=False,
-#     )
-#     grid_max_rows = serializers.IntegerField(
-#         min_value=1,
-#         max_value=20,
-#         # default=10,
-#         required=False,
-#         allow_null=True,
-#     )
-#     dependent_step = serializers.IntegerField(
-#         min_value=1,
-#         max_value=10,
-#         required=False,
-#         allow_null=True,
-#     )
-#     file_max_attachments = serializers.IntegerField(
-#         min_value=1,
-#         max_value=20,
-#         required=False,
-#         allow_null=True,
-#     )
-
-
-class QuestionSerialiser(serializers.Serializer):
-    label = serializers.CharField(max_length=500, required=True)
-    type = serializers.ChoiceField(
-        choices=[
-            *GRID_QUESTION_TYPE_CHOICES,
-            ("file", "File Upload"),
-            ("grid", "Grid (Matrix of options)"),
-        ],
-        required=True,
-    )
-    # Getting validation error; "None is not of type 'boolean'"
-    # while creating a new questionnaire
-    is_required = serializers.BooleanField(
-        default=False, required=False, allow_null=False
-    )
-    description = serializers.CharField(
-        max_length=1000, required=False, allow_null=False, allow_blank=True
-    )
-    # TODO: Replace all other extra attributes with this when schema migration is ready
-    # extra_attributes = QuestionExtraAttrs(
-    #     required=False,
-    #     allow_null=False,
-    #     default=dict(),
-    # )
+class QuestionConfig(serializers.Serializer):
+    """Nested configuration object for question-type-specific settings.
+    
+    Consolidates all type-specific configuration fields (select options,
+    grid definitions, file attachment limits, and conditional logic)
+    into a single nested structure for improved schema clarity.
+    """
+    
     select_options = serializers.ListField(
         child=serializers.CharField(max_length=100),
         max_length=50,
@@ -150,6 +98,31 @@ class QuestionSerialiser(serializers.Serializer):
         max_value=20,
         required=False,
         allow_null=True,
+    )
+
+
+class QuestionSerialiser(serializers.Serializer):
+    label = serializers.CharField(max_length=500, required=True)
+    type = serializers.ChoiceField(
+        choices=[
+            *GRID_QUESTION_TYPE_CHOICES,
+            ("file", "File Upload"),
+            ("grid", "Grid (Matrix of options)"),
+        ],
+        required=True,
+    )
+    # Getting validation error; "None is not of type 'boolean'"
+    # while creating a new questionnaire
+    is_required = serializers.BooleanField(
+        default=False, required=False, allow_null=False
+    )
+    description = serializers.CharField(
+        max_length=1000, required=False, allow_null=False, allow_blank=True
+    )
+    config = QuestionConfig(
+        required=False,
+        allow_null=False,
+        default=dict(),
     )
 
 

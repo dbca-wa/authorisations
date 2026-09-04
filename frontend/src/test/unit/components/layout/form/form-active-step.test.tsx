@@ -105,7 +105,7 @@ describe("FormActiveStep", () => {
           description: "",
           questions: [
             { label: "Has permit", type: "checkbox", is_required: false },
-            { label: "Permit number", type: "text", is_required: false, dependent_step: 1 },
+            { label: "Permit number", type: "text", is_required: false, config: { dependent_step: 1 } },
           ],
         },
       ],

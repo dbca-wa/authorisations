@@ -59,6 +59,47 @@ This system supports DBCA authorisation workflows, including Animal Ethics and S
 - Questionnaire uniqueness/versioning invariant: Unique constraint includes `(process, name, version DESC expression)` by name `qnaire_unique_process_name_version_desc`
 - Operational meaning: For each `(process, name)`, there may be multiple rows by version. "Latest" is determined by highest `version` for that pair
 
+## Question structure and configuration
+
+### Question data model
+
+Questions are nested JSON structures within questionnaires: `questionnaire.document.steps[N].sections[M].questions[K]`
+
+Each question has core properties:
+- `label`: Display label shown to applicant
+- `type`: Question type (text, textarea, number, checkbox, select, date, file, grid)
+- `is_required`: Whether the question must have an answer
+- `description`: Optional help text
+
+### Configuration consolidation (schema v1)
+
+As of schema version 1, type-specific configuration fields are consolidated into a single nested `config` object. This improves schema clarity by separating core metadata from type-specific settings.
+
+**Configuration structure**:
+```json
+{
+  "label": "Select your options",
+  "type": "select",
+  "is_required": true,
+  "config": {
+    "select_options": ["Option A", "Option B"],
+    "grid_columns": [],
+    "grid_max_rows": null,
+    "dependent_step": null,
+    "file_max_attachments": null
+  }
+}
+```
+
+**Config fields** (all optional):
+- `select_options`: Array of strings for select/checkbox questions
+- `grid_columns`: Array of column definitions for grid questions
+- `grid_max_rows`: Maximum rows for grid questions (1-20)
+- `dependent_step`: Step index for conditional (walkback) questions
+- `file_max_attachments`: Maximum file attachments for file questions (1-20)
+
+**Migration from v0 to v1**: Migration `0001_consolidate_question_config` transforms all existing questionnaires from flat structure (properties at question level) to nested structure (properties within `config` object). See [SCHEMA-MIGRATION-HANDBOOK.md](SCHEMA-MIGRATION-HANDBOOK.md#migration-0001-consolidate-question-config) for details.
+
 ## Business logic behind technical structure
 
 ### Why AuthorisationProcess exists

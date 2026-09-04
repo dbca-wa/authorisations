@@ -11,10 +11,12 @@ describe("GridInput", () => {
       type: "grid",
       label: "Animal details",
       description: "Provide one row per animal",
-      grid_columns: [
-        { label: "Species", type: "text", description: "Species common name" },
-        { label: "Count", type: "number" },
-      ],
+      config: {
+        grid_columns: [
+          { label: "Species", type: "text", description: "Species common name" },
+          { label: "Count", type: "number" },
+        ],
+      },
     });
 
     renderWithForm({ ui: <GridInput question={question} /> });
@@ -29,7 +31,7 @@ describe("GridInput", () => {
       type: "grid",
       label: "Required grid",
       is_required: true,
-      grid_columns: [{ label: "Species", type: "text" }],
+      config: { grid_columns: [{ label: "Species", type: "text" }] },
     });
 
     renderWithForm({ ui: <GridInput question={question} /> });
@@ -44,7 +46,7 @@ describe("GridInput", () => {
       type: "grid",
       label: "Required grid",
       is_required: true,
-      grid_columns: [{ label: "Species", type: "text" }],
+      config: { grid_columns: [{ label: "Species", type: "text" }] },
     });
 
     renderWithForm({

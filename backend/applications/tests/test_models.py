@@ -101,10 +101,12 @@ class GridRowsTests(TestCase):
         """_build_grid_rows builds rows from list of dicts."""
         question = {
             "type": "grid",
-            "grid_columns": [
-                {"label": "Column A"},
-                {"label": "Column B"},
-            ]
+            "config": {
+                "grid_columns": [
+                    {"label": "Column A"},
+                    {"label": "Column B"},
+                ]
+            }
         }
         raw_value = [
             {"Column A": "A1", "Column B": "B1"},
@@ -118,26 +120,26 @@ class GridRowsTests(TestCase):
 
     def test_build_grid_rows_with_non_list_value(self):
         """_build_grid_rows returns empty list for non-list values."""
-        question = {"grid_columns": [{"label": "Col"}]}
+        question = {"config": {"grid_columns": [{"label": "Col"}]}}
         result = _build_grid_rows(question, "not a list")
         self.assertEqual(result, [])
 
     def test_build_grid_rows_with_none_value(self):
         """_build_grid_rows returns empty list for None values."""
-        question = {"grid_columns": [{"label": "Col"}]}
+        question = {"config": {"grid_columns": [{"label": "Col"}]}}
         result = _build_grid_rows(question, None)
         self.assertEqual(result, [])
 
     def test_build_grid_rows_with_non_dict_items(self):
         """_build_grid_rows skips non-dict items in row list."""
-        question = {"grid_columns": [{"label": "Col"}]}
+        question = {"config": {"grid_columns": [{"label": "Col"}]}}
         raw_value = ["not a dict", {"Col": "value"}]
         result = _build_grid_rows(question, raw_value)
         self.assertEqual(len(result), 1)
 
     def test_build_grid_rows_with_missing_column_label(self):
         """_build_grid_rows uses default label when column label missing."""
-        question = {"grid_columns": [{}]}
+        question = {"config": {"grid_columns": [{}]}}
         raw_value = [{"Column": "value"}]
         result = _build_grid_rows(question, raw_value)
         # When column has no label, it gets "Column" as default.

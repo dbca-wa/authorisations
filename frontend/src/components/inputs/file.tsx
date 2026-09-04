@@ -51,7 +51,7 @@ export const FileInput = ({
 
     // Maximum attachments allowed for this question
     // Defaults to 1 (if not specified or zero) with the hard limit 20
-    const maxAttachments = Math.min(question.o.file_max_attachments || 1, 20);
+    const maxAttachments = Math.min(question.o.config?.file_max_attachments || 1, 20);
 
     // Use controller hook to manage field state
     const { field, fieldState } = useController({

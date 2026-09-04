@@ -12,13 +12,14 @@ This handbook provides comprehensive guidance on creating, executing, testing, a
 
 1. [Overview](#overview)
 2. [Special Migration 0000: Calendar → Ordinal Bridge](#special-migration-0000-calendar--ordinal-bridge)
-3. [Creating a New Migration](#creating-a-new-migration)
-4. [Writing Migration Code](#writing-migration-code)
-5. [Executing a Migration](#executing-a-migration)
-6. [Rolling Back a Migration](#rolling-back-a-migration)
-7. [Testing Migrations](#testing-migrations)
-8. [Troubleshooting](#troubleshooting)
-9. [Reference](#reference)
+3. [Migration 0001: Consolidate Question Config](#migration-0001-consolidate-question-config)
+4. [Creating a New Migration](#creating-a-new-migration)
+5. [Writing Migration Code](#writing-migration-code)
+6. [Executing a Migration](#executing-a-migration)
+7. [Rolling Back a Migration](#rolling-back-a-migration)
+8. [Testing Migrations](#testing-migrations)
+9. [Troubleshooting](#troubleshooting)
+10. [Reference](#reference)
 
 ---
 
