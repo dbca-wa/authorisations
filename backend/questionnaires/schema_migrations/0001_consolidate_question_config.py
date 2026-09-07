@@ -433,6 +433,11 @@ def target_schema():
                                 "maximum": 20,
                                 "title": "File max attachments",
                             },
+                            "hint": {
+                                "type": ["string", "null"],
+                                "maxLength": 3000,
+                                "title": "Question hint",
+                            },
                         },
                         "additionalProperties": False,
                         "title": "Question configuration",

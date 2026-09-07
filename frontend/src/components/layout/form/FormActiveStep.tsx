@@ -1,14 +1,17 @@
+import AnnouncementOutlinedIcon from '@mui/icons-material/AnnouncementOutlined';
 import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Stack from "@mui/material/Stack";
 import React from "react";
 
 import { useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
+import { useDialog } from '../../../context/Hooks';
 import type { IApplicationAttachment } from '../../../context/types/Application';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
 import { Question, type IFormSection, type IFormStep, type IQuestion } from "../../../context/types/Questionnaire";
@@ -251,7 +254,16 @@ const Section = ({
                     return (
                         <Collapse in={isVisible} timeout="auto" key={qIndex}>
                             <ListItem id={`q-${question.key}`} className="mb-4">
-                                {inputComponent}
+                                <Box className="w-full flex flex-col gap-2">
+                                    <Box className="flex items-start gap-2">
+                                        <Box className="flex-1">
+                                            {inputComponent}
+                                        </Box>
+                                        {question.o.config?.hint && (
+                                            <HintButton hint={question.o.config.hint} />
+                                        )}
+                                    </Box>
+                                </Box>
                             </ListItem>
                         </Collapse>
                     );
@@ -260,6 +272,36 @@ const Section = ({
         </Stack>
     )
 }
+
+/**
+ * Small button component that displays a hint icon and opens a dialog with hint text.
+ */
+const HintButton = ({ hint }: { hint: string }) => {
+    const { showDialog } = useDialog();
+
+    const handleOpenHint = () => {
+        showDialog({
+            title: "Information Required",
+            content: (
+                <Box className="display-linebreak whitespace-pre-wrap">
+                    {hint}
+                </Box>
+            ),
+            actions: undefined,
+        });
+    };
+
+    return (
+        <IconButton
+            size="small"
+            onClick={handleOpenHint}
+            title="Show information required"
+            sx={{ mt: 0.5 }}
+        >
+            <AnnouncementOutlinedIcon fontSize="small" />
+        </IconButton>
+    );
+};
 
 /**
  * Utility for follow-up question visibility logic.

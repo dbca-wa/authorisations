@@ -16,6 +16,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Added custom template for 404 error page to provide a user-friendly interface when users navigate to non-existent routes.
 - Added AKS pod security admission compatibility updates to the shared deployment configuration, including a RuntimeDefault seccomp profile so the application remains compliant with the restricted security policy.
 - Added smooth slide down/up animations for dependent (follow-up) questions in form sections, improving visual feedback when conditional questions appear or disappear based on parent question values.
+- Added optional question hints feature enabling questionnaire creators to provide contextual guidance for each question via a small help icon that displays explanation text in a dialog, improving form clarity without cluttering the visual layout.
 
 ### Changed
 

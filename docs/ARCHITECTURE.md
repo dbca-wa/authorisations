@@ -86,7 +86,8 @@ As of schema version 1, type-specific configuration fields are consolidated into
     "grid_columns": [],
     "grid_max_rows": null,
     "dependent_step": null,
-    "file_max_attachments": null
+    "file_max_attachments": null,
+    "hint": "Select one or more options that apply to your situation"
   }
 }
 ```
@@ -97,6 +98,7 @@ As of schema version 1, type-specific configuration fields are consolidated into
 - `grid_max_rows`: Maximum rows for grid questions (1-20)
 - `dependent_step`: Step index for conditional (walkback) questions
 - `file_max_attachments`: Maximum file attachments for file questions (1-20)
+- `hint`: Optional contextual guidance text for the question (max 3000 characters, nullable, allows blank)
 
 **Migration from v0 to v1**: Migration `0001_consolidate_question_config` transforms all existing questionnaires from flat structure (properties at question level) to nested structure (properties within `config` object). See [SCHEMA-MIGRATION-HANDBOOK.md](SCHEMA-MIGRATION-HANDBOOK.md#migration-0001-consolidate-question-config) for details.
 
