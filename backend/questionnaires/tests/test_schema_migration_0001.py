@@ -59,6 +59,7 @@ class TestTargetSchema:
             "grid_max_rows",
             "dependent_step",
             "file_max_attachments",
+            "hint",
         }
 
     def test_target_schema_has_no_flat_config_fields(self, migration_0001):
@@ -487,3 +488,83 @@ class TestRoundTripMigration:
         
         # Should match original
         assert doc_v0_restored == original_doc
+
+
+class TestHintFieldInMigration:
+    """Test that hint field is preserved through schema migrations."""
+
+    def test_migrate_forward_with_hint_preserved_in_config(self, migration_0001):
+        """Verify forward migration handles hint field in nested config."""
+        # Note: v0→v1 migration itself doesn't add hint; later migrations would
+        # This test verifies migration doesn't fail and hint structure is correct
+        doc = {
+            "schema_version": 0,
+            "steps": [
+                {
+                    "title": "Step 1",
+                    "sections": [
+                        {
+                            "title": "Section 1",
+                            "questions": [
+                                {
+                                    "label": "Question 1",
+                                    "type": "text",
+                                    "is_required": True,
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        
+        result = migration_0001.migrate_forward(doc)
+        
+        # After migration, question should not have hint (it didn't exist in v0)
+        question = result["steps"][0]["sections"][0]["questions"][0]
+        assert "hint" not in question or question.get("config", {}).get("hint") is None
+
+    def test_migrate_backward_handles_config_without_hint(self, migration_0001):
+        """Verify backward migration handles config without hint gracefully."""
+        doc = {
+            "schema_version": 1,
+            "steps": [
+                {
+                    "title": "Step 1",
+                    "sections": [
+                        {
+                            "title": "Section 1",
+                            "questions": [
+                                {
+                                    "label": "Question 1",
+                                    "type": "text",
+                                    "is_required": True,
+                                    "config": {},
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        
+        result = migration_0001.migrate_backward(doc)
+        
+        # After rollback, should be clean v0 structure
+        assert result["schema_version"] == 0
+        question = result["steps"][0]["sections"][0]["questions"][0]
+        assert "config" not in question
+        assert "hint" not in question
+
+    def test_schema_validates_hint_in_config(self, migration_0001):
+        """Verify hint field structure matches target schema definition."""
+        schema = migration_0001.target_schema()
+        config_schema = schema["$defs"]["question"]["properties"]["config"]["properties"]
+        
+        # Verify hint is defined in schema
+        assert "hint" in config_schema
+        hint_schema = config_schema["hint"]
+        
+        # Verify hint allows null and has reasonable constraints
+        assert "string" in hint_schema["type"] or hint_schema["type"] in ["string", ["string", "null"]]
+        assert hint_schema.get("maxLength", float("inf")) >= 3000

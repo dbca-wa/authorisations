@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
 from questionnaires.serialisers import (
     GridQuestionColumnSerialiser,
+    QuestionConfig,
     QuestionSerialiser,
     ReferenceField,
     ReferenceFieldConverter,
@@ -225,3 +226,67 @@ def test_reference_field_converter_builds_expected_ref_path():
     converted = ReferenceFieldConverter().convert(reference_field)
 
     assert converted == {"$ref": "#/$defs/question"}
+
+
+class TestQuestionConfigSerialiser:
+    """Test the QuestionConfig serialiser with hint field."""
+
+    def test_question_config_with_hint(self):
+        """Verify serialiser accepts hint field."""
+        data = {
+            "hint": "This is helpful information about this question.",
+            "select_options": ["Option A", "Option B"],
+        }
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == "This is helpful information about this question."
+
+    def test_question_config_hint_nullable(self):
+        """Verify hint field accepts null value."""
+        data = {
+            "hint": None,
+            "select_options": ["Option A", "Option B"],
+        }
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data.get("hint") is None
+
+    def test_question_config_hint_optional(self):
+        """Verify hint field is optional."""
+        data = {
+            "select_options": ["Option A", "Option B"],
+        }
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert "hint" not in serialiser.validated_data or serialiser.validated_data.get("hint") is None
+
+    def test_question_config_hint_max_length(self):
+        """Verify hint field respects 3000 character limit."""
+        long_hint = "x" * 3001
+        data = {"hint": long_hint}
+        serialiser = QuestionConfig(data=data)
+        assert not serialiser.is_valid()
+        assert "hint" in serialiser.errors
+
+    def test_question_config_hint_exactly_max_length(self):
+        """Verify hint field accepts exactly 3000 characters."""
+        max_hint = "x" * 3000
+        data = {"hint": max_hint}
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == max_hint
+
+    def test_question_config_hint_empty_string(self):
+        """Verify hint field accepts empty string."""
+        data = {"hint": ""}
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == ""
+
+    def test_question_config_hint_with_newlines(self):
+        """Verify hint field preserves newlines and whitespace."""
+        hint_with_newlines = "Line 1\nLine 2\nLine 3"
+        data = {"hint": hint_with_newlines}
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == hint_with_newlines
