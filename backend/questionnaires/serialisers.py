@@ -99,6 +99,12 @@ class QuestionConfig(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+    hint = serializers.CharField(
+        max_length=3000,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+    )
 
 
 class QuestionSerialiser(serializers.Serializer):

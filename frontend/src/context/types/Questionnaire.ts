@@ -76,6 +76,8 @@ export interface IQuestionConfig {
     dependent_step?: number | null;
     // File upload maximum attachment limit
     file_max_attachments?: number | null;
+    // Optional hint text to display in a dialog for the question
+    hint?: string | null;
 }
 
 
