@@ -119,7 +119,10 @@ describe("FormActiveStep", () => {
     });
 
     expect(screen.getByText("1. Has permit")).toBeInTheDocument();
-    expect(screen.queryByText("2. Permit number")).not.toBeInTheDocument();
+    // Collapse component renders the dependent question but hides it with CSS when parent is false.
+    // Check visibility instead of document existence.
+    const permutNumber = screen.queryByText("2. Permit number");
+    expect(permutNumber).not.toBeVisible();
 
     firstRender.unmount();
 
@@ -130,7 +133,8 @@ describe("FormActiveStep", () => {
       defaultValues: { 0: { "0-0": true } },
     });
 
-    expect(screen.getByText("2. Permit number")).toBeInTheDocument();
+    // Element should be visible when parent is true
+    expect(screen.getByText("2. Permit number")).toBeVisible();
   });
 
   it("throws for unsupported question types", () => {

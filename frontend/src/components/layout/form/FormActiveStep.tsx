@@ -2,6 +2,7 @@ import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftR
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Collapse from "@mui/material/Collapse";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Stack from "@mui/material/Stack";
@@ -210,10 +211,8 @@ const Section = ({
                         question: qIndex,
                     });
 
-                    // Check visibility using useWatch and recursive logic
-                    if (!isQuestionVisible(question.key)) {
-                        return null;
-                    }
+                    // Determine visibility for this question using cached visibility map
+                    const isVisible = isQuestionVisible(question.key);
 
                     let inputComponent: React.ReactNode;
                     switch (question.o.type) {
@@ -247,10 +246,14 @@ const Section = ({
                             throw new Error(`Unknown question type: ${question.o.type}`);
                     }
 
+                    // Wrap in Collapse for smooth slide down/up animation of dependent questions.
+                    // timeout="auto" calculates duration based on content height for natural feel.
                     return (
-                        <ListItem id={`q-${question.key}`} key={qIndex} className="mb-4">
-                            {inputComponent}
-                        </ListItem>
+                        <Collapse in={isVisible} timeout="auto" key={qIndex}>
+                            <ListItem id={`q-${question.key}`} className="mb-4">
+                                {inputComponent}
+                            </ListItem>
+                        </Collapse>
                     );
                 })}
             </List>
