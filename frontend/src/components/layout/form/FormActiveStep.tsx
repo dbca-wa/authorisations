@@ -282,7 +282,7 @@ const computeFollowupMap = (
             question: qIndex,
         });
 
-        const walkback = question.o.dependent_step;
+        const walkback = question.o.config?.dependent_step;
         if (walkback && qIndex - walkback >= 0) {
             const parentQuestion = new Question(
                 questions[qIndex - walkback],

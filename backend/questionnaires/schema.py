@@ -6,10 +6,8 @@ from jsonschema.validators import Draft202012Validator
 
 from .serialisers import QuestionSerialiser, SectionSerialiser, StepSerialiser
 
-# Current version of the schema (unsigned integer: 0, 1, 2, 3, ...)
-# Version 0: legacy baseline (2025.07-1)
-# Version 1+: ordinal migrations
-# Previous versions are maintained in schema_migrations/ directory
+# Current schema version (unsigned integer: 0, 1, 2, ...)
+# Migrations stored in schema_migrations/ directory:
 SCHEMA_VERSION = 1
 
 # This should never be modified on runtime, therefore we use frozendict

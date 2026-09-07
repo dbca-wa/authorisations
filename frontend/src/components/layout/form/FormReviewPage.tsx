@@ -342,7 +342,7 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
             <table className="w-full border border-[#444] border-collapse text-[11px]">
                 <thead>
                     <tr>
-                        {question.grid_columns?.map((col: IGridQuestionColumn, colIdx: number) => (
+                        {question.config?.grid_columns?.map((col: IGridQuestionColumn, colIdx: number) => (
                             <th key={colIdx} className="border border-[#777] bg-[#dbe4bf] px-2 py-1.5 text-left font-bold text-[#4f5f2f]">
                                 {col.label}
                             </th>
@@ -352,7 +352,7 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
                 <tbody>
                     {answer.map((row: IGridAnswerRow, rowIdx: number) => (
                         <tr key={rowIdx}>
-                            {question.grid_columns?.map((col: IGridQuestionColumn, colIdx: number) => {
+                            {question.config?.grid_columns?.map((col: IGridQuestionColumn, colIdx: number) => {
                                 const cellValue = row[col.label];
                                 let displayValue: React.ReactNode;
 

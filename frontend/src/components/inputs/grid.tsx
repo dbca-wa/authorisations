@@ -52,7 +52,7 @@ const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
     // Map over each row and convert date strings to Date objects
     return value.map((row) => {
         const newRow: Record<string, unknown> = { _id: uuidv6(), _isNew: false, ...row, };
-        question.o.grid_columns?.forEach((column) => {
+        question.o.config?.grid_columns?.forEach((column) => {
             if (column.type === "date") {
                 assert(
                     typeof newRow[column.label] === "string" || newRow[column.label] === null,
@@ -106,7 +106,7 @@ export function GridInput({
             // Do create a new array to avoid mutating the original state
             // also remove the internal _id and _isNew fields
             const { _id, _isNew, ...newRow } = row;
-            question.o.grid_columns?.forEach((column) => {
+            question.o.config?.grid_columns?.forEach((column) => {
                 if (column.type === "date" && newRow[column.label] instanceof Date) {
                     newRow[column.label] = dayjs(newRow[column.label]).format('YYYY-MM-DD');
                 }
@@ -238,7 +238,7 @@ function getHeaders({
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
 }): GridColDef[] {
-    const columns: GridColDef[] = (question.o.grid_columns || []).map((column, _) => {
+    const columns: GridColDef[] = (question.o.config?.grid_columns || []).map((column, _) => {
         // Corresponding column type
         let columnType: GridColDef['type'];
         switch (column.type) {
@@ -308,7 +308,7 @@ function getHeaders({
 function getEmptyRow(question: Question) {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
-    question.o.grid_columns?.forEach((column, _) => {
+    question.o.config?.grid_columns?.forEach((column, _) => {
         // Default to boolean false for checkboxes
         if (column.type === "checkbox") {
             row[column.label] = false;

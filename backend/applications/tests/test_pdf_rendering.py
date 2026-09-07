@@ -71,10 +71,12 @@ class QuestionItemBuilderTests(TestCase):
         question = {
             "type": "grid",
             "label": "Grid Question",
-            "grid_columns": [
-                {"label": "Col A"},
-                {"label": "Col B"},
-            ]
+            "config": {
+                "grid_columns": [
+                    {"label": "Col A"},
+                    {"label": "Col B"},
+                ]
+            }
         }
         raw_value = [{"Col A": "A1", "Col B": "B1"}]
         result = _build_question_item(question, raw_value, 0, {})
@@ -87,7 +89,9 @@ class QuestionItemBuilderTests(TestCase):
         """_build_question_item uses default column label when missing."""
         question = {
             "type": "grid",
-            "grid_columns": [{}]  # Missing label
+            "config": {
+                "grid_columns": [{}]  # Missing label
+            }
         }
         result = _build_question_item(question, [], 0, {})
         self.assertEqual(result["grid_columns"], ["Column"])

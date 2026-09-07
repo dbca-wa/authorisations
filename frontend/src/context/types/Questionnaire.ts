@@ -57,6 +57,15 @@ export interface IQuestion {
     type: string;
     is_required: boolean;
     description?: string;
+    // Nested configuration object containing type-specific settings
+    config?: IQuestionConfig | null;
+}
+
+/**
+ * Consolidated configuration object for type-specific question settings.
+ * Contains fields that were previously scattered at the question level.
+ */
+export interface IQuestionConfig {
     // For select type questions, the list of options to choose from
     select_options?: string[] | null;
     // Grid columns definitions

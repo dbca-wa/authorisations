@@ -36,7 +36,7 @@ export function SelectInput({
                     labelId={"label-" + question.key}
                     error={fieldState.invalid}
                 >
-                    {question.o.select_options?.map((option) => (
+                    {question.o.config?.select_options?.map((option) => (
                         <MenuItem key={option} value={option}>
                             {option}
                         </MenuItem>
