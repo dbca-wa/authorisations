@@ -257,7 +257,7 @@ const Section = ({
                                 <Box className="w-full flex flex-col gap-2">
                                     <Box className="flex items-start gap-2">
                                         <Box className="flex-1">
-                                            {inputComponent}
+                                            {isVisible && inputComponent}
                                         </Box>
                                         {question.o.config?.hint && (
                                             <HintButton hint={question.o.config.hint} />
