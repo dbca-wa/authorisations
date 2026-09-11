@@ -22,6 +22,7 @@ export function SelectInput({
         render={({ field, fieldState }) => (
             <FormControl fullWidth>
                 <label
+                    id={"label-" + question.key}
                     htmlFor={"field-" + question.key}
                     className="mb-2 block whitespace-normal text-base leading-relaxed text-gray-800"
                 >
@@ -32,6 +33,9 @@ export function SelectInput({
                     id={"field-" + question.key}
                     value={field.value ?? ""}
                     error={fieldState.invalid}
+                    inputProps={{
+                        "aria-labelledby": "label-" + question.key,
+                    }}
                 >
                     {question.o.config?.select_options?.map((option) => (
                         <MenuItem key={option} value={option}>
