@@ -47,11 +47,6 @@ export function TextInput({
                     error={fieldState.invalid}
                     variant="outlined"
                     fullWidth
-                    slotProps={{
-                        input: {
-                            className: "min-h-[56px] py-2",
-                        },
-                    }}
                     // Trim the value on blur for a better user experience.
                     // This allows users to type spaces between words and cleans up the
                     // value only when they are done editing.
