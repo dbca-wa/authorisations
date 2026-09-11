@@ -34,25 +34,33 @@ export function TextInput({
         }}
         render={({ field, fieldState }) => (
             <Box className="w-full">
+                <label
+                    htmlFor={"field-" + question.key}
+                    className="mb-2 block whitespace-normal text-base leading-relaxed text-gray-800"
+                >
+                    {question.labelText}
+                </label>
                 <TextField
                     {...field}
-
+                    id={"field-" + question.key}
                     type={question.o.type === "number" ? "number" : "text"}
-                    label={question.labelText}
                     error={fieldState.invalid}
                     variant="outlined"
-                    className="w-full"
-
+                    fullWidth
+                    slotProps={{
+                        input: {
+                            className: "min-h-[56px] py-2",
+                        },
+                    }}
                     // Trim the value on blur for a better user experience.
                     // This allows users to type spaces between words and cleans up the
                     // value only when they are done editing.
                     onBlur={() => {
-                        field.onBlur(); // First, call the original onBlur from react-hook-form
+                        field.onBlur();
                         if (typeof field.value === "string") {
-                            field.onChange(field.value.trim()); // Then, update the value with the trimmed version
+                            field.onChange(field.value.trim());
                         }
                     }}
-
                     // Spread the conditional props here
                     {...textAreaProps}
                 />

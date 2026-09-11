@@ -1,7 +1,6 @@
 import Alert from "@mui/material/Alert";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 
@@ -21,19 +20,17 @@ export function SelectInput({
             required: question.o.is_required ? ERROR_MSG.required : false,
         }}
         render={({ field, fieldState }) => (
-            // Use error attribute on children only, not on FormControl 
-            // so the description helper text will always display normal
             <FormControl fullWidth>
-                <InputLabel
-                    id={"label-" + question.key}
-                    error={fieldState.invalid}
+                <label
+                    htmlFor={"field-" + question.key}
+                    className="mb-2 block whitespace-normal text-base leading-relaxed text-gray-800"
                 >
                     {question.labelText}
-                </InputLabel>
+                </label>
                 <Select
                     {...field}
-                    label={question.labelText}
-                    labelId={"label-" + question.key}
+                    id={"field-" + question.key}
+                    value={field.value ?? ""}
                     error={fieldState.invalid}
                 >
                     {question.o.config?.select_options?.map((option) => (
