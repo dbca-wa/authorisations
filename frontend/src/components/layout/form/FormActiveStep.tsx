@@ -172,7 +172,13 @@ const Section = ({
             if (!info) return (cache[qKey] = true);
             const parentVal = parentValues[info.parentKey];
             const parentVisible = compute(info.parentKey);
-            return (cache[qKey] = Boolean(parentVal) && parentVisible);
+            // Determine if the parent's value should be considered "truthy" for visibility purposes
+            const parentValueIsTruthy =
+                typeof parentVal === 'string'
+                    ? parentVal.trim() !== "" && parentVal.toLowerCase() !== "no"
+                    : Boolean(parentVal);
+
+            return (cache[qKey] = parentValueIsTruthy && parentVisible);
         };
 
         // ensure we compute visibility for all questions (so lookups are O(1) later)
