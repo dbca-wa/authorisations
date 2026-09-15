@@ -12,7 +12,7 @@ describe("CheckboxInput", () => {
 
     renderWithForm({ ui: <CheckboxInput question={question} /> });
 
-    expect(screen.getByLabelText("1. Accept terms")).toBeInTheDocument();
+    expect(screen.getByLabelText("Accept terms")).toBeInTheDocument();
     expect(screen.getByText("You must accept")).toBeInTheDocument();
   });
 
@@ -21,7 +21,7 @@ describe("CheckboxInput", () => {
 
     renderWithForm({ ui: <CheckboxInput question={question} /> });
 
-    const checkbox = screen.getByLabelText("1. Confirm") as HTMLInputElement;
+    const checkbox = screen.getByLabelText("Confirm") as HTMLInputElement;
     expect(checkbox.checked).toBe(false);
 
     fireEvent.click(checkbox);

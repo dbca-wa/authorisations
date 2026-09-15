@@ -24,16 +24,20 @@ export function CheckboxInput({
         }}
         render={({ field, fieldState }) => (
             <FormControl>
-                <Box className="flex items-baseline-last">
+                <Box className="flex items-start gap-1">
+                    <Typography variant="h6">
+                        {question.number}
+                    </Typography>
                     <FormControlLabel
                         control={
                             <Checkbox
                                 {...field}
                                 checked={!!field.value}
+                                className="pt-1!"
                             />
                         }
-                        label={<Typography variant="h6">{question.labelText}</Typography>}
-                        className="mr-1!"
+                        label={<Typography variant="h6">{question.o.label}</Typography>}
+                        className="m-0! items-start!"
                     />
                     {question.o.config?.hint && (
                         <HintButton hint={question.o.config.hint} />
