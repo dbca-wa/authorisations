@@ -29,6 +29,7 @@ import { v6 as uuidv6 } from 'uuid';
 import { type PrimitiveType } from "../../context/types/Generic";
 import { Question } from "../../context/types/Questionnaire";
 import { assert } from '../../context/Utils';
+import { HintButton } from '../Common';
 
 // Declare custom props to pass to the footer component
 // See https://mui.com/x/api/data-grid/data-grid/#data-grid-prop-slotProps
@@ -177,9 +178,14 @@ export function GridInput({
 
     return (
         <Box className="w-full">
-            <Typography variant="h6">
-                {question.labelText}
-            </Typography>
+            <Box className="flex items-baseline-last gap-1 mb-2">
+                <Typography variant="h6">
+                    {question.labelText}
+                </Typography>
+                {question.o.config?.hint && (
+                    <HintButton hint={question.o.config.hint} />
+                )}
+            </Box>
             <DataGrid
                 getRowId={(row) => row._id}
                 rows={rows}
