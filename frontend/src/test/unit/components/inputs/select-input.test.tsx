@@ -16,7 +16,7 @@ describe("SelectInput", () => {
 
     renderWithForm({ ui: <SelectInput question={question} /> });
 
-    fireEvent.mouseDown(screen.getByLabelText("1. Select permit type"));
+    fireEvent.mouseDown(screen.getByRole("combobox"));
     expect(screen.getByRole("option", { name: "Research" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Monitoring" })).toBeInTheDocument();
   });

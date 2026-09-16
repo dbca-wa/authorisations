@@ -21,7 +21,7 @@ import { useSnackbar } from '../../context/Hooks';
 import type { IApplicationAttachment } from '../../context/types/Application';
 import type { Question } from "../../context/types/Questionnaire";
 import { VisuallyHiddenInput } from '../../context/Utils';
-import { FileAttachmentList } from '../Common';
+import { FileAttachmentList, HintButton } from '../Common';
 
 
 export const FileInput = ({
@@ -84,9 +84,14 @@ export const FileInput = ({
 
     return (
         <Box className="w-full">
-            <Typography variant="h6">
-                {question.labelText}
-            </Typography>
+            <Box className="flex items-baseline-last gap-1">
+                <Typography variant="h6">
+                    {question.labelText}
+                </Typography>
+                {question.o.config?.hint && (
+                    <HintButton hint={question.o.config.hint} />
+                )}
+            </Box>
             {/* Display the tiled attachment list if there are attachments */}
             {attachments.length > 0 &&
                 <FileAttachmentList

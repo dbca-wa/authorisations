@@ -11,6 +11,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ### Added
 
+- Added support for treating non-empty values other than "no" as truthy for follow-up question visibility, ensuring dependent questions appear correctly when a parent answer is "Yes" or similar values.
 - Added schema migration framework providing safe, auditable updates to application form structures with automatic data transformation and full rollback capability, significantly reducing risk when evolving the system.
 - Added maintenance mode feature enabling safe deployments and database migrations without displaying server errors to users. When enabled via `MAINTAINANCE_MODE=True`, all users see a friendly "Under Maintenance" page, API endpoints return 503 Service Unavailable, and file downloads are blocked.
 - Added custom template for 404 error page to provide a user-friendly interface when users navigate to non-existent routes.
@@ -20,6 +21,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ### Changed
 
+- Changed the labels across all input types to be consistent in size and styling for improved visual coherence throughout forms.
 - Reorganised questionnaire data structure by consolidating question configuration into a unified `config` object for improved clarity and easier future evolution.
 
 ## [1.1.0] - 2026-08-13

@@ -1,3 +1,4 @@
+import AnnouncementOutlinedIcon from '@mui/icons-material/AnnouncementOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import NumbersIcon from '@mui/icons-material/Numbers';
@@ -268,5 +269,38 @@ export const ApplicationIdDisplay = ({
                 {internalId}
             </Typography>
         </Tooltip>
+    );
+};
+
+/**
+ * Reusable hint button component that displays a small icon and opens a dialog with hint text.
+ * 
+ * Used in form input components to display contextual guidance next to question labels.
+ * 
+ * @param hint - The hint text to display in the dialog
+ */
+export const HintButton = ({ hint }: { hint: string }) => {
+    const { showDialog } = useDialog();
+
+    const handleOpenHint = () => {
+        showDialog({
+            title: "Information Required",
+            content: (
+                <Box className="display-linebreak whitespace-pre-wrap">
+                    {hint}
+                </Box>
+            ),
+            actions: undefined,
+        });
+    };
+
+    return (
+        <IconButton
+            size="small"
+            onClick={handleOpenHint}
+            title="Information required"
+        >
+            <AnnouncementOutlinedIcon fontSize="small" />
+        </IconButton>
     );
 };

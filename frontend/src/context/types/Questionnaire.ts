@@ -116,6 +116,11 @@ export class Question {
         return `${this.indices.step}.${this.indices.section}-${this.indices.question}`;
     }
 
+    // Return question number for display (e.g., "7. ")
+    get number(): string {
+        return `${this.indices.question + 1}. `;
+    }
+
     // Return formmatted label for display
     get labelText(): string {
         const formatted = `${this.indices.question + 1}. ${this.o.label}`;

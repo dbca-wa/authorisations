@@ -138,6 +138,56 @@ describe("FormActiveStep", () => {
     expect(screen.getByText("2. Permit number")).toBeVisible();
   });
 
+  it("treats a parent value of 'yes' as truthy for dependent visibility", () => {
+    const handleSubmit = vi.fn(() => async () => {
+      return;
+    });
+
+    const currentStep: IFormStep = {
+      title: "Step 1",
+      description: "",
+      sections: [
+        {
+          title: "Section 1",
+          description: "",
+          questions: [
+            {
+              label: "Are you affiliated?",
+              type: "select",
+              is_required: false,
+              config: { select_options: ["No", "Yes"] },
+            },
+            {
+              label: "Nature of affiliation",
+              type: "text",
+              is_required: false,
+              config: { dependent_step: 1 },
+            },
+          ],
+        },
+      ],
+    };
+
+    const yesRender = renderWithForm({
+      currentStep,
+      activeStep: 0,
+      handleSubmit,
+      defaultValues: { 0: { "0-0": "yes" } },
+    });
+
+    expect(screen.getByText("2. Nature of affiliation")).toBeInTheDocument();
+    yesRender.unmount();
+
+    renderWithForm({
+      currentStep,
+      activeStep: 0,
+      handleSubmit,
+      defaultValues: { 0: { "0-0": "No" } },
+    });
+
+    expect(screen.queryByText("2. Nature of affiliation")).not.toBeInTheDocument();
+  });
+
   it("throws for unsupported question types", () => {
     const handleSubmit = vi.fn(() => async () => {
       return;
