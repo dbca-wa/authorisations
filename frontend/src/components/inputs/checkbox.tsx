@@ -36,12 +36,15 @@ export function CheckboxInput({
                                 className="pt-1!"
                             />
                         }
-                        label={<Typography variant="h6">{question.o.label}</Typography>}
+                        label={
+                            <Typography variant="h6">
+                                {question.o.label}
+                                {question.o.is_required && " *"}
+                                {question.o.config?.hint && <HintButton hint={question.o.config.hint} />}
+                            </Typography>
+                        }
                         className="m-0! items-start!"
                     />
-                    {question.o.config?.hint && (
-                        <HintButton hint={question.o.config.hint} />
-                    )}
                 </Box>
                 {fieldState.invalid &&
                     <Alert severity="error" sx={{ mt: 1 }}>

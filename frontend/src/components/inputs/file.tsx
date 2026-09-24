@@ -84,14 +84,10 @@ export const FileInput = ({
 
     return (
         <Box className="w-full">
-            <Box className="flex items-baseline-last gap-1">
-                <Typography variant="h6">
-                    {question.labelText}
-                </Typography>
-                {question.o.config?.hint && (
-                    <HintButton hint={question.o.config.hint} />
-                )}
-            </Box>
+            <Typography variant="h6">
+                {question.labelText}
+                {question.o.config?.hint && <HintButton hint={question.o.config.hint} />}
+            </Typography>
             {/* Display the tiled attachment list if there are attachments */}
             {attachments.length > 0 &&
                 <FileAttachmentList

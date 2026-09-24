@@ -299,6 +299,7 @@ export const HintButton = ({ hint }: { hint: string }) => {
             size="small"
             onClick={handleOpenHint}
             title="Information required"
+            className="align-baseline!"
         >
             <AnnouncementOutlinedIcon fontSize="small" />
         </IconButton>

@@ -24,14 +24,10 @@ export function DateInput({
         }}
         render={({ field, fieldState }) => (
             <Box className="w-full">
-                <Box className="flex items-baseline-last gap-1 mb-2">
-                    <Typography variant="h6" component="label" htmlFor={"field-" + question.key}>
-                        {question.labelText}
-                    </Typography>
-                    {question.o.config?.hint && (
-                        <HintButton hint={question.o.config.hint} />
-                    )}
-                </Box>
+                <Typography variant="h6" component="label" htmlFor={"field-" + question.key}>
+                    {question.labelText}
+                    {question.o.config?.hint && <HintButton hint={question.o.config.hint} />}
+                </Typography>
                 <DatePicker
                     value={field.value ? dayjs(field.value) : null}
 
@@ -43,6 +39,7 @@ export function DateInput({
                         textField: {
                             id: "field-" + question.key,
                             error: fieldState.invalid,
+                            fullWidth: true,
                         }
                     }}
                 />

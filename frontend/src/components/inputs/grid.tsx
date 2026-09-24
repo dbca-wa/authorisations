@@ -178,14 +178,10 @@ export function GridInput({
 
     return (
         <Box className="w-full">
-            <Box className="flex items-baseline-last gap-1 mb-2">
-                <Typography variant="h6">
-                    {question.labelText}
-                </Typography>
-                {question.o.config?.hint && (
-                    <HintButton hint={question.o.config.hint} />
-                )}
-            </Box>
+            <Typography variant="h6">
+                {question.labelText}
+                {question.o.config?.hint && <HintButton hint={question.o.config.hint} />}
+            </Typography>
             <DataGrid
                 getRowId={(row) => row._id}
                 rows={rows}

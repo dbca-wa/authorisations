@@ -1,5 +1,4 @@
 import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import MenuItem from "@mui/material/MenuItem";
@@ -24,14 +23,10 @@ export function SelectInput({
         }}
         render={({ field, fieldState }) => (
             <FormControl fullWidth>
-                <Box className="flex items-baseline-last gap-1">
-                    <Typography variant="h6" component="label">
-                        {question.labelText}
-                    </Typography>
-                    {question.o.config?.hint && (
-                        <HintButton hint={question.o.config.hint} />
-                    )}
-                </Box>
+                <Typography variant="h6" component="label">
+                    {question.labelText}
+                    {question.o.config?.hint && <HintButton hint={question.o.config.hint} />}
+                </Typography>
                 <Select
                     {...field}
                     value={field.value ?? ""}

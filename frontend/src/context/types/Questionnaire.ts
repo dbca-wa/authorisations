@@ -123,7 +123,7 @@ export class Question {
 
     // Return formmatted label for display
     get labelText(): string {
-        const formatted = `${this.indices.question + 1}. ${this.o.label}`;
+        const formatted = `${this.number}${this.o.label}`;
         // Append asterisk for required fields
         return this.o.is_required ? `${formatted} *` : formatted;
     }
