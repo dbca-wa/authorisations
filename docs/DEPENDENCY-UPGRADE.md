@@ -2,7 +2,7 @@
 
 This document provides a comprehensive, process-driven approach to upgrading both backend and frontend dependencies. It consolidates learnings from multiple upgrade sessions, breaking-change investigations, and test validations.
 
-**Last Updated:** 2026-08-13 (Session 1: Initial Investigation, Session 2: Comprehensive Upgrades)
+**Last Updated:** 2026-09-25 (Session 1: Initial Investigation, Session 2: Comprehensive Upgrades, Session 3: Backend Patch & Minor Upgrades)
 
 ---
 
@@ -577,4 +577,18 @@ These packages have breaking changes or infrastructure requirements that make th
 - All 59 E2E tests passing in 33.76s (parallel execution)
 - Updated THIRD_PARTY_NOTICES.md and CHANGELOG.md with frontend versions
 - **Key Learning:** TypeScript definition changes requiring code modifications = not a safe upgrade. Principle: safe upgrades = zero code changes
+
+### Session 3 (2026-09-25): Backend Patch & Minor Version Upgrades
+
+#### Backend Iteration 1 - Comprehensive Patch & Minor Updates
+- Executed `poetry show --outdated` → identified 21 upgradable backend packages
+- Categorised packages: 18 safe patches + 3 minor versions (all verified safe after breaking-change analysis)
+- Upgraded 21 packages (zero code changes): azure-storage-blob 12.30.3, charset-normalizer 3.5.1, coverage 7.16.1, cryptography 50.0.1, django-vite 3.2.0, djangorestframework 3.18.1, greenlet 3.5.6, gunicorn 26.2.0, idna 3.20, ipython 9.17.1, playwright 1.63.0, psycopg 3.3.6, psycopg-binary 3.3.6, psycopg-pool 3.3.3, pure-eval 0.2.4, pygments 2.21.0, pytest-playwright 0.9.0, python-slugify 9.1.1, sqlparse 0.6.0, urllib3 2.8.0, wcwidth 0.9.1
+- Updated pyproject.toml with new minimum versions for 5 direct dependencies (psycopg >=3.3.6, django-vite >=3.2.0, gunicorn >=26.2.0, djangorestframework >=3.18.1, idna >=3.20) plus 3 dev dependencies (ipython ^9.17, playwright ^1.63, pytest-playwright ^0.9)
+- Ran `poetry lock` → lock file regenerated successfully, all transitive dependencies resolved
+- All 326 backend unit/API tests passing
+- All 59 E2E tests passing (62.16s execution time)
+- Identified 2 blocked packages: Django 6.1.1 (major version requiring dedicated session with codebase review), pyee 14.0.0 (upstream constraint: playwright 1.62.0 requires `pyee>=13,<14`, no newer playwright supporting pyee 14.x exists as of Sept 2026)
+- Updated THIRD_PARTY_NOTICES.md backend section and CHANGELOG.md
+- **Key Learning:** Transitive dependency constraints (like playwright's pyee requirement) can block minor upgrades; requires monitoring upstream projects for compatibility updates
 
