@@ -297,6 +297,7 @@ const DropzoneDialogContent = ({
         className: 'dropzone w-full flex flex-col gap-6 py-4 px-8 mt-4 ' +
             'items-center text-center border-2 border-dashed rounded-md ' +
             styling.borderColour,
+        'aria-label': 'File upload dropzone',
         ...disabledHandlers,
     }) as React.HTMLAttributes<HTMLDivElement>;
 
@@ -326,6 +327,7 @@ const DropzoneDialogContent = ({
                         <Button
                             variant="outlined"
                             startIcon={<DriveFolderUploadIcon />}
+                            disabled={progress !== null}
                             onClick={openFileDialog}
                         >
                             Select from computer
