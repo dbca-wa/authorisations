@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 
-import react from '@vitejs/plugin-react-swc'
+import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
 
@@ -13,7 +13,7 @@ export default defineConfig({
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'html', 'lcov', 'cobertura'],
-      reportsDirectory: resolve(__dirname, 'coverage'),
+      reportsDirectory: resolve(import.meta.dirname, 'coverage'),
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.d.ts',
