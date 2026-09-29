@@ -599,7 +599,8 @@ These packages have breaking changes or infrastructure requirements that make th
 - Build, linting, and type checking all passing
 - Updated THIRD_PARTY_NOTICES.md with all new versions
 - Created [FRONTEND-BLOCKED-PACKAGES.md](../FRONTEND-BLOCKED-PACKAGES.md) to document remaining blockers
-- **Remaining blockers:** react-dropzone 20.1.2 (major API changes, 2-4 hours), typescript 7.0.2 (unknown impact), react-router 8.x (intentional skip)
-- **Key Learnings:** Peer dependency constraints must be verified before upgrading; minor version upgrades are safe when their breaking changes apply only to type annotations; coordinated testing infrastructure upgrades reduce dependency conflicts
+- **Remaining blockers:** react-dropzone 20.1.2 (major API changes, 2-4 hours), typescript 7.0.2 (typescript-eslint incompatible with unstable TS7 API; defer to v7.1+), react-router 8.x (intentional skip)
+- **TypeScript 7 investigation:** Attempted upgrade from 6.0.3 → 7.0.2, but TypeScript 7.0.x has no stable programmatic API required by typescript-eslint 8.70.1. Rejected dual-version workaround (violates single-version principle). Defer to TypeScript 7.1+ when stable API available. Configuration otherwise compatible (module: ESNext, strict: true).
+- **Key Learnings:** Peer dependency constraints must be verified before upgrading; minor version upgrades are safe when their breaking changes apply only to type annotations; coordinated testing infrastructure upgrades reduce dependency conflicts; external blockers (ecosystem maturity) warrant deferral without code changes
 
 
