@@ -590,15 +590,16 @@ These packages have breaking changes or infrastructure requirements that make th
 #### Frontend - Safe Minor Upgrades + Testing Infrastructure
 - **Phase 1:** Upgraded 6 patch packages: @iconify-json/vscode-icons, @testing-library/react, dayjs, uuid, and others
 - **Phase 2:** Upgraded 14 safe minor packages: react 19.3.0, react-dom 19.3.0, @mui/material 9.4.0, @mui/icons-material 9.4.0, axios 1.20.0, vite 8.3.1, and others
-- **Phase 3 (Testing Infrastructure):** Added @testing-library/dom 10.4.0, upgraded @testing-library/jest-dom 6.9.1 → 7.0.1, upgraded jsdom 29.1.1 → 30.1.1
+- **Phase 3 (Testing Infrastructure & React Hook Form):** Added @testing-library/dom 10.4.0, upgraded @testing-library/jest-dom 6.9.1 → 7.0.1, jsdom 29.1.1 → 30.1.1, react-hook-form 7.80.0 → 7.89.0
   - Resolved peer dependency constraint: jest-dom 7.0.1 requires dom@^10
-- Total 23 frontend packages upgraded
+  - Added TypeScript return type annotations (`: Promise<void>`) to FormLayout.tsx async handlers to satisfy react-hook-form 7.89.0's stricter return typing
+- Total 24 frontend packages upgraded
 - All 302 frontend unit tests passing
-- Full E2E suite: 59/59 tests passing (63.90s)
+- Full E2E suite: 59/59 tests passing (77.55s)
 - Build, linting, and type checking all passing
 - Updated THIRD_PARTY_NOTICES.md with all new versions
 - Created [FRONTEND-BLOCKED-PACKAGES.md](../FRONTEND-BLOCKED-PACKAGES.md) to document remaining blockers
-- **Remaining blockers:** react-hook-form 7.88.0 (TypeScript annotation), react-dropzone 20.1.2 (major API changes), typescript 7.0.2 (unknown impact), react-router 8.x (intentional skip)
-- **Key Learnings:** Peer dependency constraints must be verified before upgrading; test infrastructure packages benefit from coordinated upgrades; minor version upgrades are safe when their breaking changes don't apply to project usage patterns
+- **Remaining blockers:** react-dropzone 20.1.2 (major API changes, 2-4 hours), typescript 7.0.2 (unknown impact), react-router 8.x (intentional skip)
+- **Key Learnings:** Peer dependency constraints must be verified before upgrading; minor version upgrades are safe when their breaking changes apply only to type annotations; coordinated testing infrastructure upgrades reduce dependency conflicts
 
 
