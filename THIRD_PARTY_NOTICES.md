@@ -54,10 +54,13 @@ attribution obligations, those obligations continue to apply.
 | @mui/x-data-grid | 9.14.0 | MIT |
 | @mui/x-date-pickers | 9.14.0 | MIT |
 | @tailwindcss/vite | 4.3.3 | MIT |
+| @testing-library/dom | 10.4.0 | MIT |
+| @testing-library/jest-dom | 7.0.1 | MIT |
 | axios | 1.20.0 | MIT |
 | dayjs | 1.11.23 | MIT |
 | eslint | 10.11.0 | MIT |
 | globals | 17.12.0 | MIT |
+| jsdom | 30.1.1 | MIT |
 | msw | 2.15.0 | MIT |
 | react | 19.3.0 | MIT |
 | react-dom | 19.3.0 | MIT |

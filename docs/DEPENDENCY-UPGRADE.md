@@ -2,7 +2,7 @@
 
 This document provides a comprehensive, process-driven approach to upgrading both backend and frontend dependencies. It consolidates learnings from multiple upgrade sessions, breaking-change investigations, and test validations.
 
-**Last Updated:** 2026-09-25 (Session 1: Investigation, Session 2: Backend & Frontend Upgrades, Session 3: Backend Patches & Frontend Analysis)
+**Last Updated:** 2026-09-29 (Session 1: Investigation, Session 2: Backend & Frontend Upgrades, Session 3: Backend Patches & Frontend Analysis, Session 4A: Testing Infrastructure)
 
 ---
 
@@ -578,33 +578,27 @@ These packages have breaking changes or infrastructure requirements that make th
 - Updated THIRD_PARTY_NOTICES.md and CHANGELOG.md with frontend versions
 - **Key Learning:** TypeScript definition changes requiring code modifications = not a safe upgrade. Principle: safe upgrades = zero code changes
 
-### Session 3 (2026-09-25): Backend Patch & Minor Version Upgrades
+### Session 3 (2026-09-25 → 2026-09-29): Backend Patches, Frontend Minors & Testing Infrastructure
 
 #### Backend - Comprehensive Patch & Minor Updates
-- Executed `poetry show --outdated` → identified 21 upgradable backend packages
-- Categorised packages: 18 safe patches + 3 minor versions (all verified safe after breaking-change analysis)
-- Upgraded 21 packages (zero code changes): azure-storage-blob 12.30.3, charset-normalizer 3.5.1, coverage 7.16.1, cryptography 50.0.1, django-vite 3.2.0, djangorestframework 3.18.1, greenlet 3.5.6, gunicorn 26.2.0, idna 3.20, ipython 9.17.1, playwright 1.63.0, psycopg 3.3.6, psycopg-binary 3.3.6, psycopg-pool 3.3.3, pure-eval 0.2.4, pygments 2.21.0, pytest-playwright 0.9.0, python-slugify 9.1.1, sqlparse 0.6.0, urllib3 2.8.0, wcwidth 0.9.1
-- Updated pyproject.toml with new minimum versions for 5 direct dependencies (psycopg >=3.3.6, django-vite >=3.2.0, gunicorn >=26.2.0, djangorestframework >=3.18.1, idna >=3.20) plus 3 dev dependencies (ipython ^9.17, playwright ^1.63, pytest-playwright ^0.9)
-- Ran `poetry lock` → lock file regenerated successfully, all transitive dependencies resolved
-- All 326 backend unit/API tests passing
-- All 59 E2E tests passing (62.16s execution time)
-- Identified 2 blocked packages: Django 6.1.1 (major version requiring dedicated session with codebase review), pyee 14.0.0 (upstream constraint: playwright 1.62.0 requires `pyee>=13,<14`, no newer playwright supporting pyee 14.x exists as of Sept 2026)
-- Updated THIRD_PARTY_NOTICES.md backend section and CHANGELOG.md
-- **Key Learning:** Transitive dependency constraints (like playwright's pyee requirement) can block minor upgrades; requires monitoring upstream projects for compatibility updates
+- Upgraded 21 packages (zero code changes): psycopg 3.3.6, django-vite 3.2.0, gunicorn 26.2.0, djangorestframework 3.18.1, playwright 1.63.0, and 16 others
+- Updated pyproject.toml with new minimum versions for 5 direct dependencies and 3 dev dependencies
+- Ran `poetry lock` → all transitive dependencies resolved successfully
+- All 326 backend tests passing
+- All 59 E2E tests passing
 
-#### Frontend Upgrade
-- Executed `npm outdated` → identified 29 upgradable frontend packages
-- Categorised packages: 6 patches + 15 minor updates (12 safe + 1 blocked) + 8 major updates (2 already upgraded + 5 blocked + 1 intentional skip)
-- **Phase 1 (Patches):** Upgraded 6 packages with zero code changes: @iconify-json/vscode-icons 1.2.81, @testing-library/react 16.3.3, @testing-library/user-event 14.6.7, dayjs 1.11.23, eslint-plugin-react-refresh 0.5.7, uuid 14.0.2
-- **Phase 2 (Safe Minors):** Upgraded 14 packages with zero code changes: @mui/material 9.4.0, @mui/icons-material 9.4.0, @mui/x-data-grid 9.14.0, @mui/x-date-pickers 9.14.0, @types/react 19.3.0, @types/react-dom 19.3.0, @types/use-sync-external-store 1.7.0, axios 1.20.0, eslint 10.11.0, globals 17.12.0, react 19.3.0, react-dom 19.3.0, typescript-eslint 8.70.1, vite 8.3.1
-- Ran `npm install` → lock file regenerated successfully, 11 new packages added, 19 removed, 60 changed
-- **Frontend Build:** TypeScript compilation passed, Vite build successful (1,717 modules)
-- **Frontend Tests:** All 302 unit tests passed (37 test files, 28.24s)
-- **ESLint & TypeScript Checking:** Zero errors or warnings
-- **E2E Tests:** All 59 tests passed (73.43s) — confirms no end-to-end breakage from frontend upgrades
-- Identified 5 blocked packages: react-hook-form 7.88.0 (TypeScript return type annotation), @testing-library/jest-dom 7.0.1 (new peer dependency), jsdom 30.1.1 (deferred for testing stack coordination), react-dropzone 20.1.2 (major callback logic refactor in FileInput.tsx), typescript 7.0.2 (unknown breaking changes)
-- Identified 1 intentional skip: react-router 8.4.0 (major version, architectural decision to stay on 7.x)
-- Created [FRONTEND-BLOCKED-PACKAGES.md](../FRONTEND-BLOCKED-PACKAGES.md) documenting blocked packages with why they're blocked, what codebase changes needed, and risk evaluations
-- Updated THIRD_PARTY_NOTICES.md frontend section with upgraded package versions
-- **Key Learning:** Minor version upgrades can be safe when their breaking changes don't apply to project usage patterns (e.g., React Hook Form type annotation requirement doesn't affect execution logic); TypeScript and major framework upgrades require dedicated investigation sessions
+#### Frontend - Safe Minor Upgrades + Testing Infrastructure
+- **Phase 1:** Upgraded 6 patch packages: @iconify-json/vscode-icons, @testing-library/react, dayjs, uuid, and others
+- **Phase 2:** Upgraded 14 safe minor packages: react 19.3.0, react-dom 19.3.0, @mui/material 9.4.0, @mui/icons-material 9.4.0, axios 1.20.0, vite 8.3.1, and others
+- **Phase 3 (Testing Infrastructure):** Added @testing-library/dom 10.4.0, upgraded @testing-library/jest-dom 6.9.1 → 7.0.1, upgraded jsdom 29.1.1 → 30.1.1
+  - Resolved peer dependency constraint: jest-dom 7.0.1 requires dom@^10
+- Total 23 frontend packages upgraded
+- All 302 frontend unit tests passing
+- Full E2E suite: 59/59 tests passing (63.90s)
+- Build, linting, and type checking all passing
+- Updated THIRD_PARTY_NOTICES.md with all new versions
+- Created [FRONTEND-BLOCKED-PACKAGES.md](../FRONTEND-BLOCKED-PACKAGES.md) to document remaining blockers
+- **Remaining blockers:** react-hook-form 7.88.0 (TypeScript annotation), react-dropzone 20.1.2 (major API changes), typescript 7.0.2 (unknown impact), react-router 8.x (intentional skip)
+- **Key Learnings:** Peer dependency constraints must be verified before upgrading; test infrastructure packages benefit from coordinated upgrades; minor version upgrades are safe when their breaking changes don't apply to project usage patterns
+
 
