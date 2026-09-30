@@ -6,6 +6,7 @@ database, running migrations, and loading local fixture data at test startup.
 
 from pathlib import Path
 import base64
+import copy
 from datetime import UTC, datetime
 import io
 import json
@@ -16,6 +17,7 @@ from typing import Callable
 
 import pytest
 from applications.models import Application
+from applications.schema import SCHEMA_VERSION
 from django.conf import settings
 from django.core.management import call_command
 from django.db import connections
@@ -208,6 +210,22 @@ def load_e2e_seed_data(db):
     """Load deterministic seed data before each E2E test after DB resets."""
     fixture_path = Path(__file__).parent / "fixtures" / "e2e_seed.json"
     call_command("loaddata", str(fixture_path), verbosity=0)
+
+
+@pytest.fixture(autouse=True)
+def normalise_e2e_application_schema(db, load_e2e_seed_data):
+    """Keep seeded application documents aligned with the current schema version."""
+    for application in Application.objects.all():
+        document = application.document or {}
+        if not isinstance(document, dict):
+            continue
+        if document.get("schema_version") == SCHEMA_VERSION:
+            continue
+
+        normalised_document = copy.deepcopy(document)
+        normalised_document["schema_version"] = SCHEMA_VERSION
+        application.document = normalised_document
+        application.save(update_fields=["document"])
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -155,7 +155,7 @@ export const FormLayout = () => {
      * @example Go to next step on successful validation: `onSubmit={handleSubmit((prev) => prev + 1)}`
      */
     const handleSubmit = (nextStep: React.SetStateAction<number>,): AsyncVoidAction => {
-        const onValid: SubmitHandler<IFormAnswers> = async (_: IFormAnswers) => {
+        const onValid: SubmitHandler<IFormAnswers> = async (_: IFormAnswers): Promise<void> => {
             // Calculate the next state for validated steps
             const newValidatedSteps = { ...validatedSteps };
             // Watch out for the review step, which is outside the range of steps array
@@ -173,7 +173,7 @@ export const FormLayout = () => {
             setActiveStep(nextStep);
         }
 
-        const onInvalid: SubmitErrorHandler<IFormAnswers> = async (errors: FieldErrors<IFormAnswers>) => {
+        const onInvalid: SubmitErrorHandler<IFormAnswers> = async (errors: FieldErrors<IFormAnswers>): Promise<void> => {
             // Set the current step as failed
             setValidSteps((completed) => ({
                 ...completed,
@@ -204,7 +204,7 @@ export const FormLayout = () => {
             }
         }
 
-        return formMethods.handleSubmit(onValid, onInvalid);
+        return formMethods.handleSubmit(onValid, onInvalid) as AsyncVoidAction;
     }
 
     // Change page title

@@ -21,10 +21,10 @@ attribution obligations, those obligations continue to apply.
 | Package | Version reviewed | Licence |
 | --- | --- | --- |
 | Django | 5.2.17 | BSD-3-Clause |
-| psycopg | 3.3.4 | LGPL-3.0-only |
-| django-vite | 3.1.0 | Apache-2.0 |
-| whitenoise | 6.12.0 | MIT |
-| gunicorn | 26.0.0 | MIT |
+| psycopg | 3.3.6 | LGPL-3.0-only |
+| django-vite | 3.2.0 | Apache-2.0 |
+| whitenoise | 6.9.0 | MIT |
+| gunicorn | 26.2.0 | MIT |
 | django-environ | 0.14.0 | MIT |
 | jsonschema | 4.26.0 | MIT |
 | drf-jsonschema-serializer | 3.0.0 | BSD-3-Clause |
@@ -32,11 +32,12 @@ attribution obligations, those obligations continue to apply.
 | django-admin-tools | 0.9.3 | MIT |
 | frozendict | 2.4.7 | LGPL-3.0-only |
 | dbca-utils | 3.0.13 | Apache-2.0 |
-| djangorestframework | 3.18.0 | BSD-3-Clause |
+| djangorestframework | 3.18.1 | BSD-3-Clause |
 | pyfsig | 1.1.1 | MIT |
 | django-storages | 1.14.6 | BSD-3-Clause |
 | django-admin-sortable2 | 2.3.1 | MIT |
-| requests | 2.34.2 | Apache-2.0
+| requests | 2.34.2 | Apache-2.0 |
+| idna | 3.20 | BSD-3-Clause |
 
 ### Backend compliance notes
 
@@ -45,31 +46,57 @@ attribution obligations, those obligations continue to apply.
 
 ## Frontend direct dependencies
 
+### Runtime dependencies (18 packages)
 | Package | Version reviewed | Licence |
 | --- | --- | --- |
 | @emotion/react | 11.14.0 | MIT |
 | @emotion/styled | 11.14.1 | MIT |
-| @mui/icons-material | 9.1.1 | MIT |
-| @mui/material | 9.1.2 | MIT |
-| @mui/x-data-grid | 9.7.0 | MIT |
-| @mui/x-date-pickers | 9.7.0 | MIT |
+| @mui/icons-material | 9.4.0 | MIT |
+| @mui/material | 9.4.0 | MIT |
+| @mui/x-data-grid | 9.14.0 | MIT |
+| @mui/x-date-pickers | 9.14.0 | MIT |
 | @tailwindcss/vite | 4.3.3 | MIT |
-| axios | 1.19.0 | MIT |
-| dayjs | 1.11.21 | MIT |
-| eslint | 10.8.1 | MIT |
-| globals | 17.11.0 | MIT |
-| msw | 2.15.0 | MIT |
-| react | 19.2.8 | MIT |
-| react-dom | 19.2.8 | MIT |
-| react-dropzone | 15.0.0 | MIT |
-| react-hook-form | 7.80.0 | MIT |
-| react-router | 7.18.2 | MIT |
+| axios | 1.20.0 | MIT |
+| canvas-confetti | 1.9.4 | ISC |
+| dayjs | 1.11.23 | MIT |
+| react | 19.3.0 | MIT |
+| react-dom | 19.3.0 | MIT |
+| react-dropzone | 20.1.2 | MIT |
+| react-hook-form | 7.89.0 | MIT |
+| react-router | 8.4.0 | MIT |
 | tailwindcss | 4.3.3 | MIT |
-| typescript | 6.0.3 | Apache-2.0 |
-| typescript-eslint | 8.67.0 | BSD-2-Clause |
 | underscore | 1.13.8 | MIT |
-| uuid | 14.0.1 | MIT |
-| vitest | 4.1.10 | MIT |
+| uuid | 14.0.2 | MIT |
+
+### Development dependencies (26 packages)
+| Package | Version reviewed | Licence |
+| --- | --- | --- |
+| @eslint/js | 10.0.1 | MIT |
+| @iconify-json/flat-color-icons | 1.2.3 | MIT |
+| @iconify-json/vscode-icons | 1.2.81 | MIT |
+| @iconify/tailwind4 | 1.2.3 | MIT |
+| @testing-library/dom | 10.4.0 | MIT |
+| @testing-library/jest-dom | 7.0.1 | MIT |
+| @testing-library/react | 16.3.3 | MIT |
+| @testing-library/user-event | 14.6.7 | MIT |
+| @types/canvas-confetti | 1.9.0 | MIT |
+| @types/node | 26.6.3 | MIT |
+| @types/react | 19.3.0 | MIT |
+| @types/react-dom | 19.3.0 | MIT |
+| @types/underscore | 1.13.0 | MIT |
+| @types/use-sync-external-store | 1.7.0 | MIT |
+| @vitejs/plugin-react | 6.1.1 | MIT |
+| @vitest/coverage-istanbul | 4.1.11 | MIT |
+| eslint | 10.11.0 | MIT |
+| eslint-plugin-react-hooks | 7.1.1 | MIT |
+| eslint-plugin-react-refresh | 0.5.7 | MIT |
+| globals | 17.12.0 | MIT |
+| jsdom | 30.1.1 | MIT |
+| msw | 3.0.0 | MIT |
+| typescript | 6.0.3 | Apache-2.0 |
+| typescript-eslint | 8.70.1 | BSD-2-Clause |
+| vite | 8.3.1 | MIT |
+| vitest | 4.1.11 | MIT |
 
 ### Frontend transitive licence notes
 

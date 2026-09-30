@@ -2,13 +2,24 @@ import type { IFormDocument } from "./types/Application";
 
 
 export class LocalStorage {
+    /** Resolve browser storage safely for both app runtime and Node-based tests. */
+    private static getStorage(): Storage | null {
+        if (typeof window === "undefined") {
+            return null;
+        }
+
+        return window.localStorage ?? null;
+    }
+
     private static getItem(key: string): object | null {
-        const item = localStorage.getItem(key);
+        const storage = this.getStorage();
+        const item = storage?.getItem(key);
         return item ? JSON.parse(item) : null;
     }
 
     private static setItem(key: string, value: object): void {
-        localStorage.setItem(key, JSON.stringify(value));
+        const storage = this.getStorage();
+        storage?.setItem(key, JSON.stringify(value));
     }
 
     private static getKey(key: string): string {
@@ -24,7 +35,8 @@ export class LocalStorage {
     }
 
     public static removeValue(key: string): void {
-        localStorage.removeItem(this.getKey(key));
+        const storage = this.getStorage();
+        storage?.removeItem(this.getKey(key));
     }
 
     public static getFormState(applicationKey: string): IFormDocument | null {

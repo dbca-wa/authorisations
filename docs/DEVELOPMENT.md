@@ -7,7 +7,7 @@ This document covers setup, installation, and running the application locally fo
 - Docker engine: https://docs.docker.com/engine/install/
 - Python 3 (recommended version 3.14 via pyenv)
 - Poetry: https://python-poetry.org/docs/#installing-with-the-official-installer
-- Node.js 22 and npm: https://nodejs.org/
+- Node.js 26 and npm: https://nodejs.org/
 
 ## Create the database
 
