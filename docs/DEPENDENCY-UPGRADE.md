@@ -2,12 +2,12 @@
 
 This document provides a comprehensive, process-driven approach to upgrading both backend and frontend dependencies. It consolidates learnings from multiple upgrade sessions, breaking-change investigations, and test validations.
 
-**Last Updated:** 2026-09-30 (Completed: Sessions 1-3 with 48 total package upgrades — 21 backend + 27 frontend including react-router v8, react-dropzone v20, testing infrastructure)
+**Last Updated:** 2026-09-30 (Completed: Sessions 1-3 with 49 total package upgrades — 21 backend + 28 frontend including react-router v8, react-dropzone v20, testing infrastructure, and Node 26 alignment)
 
 **Status Summary:**
-- ✅ **Deployable Now:** 311 frontend unit tests + 326 backend tests all passing
-- ✅ **48 packages upgraded:** 21 backend patches + 27 frontend (including major versions: react-router v8, react-dropzone v20)
-- ⏸️ **3 dependencies intentionally deferred:** Django 6.1 (backend), TypeScript 7.x (frontend), @types/node 26.x (frontend)
+- ✅ **Deployable Now:** 311 frontend unit tests + 326 backend tests + 63 E2E tests all passing
+- ✅ **49 packages upgraded:** 21 backend patches + 28 frontend (including major versions: react-router v8, react-dropzone v20)
+- ⏸️ **2 dependencies intentionally deferred:** Django 6.1 (backend), TypeScript 7.x (frontend)
 
 ---
 
@@ -177,7 +177,7 @@ Output shows current, wanted, and latest versions. Categorise by risk level (sam
 Same three groups as backend.
 
 **Additional frontend-specific blockers:**
-- Packages requiring Node.js version increase (e.g., react-dropzone v20 requires Node 22+)
+- Packages requiring Node.js version increase (for example, packages that require newer LTS baselines)
 - Packages requiring peer dependency additions (e.g., @testing-library/jest-dom v7 requires @testing-library/dom)
 - TypeScript major versions requiring ecosystem-wide testing
 
@@ -251,7 +251,7 @@ cd backend && poetry run pytest e2e/tests -v -n auto --dist loadscope
 cd backend && poetry run pytest e2e/tests -v -n auto --dist loadscope --tracing=retain-on-failure --screenshot=only-on-failure
 ```
 
-**Note:** E2E tests run in parallel (`-n auto`) for faster execution (~34 seconds for 59 tests vs. 83 seconds sequential).
+**Note:** E2E tests run in parallel (`-n auto`) for faster execution (recent baseline: 63 tests in under 2 minutes, environment dependent).
 
 ### Phase 9: Update Documentation
 
@@ -347,7 +347,7 @@ React major versions (currently on 19.x, next is 20.x) require:
 
 ### ❌ Pitfall 4: Not Checking Node.js Version Requirements
 
-**Problem:** Upgrade packages that require Node 22+, but CI still runs on Node 20. Tests pass locally, fail in CI.
+**Problem:** Upgrade packages or tooling assumptions without updating CI/runtime Node version alignment. Tests pass locally, fail in CI.
 
 **Solution:**
 - Check release notes for "Node.js X.Y required"
@@ -437,13 +437,13 @@ All completed with comprehensive testing:
 - ✅ E2E tests: 59/59 PASSED (parallel execution, ~33 seconds)
 - ✅ Linting: Zero errors (ESLint + TypeScript)
 - ✅ Build: 1,784 modules transformed, production build successful
-- **Total test coverage: 696 tests passing**
+- **Total test coverage at Session 3 closure: 696 tests passing**
 
 ---
 
 ## Intentionally Deferred Dependencies
 
-Only **3 major dependencies** are intentionally deferred. These require dedicated sessions and ecosystem readiness:
+Only **2 major dependencies** are intentionally deferred. These require dedicated sessions and ecosystem readiness:
 
 ### Backend
 
@@ -466,15 +466,6 @@ Only **3 major dependencies** are intentionally deferred. These require dedicate
 - **When to Upgrade:** When all prerequisites met + time available for comprehensive testing
 - **Estimated Effort:** 2-4 hours (full build testing + possible configuration updates)
 - **Decision:** Monitor TypeScript 7.1+ release; create dedicated session when ready
-
-**@types/node 26.x** (from 25.9.5)
-- **Status:** ⏸️ Intentionally deferred (major version)
-- **Current Node Runtime:** v22.23.1 (fully compatible; no runtime blocker)
-- **Reason:** Type strictness changes in @types/node v26 (TypeScript type definitions package) likely require code changes. Note: @types/node is a dev-only TypeScript package, separate from Node runtime version.
-- **Blocker:** Dependency of TypeScript 7.x decision — plan both upgrades together
-- **When to Upgrade:** Coordinate with TypeScript 7.x upgrade; no Node runtime upgrade needed
-- **Estimated Effort:** 1-2 hours (build testing + possible type annotation updates)
-- **Decision:** Keep @types/node on 25.x until TypeScript 7.x roadmap clear (Node runtime v22 is stable and unaffected)
 
 ---
 
@@ -553,5 +544,8 @@ Only **3 major dependencies** are intentionally deferred. These require dedicate
 - Total 27 frontend packages upgraded
 - All 302 frontend unit tests passing, 326 backend tests passing
 - Build: 1,784 modules transformed (67 additional from v8 dependencies), successful production build
+- Node runtime and typings alignment completed during this session: CI `UseNode@1` moved from `22.x` to `26.x`, local frontend pin updated to `v26.10.0`, and `@types/node` updated from 25.9.5 to 26.6.3.
+- Final validation baseline for this session: frontend 311/311, backend 326/326, E2E 63/63 (700 total tests passing).
+- Node 26 currently emits experimental warnings for global `localStorage` during Vitest worker startup when no `--localstorage-file` option is provided; this is warning noise only and does not indicate test failures.
 - **Remaining blockers:** typescript 7.0.2 (defer to v7.1+)
 - **Key Learnings:** Major version library upgrades with clear breaking-change documentation enable zero-risk deployments; client-side SPAs have minimal surface area for v8 migration; comprehensive test suite validates complex multi-package upgrade sessions
