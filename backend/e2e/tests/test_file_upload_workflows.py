@@ -53,6 +53,18 @@ def _attachment_link(page, filename: str):
     return page.get_by_role("link", name=filename)
 
 
+def _wait_for_application_patch(page, application_key: str):
+    """Wait for the application-save update triggered by attachment changes."""
+    page.wait_for_event(
+        "response",
+        lambda response: (
+            response.url.endswith(f"/api/applications/{application_key}")
+            and response.request.method in {"PUT", "PATCH"}
+        ),
+        timeout=15000,
+    )
+
+
 def _set_file_question_config(
     questionnaire: Questionnaire,
     *,
@@ -98,6 +110,7 @@ def test_editor_upload_flow_supports_multiple_valid_files(
             content=b"%PDF-1.4\nworkflow-one",
         )
         page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_application_patch(page, application.key)
         assert _attachment_link(page, "workflow-one.pdf").is_visible()
 
         _upload_file(
@@ -107,6 +120,7 @@ def test_editor_upload_flow_supports_multiple_valid_files(
             content=b"\x89PNG\r\n\x1a\nworkflow-two",
         )
         page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_application_patch(page, application.key)
         assert _attachment_link(page, "workflow-two.png").is_visible()
 
         # The seeded question allows up to 3 files, so upload control remains available after 2 uploads.
@@ -149,6 +163,7 @@ def test_editor_invalid_upload_shows_error_and_allows_retry(
             content=b"%PDF-1.4\nretry-success",
         )
         page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_application_patch(page, application.key)
         assert _attachment_link(page, "retry-success.pdf").is_visible()
     finally:
         page.close()
@@ -180,6 +195,7 @@ def test_editor_multiple_attachment_delete_keeps_upload_available(
             content=b"%PDF-1.4\ndelete-me",
         )
         page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_application_patch(page, application.key)
 
         _upload_file(
             page,
@@ -188,6 +204,7 @@ def test_editor_multiple_attachment_delete_keeps_upload_available(
             content=b"\x89PNG\r\n\x1a\nkeep-me",
         )
         page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_application_patch(page, application.key)
 
         assert _attachment_link(page, "delete-me.pdf").is_visible()
         assert _attachment_link(page, "keep-me.png").is_visible()
@@ -195,6 +212,7 @@ def test_editor_multiple_attachment_delete_keeps_upload_available(
         page.get_by_title("Delete: delete-me.pdf").click()
         page.get_by_role("button", name="Delete").click()
         page.get_by_text("File has been deleted").wait_for(timeout=5000)
+        _wait_for_application_patch(page, application.key)
 
         assert _attachment_link(page, "keep-me.png").is_visible()
         assert page.locator("text=delete-me.pdf").count() == 0
@@ -232,6 +250,7 @@ def test_editor_required_file_blocks_continue_until_upload(
             content=b"%PDF-1.4\nrequired-file",
         )
         page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_application_patch(page, application.key)
 
         page.get_by_role("button", name="Continue").click()
         page.get_by_role("button", name="Submit Application").wait_for(timeout=5000)
