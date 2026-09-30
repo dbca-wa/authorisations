@@ -61,12 +61,12 @@ attribution obligations, those obligations continue to apply.
 | eslint | 10.11.0 | MIT |
 | globals | 17.12.0 | MIT |
 | jsdom | 30.1.1 | MIT |
-| msw | 2.15.0 | MIT |
+| msw | 3.0.0 | MIT |
 | react | 19.3.0 | MIT |
 | react-dom | 19.3.0 | MIT |
-| react-dropzone | 15.0.0 | MIT |
+| react-dropzone | 20.1.2 | MIT |
 | react-hook-form | 7.89.0 | MIT |
-| react-router | 7.18.2 | MIT |
+| react-router | 8.4.0 | MIT |
 | tailwindcss | 4.3.3 | MIT |
 | typescript | 6.0.3 | Apache-2.0 |
 | typescript-eslint | 8.70.1 | BSD-2-Clause |
