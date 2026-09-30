@@ -46,7 +46,7 @@ attribution obligations, those obligations continue to apply.
 
 ## Frontend direct dependencies
 
-### Runtime dependencies
+### Runtime dependencies (18 packages)
 | Package | Version reviewed | Licence |
 | --- | --- | --- |
 | @emotion/react | 11.14.0 | MIT |
@@ -68,7 +68,7 @@ attribution obligations, those obligations continue to apply.
 | underscore | 1.13.8 | MIT |
 | uuid | 14.0.2 | MIT |
 
-### Development dependencies (devDependencies)
+### Development dependencies (26 packages)
 | Package | Version reviewed | Licence |
 | --- | --- | --- |
 | @eslint/js | 10.0.1 | MIT |
@@ -86,7 +86,7 @@ attribution obligations, those obligations continue to apply.
 | @types/underscore | 1.13.0 | MIT |
 | @types/use-sync-external-store | 1.7.0 | MIT |
 | @vitejs/plugin-react | 6.1.1 | MIT |
-| @vitest/coverage-istanbul | 4.1.10 | MIT |
+| @vitest/coverage-istanbul | 4.1.11 | MIT |
 | eslint | 10.11.0 | MIT |
 | eslint-plugin-react-hooks | 7.1.1 | MIT |
 | eslint-plugin-react-refresh | 0.5.7 | MIT |
@@ -94,9 +94,9 @@ attribution obligations, those obligations continue to apply.
 | jsdom | 30.1.1 | MIT |
 | msw | 3.0.0 | MIT |
 | typescript | 6.0.3 | Apache-2.0 |
-| typescript-eslint | 8.71.0 | BSD-2-Clause |
+| typescript-eslint | 8.70.1 | BSD-2-Clause |
 | vite | 8.3.1 | MIT |
-| vitest | 4.1.10 | MIT |
+| vitest | 4.1.11 | MIT |
 
 ### Frontend transitive licence notes
 

@@ -392,7 +392,7 @@ React major versions (currently on 19.x, next is 20.x) require:
 
 ### ✅ COMPLETED UPGRADES — Production Ready
 
-**Session 3 delivered 51 total package upgrades across backend and frontend:**
+**Session 3 delivered 50 total package upgrades across backend and frontend:**
 
 #### Backend: 21 Package Upgrades
 - Zero code changes required
@@ -400,7 +400,7 @@ React major versions (currently on 19.x, next is 20.x) require:
 - Patches and minor upgrades: psycopg 3.3.6, django-vite 3.2.0, gunicorn 26.2.0, djangorestframework 3.18.1, playwright 1.63.0, and 16 others
 - See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) backend section for complete list
 
-#### Frontend: 30 Package Upgrades
+#### Frontend: 29 Package Upgrades
 All completed with comprehensive testing:
 
 **Major Version Migrations:**
@@ -482,21 +482,22 @@ All completed with comprehensive testing:
 - **Estimated Effort:** 2-4 hours (full build testing + possible configuration updates)
 - **Decision:** Monitor TypeScript 7.1+ release; create dedicated session when ready
 
-**vitest v5.x** (from 4.1.10)
+**vitest v5.x** (from 4.1.11)
 - **Status:** ⏸️ Intentionally deferred (ecosystem compatibility issue)
 - **Reason:** vitest 5.0.2 has type declaration conflict with @testing-library/jest-dom 7.0.1 — both declare `interface Assertion` with incompatible type parameters (vitest 5: `<Return, Received>`, jest-dom 7: `<T = any>`). This is a known ecosystem incompatibility from two newly released packages (vitest 5 released 3 weeks ago, jest-dom 7 released 5 days ago).
 - **Technical Details:** TypeScript error TS2428 "All declarations of 'Assertion' must have identical type parameters" prevents `npm run lint` and `npm run build` from succeeding, despite all 311 tests passing (test execution unaffected, type checking affected)
 - **Investigation Completed:** 
   - ✅ Confirmed vitest 5.0.2 supports Node 22+ ✅ No code changes needed for tests
-  - ✅ Confirmed @testing-library/jest-dom 7.0.1 is compatible with vitest 4.1.10 ✅ No type conflict with v4
-  - ✅ Confirmed msw 3.0.0 (v2→v3 migration) works perfectly with vitest 4.1.10
-  - ✅ Decision: Revert to vitest 4.1.10 (stable), keep @testing-library/jest-dom 7.0.1
+  - ✅ Confirmed @testing-library/jest-dom 7.0.1 is compatible with vitest 4.1.11 ✅ No type conflict with v4
+  - ✅ Confirmed msw 3.0.0 (v2→v3 migration) works perfectly with vitest 4.1.11
+  - ✅ Applied security patch: vitest 4.1.10 → 4.1.11 (GHSA-82fw-gwwq-j7x9 Path Traversal / Arbitrary File Read)
+  - ✅ Decision: Use vitest 4.1.11 (patched), keep @testing-library/jest-dom 7.0.1
 - **When to Upgrade:** After ecosystem publishes:
   - Option A: vitest 5.0.3+ with fixed Assertion interface matching jest-dom 7.x declarations, OR
   - Option B: jest-dom 7.0.2+ with Assertion interface matching vitest 5.0.x declarations, OR
   - Option C: TypeScript issue resolved (both projects align type signatures)
 - **Estimated Effort:** 30 minutes once ecosystem stabilises (just update package.json + npm install + revalidate tests)
-- **Current State:** vitest 4.1.10, @testing-library/jest-dom 7.0.1, all 700 tests passing, full build successful
+- **Current State:** vitest 4.1.11 (security patch), @testing-library/jest-dom 7.0.1, all 700 tests passing, full build successful
 
 ---
 
@@ -552,7 +553,7 @@ All completed with comprehensive testing:
 #### Frontend
 - Executed `npm outdated` → identified 29 upgradable frontend packages
 - Categorised packages: 14 safe patches, 7 high-risk (major versions), 8 moderate-risk (minor versions)
-- Upgraded 19 safe packages (zero code changes): react 19.2.8, react-dom 19.2.8, react-router 7.18.2, tailwindcss 4.3.3, @tailwindcss/vite 4.3.3, vitest 4.1.10, @vitejs/plugin-react-swc 4.3.3, @vitest/coverage-istanbul 4.1.10, @types/react 19.2.18, @types/react-dom 19.2.4, @types/node 25.9.5, @testing-library/user-event 14.6.4, eslint-plugin-react-refresh 0.5.4, @iconify-json/vscode-icons 1.2.72, axios 1.19.0, eslint 10.8.1, globals 17.11.0, msw 2.15.0, typescript-eslint 8.67.0
+- Upgraded 19 safe packages (zero code changes): react 19.2.8, react-dom 19.2.8, react-router 7.18.2, tailwindcss 4.3.3, @tailwindcss/vite 4.3.3, vitest 4.1.11 (security patch), @vitejs/plugin-react-swc 4.3.3, @vitest/coverage-istanbul 4.1.11, @types/react 19.2.18, @types/react-dom 19.2.4, @types/node 25.9.5, @testing-library/user-event 14.6.4, eslint-plugin-react-refresh 0.5.4, @iconify-json/vscode-icons 1.2.72, axios 1.19.0, eslint 10.8.1, globals 17.11.0, msw 2.15.0, typescript-eslint 8.67.0
 - Blocked 6 packages: react-hook-form 7.85.0 (TypeScript type change requires code modifications), react-dropzone v20 (5 major versions with breaking changes), @testing-library/jest-dom v7 (new peer dependency), typescript v7 (major version), jsdom v30, @types/node v26
 - All 292 frontend unit tests passing
 - All 59 E2E tests passing in 33.76s (parallel execution)
@@ -567,10 +568,11 @@ All completed with comprehensive testing:
 
 #### Frontend - 29 Package Upgrades + 3 Major Version Migrations
 - **Testing Infrastructure:** Added @testing-library/dom 10.4.0, upgraded @testing-library/jest-dom 6.9.1 → 7.0.1, jsdom 29.1.1 → 30.1.1, react-hook-form 7.80.0 → 7.89.0 (added TypeScript return type annotations to FormLayout.tsx async handlers)
-- **vitest v4:** Kept at 4.1.10 (deferred v5 due to type declaration conflict with @testing-library/jest-dom 7.0.1)
+- **vitest v4:** Upgraded to 4.1.11 (security patch GHSA-82fw-gwwq-j7x9 Path Traversal / Arbitrary File Read in @vitest/mocker), deferred v5 due to type declaration conflict with @testing-library/jest-dom 7.0.1
   - **Investigation Summary:** vitest 5.0.2 has `interface Assertion<Return, Received>` (requires 2 type params), jest-dom 7.0.1 has `interface Assertion<T = any>` (requires 1 type param). This ecosystem incompatibility (both libraries released within 3 weeks) produces TypeScript error TS2428: "All declarations of 'Assertion' must have identical type parameters", preventing linting and build completion despite all tests passing.
-  - **Decision:** Revert to vitest 4.1.10 (stable with jest-dom 7.x), defer v5 until ecosystem stabilises (vitest 5.0.3+ or jest-dom 7.0.2+ fix alignment)
-  - **Status:** ⏸️ Intentionally deferred; 30 minutes effort when ecosystem resolves
+  - **Security Fix Applied:** vitest 4.1.11 patches GHSA-82fw-gwwq-j7x9 (moderate severity), affecting vitest 2.1.0-beta.1 through 4.1.10. Docker build now succeeds with `npm ci`, no vulnerabilities reported by `npm audit`.
+  - **Decision:** Use vitest 4.1.11 (patched, stable with jest-dom 7.x), defer v5 until ecosystem stabilises (vitest 5.0.3+ or jest-dom 7.0.2+ fix alignment)
+  - **Status:** ⏸️ v5 intentionally deferred; 30 minutes effort when ecosystem resolves
   - **Lesson Learned:** Never disable type checking (skipLibCheck) to hide incompatibilities; always fix root cause or defer until compatibility arrives
 - **msw v2 → v3:** Upgraded msw 2.15.0 → 3.0.0 (ESM-only, zero codebase impact — MSW not used in Authorisations System)
 - **react-dropzone v15 → v20:** Refactored [frontend/src/components/inputs/file.tsx](../frontend/src/components/inputs/file.tsx) callback structure (split onDrop → onDropAccepted + onDropRejected)
