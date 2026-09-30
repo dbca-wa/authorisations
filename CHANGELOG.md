@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.2.0] - Unreleased
+## [1.2.0] - 2026-10-05
 
 **Requires JSON Schema Migration**
 
@@ -26,6 +26,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Changed the labels across all input types to be consistent in size and styling for improved visual coherence throughout forms.
 - Reorganised questionnaire data structure by consolidating question configuration into a unified `config` object for improved clarity and easier future evolution.
 - Upgraded the project Node.js runtime target from 22.x to 26.x in CI and development prerequisites, and updated frontend Node type definitions to `@types/node` 26.x for alignment.
+- **Dependency upgrades:** Updated 21 backend packages (coverage, pygments, sqlparse, python-slugify, cryptography, azure-storage-blob, and others) and 27 frontend packages with major version migrations (react-router v7→v8, react-dropzone v15→v20, testing infrastructure including @testing-library/dom, jsdom, and react-hook-form v7.89.0). Required TypeScript return-type annotations in FormLayout.tsx async handlers for react-hook-form compatibility. All 700 tests passing (311 frontend unit, 326 backend unit/API, 63 E2E).
 
 ## [1.1.0] - 2026-08-13
 
