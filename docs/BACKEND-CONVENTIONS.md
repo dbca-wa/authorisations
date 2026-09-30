@@ -167,12 +167,12 @@ Common management commands:
 - `NodeTool@0` is deprecated and should be replaced with `UseNode@1`
 - `UseNode@1` expects input key `version` (not `versionSpec`)
 - Symptom when misconfigured:
-  - Task label says Node 22, but agent installs default Node 10.x
+  - Task label says Node 26, but agent installs default Node 10.x
   - Frontend `npm ci` fails with dependency-resolution/runtime errors
 - Safe pattern for this codebase:
   - Use:
     - task: `UseNode@1`
-    - inputs: `version: '22.x'`
+    - inputs: `version: '26.x'`
 
 ### Coverage publish overwrite behaviour
 - Publishing backend and frontend coverage independently can lead Azure DevOps Code Coverage tab to show only the last published dataset

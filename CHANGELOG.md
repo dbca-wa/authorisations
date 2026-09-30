@@ -9,6 +9,8 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ## [1.2.0] - Unreleased
 
+**Requires JSON Schema Migration**
+
 ### Added
 
 - Added support for treating non-empty values other than "no" as truthy for follow-up question visibility, ensuring dependent questions appear correctly when a parent answer is "Yes" or similar values.
@@ -23,6 +25,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 - Changed the labels across all input types to be consistent in size and styling for improved visual coherence throughout forms.
 - Reorganised questionnaire data structure by consolidating question configuration into a unified `config` object for improved clarity and easier future evolution.
+- Upgraded the project Node.js runtime target from 22.x to 26.x in CI and development prerequisites, and updated frontend Node type definitions to `@types/node` 26.x for alignment.
 
 ## [1.1.0] - 2026-08-13
 

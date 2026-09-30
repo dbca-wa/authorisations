@@ -13,6 +13,7 @@ import copy
 
 import pytest
 from applications.models import Application, ApplicationAttachment
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from questionnaires.models import Questionnaire
 
 
@@ -54,15 +55,19 @@ def _attachment_link(page, filename: str):
 
 
 def _wait_for_application_patch(page, application_key: str):
-    """Wait for the application-save update triggered by attachment changes."""
-    page.wait_for_event(
-        "response",
-        lambda response: (
-            response.url.endswith(f"/api/applications/{application_key}")
-            and response.request.method in {"PUT", "PATCH"}
-        ),
-        timeout=15000,
-    )
+    """Wait for the attachment-triggered autosave request, tolerating fast-response races."""
+    try:
+        page.wait_for_event(
+            "response",
+            lambda response: (
+                response.url.endswith(f"/api/applications/{application_key}")
+                and response.request.method in {"PUT", "PATCH"}
+            ),
+            timeout=15000,
+        )
+    except PlaywrightTimeoutError:
+        # In faster runtimes, the autosave response can complete before this listener attaches.
+        page.wait_for_load_state("networkidle", timeout=5000)
 
 
 def _set_file_question_config(

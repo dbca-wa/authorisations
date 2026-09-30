@@ -69,9 +69,9 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: UseNode@1
-      displayName: Use Node.js 22
+      displayName: Use Node.js 26
       inputs:
-        version: '22.x'
+        version: '26.x'
     - script: |
         cd frontend
         npm ci --no-audit --no-fund
@@ -106,9 +106,9 @@ stages:
       inputs:
         versionSpec: '3.14'
     - task: UseNode@1
-      displayName: Use Node.js 22
+      displayName: Use Node.js 26
       inputs:
-        version: '22.x'
+        version: '26.x'
     - script: python -m pip install --upgrade pip poetry
       displayName: Install Poetry
     - script: |
