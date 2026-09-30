@@ -99,10 +99,16 @@ const renderFileInput = ({
   ),
 });
 
-const getOnDrop = () => {
-  const onDrop = lastDropzoneOptions.onDrop as ((accepted: File[], rejected: unknown[]) => Promise<void>) | undefined;
-  expect(onDrop).toBeDefined();
-  return onDrop;
+const getOnDropAccepted = () => {
+  const onDropAccepted = lastDropzoneOptions.onDropAccepted as ((accepted: File[]) => Promise<void>) | undefined;
+  expect(onDropAccepted).toBeDefined();
+  return onDropAccepted!;
+};
+
+const getOnDropRejected = () => {
+  const onDropRejected = lastDropzoneOptions.onDropRejected as ((rejected: unknown[]) => void) | undefined;
+  expect(onDropRejected).toBeDefined();
+  return onDropRejected!;
 };
 
 const getDropzone = () => {
@@ -288,12 +294,12 @@ describe("FileInput", () => {
       onAttachmentAdded,
     });
 
-    const onDrop = getOnDrop();
+    const onDropAccepted = getOnDropAccepted();
 
     await act(async () => {
-      await onDrop?.([
+      await onDropAccepted([
         new File(["dummy-pdf-content"], "evidence.pdf", { type: "application/pdf" }),
-      ], []);
+      ]);
     });
 
     expect(uploadAttachmentMock).toHaveBeenCalledTimes(1);
@@ -332,12 +338,12 @@ describe("FileInput", () => {
       onAttachmentAdded,
     });
 
-    const onDrop = getOnDrop();
+    const onDropAccepted = getOnDropAccepted();
 
     await act(async () => {
-      await onDrop?.([
+      await onDropAccepted([
         new File(["dummy-pdf-content"], "evidence.pdf", { type: "application/pdf" }),
-      ], []);
+      ]);
     });
 
     expect(showSnackbarMock).toHaveBeenCalledWith(
@@ -360,10 +366,10 @@ describe("FileInput", () => {
       attachments: [],
     });
 
-    const onDrop = getOnDrop();
+    const onDropRejected = getOnDropRejected();
 
     await act(async () => {
-      await onDrop?.([], [{ errors: [{ message: "Rejected" }] }]);
+      await onDropRejected([{ errors: [{ message: "Rejected" }] }]);
     });
 
     expect(showSnackbarMock).toHaveBeenCalledWith(
