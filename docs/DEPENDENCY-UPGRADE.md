@@ -127,7 +127,40 @@ cd backend && poetry run pytest --cov --cov-report=term-missing
 cd backend && poetry run pytest -x
 ```
 
-### Phase 7: Update Documentation
+### Phase 7: Upgrade Transitive Dependencies
+
+After direct dependencies are upgraded and tested, upgrade transitive dependencies (dependencies of your dependencies) to latest patch versions:
+
+```bash
+cd backend
+poetry update
+```
+
+This command:
+- Upgrades all transitive dependencies to latest patch/minor versions
+- Respects all version ranges (upper/lower bounds) in `pyproject.toml`
+- Regenerates `poetry.lock` automatically
+- Does NOT modify `pyproject.toml` or `poetry.toml`
+
+**Verify compatibility:**
+```bash
+cd backend && poetry run pytest
+```
+
+All tests must pass. If transitive upgrades introduce regressions:
+
+```bash
+# Revert and identify the problematic package
+git checkout poetry.lock
+
+# Run audit to see what's needed
+poetry show --outdated
+
+# Consider deferring problematic transitive deps to next cycle
+# Document in DEPENDENCY-UPGRADE.md "Intentionally Deferred Dependencies"
+```
+
+### Phase 8: Update Documentation
 
 **Update [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md):**
 - Add backend section if not present
@@ -238,7 +271,41 @@ cd frontend && npm run test
 cd frontend && npm run test:coverage
 ```
 
-### Phase 8: Run E2E Tests
+### Phase 8: Upgrade Transitive Dependencies
+
+After direct dependencies are upgraded and tested, upgrade transitive dependencies to latest patch versions:
+
+```bash
+cd frontend
+npm update
+```
+
+This command:
+- Upgrades all transitive dependencies to latest patch/minor versions
+- Respects all version ranges (^, ~) in `package.json`
+- Regenerates `package-lock.json` automatically
+- Does NOT modify `package.json`
+
+**Verify compatibility:**
+```bash
+cd frontend && npm run lint && npm run build && npm run test:unit
+```
+
+All tests and linting must pass. If transitive upgrades introduce regressions:
+
+```bash
+# Revert and identify the problematic package
+git checkout package-lock.json
+
+# Check for vulnerabilities or outdated transitive deps
+npm audit
+npm ls
+
+# Consider deferring problematic transitive deps to next cycle
+# Document in DEPENDENCY-UPGRADE.md "Intentionally Deferred Dependencies"
+```
+
+### Phase 9: Run E2E Tests
 
 After frontend upgrades, always validate end-to-end:
 
@@ -253,7 +320,7 @@ cd backend && poetry run pytest e2e/tests -v -n auto --dist loadscope --tracing=
 
 **Note:** E2E tests run in parallel (`-n auto`) for faster execution (recent baseline: 63 tests in under 2 minutes, environment dependent).
 
-### Phase 9: Update Documentation
+### Phase 10: Update Documentation
 
 Same as backend: update [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) frontend section and [CHANGELOG.md](../CHANGELOG.md).
 
