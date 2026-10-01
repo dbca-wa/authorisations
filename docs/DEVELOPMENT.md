@@ -7,7 +7,8 @@ This document covers setup, installation, and running the application locally fo
 - Docker engine: https://docs.docker.com/engine/install/
 - Python 3 (recommended version 3.14 via pyenv)
 - Poetry: https://python-poetry.org/docs/#installing-with-the-official-installer
-- Node.js 26 and npm: https://nodejs.org/
+- Node.js 26 and npm 11.x: https://nodejs.org/
+  - **npm Version Alignment:** Local development must use npm 11.x. The Docker base image (`node:22-trixie-slim`) includes npm 10.9.9, which the Dockerfile automatically upgrades to npm 11.x to ensure lock file compatibility. If you encounter `npm ci` failures in Docker builds after transitive dependency upgrades, verify your local npm version matches the Dockerfile upgrade target using `npm --version`.
 
 ## Create the database
 

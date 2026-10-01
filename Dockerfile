@@ -12,6 +12,10 @@ FROM node:22-trixie-slim AS builder_frontend
 # Build frontend assets in an isolated stage.
 WORKDIR /tmp/frontend
 
+# Upgrade npm to 11.x to support lock file format compatibility with local development
+# (local development uses npm 11.19.1; base image node:22 includes npm 10.9.9).
+RUN npm install -g npm@11
+
 # Copy dependency manifests for deterministic dependency installation.
 # package-lock.json is committed to version control.
 COPY frontend/package*.json ./
