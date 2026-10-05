@@ -11,12 +11,12 @@ describe("SelectInput", () => {
     const question = makeQuestion({
       type: "select",
       label: "Select permit type",
-      select_options: ["Research", "Monitoring"],
+      config: { select_options: ["Research", "Monitoring"] },
     });
 
     renderWithForm({ ui: <SelectInput question={question} /> });
 
-    fireEvent.mouseDown(screen.getByLabelText("1. Select permit type"));
+    fireEvent.mouseDown(screen.getByRole("combobox"));
     expect(screen.getByRole("option", { name: "Research" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Monitoring" })).toBeInTheDocument();
   });
@@ -26,7 +26,7 @@ describe("SelectInput", () => {
       type: "select",
       label: "Required select",
       is_required: true,
-      select_options: ["A", "B"],
+      config: { select_options: ["A", "B"] },
     });
 
     renderWithForm({ ui: <SelectInput question={question} /> });

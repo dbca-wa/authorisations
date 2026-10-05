@@ -3,11 +3,13 @@ import dayjs from 'dayjs';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import FormHelperText from '@mui/material/FormHelperText';
+import Typography from '@mui/material/Typography';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Controller } from 'react-hook-form';
 import { ERROR_MSG } from '../../context/Constants';
 import { Question } from "../../context/types/Questionnaire";
+import { HintButton } from "../Common";
 
 export function DateInput({
     question,
@@ -22,8 +24,11 @@ export function DateInput({
         }}
         render={({ field, fieldState }) => (
             <Box className="w-full">
+                <Typography variant="h6" component="label" htmlFor={"field-" + question.key}>
+                    {question.labelText}
+                    {question.o.config?.hint && <HintButton hint={question.o.config.hint} />}
+                </Typography>
                 <DatePicker
-                    label={question.labelText}
                     value={field.value ? dayjs(field.value) : null}
 
                     // Convert to "YYYY-MM-DD" string or null
@@ -32,7 +37,9 @@ export function DateInput({
                     }
                     slotProps={{
                         textField: {
+                            id: "field-" + question.key,
                             error: fieldState.invalid,
+                            fullWidth: true,
                         }
                     }}
                 />

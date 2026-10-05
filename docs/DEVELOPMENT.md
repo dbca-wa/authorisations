@@ -7,7 +7,8 @@ This document covers setup, installation, and running the application locally fo
 - Docker engine: https://docs.docker.com/engine/install/
 - Python 3 (recommended version 3.14 via pyenv)
 - Poetry: https://python-poetry.org/docs/#installing-with-the-official-installer
-- Node.js 22 and npm: https://nodejs.org/
+- Node.js 26 and npm 11.x: https://nodejs.org/
+  - **npm Version Alignment:** Local development must use npm 11.x. The Docker base image (`node:22-trixie-slim`) includes npm 10.9.9, which the Dockerfile automatically upgrades to npm 11.x to ensure lock file compatibility. If you encounter `npm ci` failures in Docker builds after transitive dependency upgrades, verify your local npm version matches the Dockerfile upgrade target using `npm --version`.
 
 ## Create the database
 
@@ -82,13 +83,13 @@ Poetry automatically creates a virtual environment within the same directory, wh
 Apply the database migrations:
 
 ```bash
-poetry run python manage.py migrate
+cd backend && poetry run python manage.py migrate
 ```
 
 Create a superuser to access the admin interface on development environment:
 
 ```bash
-poetry run python manage.py createsuperuser
+cd backend && poetry run python manage.py createsuperuser
 ```
 
 ### Activate the virtual environment
@@ -116,10 +117,10 @@ npm install
 
 ### Backend
 
-Run the Django development server (within the `backend` directory):
+Run the Django development server:
 
 ```bash
-poetry run python manage.py runserver
+cd backend && poetry run python manage.py runserver
 ```
 
 ### Frontend
@@ -155,11 +156,11 @@ Quick start:
 
 Common Django management commands used in development:
 
-- `poetry run python manage.py runserver` — Run dev server
-- `poetry run python manage.py migrate` — Apply migrations
-- `poetry run python manage.py collectstatic` — Collect static files
-- `poetry run python manage.py normalise_questionnaire_sort_order` — Rebuild questionnaire sort order globally
-  - Dry-run mode: `poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
+- `cd backend && poetry run python manage.py runserver` — Run dev server
+- `cd backend && poetry run python manage.py migrate` — Apply migrations
+- `cd backend && poetry run python manage.py collectstatic` — Collect static files
+- `cd backend && poetry run python manage.py normalise_questionnaire_sort_order` — Rebuild questionnaire sort order globally
+  - Dry-run mode: `cd backend && poetry run python manage.py normalise_questionnaire_sort_order --dry-run`
 
 **For full testing commands, refer to [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md#test-coverage).**
 

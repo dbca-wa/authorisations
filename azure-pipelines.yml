@@ -18,6 +18,8 @@ variables:
   - group: docker-build-variables
   - name: tagDate
     value: $[ format('{0:yyyy}-{0:MM}-{0:dd}_{0:HH}.{0:mm}', pipeline.startTime) ]
+  - name: linuxVmImage
+    value: 'ubuntu-26.04'
 
 stages:
 - stage: Validate
@@ -26,7 +28,7 @@ stages:
   - job: BackendTests
     displayName: Backend pytest
     pool:
-      vmImage: ubuntu-latest
+      vmImage: $(linuxVmImage)
     steps:
     - task: UsePythonVersion@0
       displayName: Use Python 3.14
@@ -66,12 +68,12 @@ stages:
   - job: FrontendTests
     displayName: Frontend quality and tests
     pool:
-      vmImage: ubuntu-latest
+      vmImage: $(linuxVmImage)
     steps:
     - task: UseNode@1
-      displayName: Use Node.js 22
+      displayName: Use Node.js 26
       inputs:
-        version: '22.x'
+        version: '26.x'
     - script: |
         cd frontend
         npm ci --no-audit --no-fund
@@ -99,16 +101,16 @@ stages:
     - FrontendTests
     condition: succeeded()
     pool:
-      vmImage: ubuntu-latest
+      vmImage: $(linuxVmImage)
     steps:
     - task: UsePythonVersion@0
       displayName: Use Python 3.14
       inputs:
         versionSpec: '3.14'
     - task: UseNode@1
-      displayName: Use Node.js 22
+      displayName: Use Node.js 26
       inputs:
-        version: '22.x'
+        version: '26.x'
     - script: python -m pip install --upgrade pip poetry
       displayName: Install Poetry
     - script: |
@@ -197,7 +199,7 @@ stages:
     - FrontendTests
     condition: succeededOrFailed()
     pool:
-      vmImage: ubuntu-latest
+      vmImage: $(linuxVmImage)
     steps:
     - task: DownloadPipelineArtifact@2
       displayName: Download backend coverage XML
@@ -229,7 +231,7 @@ stages:
   - job: PushImage
     displayName: Build and push Docker image
     pool:
-      vmImage: ubuntu-latest
+      vmImage: $(linuxVmImage)
     steps:
     - script: |
         TAG=$(python3 scripts/get_image_tag.py "$(Build.SourceBranch)")

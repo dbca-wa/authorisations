@@ -2,6 +2,7 @@ import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftR
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Collapse from "@mui/material/Collapse";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Stack from "@mui/material/Stack";
@@ -168,7 +169,13 @@ const Section = ({
             if (!info) return (cache[qKey] = true);
             const parentVal = parentValues[info.parentKey];
             const parentVisible = compute(info.parentKey);
-            return (cache[qKey] = Boolean(parentVal) && parentVisible);
+            // Determine if the parent's value should be considered "truthy" for visibility purposes
+            const parentValueIsTruthy =
+                typeof parentVal === 'string'
+                    ? parentVal.trim() !== "" && parentVal.toLowerCase() !== "no"
+                    : Boolean(parentVal);
+
+            return (cache[qKey] = parentValueIsTruthy && parentVisible);
         };
 
         // ensure we compute visibility for all questions (so lookups are O(1) later)
@@ -210,10 +217,8 @@ const Section = ({
                         question: qIndex,
                     });
 
-                    // Check visibility using useWatch and recursive logic
-                    if (!isQuestionVisible(question.key)) {
-                        return null;
-                    }
+                    // Determine visibility for this question using cached visibility map
+                    const isVisible = isQuestionVisible(question.key);
 
                     let inputComponent: React.ReactNode;
                     switch (question.o.type) {
@@ -247,10 +252,14 @@ const Section = ({
                             throw new Error(`Unknown question type: ${question.o.type}`);
                     }
 
+                    // Wrap in Collapse for smooth slide down/up animation of dependent questions.
+                    // timeout="auto" calculates duration based on content height for natural feel.
                     return (
-                        <ListItem id={`q-${question.key}`} key={qIndex} className="mb-4">
-                            {inputComponent}
-                        </ListItem>
+                        <Collapse in={isVisible} timeout="auto" key={qIndex}>
+                            <ListItem id={`q-${question.key}`} className="mb-4 w-full">
+                                {isVisible && inputComponent}
+                            </ListItem>
+                        </Collapse>
                     );
                 })}
             </List>
@@ -282,7 +291,7 @@ const computeFollowupMap = (
             question: qIndex,
         });
 
-        const walkback = question.o.dependent_step;
+        const walkback = question.o.config?.dependent_step;
         if (walkback && qIndex - walkback >= 0) {
             const parentQuestion = new Question(
                 questions[qIndex - walkback],

@@ -6,6 +6,7 @@ from applications.models import Application
 from applications.statuses import ApplicationStatus
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
+from questionnaires.schema import SCHEMA_VERSION
 from users.models import User
 
 
@@ -74,7 +75,7 @@ def questionnaire_factory(db, user, process_factory):
             "description": f"Questionnaire description {index}",
             "version": 1,
             "document": {
-                "schema_version": "2025.07-1",
+                "schema_version": SCHEMA_VERSION,
                 "steps": [
                     {
                         "title": "Step 1",
@@ -114,7 +115,7 @@ def questionnaire(db, process, user):
         name="New application",
         description="Create a new application",
         document={
-            "schema_version": "2025.07-1",
+            "schema_version": SCHEMA_VERSION,
             "steps": [
                 {
                     "title": "Step 1",

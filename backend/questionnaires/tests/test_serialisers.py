@@ -1,10 +1,12 @@
 """Unit tests for questionnaire serialisers and schema helpers."""
 
 import pytest
+from rest_framework.exceptions import ValidationError
 
 from questionnaires.models import Questionnaire, QuestionnaireSerialiser
 from questionnaires.serialisers import (
     GridQuestionColumnSerialiser,
+    QuestionConfig,
     QuestionSerialiser,
     ReferenceField,
     ReferenceFieldConverter,
@@ -19,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 def _document():
     """Return a valid questionnaire document for serializer representation tests."""
     return {
-        "schema_version": "2025.07-1",
+        "schema_version": 1,
         "steps": [
             {
                 "title": "Step 1",
@@ -149,6 +151,74 @@ def test_step_serialiser_requires_at_least_one_section():
     assert "sections" in serialiser.errors
 
 
+def test_questionnaire_serialiser_validate_document_accepts_current_schema_version():
+    """Accept documents with schema_version matching document structure."""
+    serialiser = QuestionnaireSerialiser()
+    valid_doc = _document()
+
+    # Should not raise ValidationError
+    result = serialiser.validate_document(valid_doc)
+
+    assert result["schema_version"] == valid_doc["schema_version"]
+
+
+def test_questionnaire_serialiser_validate_document_rejects_mismatched_version():
+    """Reject documents with mismatched schema_version and provide actionable error guidance.
+
+    Verifies that:
+    - Old schema versions are rejected
+    - Error message includes what version is required
+    - Error message includes what version was provided
+    - Error message includes the migration command to run
+    """
+    serialiser = QuestionnaireSerialiser()
+    old_doc = _document()
+    old_doc["schema_version"] = "0"  # Old version
+
+    with pytest.raises(ValidationError) as exc_info:
+        serialiser.validate_document(old_doc)
+
+    error_message = str(exc_info.value.detail[0])
+
+    # Verify error message is actionable
+    assert "'0'" in error_message  # Provided version
+    assert "python manage.py schema_migrate_questionnaire" in error_message  # Migration command
+    assert "schema version" in error_message.lower()
+
+
+def test_questionnaire_serialiser_validate_document_rejects_edge_cases():
+    """Reject documents with null, missing, or non-dict schema_version values.
+
+    Verifies edge cases are handled gracefully:
+    - null schema_version
+    - missing schema_version
+    - non-dict input values (string, list, etc.)
+    """
+    serialiser = QuestionnaireSerialiser()
+
+    # Test null schema_version
+    null_doc = _document()
+    null_doc["schema_version"] = None
+
+    with pytest.raises(ValidationError):
+        serialiser.validate_document(null_doc)
+
+    # Test missing schema_version
+    missing_doc = _document()
+    del missing_doc["schema_version"]
+
+    with pytest.raises(ValidationError):
+        serialiser.validate_document(missing_doc)
+
+    # Test non-dict inputs (string)
+    with pytest.raises(ValidationError):
+        serialiser.validate_document("not a dict")
+
+    # Test non-dict inputs (list)
+    with pytest.raises(ValidationError):
+        serialiser.validate_document([])
+
+
 def test_reference_field_converter_builds_expected_ref_path():
     """Convert custom reference fields into $defs references for generated JSON schema."""
     reference_field = ReferenceField(definition="question")
@@ -156,3 +226,67 @@ def test_reference_field_converter_builds_expected_ref_path():
     converted = ReferenceFieldConverter().convert(reference_field)
 
     assert converted == {"$ref": "#/$defs/question"}
+
+
+class TestQuestionConfigSerialiser:
+    """Test the QuestionConfig serialiser with hint field."""
+
+    def test_question_config_with_hint(self):
+        """Verify serialiser accepts hint field."""
+        data = {
+            "hint": "This is helpful information about this question.",
+            "select_options": ["Option A", "Option B"],
+        }
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == "This is helpful information about this question."
+
+    def test_question_config_hint_nullable(self):
+        """Verify hint field accepts null value."""
+        data = {
+            "hint": None,
+            "select_options": ["Option A", "Option B"],
+        }
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data.get("hint") is None
+
+    def test_question_config_hint_optional(self):
+        """Verify hint field is optional."""
+        data = {
+            "select_options": ["Option A", "Option B"],
+        }
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert "hint" not in serialiser.validated_data or serialiser.validated_data.get("hint") is None
+
+    def test_question_config_hint_max_length(self):
+        """Verify hint field respects 3000 character limit."""
+        long_hint = "x" * 3001
+        data = {"hint": long_hint}
+        serialiser = QuestionConfig(data=data)
+        assert not serialiser.is_valid()
+        assert "hint" in serialiser.errors
+
+    def test_question_config_hint_exactly_max_length(self):
+        """Verify hint field accepts exactly 3000 characters."""
+        max_hint = "x" * 3000
+        data = {"hint": max_hint}
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == max_hint
+
+    def test_question_config_hint_empty_string(self):
+        """Verify hint field accepts empty string."""
+        data = {"hint": ""}
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == ""
+
+    def test_question_config_hint_with_newlines(self):
+        """Verify hint field preserves newlines and whitespace."""
+        hint_with_newlines = "Line 1\nLine 2\nLine 3"
+        data = {"hint": hint_with_newlines}
+        serialiser = QuestionConfig(data=data)
+        assert serialiser.is_valid(), serialiser.errors
+        assert serialiser.validated_data["hint"] == hint_with_newlines

@@ -57,6 +57,15 @@ export interface IQuestion {
     type: string;
     is_required: boolean;
     description?: string;
+    // Nested configuration object containing type-specific settings
+    config?: IQuestionConfig | null;
+}
+
+/**
+ * Consolidated configuration object for type-specific question settings.
+ * Contains fields that were previously scattered at the question level.
+ */
+export interface IQuestionConfig {
     // For select type questions, the list of options to choose from
     select_options?: string[] | null;
     // Grid columns definitions
@@ -67,6 +76,8 @@ export interface IQuestion {
     dependent_step?: number | null;
     // File upload maximum attachment limit
     file_max_attachments?: number | null;
+    // Optional hint text to display in a dialog for the question
+    hint?: string | null;
 }
 
 
@@ -105,9 +116,14 @@ export class Question {
         return `${this.indices.step}.${this.indices.section}-${this.indices.question}`;
     }
 
+    // Return question number for display (e.g., "7. ")
+    get number(): string {
+        return `${this.indices.question + 1}. `;
+    }
+
     // Return formmatted label for display
     get labelText(): string {
-        const formatted = `${this.indices.question + 1}. ${this.o.label}`;
+        const formatted = `${this.number}${this.o.label}`;
         // Append asterisk for required fields
         return this.o.is_required ? `${formatted} *` : formatted;
     }

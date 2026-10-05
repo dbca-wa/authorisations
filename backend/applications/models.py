@@ -63,7 +63,7 @@ def _build_grid_rows(
     if not isinstance(raw_value, list):
         return []
 
-    grid_columns: list[dict[str, Any]] = question.get("grid_columns") or []
+    grid_columns: list[dict[str, Any]] = question.get("config", {}).get("grid_columns") or []
     rows: list[list[str | None]] = []
 
     for row in raw_value:
@@ -130,7 +130,7 @@ def _build_question_item(
     if question_type == "grid":
         item["grid_columns"] = [
             column.get("label") or "Column"
-            for column in question.get("grid_columns") or []
+            for column in question.get("config", {}).get("grid_columns") or []
         ]
         item["grid_rows"] = _build_grid_rows(question, answer_value)
         return item

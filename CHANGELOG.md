@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.1.0] - Unreleased (Requires DB Migration)
+## [1.2.0] - 2026-10-05
+
+**Requires JSON Schema Migration**
+
+### Added
+
+- Added support for treating non-empty values other than "no" as truthy for follow-up question visibility, ensuring dependent questions appear correctly when a parent answer is "Yes" or similar values.
+- Added schema migration framework providing safe, auditable updates to application form structures with automatic data transformation and full rollback capability, significantly reducing risk when evolving the system.
+- Added maintenance mode feature enabling safe deployments and database migrations without displaying server errors to users. When enabled via `MAINTAINANCE_MODE=True`, all users see a friendly "Under Maintenance" page, API endpoints return 503 Service Unavailable, and file downloads are blocked.
+- Added custom template for 404 error page to provide a user-friendly interface when users navigate to non-existent routes.
+- Added AKS pod security admission compatibility updates to the shared deployment configuration, including a RuntimeDefault seccomp profile so the application remains compliant with the restricted security policy.
+- Added smooth slide down/up animations for dependent (follow-up) questions in form sections, improving visual feedback when conditional questions appear or disappear based on parent question values.
+- Added optional question hints feature enabling questionnaire creators to provide contextual guidance for each question via a small help icon that displays explanation text in a dialog, improving form clarity without cluttering the visual layout.
+
+### Changed
+
+- Changed the labels across all input types to be consistent in size and styling for improved visual coherence throughout forms.
+- Reorganised questionnaire data structure by consolidating question configuration into a unified `config` object for improved clarity and easier future evolution.
+- Upgraded the project Node.js runtime target from 22.x to 26.x in CI and development prerequisites, and updated frontend Node type definitions to `@types/node` 26.x for alignment.
+- **Dependency upgrades:** Updated 21 backend packages (coverage, pygments, sqlparse, python-slugify, cryptography, azure-storage-blob, and others) and 29 frontend packages with major version migrations (react-router v7→v8, react-dropzone v15→v20, msw v2→v3, testing infrastructure including @testing-library/dom, jsdom, and react-hook-form v7.89.0). Required TypeScript return-type annotations in FormLayout.tsx async handlers for react-hook-form compatibility. Vitest upgraded to 4.1.11 (security patch fixing Path Traversal vulnerability in @vitest/mocker GHSA-82fw-gwwq-j7x9). Deferred v5 upgrade due to ecosystem type declaration incompatibility with @testing-library/jest-dom 7.0.1 - awaiting vitest 5.0.3+ or jest-dom 7.0.2+ compatibility fixes. All 700 tests passing (311 frontend unit, 326 backend unit/API, 63 E2E).
+
+## [1.1.0] - 2026-08-13
+
+**Requires DB Migration**
 
 ### Added
 

@@ -93,6 +93,12 @@ npm run lint
 
 ## Key Rules
 
+### npm Version Alignment
+- **Local Development**: Use npm 11.x (verify with `npm --version`)
+- **Docker Builds**: Dockerfile automatically upgrades npm from node:22-trixie-slim base (10.9.9) to 11.x
+- **Lock File Compatibility**: After running `npm update` or `npm install` locally, the generated `package-lock.json` may use npm 11.x format. Docker must have npm 11.x installed to parse this format with `npm ci`
+- **Troubleshooting**: If Docker builds fail with "npm error" during `npm ci`, ensure your local npm version is 11.x; if local npm is correct, verify Dockerfile npm upgrade is in place
+
 ### Package Managers
 - **All contexts**: Use `npm` exclusively (local development, CI, production, Docker)
 - **No Bun**: Bun is not compatible with npm's dependency resolution; using both causes version mismatches
