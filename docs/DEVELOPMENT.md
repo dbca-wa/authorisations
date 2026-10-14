@@ -106,17 +106,40 @@ poetry install
 
 Poetry automatically creates a virtual environment within the same directory, which is git ignored.
 
-Apply the database migrations:
+Run database migrations (if starting with a fresh database, or to ensure you have the latest schema):
 
 ```bash
 poetry run python manage.py migrate
 ```
 
-Create a superuser to access the admin interface:
+Create or designate a superuser to access the admin interface. You can use either method:
+
+**Method 1: Interactive prompt** (if you are starting with an empty database)
 
 ```bash
 poetry run python manage.py createsuperuser
 ```
+
+**Method 2: Set password on existing user** (if you already have a user account from the backup)
+
+```bash
+poetry run python manage.py shell
+```
+
+Then in the Python shell, run:
+
+```python
+from django.contrib.auth import get_user_model
+User = get_user_model()
+user = User.objects.get(username='your_username')
+user.set_password('your_new_password')
+user.is_staff = True
+user.is_superuser = True
+user.save()
+exit()
+```
+
+Replace `your_username` and `your_new_password` with your actual values.
 
 ## Setup frontend
 
