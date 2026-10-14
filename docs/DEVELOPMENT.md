@@ -27,22 +27,22 @@ cd backend
 cp .env.template .env
 ```
 
-Edit the `.env` file and set the environment variables. You need to generate secure random values for:
-- `DJANGO_SECRET_KEY`
-- `POSTGRES_PASSWORD` (PostgreSQL superuser password)
-- `DATABASE_PASSWORD` (application database user password)
+Edit the `.env` file and set the required environment variables. Generate secure random values for:
+- `DJANGO_SECRET_KEY` — Use: `python -c 'import secrets; print(secrets.token_hex(25))'`
+- `POSTGRES_PASSWORD` — PostgreSQL superuser password
+- `DATABASE_PASSWORD` — Application database user password (use the same command above)
 
-Use this command to generate cryptographically secure random strings:
+**Important**: When you set `DATABASE_PASSWORD`, you must also duplicate that same value in the `DATABASE_URL` line:
 
-```bash
-cd backend && poetry run python -c 'import secrets; print(secrets.token_hex(25))'
+```env
+DATABASE_PASSWORD=your_generated_password_here
+DATABASE_URL=postgresql://authorisations_dev:your_generated_password_here@localhost:5432/authorisations_dev
 ```
 
-Run this command multiple times and paste the output into your `.env` file for each required secret.
+The password appears in both places - `DATABASE_PASSWORD` is used by the database initialization script, and `DATABASE_URL` is used by Django to connect.
 
-Also set the environment variables for:
-- `DATABASE_URL` — Uses the `DATABASE_PASSWORD` value you set above
-- `PRIVATE_MEDIA_ROOT` — Full path to your local media directory
+Also set:
+- `PRIVATE_MEDIA_ROOT` — Full path to your local media directory (replace `[user]` with your username)
 
 ## Database
 
