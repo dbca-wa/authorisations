@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## [1.2.1] - Unreleased
+
+### Changed
+
+- Improved PostgreSQL development setup with Docker Compose for simplified local development configuration.
+
 ## [1.2.0] - 2026-10-05
 
 **Requires JSON Schema Migration**
