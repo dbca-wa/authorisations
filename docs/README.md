@@ -2,45 +2,56 @@
 
 Welcome to the Authorisations documentation hub. Use the links below to find information relevant to your task.
 
-## ⚠️ Before Any Feature Development
+## Business Logic
 
-**[FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md)** — **Mandatory checklist for all feature development and bugfixes.** Read this before every session. Covers code quality, testing, documentation, CHANGELOG requirements, and common commands. AI agents must follow this unless explicitly overridden.
+Start here to understand the project at a high level.
 
-## Command Reference
+- **[STATUS-WORKFLOW.md](STATUS-WORKFLOW.md)** — Application status definitions and transition business logic
+- **[FRONTEND-API-FLOWS.md](FRONTEND-API-FLOWS.md)** — User-facing workflows, routes, pages, and authentication flows
+- **[FILE-MANAGEMENT.md](FILE-MANAGEMENT.md)** — File attachment design and implementation
 
-**[COMMAND-REFERENCE.md](COMMAND-REFERENCE.md)** — Quick visual guide to standardized command patterns. Local dev vs CI/production, backend vs frontend, with exact commands for every task.
+## Technical Design
 
-## Getting Started
+Core architecture and development conventions for backend and frontend.
 
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** — Setup, installation, running locally, and development workflows
-
-## Understand The Project
-
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Data model, terminology, business logic, and technical structure
-- **[BACKEND-CONVENTIONS.md](BACKEND-CONVENTIONS.md)** — Backend development patterns, API layer, security, and ordering rules
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Data model, terminology, and technical structure
+- **[BACKEND-CONVENTIONS.md](BACKEND-CONVENTIONS.md)** — Backend development patterns, API layer, security, and ordering conventions
 - **[FRONTEND-CONVENTIONS.md](FRONTEND-CONVENTIONS.md)** — Frontend development guidelines, React patterns, and component structure
 
-## Features & Workflows
+## Schema & Data Management
 
-- **[FRONTEND-API-FLOWS.md](FRONTEND-API-FLOWS.md)** — User-facing workflows, routes, pages, and authentication
-- **[STATUS-WORKFLOW.md](STATUS-WORKFLOW.md)** — Detailed definitions of application statuses and transition business logic
-- **[FILE-MANAGEMENT.md](FILE-MANAGEMENT.md)** — File attachment design and implementation
+Framework and guidance for safe database schema evolution.
+
+- **[SCHEMA-MIGRATION-HANDBOOK.md](SCHEMA-MIGRATION-HANDBOOK.md)** — Comprehensive guide to the schema migration framework
+- **[SCHEMA-MIGRATION-PLAN.md](SCHEMA-MIGRATION-PLAN.md)** — Schema migration planning and strategy
 
 ## Deployment & Release
 
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** — Kubernetes, kustomize configuration, and deployment procedures
+Instructions for deploying to production and managing releases.
+
 - **[RELEASE.md](RELEASE.md)** — Semantic versioning and production release process
-
-## Maintenance & Operations
-
-- **[DEPENDENCY-UPGRADE.md](DEPENDENCY-UPGRADE.md)** — Process-driven approach to upgrading backend and frontend dependencies, breaking-change analysis, and pending upgrade inventory
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** — Kubernetes, kustomize configuration, and deployment procedures
 
 ## Quality & Contributions
 
+Standards for code quality, testing, contributing, and security.
+
+- **[FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md)** — **Mandatory checklist for all feature development and bugfixes.** Read before every development cycle. Covers code quality, testing, documentation, CHANGELOG requirements, and common commands.
 - **[TESTING.md](TESTING.md)** — Testing strategy, running tests locally and in CI, and best practices
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — Contribution guidelines and expectations
 - **[SECURITY.md](SECURITY.md)** — Security policy and vulnerability reporting
+- **[COMMAND-REFERENCE.md](COMMAND-REFERENCE.md)** — Quick reference for standardized command patterns
+- **[AI-AGENTS-MANDATORY-REQUIREMENTS-PROTOCOL.md](AI-AGENTS-MANDATORY-REQUIREMENTS-PROTOCOL.md)** — Protocol for AI agents working within the project
+
+## Future Development
+
+Planned improvements and ongoing enhancements to the system.
+
+- **[DEPENDENCY-UPGRADE.md](DEPENDENCY-UPGRADE.md)** — Process-driven approach to upgrading dependencies and breaking-change analysis
+- **[CROSS-TAB-STATE-SYNC.md](CROSS-TAB-STATE-SYNC.md)** — Cross-tab state synchronization implementation and patterns
+- **[MIGRATION-FRAMEWORK-LIBRARY-PLAN.md](MIGRATION-FRAMEWORK-LIBRARY-PLAN.md)** — Migration framework library design
 
 ---
 
-For high-level project information and links, see [../README.md](../README.md).
+For high-level project information, see [../README.md](../README.md).
