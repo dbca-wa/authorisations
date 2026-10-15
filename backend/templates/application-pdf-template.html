@@ -13,7 +13,7 @@
         marks: none;
 
         @top-left {
-          content: "#{{ application.internal_id }}" string(app-status);
+          content: "#{{ application.internal_id }}";
           font: 8.5pt Arial, Helvetica, sans-serif;
           color: #4c4c4c;
           vertical-align: middle;
@@ -54,6 +54,19 @@
           font: 8.5pt Arial, Helvetica, sans-serif;
           color: #2f2f2f;
         }
+
+        {% if is_draft %}
+        @prince-overlay {
+          content: "DRAFT";
+          color: rgba(80, 80, 80, 0.2);
+          font: bold 200px Arial, Helvetica, sans-serif;
+          text-align: center;
+          vertical-align: middle;
+          transform: rotate(-30deg);
+          white-space: nowrap;
+          line-height: 1;
+        }
+        {% endif %}
       }
 
       @page:first {
@@ -86,15 +99,6 @@
 
       p {
         margin: 0;
-      }
-
-      .status-marker {
-        display: block;
-        height: 0;
-        overflow: hidden;
-        font-size: 0;
-        line-height: 0;
-        string-set: app-status attr(data-status);
       }
 
       .section-breadcrumb-marker {
@@ -384,7 +388,6 @@
   </head>
   <body>
     <main>
-      <div class="status-marker" data-status="{% if application.status == 'DRAFT' %} - DRAFT{% endif %}"></div>
       <div class="header-wrapper" aria-label="Form Header">
         <div class="header-cell">
           <div class="header-inner">
