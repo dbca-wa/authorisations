@@ -71,7 +71,7 @@
 
       @page:first {
         @bottom-left {
-          content: "Form last updated at {{ application.questionnaire.updated_at|date:'F Y' }} (v{{ application.questionnaire.version }})";
+          content: "{% if is_draft %}Draft last saved: {{ application.updated_at|date:'j M Y, g:i A' }}{% else %}Submitted: {{ application.submitted_at|date:'j M Y, g:i A' }}{% endif %}";
         }
       }
 
