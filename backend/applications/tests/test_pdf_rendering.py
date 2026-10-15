@@ -766,14 +766,13 @@ class PDFContextBuildingTests(TestCase):
             "Section title for images must be present")
 
     def test_render_pdf_html_includes_draft_label_in_header_for_draft_status(self):
-        """render_pdf_html includes DRAFT label in page header when status is DRAFT.
+        """render_pdf_html includes DRAFT watermark overlay for DRAFT status.
 
         This test verifies that:
-        1. A status marker element is present in the HTML
-        2. When application status is DRAFT, data-status attribute contains " - DRAFT"
-        3. The string-set CSS captures the DRAFT label
-        4. The @top-left page header includes the DRAFT label after the internal ID
-           in the format: "#internal_id - DRAFT"
+        1. The PDF context includes is_draft=True for DRAFT applications
+        2. The @prince-overlay CSS rule is present to render the watermark
+        3. The watermark displays "DRAFT" text rotated -30 degrees
+        4. Status marker element is NOT present (old implementation removed)
         """
         # Create an application with DRAFT status
         questionnaire = Questionnaire.objects.create(
@@ -820,33 +819,42 @@ class PDFContextBuildingTests(TestCase):
             },
         )
 
+        # Verify context is_draft flag
+        context = app.build_pdf_context()
+        self.assertTrue(context["is_draft"],
+            "Context must include is_draft=True for DRAFT applications")
+
         # Render the PDF HTML
         html = app.render_pdf_html()
 
-        # Verify 1: Status marker element is present with DRAFT label separator
-        self.assertIn('class="status-marker"', html,
-            "Status marker element must be present in HTML")
-        self.assertIn('data-status=" - DRAFT"', html,
-            "Status marker must have data-status=' - DRAFT' for DRAFT applications")
+        # Verify 1: @prince-overlay watermark CSS is present (only for DRAFT)
+        self.assertIn("@prince-overlay", html,
+            "@prince-overlay rule must be present for DRAFT applications")
+        self.assertIn('content: "DRAFT"', html,
+            "Watermark must display DRAFT text")
+        self.assertIn("transform: rotate(-30deg)", html,
+            "Watermark must be rotated -30 degrees counter-clockwise")
 
-        # Verify 2: CSS string-set rule for status marker is present
-        self.assertIn("string-set: app-status attr(data-status)", html,
-            "CSS must include string-set rule to capture status from data attribute")
+        # Verify 2: Status marker element is NOT present (old implementation removed)
+        self.assertNotIn('class="status-marker"', html,
+            "Status marker element must NOT be present (old DRAFT label implementation)")
+        self.assertNotIn("string-set: app-status", html,
+            "string-set CSS rule must NOT be present (replaced by @prince-overlay)")
+        self.assertNotIn('string(app-status)', html,
+            "string(app-status) reference must NOT be present in page headers")
 
-        # Verify 3: @top-left page header shows internal ID followed by status string
-        # The content property should show the internal ID followed by string(app-status)
-        self.assertIn('content: "#', html,
-            "Page header must show internal_id with #")
-        self.assertIn('string(app-status)', html,
-            "Page header must include string(app-status) for DRAFT label")
+        # Verify 3: Page header shows clean internal ID without DRAFT suffix
+        self.assertIn('content: "#{{ application.internal_id }}"', html,
+            "Page header must show internal_id without DRAFT suffix")
 
     def test_render_pdf_html_excludes_draft_label_for_non_draft_status(self):
-        """render_pdf_html does not include DRAFT label when status is not DRAFT.
+        """render_pdf_html does not include DRAFT watermark for non-DRAFT status.
 
         This test verifies that:
-        1. A status marker element is present in the HTML
-        2. When application status is NOT DRAFT, data-status attribute is empty
-        3. The page header shows only the internal ID without DRAFT suffix
+        1. The PDF context includes is_draft=False for non-DRAFT applications
+        2. The @prince-overlay CSS rule is NOT present for non-DRAFT applications
+        3. Status marker element is NOT present (old implementation removed)
+        4. Page header shows clean internal ID without any watermark
         """
         # Create an application with SUBMITTED status
         questionnaire = Questionnaire.objects.create(
@@ -893,22 +901,26 @@ class PDFContextBuildingTests(TestCase):
             },
         )
 
+        # Verify context is_draft flag
+        context = app.build_pdf_context()
+        self.assertFalse(context["is_draft"],
+            "Context must include is_draft=False for non-DRAFT applications")
+
         # Render the PDF HTML
         html = app.render_pdf_html()
 
-        # Verify 1: Status marker element is present but empty
-        self.assertIn('class="status-marker"', html,
-            "Status marker element must be present in HTML")
-        self.assertIn('data-status=""', html,
-            "Status marker must have empty data-status for non-DRAFT applications")
+        # Verify 1: @prince-overlay watermark CSS is NOT present for non-DRAFT
+        self.assertNotIn("@prince-overlay", html,
+            "@prince-overlay rule must NOT be present for non-DRAFT applications")
+        self.assertNotIn('content: "DRAFT"', html,
+            "DRAFT watermark text must NOT be present for non-DRAFT applications")
 
-        # Verify 2: CSS string-set rule is still present
-        self.assertIn("string-set: app-status attr(data-status)", html,
-            "CSS must include string-set rule even for non-DRAFT applications")
+        # Verify 2: Status marker element is NOT present (old implementation removed)
+        self.assertNotIn('class="status-marker"', html,
+            "Status marker element must NOT be present (old implementation removed)")
+        self.assertNotIn("string-set: app-status", html,
+            "string-set CSS rule must NOT be present (old implementation removed)")
 
-        # Verify 3: @top-left page header shows internal ID (without DRAFT suffix)
-        # The content property should show the internal ID followed by empty status string
-        self.assertIn('content: "#', html,
-            "Page header must show internal_id with #")
-        self.assertIn('string(app-status)', html,
-            "Page header must include string(app-status) function")
+        # Verify 3: Page header shows clean internal ID without any suffix
+        self.assertIn('content: "#{{ application.internal_id }}"', html,
+            "Page header must show only internal_id without status suffix")
