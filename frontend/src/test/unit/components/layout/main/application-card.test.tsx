@@ -148,6 +148,54 @@ describe("ApplicationCard", () => {
       expect(downloadLink).toHaveAttribute("target", "_blank");
       expect(downloadLink).toHaveAttribute("rel", "noopener");
     });
+
+    it("hides attachments button for DISCARDED (terminated) status", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "DISCARDED" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByRole("button", { name: "View attachments" })).not.toBeInTheDocument();
+    });
+
+    it("hides attachments button for WITHDRAWN (terminated) status", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "WITHDRAWN" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByRole("button", { name: "View attachments" })).not.toBeInTheDocument();
+    });
+
+    it("hides download button for DISCARDED (terminated) status", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "DISCARDED", key: "app-discarded" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByRole("link", { name: "Download application PDF" })).not.toBeInTheDocument();
+    });
+
+    it("hides download button for WITHDRAWN (terminated) status", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "WITHDRAWN", key: "app-withdrawn" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByRole("link", { name: "Download application PDF" })).not.toBeInTheDocument();
+    });
   });
 
   it("does not display review button", () => {

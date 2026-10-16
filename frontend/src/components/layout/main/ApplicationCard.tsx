@@ -126,10 +126,12 @@ export const ApplicationCard = ({
                 {/* Header: Application ID on left, PDF/Files on right */}
                 <Box className="flex justify-between items-start mb-4 gap-4">
                     <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
-                    <Box className="flex gap-1">
-                        <AttachmentsButton application={displayedApplication} />
-                        <PdfDownloadButton applicationKey={application.key} />
-                    </Box>
+                    {!isTerminated &&
+                        <Box className="flex gap-1">
+                            <AttachmentsButton application={displayedApplication} />
+                            <PdfDownloadButton applicationKey={application.key} />
+                        </Box>
+                    }
                 </Box>
 
                 <Box className="flex gap-2 my-4 flex-wrap justify-around">
