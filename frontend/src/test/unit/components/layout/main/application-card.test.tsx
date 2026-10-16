@@ -161,4 +161,154 @@ describe("ApplicationCard", () => {
 
     expect(screen.queryByRole("button", { name: "Review" })).not.toBeInTheDocument();
   });
+
+  describe("application status workflow stepper", () => {
+    it("DRAFT displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "DRAFT" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("SUBMITTED displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "SUBMITTED" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("UNDER_REVIEW displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "UNDER_REVIEW" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("UNDER_ASSESSMENT displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "UNDER_ASSESSMENT" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("APPROVED displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "APPROVED" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("APPROVED_WITH_CONDITIONS displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "APPROVED_WITH_CONDITIONS" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("REJECTED displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "REJECTED" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("DEFERRED displays stepper (not terminated alert)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "DEFERRED" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByText("Application Terminated")).not.toBeInTheDocument();
+      const steps = screen.getAllByRole("listitem");
+      const muiSteps = steps.filter(el => el.className.includes("MuiStep"));
+      expect(muiSteps).toHaveLength(5);
+    });
+
+    it("DISCARDED shows terminated alert (not stepper)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "DISCARDED" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText("Application Terminated")).toBeInTheDocument();
+      const steps = screen.queryAllByRole("listitem").filter(el => el.className.includes("MuiStep"));
+      expect(steps).toHaveLength(0);
+    });
+
+    it("WITHDRAWN shows terminated alert (not stepper)", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication({ status: "WITHDRAWN" })}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText("Application Terminated")).toBeInTheDocument();
+      const steps = screen.queryAllByRole("listitem").filter(el => el.className.includes("MuiStep"));
+      expect(steps).toHaveLength(0);
+    });
+  });
 });

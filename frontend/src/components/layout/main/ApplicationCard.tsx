@@ -30,11 +30,11 @@ import {
 
 // Card-specific constants for application status progression display
 const applicationSteps = [
-    "Application",
+    "Draft",
     "Submitted",
-    "Review",
+    "Under Review",
     "Assessment",
-    "Decision",
+    "Outcome",
 ] as const;
 
 const statusToActiveStep: Record<ApplicationStatus, number> = {
