@@ -4,12 +4,13 @@ import type { ApplicationStatus } from "../../../../../context/types/Application
 import { ApplicationCard } from "../../../../../components/layout/main/ApplicationCard";
 import { makeApplication, makeProcess } from "../../../fixtures";
 
-// Mock useSnackbar to avoid "useSnackbar must be used within a SnackbarProvider" error
+// Mock useSnackbar and useDialog to avoid provider errors
 vi.mock("../../../../../context/Hooks", async () => {
     const actual = await vi.importActual<typeof import("../../../../../context/Hooks")>("../../../../../context/Hooks");
     return {
         ...actual,
         useSnackbar: () => ({ showSnackbar: vi.fn() }),
+        useDialog: () => ({ showDialog: vi.fn() }),
     };
 });
 
@@ -53,13 +54,23 @@ describe("Application Workflow Frontend Logic", () => {
     });
 
     /**
-     * Verifies that the download link is NOT visible for DRAFT applications.
-     * Applicants should only be able to download a PDF once they have submitted
-     * or finalised the application.
+     * Verifies that the download link is visible for DRAFT and other appropriate statuses.
+     * Applicants can now download a PDF even during the draft phase for preview purposes.
      */
     it("identifies appropriate statuses as downloadable", () => {
-        // Test that SUBMITTED shows Download link
+        // Test that DRAFT shows Download link
         const { unmount } = render(
+            <ApplicationCard 
+                process={makeProcess()} 
+                application={makeApplication({ status: "DRAFT" })}
+                onStatusChanged={vi.fn()}
+            />
+        );
+        expect(screen.getByRole("link", { name: "Download application PDF" })).toBeInTheDocument();
+        unmount();
+
+        // Test that SUBMITTED also shows Download link
+        render(
             <ApplicationCard 
                 process={makeProcess()} 
                 application={makeApplication({ status: "SUBMITTED" })}
@@ -67,17 +78,6 @@ describe("Application Workflow Frontend Logic", () => {
             />
         );
         expect(screen.getByRole("link", { name: "Download application PDF" })).toBeInTheDocument();
-        unmount();
-
-        // Test that DRAFT does NOT show Download link
-        render(
-            <ApplicationCard 
-                process={makeProcess()} 
-                application={makeApplication({ status: "DRAFT" })}
-                onStatusChanged={vi.fn()}
-            />
-        );
-        expect(screen.queryByRole("link", { name: "Download application PDF" })).not.toBeInTheDocument();
     });
 
     /**

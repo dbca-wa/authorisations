@@ -1,15 +1,26 @@
 /* eslint-disable react-refresh/only-export-components */
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import DownloadIcon from '@mui/icons-material/Download';
 import SortIcon from '@mui/icons-material/Sort';
 import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
+import IconButton from "@mui/material/IconButton";
+import Link from '@mui/material/Link';
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
+import Tooltip from '@mui/material/Tooltip';
 import _ from "underscore";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useState } from 'react';
 
 import { LocalStorage } from "../../../context/LocalStorage";
-import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
+import { ApiManager } from '../../../context/ApiManager';
+import { useDialog, useResolvedPromise } from '../../../context/Hooks';
+import type { ApplicationStatus, IApplicationAttachment, IApplicationData } from "../../../context/types/Application";
+import { FileAttachmentList } from '../../Common';
+import { EmptyStateComponent } from './EmptyState';
+import { LoadingState } from './LoadingState';
 
 // Enable relative date labels like "2 days ago" for card metadata.
 dayjs.extend(relativeTime);
@@ -44,6 +55,7 @@ export const formatRelativeDates = (application: IApplicationData) => {
 
 /** Statuses for which a download link should be available. */
 export const downloadableStatuses = new Set<ApplicationStatus>([
+    "DRAFT",
     "SUBMITTED",
     "UNDER_REVIEW",
     "UNDER_ASSESSMENT",
@@ -52,6 +64,98 @@ export const downloadableStatuses = new Set<ApplicationStatus>([
     "DEFERRED",
     "REJECTED"
 ]);
+
+// ============================================================================
+// Reusable Attachment & Download Components (used by ApplicationCard, ReviewCard)
+// ============================================================================
+
+/**
+ * Internal dialog content component for displaying application attachments.
+ * Fetches attachments on mount and displays them in a grid with download functionality.
+ * Shows loading state while fetching and empty state if no attachments are available.
+ */
+const AttachmentsDialogContent = ({
+    applicationKey,
+}: {
+    applicationKey: string;
+}) => {
+    const attachmentsPromise = useState(() =>
+        ApiManager.getApplicationAttachments(applicationKey)
+    )[0];
+    const [attachments, isLoading] = useResolvedPromise<IApplicationAttachment[]>(
+        attachmentsPromise,
+        []
+    );
+
+    if (isLoading) {
+        return <LoadingState />;
+    }
+
+    if (attachments.length === 0) {
+        return <EmptyStateComponent />;
+    }
+
+    return <FileAttachmentList attachments={attachments} canEdit={false} fullWidth={true} />;
+};
+
+/**
+ * Reusable PDF download button displayed as an icon button.
+ * Used in card headers for compact layout.
+ */
+export const PdfDownloadButton = ({
+    applicationKey,
+}: {
+    applicationKey: string;
+}) => (
+    <Link
+        target="_blank"
+        rel="noopener"
+        aria-label="Download application PDF"
+        href={`/d/${applicationKey}`}
+    >
+        <Tooltip title="Download PDF" placement="top" arrow>
+            <IconButton
+                color="primary"
+                size="large"
+                aria-label="Download PDF"
+            >
+                <DownloadIcon />
+            </IconButton>
+        </Tooltip>
+    </Link>
+);
+
+/**
+ * Reusable self-contained attachments button.
+ * Manages its own dialog state internally.
+ */
+export const AttachmentsButton = ({
+    application,
+}: {
+    application: IApplicationData;
+}) => {
+    const { showDialog } = useDialog();
+
+    const handleFilesClick = () => {
+        showDialog({
+            title: `Attachments for #${application.internal_id}`,
+            content: <AttachmentsDialogContent applicationKey={application.key} />,
+        });
+    };
+
+    return (
+        <Tooltip title="View attachments" placement="top" arrow>
+            <IconButton
+                color="secondary"
+                size="large"
+                aria-label="View attachments"
+                onClick={handleFilesClick}
+            >
+                <AttachFileIcon />
+            </IconButton>
+        </Tooltip>
+    );
+};
 
 // ============================================================================
 // Application Sorting (reusable across pages)

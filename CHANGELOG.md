@@ -9,8 +9,14 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ## [1.2.1] - Unreleased
 
+### Added
+
+- Added "DRAFT" watermark to the PDF template, displayed as a diagonal overlay on every page of draft applications to clearly distinguish them from final submissions.
+- Added application metadata information page to the PDF template, displaying questionnaire details, applicant information, and application lifecycle timestamps.
+
 ### Changed
 
+- Enabled the "View attachments" and "Download PDF" buttons on application cards for draft applications, allowing users to preview and download PDFs even before submission.
 - Improved PostgreSQL development setup with Docker Compose for simplified local development configuration.
 
 ## [1.2.0] - 2026-10-05

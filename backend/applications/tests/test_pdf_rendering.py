@@ -6,6 +6,7 @@ from unittest.mock import Mock, PropertyMock, patch
 from azure.core.exceptions import ResourceNotFoundError
 from django.core.files.base import ContentFile
 from django.test import TestCase
+from django.utils import timezone
 from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
 from users.models import User
@@ -16,6 +17,7 @@ from applications.models import (
     _build_question_item,
     _icon_class_for_extension,
 )
+from applications.statuses import ApplicationStatus
 
 
 class IconClassTests(TestCase):
@@ -765,15 +767,14 @@ class PDFContextBuildingTests(TestCase):
         self.assertIn("Image attachments", html,
             "Section title for images must be present")
 
-    def test_render_pdf_html_includes_draft_label_in_header_for_draft_status(self):
-        """render_pdf_html includes DRAFT label in page header when status is DRAFT.
+    def test_render_pdf_html_includes_draft_watermark_overlay_for_draft_status(self):
+        """render_pdf_html includes DRAFT watermark overlay for DRAFT status.
 
         This test verifies that:
-        1. A status marker element is present in the HTML
-        2. When application status is DRAFT, data-status attribute contains " - DRAFT"
-        3. The string-set CSS captures the DRAFT label
-        4. The @top-left page header includes the DRAFT label after the internal ID
-           in the format: "#internal_id - DRAFT"
+        1. The PDF context includes is_draft=True for DRAFT applications
+        2. The @prince-overlay CSS rule is present to render the watermark
+        3. The watermark displays "DRAFT" text rotated -30 degrees
+        4. Status marker element is NOT present (old implementation removed)
         """
         # Create an application with DRAFT status
         questionnaire = Questionnaire.objects.create(
@@ -820,33 +821,45 @@ class PDFContextBuildingTests(TestCase):
             },
         )
 
+        # Verify context is_draft flag
+        context = app.build_pdf_context()
+        self.assertTrue(context["is_draft"],
+            "Context must include is_draft=True for DRAFT applications")
+
         # Render the PDF HTML
         html = app.render_pdf_html()
 
-        # Verify 1: Status marker element is present with DRAFT label separator
-        self.assertIn('class="status-marker"', html,
-            "Status marker element must be present in HTML")
-        self.assertIn('data-status=" - DRAFT"', html,
-            "Status marker must have data-status=' - DRAFT' for DRAFT applications")
+        # Verify 1: @prince-overlay watermark CSS is present (only for DRAFT)
+        self.assertIn("@prince-overlay", html,
+            "@prince-overlay rule must be present for DRAFT applications")
+        self.assertIn('content: "DRAFT"', html,
+            "Watermark must display DRAFT text")
+        self.assertIn("transform: rotate(-30deg)", html,
+            "Watermark must be rotated -30 degrees counter-clockwise")
 
-        # Verify 2: CSS string-set rule for status marker is present
-        self.assertIn("string-set: app-status attr(data-status)", html,
-            "CSS must include string-set rule to capture status from data attribute")
+        # Verify 2: Status marker element is NOT present (old implementation removed)
+        self.assertNotIn('class="status-marker"', html,
+            "Status marker element must NOT be present (old DRAFT label implementation)")
+        self.assertNotIn("string-set: app-status", html,
+            "string-set CSS rule must NOT be present (replaced by @prince-overlay)")
+        self.assertNotIn('string(app-status)', html,
+            "string(app-status) reference must NOT be present in page headers")
 
-        # Verify 3: @top-left page header shows internal ID followed by status string
-        # The content property should show the internal ID followed by string(app-status)
+        # Verify 3: Page header shows clean internal ID without DRAFT suffix
         self.assertIn('content: "#', html,
-            "Page header must show internal_id with #")
-        self.assertIn('string(app-status)', html,
-            "Page header must include string(app-status) for DRAFT label")
+            "Page header must show internal_id with # prefix")
+        # Verify page header contains the rendered internal ID
+        self.assertIn(f'content: "#{app.internal_id}"', html,
+            "Page header must show the actual internal_id value")
 
-    def test_render_pdf_html_excludes_draft_label_for_non_draft_status(self):
-        """render_pdf_html does not include DRAFT label when status is not DRAFT.
+    def test_render_pdf_html_excludes_draft_watermark_overlay_for_non_draft_status(self):
+        """render_pdf_html does not include DRAFT watermark for non-DRAFT status.
 
         This test verifies that:
-        1. A status marker element is present in the HTML
-        2. When application status is NOT DRAFT, data-status attribute is empty
-        3. The page header shows only the internal ID without DRAFT suffix
+        1. The PDF context includes is_draft=False for non-DRAFT applications
+        2. The @prince-overlay CSS rule is NOT present for non-DRAFT applications
+        3. Status marker element is NOT present (old implementation removed)
+        4. Page header shows clean internal ID without any watermark
         """
         # Create an application with SUBMITTED status
         questionnaire = Questionnaire.objects.create(
@@ -893,22 +906,392 @@ class PDFContextBuildingTests(TestCase):
             },
         )
 
+        # Verify context is_draft flag
+        context = app.build_pdf_context()
+        self.assertFalse(context["is_draft"],
+            "Context must include is_draft=False for non-DRAFT applications")
+
         # Render the PDF HTML
         html = app.render_pdf_html()
 
-        # Verify 1: Status marker element is present but empty
-        self.assertIn('class="status-marker"', html,
-            "Status marker element must be present in HTML")
-        self.assertIn('data-status=""', html,
-            "Status marker must have empty data-status for non-DRAFT applications")
+        # Verify 1: @prince-overlay watermark CSS is NOT present for non-DRAFT
+        self.assertNotIn("@prince-overlay", html,
+            "@prince-overlay rule must NOT be present for non-DRAFT applications")
+        self.assertNotIn('content: "DRAFT"', html,
+            "DRAFT watermark text must NOT be present for non-DRAFT applications")
 
-        # Verify 2: CSS string-set rule is still present
-        self.assertIn("string-set: app-status attr(data-status)", html,
-            "CSS must include string-set rule even for non-DRAFT applications")
+        # Verify 2: Status marker element is NOT present (old implementation removed)
+        self.assertNotIn('class="status-marker"', html,
+            "Status marker element must NOT be present (old implementation removed)")
+        self.assertNotIn("string-set: app-status", html,
+            "string-set CSS rule must NOT be present (old implementation removed)")
 
-        # Verify 3: @top-left page header shows internal ID (without DRAFT suffix)
-        # The content property should show the internal ID followed by empty status string
+        # Verify 3: Page header shows clean internal ID without any suffix
         self.assertIn('content: "#', html,
-            "Page header must show internal_id with #")
-        self.assertIn('string(app-status)', html,
-            "Page header must include string(app-status) function")
+            "Page header must show internal_id with # prefix")
+        # Verify page header contains the rendered internal ID
+        self.assertIn(f'content: "#{app.internal_id}"', html,
+            "Page header must show the actual internal_id value")
+
+    def test_render_pdf_html_includes_metadata_page_for_all_statuses(self):
+        """render_pdf_html includes application metadata information page for all statuses.
+
+        This test verifies that:
+        1. The metadata page HTML structure is present
+        2. The metadata page has the correct header "Application Information"
+        3. The metadata page appears after application content (page break)
+        4. The metadata page is included regardless of application status
+        """
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="metadata-test",
+            name="Metadata Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Test Question",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="DRAFT",
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": "test answer"
+                        }
+                    }
+                ]
+            },
+        )
+
+        html = app.render_pdf_html()
+
+        # Verify 1: Metadata page HTML structure is present
+        self.assertIn('class="metadata-page"', html,
+            "Metadata page container must be present")
+
+        # Verify 2: Metadata page has correct header
+        self.assertIn('class="metadata-page-header"', html,
+            "Metadata page header element must be present")
+        self.assertIn("Application Information", html,
+            "Metadata page must have 'Application Information' header")
+
+        # Verify 3: Metadata page uses page-break-before for separation
+        self.assertIn("page-break-before: always", html,
+            "Metadata page must have page break to separate from content")
+
+        # Verify 4: Metadata page is included regardless of status
+        # This test uses DRAFT; non-DRAFT status is tested separately
+        self.assertIn('class="metadata-table"', html,
+            "Metadata table must be present for all application statuses")
+
+    def test_metadata_page_contains_questionnaire_details_section(self):
+        """Metadata page displays questionnaire details in a dedicated section.
+
+        This test verifies that:
+        1. Questionnaire details section header is present
+        2. Process name is displayed
+        3. Questionnaire name is displayed
+        4. Questionnaire version is displayed
+        5. Questionnaire last modified date is displayed in full date format
+        """
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="quest-section-test",
+            name="Test Questionnaire Name",
+            version=3,
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "questions": [
+                                    {
+                                        "label": "Q1",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="SUBMITTED",
+            document={"steps": [{"answers": {"0-0": "test"}}]},
+        )
+
+        html = app.render_pdf_html()
+
+        # Verify 1: Questionnaire section header
+        self.assertIn("QUESTIONNAIRE DETAILS", html,
+            "Questionnaire details section header must be present")
+
+        # Verify 2: Process name is displayed
+        self.assertIn(self.process.name, html,
+            "Process name must be displayed in metadata")
+
+        # Verify 3: Questionnaire name is displayed
+        self.assertIn("Test Questionnaire Name", html,
+            "Questionnaire name must be displayed in metadata")
+
+        # Verify 4: Questionnaire version is displayed
+        self.assertIn(">3<", html,  # Wrapped in tags to ensure it's the version value
+            "Questionnaire version must be displayed in metadata")
+
+        # Verify 5: Questionnaire updated_at is displayed with full month format
+        self.assertIn("Questionnaire last modified on", html,
+            "Questionnaire last modified label must be present")
+        # Date format should use full month name (j F Y format)
+        # E.g., "15 October 2026" not "15 Oct 2026"
+        self.assertNotIn(" Oct ", html,  # Ensure abbreviated month is NOT present
+            "Date should use full month name, not abbreviated")
+
+    def test_metadata_page_contains_application_details_section(self):
+        """Metadata page displays application details in a dedicated section.
+
+        This test verifies that:
+        1. Application details section header is present
+        2. Application ID is displayed with # prefix
+        3. Application key (UUID) is displayed
+        4. Current status is displayed in human-readable format
+        5. Applicant full name is displayed
+        6. Applicant email is displayed
+        7. Created on date is displayed in full format
+        8. Last modified on date is displayed in full format
+        """
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="app-section-test",
+            name="App Details Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "questions": [
+                                    {
+                                        "label": "Q1",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status=ApplicationStatus.UNDER_REVIEW,
+            document={"steps": [{"answers": {"0-0": "test"}}]},
+        )
+
+        html = app.render_pdf_html()
+
+        # Verify 1: Application section header
+        self.assertIn("APPLICATION DETAILS", html,
+            "Application details section header must be present")
+
+        # Verify 2: Application ID with # prefix
+        self.assertIn(f"#{app.internal_id}", html,
+            "Application ID must be displayed with # prefix")
+
+        # Verify 3: Application key (UUID)
+        self.assertIn(str(app.key), html,
+            "Application key (UUID) must be displayed")
+
+        # Verify 4: Current status in human-readable format
+        self.assertIn("Under Review", html,  # UNDER_REVIEW status displays as "Under Review"
+            "Current status must be displayed in human-readable format")
+
+        # Verify 5: Applicant full name
+        full_name = f"{self.user.first_name} {self.user.last_name}"
+        self.assertIn(full_name, html,
+            "Applicant full name must be displayed")
+
+        # Verify 6: Applicant email
+        self.assertIn(self.user.email, html,
+            "Applicant email must be displayed")
+
+        # Verify 7: Created on with full date format
+        self.assertIn("Created on", html,
+            "Created on label must be present")
+        # Ensure full month name is used (j F Y format: day Month Year)
+        self.assertNotIn(" Oct ", html,
+            "Dates should use full month name")
+
+        # Verify 8: Last modified on with full date format
+        self.assertIn("Last modified on", html,
+            "Last modified on label must be present")
+
+    def test_metadata_page_conditional_submitted_timestamp_display(self):
+        """Metadata page displays submitted timestamp only for submitted applications.
+
+        This test verifies that:
+        1. For DRAFT applications without submitted_at: no submitted timestamp row
+        2. For SUBMITTED applications: "Formally submitted on" row is present
+        3. Submitted timestamp uses full date format
+        """
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="submitted-ts-test",
+            name="Submitted TS Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "questions": [
+                                    {
+                                        "label": "Q1",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        # Test 1: DRAFT application (no submitted_at)
+        draft_app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="DRAFT",
+            document={"steps": [{"answers": {"0-0": "test"}}]},
+        )
+
+        draft_html = draft_app.render_pdf_html()
+
+        # For DRAFT: submitted_at is None, so "Formally submitted on" row should NOT appear
+        self.assertNotIn("Formally submitted on", draft_html,
+            "DRAFT application should not have 'Formally submitted on' row")
+
+        # Test 2: SUBMITTED application (with submitted_at)
+        submitted_app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="SUBMITTED",
+            document={"steps": [{"answers": {"0-0": "test"}}]},
+            submitted_at=timezone.now(),
+        )
+
+        submitted_html = submitted_app.render_pdf_html()
+
+        # For SUBMITTED: submitted_at is set, so row should appear
+        self.assertIn("Formally submitted on", submitted_html,
+            "SUBMITTED application must have 'Formally submitted on' row")
+
+    def test_metadata_page_uses_metadata_table_styling(self):
+        """Metadata page uses appropriate styling classes for visual distinction.
+
+        This test verifies that:
+        1. Metadata table uses metadata-table class
+        2. Section headers use metadata-section-header class with blue background
+        3. Labels use metadata-label class with grey background
+        4. Values use metadata-value class with white background
+        """
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="styling-test",
+            name="Styling Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "questions": [
+                                    {
+                                        "label": "Q1",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="DRAFT",
+            document={"steps": [{"answers": {"0-0": "test"}}]},
+        )
+
+        html = app.render_pdf_html()
+
+        # Verify 1: Metadata table styling class
+        self.assertIn('class="metadata-table"', html,
+            "Metadata table must use metadata-table class")
+
+        # Verify 2: Section headers use styling class
+        self.assertIn('class="metadata-section-header"', html,
+            "Section headers must use metadata-section-header class")
+
+        # Verify 3: Labels use styling class
+        self.assertIn('class="metadata-label"', html,
+            "Labels must use metadata-label class")
+
+        # Verify 4: Values use styling class
+        self.assertIn('class="metadata-value"', html,
+            "Values must use metadata-value class")
+
+        # Verify 5: Section headers span full width (colspan="2")
+        self.assertIn('colspan="2"', html,
+            "Section headers must span full table width with colspan=2")

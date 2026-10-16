@@ -1,5 +1,4 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RestoreIcon from '@mui/icons-material/Restore';
 import Alert from '@mui/material/Alert';
@@ -23,7 +22,8 @@ import type { IAuthorisationProcess } from '../../../context/types/Questionnaire
 import { openNewTab } from '../../../context/Utils';
 import { ApplicationIdDisplay } from '../../Common';
 import {
-    downloadableStatuses,
+    AttachmentsButton,
+    PdfDownloadButton,
     formatRelativeDates,
     formatStatusLabel,
 } from './applicationUtils';
@@ -72,9 +72,7 @@ export const ApplicationCard = ({
     const { createdAtRelative, updatedAtRelative } = formatRelativeDates(displayedApplication);
 
     const isTerminated = terminatedStatuses.includes(displayedApplication.status);
-    const isDownloadable = downloadableStatuses.has(displayedApplication.status);
     const isEditable = displayedApplication.status === "DRAFT";
-    const isDiscarded = displayedApplication.status === "DISCARDED";
 
     /**
      * Initiates the discard workflow by sending a status update request to the API.
@@ -125,7 +123,14 @@ export const ApplicationCard = ({
     return (
         <ListItem className="mb-4">
             <Card className="p-8 w-full rounded-lg!" elevation={4}>
-                <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
+                {/* Header: Application ID on left, PDF/Files on right */}
+                <Box className="flex justify-between items-start mb-4 gap-4">
+                    <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
+                    <Box className="flex gap-1">
+                        <AttachmentsButton application={displayedApplication} />
+                        <PdfDownloadButton applicationKey={application.key} />
+                    </Box>
+                </Box>
 
                 <Box className="flex gap-2 my-4 flex-wrap justify-around">
                     <Chip label={process.name} size="small" variant="outlined" />
@@ -142,7 +147,7 @@ export const ApplicationCard = ({
                 <Box className="my-8 w-9/10 mx-auto flex items-center min-h-20">
                     {isTerminated ? (
                         <Alert severity="info" className="w-full">
-                            <strong>{isDiscarded ? 'Application Discarded' : 'Application Withdrawn'}</strong>
+                            <strong>Application Terminated</strong>
                         </Alert>
                     ) : (
                         <Stepper
@@ -184,8 +189,8 @@ export const ApplicationCard = ({
                         </Tooltip>
                     )}
 
-                    {/* Revert button on left—only for discarded applications. */}
-                    {isDiscarded && (
+                    {/* Revert button on left—only for terminated applications. */}
+                    {isTerminated && (
                         <Tooltip title="Revert to draft" placement="bottom" arrow>
                             <Button
                                 variant="outlined"
@@ -198,28 +203,8 @@ export const ApplicationCard = ({
                         </Tooltip>
                     )}
 
-                    {/* Download and Continue buttons—push to the right. */}
+                    {/* Continue button—push to the right. */}
                     <Box className="ml-auto flex gap-1">
-                        {/* Render the PDF action only for downloadable statuses. */}
-                        {isDownloadable && (
-                            <Tooltip title="Download application PDF" placement="bottom" arrow>
-                                <Link
-                                    target="_blank"
-                                    rel="noopener"
-                                    aria-label="Download application PDF"
-                                    href={`/d/${application.key}`}
-                                >
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        startIcon={<DownloadIcon />}
-                                    >
-                                        Download
-                                    </Button>
-                                </Link>
-                            </Tooltip>
-                        )}
-
                         {/* Render the continue action only for editable applications. */}
                         {isEditable && (
                             <Tooltip title="Continue editing application" placement="bottom" arrow>

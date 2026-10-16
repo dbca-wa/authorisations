@@ -1,5 +1,3 @@
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import DownloadIcon from '@mui/icons-material/Download';
 import EmailIcon from '@mui/icons-material/Email';
 import HistoryIcon from '@mui/icons-material/History';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
@@ -10,53 +8,21 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
-import Link from '@mui/material/Link';
 import ListItem from "@mui/material/ListItem";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
-import { useState } from 'react';
 import { ApiManager } from '../../../context/ApiManager';
-import { useDialog, useResolvedPromise, useSnackbar } from '../../../context/Hooks';
-import type { ApplicationStatus, IApplicationAttachment, IApplicationData } from "../../../context/types/Application";
+import { useDialog, useSnackbar } from '../../../context/Hooks';
+import type { ApplicationStatus, IApplicationData } from "../../../context/types/Application";
 import type { IAuthorisationProcess } from '../../../context/types/Questionnaire';
-import { ApplicationIdDisplay, FileAttachmentList } from '../../Common';
+import { ApplicationIdDisplay } from '../../Common';
 import {
+    AttachmentsButton,
+    PdfDownloadButton,
     formatRelativeDates,
     formatStatusLabel,
 } from './applicationUtils';
-import { EmptyStateComponent } from './EmptyState';
-import { LoadingState } from './LoadingState';
-
-/**
- * Dialog content component for displaying application attachments.
- * Fetches attachments on mount and displays them in a grid with download functionality.
- * Shows loading state while fetching and empty state if no attachments are available.
- */
-export const AttachmentsDialogContent = ({
-    application,
-}: {
-    application: IApplicationData;
-}) => {
-    const attachmentsPromise = useState(() =>
-        ApiManager.getApplicationAttachments(application.key)
-    )[0];
-    const [attachments, isLoading] = useResolvedPromise<IApplicationAttachment[]>(
-        attachmentsPromise,
-        []
-    );
-
-    if (isLoading) {
-        return <LoadingState />;
-    }
-
-    if (attachments.length === 0) {
-        return <EmptyStateComponent />;
-    }
-
-    return <FileAttachmentList attachments={attachments} canEdit={false} fullWidth={true} />;
-};
 
 /**
  * Renders an application summary card for technical officers in the review queue.
@@ -82,13 +48,6 @@ export const ReviewCard = ({
     const questionnaireName = `${application.questionnaire_name} (v${application.questionnaire_version})`;
     const statusCapitalised = formatStatusLabel(application.status);
     const { createdAtRelative, updatedAtRelative, submittedAtRelative } = formatRelativeDates(application);
-
-    const handleFilesClick = () => {
-        showDialog({
-            title: `Attachments for #${application.internal_id}`,
-            content: <AttachmentsDialogContent application={application} />,
-        });
-    };
 
     const handleEmailClick = () => {
         navigator.clipboard.writeText(application.owner_email)
@@ -234,32 +193,8 @@ export const ReviewCard = ({
                 <Box className="flex justify-between items-start mb-4 gap-4">
                     <ApplicationIdDisplay internalId={application.internal_id} variant="h6" />
                     <Box className="flex gap-1">
-                        <Tooltip title="View attachments" placement="top" arrow>
-                            <IconButton
-                                color="secondary"
-                                size="large"
-                                aria-label="View attachments"
-                                onClick={handleFilesClick}
-                            >
-                                <AttachFileIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Link
-                            target="_blank"
-                            rel="noopener"
-                            aria-label="Download application PDF"
-                            href={`/d/${application.key}`}
-                        >
-                            <Tooltip title="Download PDF" placement="top" arrow>
-                                <IconButton
-                                    color="primary"
-                                    size="large"
-                                    aria-label="Download PDF"
-                                >
-                                    <DownloadIcon />
-                                </IconButton>
-                            </Tooltip>
-                        </Link>
+                        <AttachmentsButton application={application} />
+                        <PdfDownloadButton applicationKey={application.key} />
                     </Box>
                 </Box>
 
