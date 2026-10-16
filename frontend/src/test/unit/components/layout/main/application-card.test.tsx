@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApplicationCard } from "../../../../../components/layout/main/ApplicationCard";
@@ -80,33 +80,74 @@ describe("ApplicationCard", () => {
     expect(openNewTabSpy).toHaveBeenCalledWith("/a/app-key-1", "app-key-1");
   });
 
-  it("shows download button for downloadable statuses", () => {
-    const application = makeApplication({ status: "SUBMITTED", key: "app-key-123" });
-    
-    render(
-      <ApplicationCard
-        process={makeProcess()}
-        application={application}
-        onStatusChanged={vi.fn()}
-      />,
-    );
+  describe("file and download buttons", () => {
+    it("displays the attachments button", () => {
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={makeApplication()}
+          onStatusChanged={vi.fn()}
+        />,
+      );
 
-    const downloadLink = screen.getByRole("link", { name: "Download application PDF" });
-    expect(downloadLink).toHaveAttribute("href", `/d/${application.key}`);
-  });
+      expect(screen.getByRole("button", { name: "View attachments" })).toBeInTheDocument();
+    });
 
-  it("shows download button for DRAFT status (preview purposes)", () => {
-    const application = makeApplication({ status: "DRAFT" });
-    render(
-      <ApplicationCard
-        process={makeProcess()}
-        application={application}
-        onStatusChanged={vi.fn()}
-      />,
-    );
+    it("opens attachments dialog when attachments button is clicked", async () => {
+      const application = makeApplication({ internal_id: "app-draft-1" });
 
-    const downloadLink = screen.getByRole("link", { name: "Download application PDF" });
-    expect(downloadLink).toHaveAttribute("href", `/d/${application.key}`);
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={application}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "View attachments" }));
+
+      await waitFor(() => {
+        expect(showDialogMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: `Attachments for #${application.internal_id}`,
+            content: expect.anything(),
+          })
+        );
+      });
+    });
+
+    it("shows download button for downloadable statuses", () => {
+      const application = makeApplication({ status: "SUBMITTED", key: "app-key-123" });
+      
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={application}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      const downloadLink = screen.getByRole("link", { name: "Download application PDF" });
+      expect(downloadLink).toHaveAttribute("href", `/d/${application.key}`);
+      expect(downloadLink).toHaveAttribute("target", "_blank");
+      expect(downloadLink).toHaveAttribute("rel", "noopener");
+    });
+
+    it("shows download button for DRAFT status (preview purposes)", () => {
+      const application = makeApplication({ status: "DRAFT", key: "app-key-draft" });
+      render(
+        <ApplicationCard
+          process={makeProcess()}
+          application={application}
+          onStatusChanged={vi.fn()}
+        />,
+      );
+
+      const downloadLink = screen.getByRole("link", { name: "Download application PDF" });
+      expect(downloadLink).toHaveAttribute("href", `/d/${application.key}`);
+      expect(downloadLink).toHaveAttribute("target", "_blank");
+      expect(downloadLink).toHaveAttribute("rel", "noopener");
+    });
   });
 
   it("does not display review button", () => {
