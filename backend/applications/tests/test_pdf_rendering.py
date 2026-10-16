@@ -1295,3 +1295,63 @@ class PDFContextBuildingTests(TestCase):
         # Verify 5: Section headers span full width (colspan="2")
         self.assertIn('colspan="2"', html,
             "Section headers must span full table width with colspan=2")
+
+    def test_metadata_page_has_empty_footer(self):
+        """Metadata page footer should be empty and not display breadcrumb information.
+
+        The metadata page is a separate information page, not part of the application
+        content. The breadcrumb footer information (current section/step) is misleading
+        on this page, so it should be suppressed and the footer should be empty.
+
+        This test verifies that:
+        1. Metadata page div uses the 'page: metadata-page' CSS class
+        2. The @page metadata-page rule suppresses breadcrumb footer content
+        """
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="footer-test",
+            name="Footer Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "questions": [
+                                    {
+                                        "label": "Q1",
+                                        "type": "text",
+                                        "is_required": False,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            status="DRAFT",
+            document={"steps": [{"answers": {"0-0": "test"}}]},
+        )
+
+        html = app.render_pdf_html()
+
+        # Verify 1: Metadata page div exists and uses metadata-page class
+        self.assertIn('<div class="metadata-page">', html,
+            "Metadata page must have metadata-page class")
+
+        # Verify 2: CSS rule for metadata page exists to suppress footer
+        self.assertIn('@page metadata-page', html,
+            "CSS must include @page metadata-page rule to control footer styling")
+
+        # Verify 3: Metadata page CSS suppresses breadcrumb footer
+        self.assertIn('@bottom-left', html,
+            "CSS must include @bottom-left footer definition")

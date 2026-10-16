@@ -385,7 +385,13 @@
       /* Metadata information page */
       .metadata-page {
         page-break-before: always;
-        margin-top: 30px;
+        page: metadata-page;
+      }
+
+      @page metadata-page {
+        @bottom-left {
+          content: "";
+        }
       }
 
       .metadata-page-header {
@@ -402,11 +408,6 @@
       .metadata-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 0;
-      }
-
-      .metadata-table tr {
-        border: 1px solid #999;
       }
 
       .metadata-table td {
@@ -416,6 +417,7 @@
         vertical-align: top;
         overflow-wrap: break-word;
         word-break: break-word;
+        border: 1px solid #999;
       }
 
       .metadata-section-header {
@@ -423,7 +425,7 @@
         color: #ffffff;
         font-weight: 700;
         font-size: 12px;
-        padding: 8px 12px !important;
+        padding: 8px 12px;
         letter-spacing: 0.5px;
       }
 
@@ -432,7 +434,6 @@
         font-weight: 700;
         color: #222;
         width: 35%;
-        border-right: 1px solid #999;
       }
 
       .metadata-value {
