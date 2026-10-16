@@ -844,8 +844,11 @@ class PDFContextBuildingTests(TestCase):
             "string(app-status) reference must NOT be present in page headers")
 
         # Verify 3: Page header shows clean internal ID without DRAFT suffix
-        self.assertIn('content: "#{{ application.internal_id }}"', html,
-            "Page header must show internal_id without DRAFT suffix")
+        self.assertIn('content: "#', html,
+            "Page header must show internal_id with # prefix")
+        # Verify page header contains the rendered internal ID
+        self.assertIn(f'content: "#{app.internal_id}"', html,
+            "Page header must show the actual internal_id value")
 
     def test_render_pdf_html_excludes_draft_label_for_non_draft_status(self):
         """render_pdf_html does not include DRAFT watermark for non-DRAFT status.
@@ -922,5 +925,8 @@ class PDFContextBuildingTests(TestCase):
             "string-set CSS rule must NOT be present (old implementation removed)")
 
         # Verify 3: Page header shows clean internal ID without any suffix
-        self.assertIn('content: "#{{ application.internal_id }}"', html,
-            "Page header must show only internal_id without status suffix")
+        self.assertIn('content: "#', html,
+            "Page header must show internal_id with # prefix")
+        # Verify page header contains the rendered internal ID
+        self.assertIn(f'content: "#{app.internal_id}"', html,
+            "Page header must show the actual internal_id value")
