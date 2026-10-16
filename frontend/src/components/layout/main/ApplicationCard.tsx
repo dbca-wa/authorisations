@@ -74,7 +74,6 @@ export const ApplicationCard = ({
     const isTerminated = terminatedStatuses.includes(displayedApplication.status);
     const isDownloadable = downloadableStatuses.has(displayedApplication.status);
     const isEditable = displayedApplication.status === "DRAFT";
-    const isDiscarded = displayedApplication.status === "DISCARDED";
 
     /**
      * Initiates the discard workflow by sending a status update request to the API.
@@ -142,7 +141,7 @@ export const ApplicationCard = ({
                 <Box className="my-8 w-9/10 mx-auto flex items-center min-h-20">
                     {isTerminated ? (
                         <Alert severity="info" className="w-full">
-                            <strong>{isDiscarded ? 'Application Discarded' : 'Application Withdrawn'}</strong>
+                            <strong>Application Terminated</strong>
                         </Alert>
                     ) : (
                         <Stepper
@@ -184,8 +183,8 @@ export const ApplicationCard = ({
                         </Tooltip>
                     )}
 
-                    {/* Revert button on left—only for discarded applications. */}
-                    {isDiscarded && (
+                    {/* Revert button on left—only for terminated applications. */}
+                    {isTerminated && (
                         <Tooltip title="Revert to draft" placement="bottom" arrow>
                             <Button
                                 variant="outlined"
