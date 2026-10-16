@@ -5,8 +5,9 @@ import { ApplicationCard } from "../../../../../components/layout/main/Applicati
 import * as UtilsModule from "../../../../../context/Utils";
 import { makeApplication, makeProcess } from "../../../fixtures";
 
-const { showSnackbarMock } = vi.hoisted(() => ({
+const { showSnackbarMock, showDialogMock } = vi.hoisted(() => ({
   showSnackbarMock: vi.fn(),
+  showDialogMock: vi.fn(),
 }));
 
 vi.mock("../../../../../context/Hooks", async () => {
@@ -14,6 +15,7 @@ vi.mock("../../../../../context/Hooks", async () => {
   return {
     ...actual,
     useSnackbar: () => ({ showSnackbar: showSnackbarMock }),
+    useDialog: () => ({ showDialog: showDialogMock }),
   };
 });
 
@@ -93,16 +95,18 @@ describe("ApplicationCard", () => {
     expect(downloadLink).toHaveAttribute("href", `/d/${application.key}`);
   });
 
-  it("hides download button for non-downloadable statuses", () => {
+  it("shows download button for DRAFT status (preview purposes)", () => {
+    const application = makeApplication({ status: "DRAFT" });
     render(
       <ApplicationCard
         process={makeProcess()}
-        application={makeApplication({ status: "DRAFT" })}
+        application={application}
         onStatusChanged={vi.fn()}
       />,
     );
 
-    expect(screen.queryByRole("link", { name: "Download application PDF" })).not.toBeInTheDocument();
+    const downloadLink = screen.getByRole("link", { name: "Download application PDF" });
+    expect(downloadLink).toHaveAttribute("href", `/d/${application.key}`);
   });
 
   it("does not display review button", () => {
