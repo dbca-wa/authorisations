@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.2.1] - Unreleased
+## [1.2.1] - 2026-10-19
 
 ### Added
 
@@ -16,8 +16,9 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 ### Changed
 
-- Enabled the "View attachments" and "Download PDF" buttons on application cards for draft applications, allowing users to preview and download PDFs even before submission.
+- Enabled the "View attachments" and "Download PDF" buttons on application cards for all applications including drafts, allowing users to preview and download attachments as well as PDFs even before submission.
 - Improved PostgreSQL development setup with Docker Compose for simplified local development configuration.
+- Changed Kustomize HPA metric for CPU target from "Utilization" to "AverageValue" for more accurate scaling based on actual CPU usage.
 
 ## [1.2.0] - 2026-10-05
 
