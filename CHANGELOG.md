@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## [1.2.1] - 2026-10-19
+
+### Added
+
+- Added "DRAFT" watermark to the PDF template, displayed as a diagonal overlay on every page of draft applications to clearly distinguish them from final submissions.
+- Added application metadata information page to the PDF template, displaying questionnaire details, applicant information, and application lifecycle timestamps.
+
+### Changed
+
+- Enabled the "View attachments" and "Download PDF" buttons on application cards for all applications including drafts, allowing users to preview and download attachments as well as PDFs even before submission.
+- Improved PostgreSQL development setup with Docker Compose for simplified local development configuration.
+- Changed Kustomize HPA metric for CPU target from "Utilization" to "AverageValue" for more accurate scaling based on actual CPU usage.
+
 ## [1.2.0] - 2026-10-05
 
 **Requires JSON Schema Migration**

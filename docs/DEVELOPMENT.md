@@ -10,101 +10,138 @@ This document covers setup, installation, and running the application locally fo
 - Node.js 26 and npm 11.x: https://nodejs.org/
   - **npm Version Alignment:** Local development must use npm 11.x. The Docker base image (`node:22-trixie-slim`) includes npm 10.9.9, which the Dockerfile automatically upgrades to npm 11.x to ensure lock file compatibility. If you encounter `npm ci` failures in Docker builds after transitive dependency upgrades, verify your local npm version matches the Dockerfile upgrade target using `npm --version`.
 
-## Create the database
-
-This application runs on PostgreSQL. The easiest way to run a PostgreSQL instance is via a Docker image.
-
-Pull the latest PostgreSQL image:
-
-```bash
-docker pull postgres
-```
-
-Create a Docker volume to persist the database:
-
-```bash
-docker volume create pgdata
-```
-
-Run the PostgreSQL container (set the `postgres` user password, mount the persistent data volume and expose the port):
-
-```bash
-docker run -d --name psql -e POSTGRES_PASSWORD=mysecretpassword -v pgdata:/var/lib/postgresql -p 5432:5432 postgres
-```
-
-Check the container is running:
-
-```bash
-docker ps
-```
-
-Next time you can start the container with:
-
-```bash
-docker start psql
-```
-
-Once the database is up and running, create the application database and user. Ideally there should be a dedicated database user (not the `postgres` superuser) and the database owner should be that user. This can be achieved by pgAdmin, `psql` command line tool or any other PostgreSQL client.
-
 ## Get the source code
 
 ```bash
 cd ~/dev # or wherever
 git clone git@github.com:dbca-wa/authorisations.git
+cd authorisations
 ```
 
-## Setup the backend
+## Local environment (secrets) file
 
 Navigate to the backend directory and create a `.env` file from the template:
 
 ```bash
-cd authorisations/backend
+cd backend
 cp .env.template .env
 ```
 
-Edit the `.env` file and set the environment variables, including:
-- The database connection string with your newly created database and user
-- The full path for your local `PRIVATE_MEDIA_ROOT`
+Edit the `.env` file and set the required environment variables. Generate secure random values for:
+- `DJANGO_SECRET_KEY` — Use: `python -c 'import secrets; print(secrets.token_hex(25))'`
+- `POSTGRES_PASSWORD` — PostgreSQL superuser password
+- `DATABASE_PASSWORD` — Application database user password (use the same command above)
 
-Generate a Django secret key and add it to your `.env` file:
+**Important**: When you set `DATABASE_PASSWORD`, you must also duplicate that same value in the `DATABASE_URL` line:
 
-```bash
-cd backend && poetry run python -c 'import secrets; print(secrets.token_hex(25))'
+```env
+DATABASE_PASSWORD=your_generated_password_here
+DATABASE_URL=postgresql://authorisations_dev:your_generated_password_here@localhost:5432/authorisations_dev
 ```
 
-Install Python dependencies via Poetry (run within the `backend` directory):
+The password appears in both places - `DATABASE_PASSWORD` is used by the database initialization script, and `DATABASE_URL` is used by Django to connect.
+
+Also set:
+- `PRIVATE_MEDIA_ROOT` — Full path to your local media directory (replace `[user]` with your username)
+
+## Database
+
+This application runs on PostgreSQL 17 via Docker Compose.
+
+### Initial setup (first time only)
+
+Start the PostgreSQL container:
 
 ```bash
+cd backend
+docker compose --env-file .env -f postgresql.yml up -d
+```
+
+This creates:
+- Container: `authorisations_psql`
+- Database: `authorisations_dev`
+- Application user: `authorisations_dev`
+- Volume: `authorisations_postgres_data`
+
+### Starting and stopping the database
+
+Start the existing container:
+
+```bash
+docker start authorisations_psql
+```
+
+Stop the container:
+
+```bash
+docker stop authorisations_psql
+```
+
+View logs:
+
+```bash
+docker logs authorisations_psql
+```
+
+### Restoring a backup
+
+When setting up for the first time, you may need to restore a database backup from UAT.
+
+If you have a `.sql` backup file, restore it using:
+
+```bash
+cat ./path/to/backup.sql | docker exec -i authorisations_psql pg_restore --verbose --no-privileges --no-owner -U authorisations_dev -d authorisations_dev
+```
+
+The `--no-privileges` and `--no-owner` flags skip role and ownership restoration, which prevents errors when the backup contains users or roles that don't exist in your environment.
+
+## Setup backend
+
+Navigate to the backend directory and install Python dependencies via Poetry:
+
+```bash
+cd backend
 poetry install
 ```
 
 Poetry automatically creates a virtual environment within the same directory, which is git ignored.
 
-Apply the database migrations:
+Run database migrations (if starting with a fresh database, or to ensure you have the latest schema):
 
 ```bash
-cd backend && poetry run python manage.py migrate
+poetry run python manage.py migrate
 ```
 
-Create a superuser to access the admin interface on development environment:
+Create or designate a superuser to access the admin interface. You can use either method:
+
+**Method 1: Interactive prompt** (if you are starting with an empty database)
 
 ```bash
-cd backend && poetry run python manage.py createsuperuser
+poetry run python manage.py createsuperuser
 ```
 
-### Activate the virtual environment
+**Method 2: Set password on existing user** (if you already have a user account from the backup)
 
 ```bash
-source ~/dev/authorisations/backend/.venv/bin/activate
+poetry run python manage.py shell
 ```
 
-It is often practical to assign an alias to the above command in your `.bash_aliases` file:
+Then in the Python shell, run:
 
-```bash
-alias activate='source ~/dev/authorisations/backend/.venv/bin/activate'
+```python
+from django.contrib.auth import get_user_model
+User = get_user_model()
+user = User.objects.get(username='your_username')
+user.set_password('your_new_password')
+user.is_staff = True
+user.is_superuser = True
+user.save()
+exit()
 ```
 
-## Setup the frontend
+Replace `your_username` and `your_new_password` with your actual values.
+
+## Setup frontend
 
 Navigate to the frontend directory and install dependencies with npm:
 
@@ -113,21 +150,57 @@ cd ../frontend
 npm install
 ```
 
-## Run the application
+## Virtual environment
 
-### Backend
-
-Run the Django development server:
+### Activate the virtual environment
 
 ```bash
-cd backend && poetry run python manage.py runserver
+source ~/dev/authorisations/backend/.venv/bin/activate
 ```
 
-### Frontend
-
-In another terminal window, navigate to the `frontend` directory and run the npm development server:
+It is practical to assign an alias to activate the virtual environment in your `.bash_aliases` or `.bashrc` file:
 
 ```bash
+alias activate='source ~/dev/authorisations/backend/.venv/bin/activate'
+```
+
+Then you can simply run:
+
+```bash
+activate
+```
+
+## Development server
+
+### Starting the database and environment
+
+Start the PostgreSQL container:
+
+```bash
+docker start authorisations_psql
+```
+
+Activate the virtual environment:
+
+```bash
+activate
+```
+
+### Running the backend
+
+In one terminal, start the Django development server:
+
+```bash
+cd backend
+poetry run python manage.py runserver
+```
+
+### Running the frontend
+
+In another terminal, start the frontend development server:
+
+```bash
+cd frontend
 npm run dev
 ```
 
@@ -139,7 +212,7 @@ The application should be accessible in your web browser at `http://localhost:80
 - If the warning bothers you, create an empty `assets` directory in the `backend` folder (also git ignored):
 
 ```bash
-cd ../backend
+cd backend
 mkdir assets
 ```
 

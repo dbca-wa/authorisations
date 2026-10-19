@@ -403,6 +403,8 @@ class Application(models.Model):
             "logo_src": f"file://{settings.STATIC_ROOT}/images/Government_of_Western_Australia_logo.png",
             # Inlined so Prince never needs to resolve an external stylesheet URL.
             "pdf_icon_css": self._load_pdf_icon_css(),
+            # DRAFT watermark: only display for draft applications
+            "is_draft": self.status == ApplicationStatus.DRAFT,
         }
 
     def render_pdf_html(self):

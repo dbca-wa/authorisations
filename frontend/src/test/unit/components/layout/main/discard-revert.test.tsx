@@ -6,8 +6,9 @@ import { ApiManager } from "../../../../../context/ApiManager";
 import type { ApplicationStatus } from "../../../../../context/types/Application";
 import { makeApplication, makeProcess } from "../../../fixtures";
 
-const { showSnackbarMock } = vi.hoisted(() => ({
+const { showSnackbarMock, showDialogMock } = vi.hoisted(() => ({
   showSnackbarMock: vi.fn(),
+  showDialogMock: vi.fn(),
 }));
 
 vi.mock("../../../../../context/Hooks", async () => {
@@ -15,6 +16,7 @@ vi.mock("../../../../../context/Hooks", async () => {
   return {
     ...actual,
     useSnackbar: () => ({ showSnackbar: showSnackbarMock }),
+    useDialog: () => ({ showDialog: showDialogMock }),
   };
 });
 
