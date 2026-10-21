@@ -12,7 +12,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 ### Changed
 
 - **Backend security patch:** Updated certifi to 2026.10.19 (CA bundle fix for eMudhra/emSign incident) and 14 transitive dependencies. All 332 tests passing.
-- **Frontend security patch:** Pending transitive dependency updates for certificate chain security.
+- **Frontend security patch:** Updated 22 packages and 32 transitive dependencies for certificate chain security. All 340 unit tests and 63 E2E tests passing.
 
 ## [1.2.1] - 2026-10-19
 
