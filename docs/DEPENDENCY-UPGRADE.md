@@ -2,11 +2,11 @@
 
 This document provides a comprehensive, process-driven approach to upgrading both backend and frontend dependencies. It consolidates learnings from multiple upgrade sessions, breaking-change investigations, and test validations.
 
-**Last Updated:** 2026-09-30 (Completed: Sessions 1-3 with 50 total package upgrades — 21 backend + 29 frontend including react-router v8, react-dropzone v20, msw v3, testing infrastructure, and Node 26 alignment)
+**Last Updated:** 2026-10-21 (Completed: Sessions 1-4 with 65+ total package upgrades — 21+15 backend + 29 frontend across reliability, security, and CA certificate incident response workflows)
 
 **Status Summary:**
-- ✅ **Deployable Now:** 311 frontend unit tests + 326 backend tests + 63 E2E tests all passing
-- ✅ **50 packages upgraded:** 21 backend patches + 29 frontend (including major versions: react-router v8, react-dropzone v20, msw v3)
+- ✅ **Deployable Now:** 332 backend tests + 311 frontend unit tests + 63 E2E tests all passing
+- ✅ **65+ packages upgraded:** 36 backend (21 Session 3 + 15 Session 4 transitive) + 29 frontend
 - ⏸️ **3 dependencies intentionally deferred:** Django 6.1 (backend), TypeScript 7.x (frontend), vitest v5 (frontend)
 
 ---
@@ -28,6 +28,8 @@ This document provides a comprehensive, process-driven approach to upgrading bot
 - **Test after every step** — Validate each group of upgrades before proceeding
 - **Lock file synchronization** — Always sync lock files after constraint changes
 - **Backend and frontend are separate workflows** — Handle independently with their own cycles
+- **No git operations** — AI agent is completely prohibited from executing any git write operations (commit, push, add, reset, merge, etc.). Permitted: read-only operations only (status, log, diff, show). User handles all git operations.
+- **Keep documentation concise** — Session summaries and CHANGELOG entries must be minimal and factual. Avoid excessive technical details, avoid repeating information already documented elsewhere. One sentence per major change, link to detailed documentation only where needed.
 
 ---
 
@@ -654,3 +656,15 @@ All completed with comprehensive testing:
 - Node 26 currently emits experimental warnings for global `localStorage` during Vitest worker startup when no `--localstorage-file` option is provided; this is warning noise only and does not indicate test failures.
 - **Remaining blockers:** typescript 7.0.2 (defer to v7.1+), vitest 5.x (defer to ecosystem stabilisation)
 - **Key Learnings:** Type declaration conflicts between interdependent packages are ecosystem compatibility issues; never hide incompatibilities with compiler flags; defer incompatible versions until ecosystem stabilises. Major version library upgrades with clear breaking-change documentation enable zero-risk deployments; client-side SPAs have minimal surface area for v8 migration; comprehensive test suite validates complex multi-package upgrade sessions.
+
+### Session 4 (2026-10-21): Security Patch Response to eMudhra/emSign CA Certificate Incident
+
+**Backend - 15 Transitive Dependency Updates**
+- certifi 2026.10.19 (CA bundle security fix), playwright 1.64.0, pytest-playwright 0.10.0, pyee 14.0.0, pycparser 3.11, and 10 other transitive patches
+- All 332 backend tests passing
+- Group C (blocked): Django 6.1.2 (deferred per policy)
+
+**Frontend - 32 Transitive Dependency Updates**
+- Updated 22 direct packages (react, @mui, vite, vitest, eslint, typescript-eslint, and others) plus 32 transitive upgrades
+- All 340 unit tests passing; all 63 E2E tests passing
+- No high severity vulnerabilities remaining
