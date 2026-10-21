@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## [1.2.2] - [Unreleased]
+
+### Changed
+
+- **Backend security patch:** Updated certifi to 2026.10.19 (CA bundle fix for eMudhra/emSign incident) and 14 transitive dependencies. All 332 tests passing.
+- **Frontend security patch:** Pending transitive dependency updates for certificate chain security.
+
 ## [1.2.1] - 2026-10-19
 
 ### Added
