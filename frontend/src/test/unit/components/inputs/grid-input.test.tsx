@@ -172,7 +172,7 @@ describe("GridInput", () => {
     await user.click(screen.getByRole("button", { name: "Edit text" }));
 
     const dialog = screen.getByRole("dialog", { name: "Notes" });
-    const notesInput = within(dialog).getByRole("textbox", { name: "Notes" });
+    const notesInput = within(dialog).getByRole("textbox");
     await user.clear(notesInput);
     await user.type(notesInput, "Updated multiline details for this location");
     await user.click(within(dialog).getByRole("button", { name: "Apply" }));
@@ -212,7 +212,7 @@ describe("GridInput", () => {
     await user.click(screen.getByRole("button", { name: "Edit text" }));
 
     const dialog = screen.getByRole("dialog", { name: "Notes" });
-    const notesInput = within(dialog).getByRole("textbox", { name: "Notes" });
+    const notesInput = within(dialog).getByRole("textbox");
     await user.clear(notesInput);
     await user.type(notesInput, "This change should be discarded");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
