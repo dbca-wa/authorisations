@@ -303,15 +303,15 @@ export function GridInput({
     const columns: GridColDef[] = getHeaders({
         question,
         rowModesModel,
+        handleEditClick,
+        handleDeleteClick,
+        handleSaveClick,
+        handleCancelClick,
         onLongTextApply: (id, field, value) => {
             setRows((previousRows) => previousRows.map((row) => (
                 row._id === id ? { ...row, [field]: value } : row
             )));
         },
-        handleEditClick,
-        handleDeleteClick,
-        handleSaveClick,
-        handleCancelClick,
     });
 
     return (

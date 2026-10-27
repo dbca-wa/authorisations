@@ -166,8 +166,9 @@ def test_grid_question_distinguishes_text_and_textarea_business_inputs(
 
         page.get_by_role("button", name="Edit text").first.click()
         assert page.get_by_role("dialog", name="Notes").is_visible()
-        page.get_by_role("textbox", name="Notes").fill("Expanded long-text details")
+        page.get_by_role("textbox").fill("Expanded long-text details")
         page.get_by_role("button", name="Apply").click()
+        page.get_by_role("button", name="Save").first.click()
         assert page.get_by_text("Expanded long-text details", exact=True).is_visible()
     finally:
         page.close()
