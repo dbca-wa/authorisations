@@ -13,6 +13,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 
 - Changed grid textarea editing to an explicit dialog workflow so long-form answers can be edited comfortably without cramped in-row scrolling.
 - Improved grid table styling with auto-scaling column widths and line break preservation in PDF and review page displays.
+- Updated boolean answer display from checkbox glyphs (☑/☐) to checkmark/cross symbols (✔/✗) for clearer visual distinction and reduced confusion.
 
 ## [1.2.2] - 2026-10-21
 

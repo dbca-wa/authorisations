@@ -24,22 +24,22 @@ class HelperFunctionsTests(TestCase):
     """Test module-level helper functions for PDF answer normalisation."""
 
     def test_boolean_checkbox_true(self):
-        """_boolean_checkbox should return checked box for True."""
-        self.assertEqual(_boolean_checkbox(True), "☑ Yes")
+        """_boolean_checkbox should return checkmark for True."""
+        self.assertEqual(_boolean_checkbox(True), "✔ Yes")
 
     def test_boolean_checkbox_false(self):
-        """_boolean_checkbox should return unchecked box for False."""
-        self.assertEqual(_boolean_checkbox(False), "☐ No")
+        """_boolean_checkbox should return cross for False."""
+        self.assertEqual(_boolean_checkbox(False), "✗ No")
 
     def test_normalise_answer_value_with_checkbox_type(self):
         """_normalise_answer_value handles checkbox type with boolean."""
         result = _normalise_answer_value({"type": "checkbox"}, True)
-        self.assertEqual(result, "☑ Yes")
+        self.assertEqual(result, "✔ Yes")
 
     def test_normalise_answer_value_with_bool_type_false(self):
         """_normalise_answer_value handles boolean False."""
         result = _normalise_answer_value({"type": "text"}, False)
-        self.assertEqual(result, "☐ No")
+        self.assertEqual(result, "✗ No")
 
     def test_normalise_answer_value_none_returns_none(self):
         """_normalise_answer_value returns None for None values."""
@@ -165,7 +165,7 @@ class GridRowsTests(TestCase):
 
         self.assertEqual(
             result,
-            [["Quokka", "Seen grazing at dusk.", "3", "☑ Yes", "Mammal", "2025-10-20"]],
+            [["Quokka", "Seen grazing at dusk.", "3", "✔ Yes", "Mammal", "2025-10-20"]],
         )
 
     def test_build_grid_rows_with_missing_column_label(self):

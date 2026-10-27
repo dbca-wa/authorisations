@@ -292,7 +292,7 @@ export function FormReviewPage({
 
 
 const humaniseBoolean = (val: IAnswer): string => {
-    return val === true ? "Yes" : "No";
+    return val === true ? "✔ Yes" : "✗ No";
 }
 
 const isEmptyAnswer = (answer: IAnswer | undefined) => {

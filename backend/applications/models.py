@@ -21,7 +21,7 @@ from .statuses import ApplicationStatus
 
 def _boolean_checkbox(value: Any) -> str:
     """Return a checkbox glyph for boolean answers in the PDF output."""
-    return "☑ Yes" if value else "☐ No"
+    return "✔ Yes" if value else "✗ No"
 
 
 def _normalise_answer_value(question: dict[str, Any], value: Any) -> str | None:
