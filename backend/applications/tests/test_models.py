@@ -137,6 +137,37 @@ class GridRowsTests(TestCase):
         result = _build_grid_rows(question, raw_value)
         self.assertEqual(len(result), 1)
 
+    def test_build_grid_rows_with_all_supported_column_types(self):
+        """Grid rows preserve business values across text, textarea, numeric, checkbox, select, and date columns."""
+        question = {
+            "type": "grid",
+            "config": {
+                "grid_columns": [
+                    {"label": "Animal", "type": "text"},
+                    {"label": "Notes", "type": "textarea"},
+                    {"label": "Count", "type": "number"},
+                    {"label": "Approved", "type": "checkbox"},
+                    {"label": "Category", "type": "select", "select_options": ["Mammal", "Bird"]},
+                    {"label": "First seen", "type": "date"},
+                ]
+            },
+        }
+        raw_value = [{
+            "Animal": "Quokka",
+            "Notes": "Seen grazing at dusk.",
+            "Count": 3,
+            "Approved": True,
+            "Category": "Mammal",
+            "First seen": "2025-10-20",
+        }]
+
+        result = _build_grid_rows(question, raw_value)
+
+        self.assertEqual(
+            result,
+            [["Quokka", "Seen grazing at dusk.", "3", "☑ Yes", "Mammal", "2025-10-20"]],
+        )
+
     def test_build_grid_rows_with_missing_column_label(self):
         """_build_grid_rows uses default label when column label missing."""
         question = {"config": {"grid_columns": [{}]}}

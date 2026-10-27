@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
-## [1.2.2] - 2026-10-21
+## [1.2.3] - Unreleased
 
 ### Changed
+
+- Changed grid textarea editing to an explicit dialog workflow so long-form answers can be edited comfortably without cramped in-row scrolling.
+
+## [1.2.2] - 2026-10-21
 
 - **Backend security patch:** Updated certifi to 2026.10.19 (CA bundle fix for eMudhra/emSign incident) and 14 transitive dependencies. All 332 tests passing.
 - **Frontend security patch:** Updated 22 packages and 32 transitive dependencies for certificate chain security. All 340 unit tests and 63 E2E tests passing.
