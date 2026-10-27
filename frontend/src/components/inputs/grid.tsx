@@ -101,8 +101,8 @@ const renderLongTextCell = ({ value }: GridRenderCellParams) => {
         </span>
     );
 
-    // Only show tooltip if there's actual text content
-    if (!text) {
+    // Only show tooltip for truncated values.
+    if (!text || preview === text) {
         return span;
     }
 
@@ -111,7 +111,7 @@ const renderLongTextCell = ({ value }: GridRenderCellParams) => {
             title={text}
             slotProps={{
                 tooltip: {
-                    className: "whitespace-pre-wrap! wrap-break-word",
+                    className: "w-[56rem]! max-w-[56rem]! whitespace-pre-wrap wrap-break-word max-h-96 overflow-y-auto",
                 }
             }}
         >
