@@ -368,7 +368,7 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
                                 }
 
                                 return (
-                                    <td key={colIdx} className="align-top border border-[#777] px-2 py-1.5 text-[#111]">
+                                    <td key={colIdx} className="align-top border border-[#777] px-2 py-1.5 whitespace-pre-wrap text-[#111]">
                                         {displayValue}
                                     </td>
                                 );
