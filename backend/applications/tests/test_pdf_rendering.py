@@ -1355,3 +1355,119 @@ class PDFContextBuildingTests(TestCase):
         # Verify 3: Metadata page CSS suppresses breadcrumb footer
         self.assertIn('@bottom-left', html,
             "CSS must include @bottom-left footer definition")
+
+    def test_render_pdf_html_displays_empty_grid_cells_as_not_provided(self):
+        """render_pdf_html displays empty grid cells as '(Not provided)' with grey styling.
+
+        This test validates that grid cells with None or empty string values display
+        consistently with the frontend, showing "(Not provided)" in grey italic text
+        instead of "None" or blank cells.
+        
+        The fix ensures:
+        1. Empty cells render "(Not provided)" text
+        2. Empty cells have the empty-cell CSS class
+        3. The CSS class applies grey color (#666) and italic style
+        4. Non-empty cells render their values normally
+        """
+        # Create a questionnaire with a grid question
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="grid-empty-test",
+            name="Grid Empty Cells Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Location Details",
+                        "sections": [
+                            {
+                                "title": "Site Information",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Site locations",
+                                        "type": "grid",
+                                        "is_required": False,
+                                        "config": {
+                                            "grid_columns": [
+                                                {"label": "Site Name"},
+                                                {"label": "Location"},
+                                                {"label": "Notes"},
+                                            ]
+                                        },
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        # Create an application with mixed grid data:
+        # - Row 1: all values filled
+        # - Row 2: some empty values (None and empty string)
+        # - Row 3: all empty values
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": [
+                                {
+                                    "Site Name": "Site A",
+                                    "Location": "North paddock",
+                                    "Notes": "Primary investigation site"
+                                },
+                                {
+                                    "Site Name": "Site B",
+                                    "Location": None,  # Empty as None
+                                    "Notes": ""  # Empty as empty string
+                                },
+                                {
+                                    "Site Name": None,
+                                    "Location": "",
+                                    "Notes": None
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+        # Render the PDF HTML
+        html = app.render_pdf_html()
+
+        # Verify 1: CSS class for empty cells exists and has correct styling
+        self.assertIn(".grid-table .empty-cell", html,
+            "CSS must include .grid-table .empty-cell rule")
+        self.assertIn("color: #666", html,
+            "Empty cell CSS must specify grey color (#666)")
+        self.assertIn("font-style: italic", html,
+            "Empty cell CSS must specify italic font style")
+
+        # Verify 2: Row 1 - non-empty cells render their values
+        self.assertIn("Site A", html)
+        self.assertIn("North paddock", html)
+        self.assertIn("Primary investigation site", html)
+
+        # Verify 3: Row 2 - empty cells show "(Not provided)" with class
+        # Location is None - should show (Not provided) with empty-cell class
+        self.assertIn('<td class="empty-cell">', html,
+            "Empty cells must have empty-cell CSS class")
+        # Check that (Not provided) appears in the HTML (counting helps verify presence)
+        not_provided_count = html.count("(Not provided)")
+        self.assertGreaterEqual(not_provided_count, 2,
+            "At least 2 '(Not provided)' entries should exist for Row 2 and Row 3")
+
+        # Verify 4: Structure is intact - table with columns and rows
+        self.assertIn("<table class=\"grid-table\"", html,
+            "Grid table must have grid-table class")
+        self.assertIn("Site Name", html)
+        self.assertIn("Location", html)
+        self.assertIn("Notes", html)

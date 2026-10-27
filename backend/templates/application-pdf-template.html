@@ -278,6 +278,11 @@
         font-weight: 700;
       }
 
+      .grid-table .empty-cell {
+        color: #666;
+        font-style: italic;
+      }
+
       .attachment-list {
         margin: 0;
         padding: 0;
@@ -519,7 +524,9 @@
                               {% for row in question.grid_rows %}
                                 <tr>
                                   {% for cell in row %}
-                                    <td>{{ cell|linebreaksbr }}</td>
+                                    <td{% if not cell %} class="empty-cell"{% endif %}>
+                                      {% if not cell %}(Not provided){% else %}{{ cell|linebreaksbr }}{% endif %}
+                                    </td>
                                   {% endfor %}
                                 </tr>
                               {% endfor %}
