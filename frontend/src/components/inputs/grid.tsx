@@ -185,11 +185,11 @@ const LongTextDialogEditCell = ({ id, field, value, onApply }: LongTextDialogEdi
     );
 };
 
-export function GridInput({
+export const GridInput = ({
     question,
 }: {
     question: Readonly<Question>,
-}) {
+}) => {
     const longTextFields = React.useMemo(
         () => (question.o.config?.grid_columns ?? [])
             .filter((column) => column.type === "textarea")
@@ -363,7 +363,7 @@ export function GridInput({
 }
 
 
-function getHeaders({
+const getHeaders = ({
     question,
     rowModesModel,
     onLongTextApply,
@@ -379,7 +379,7 @@ function getHeaders({
     handleDeleteClick: (id: GridRowId) => () => void;
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
-}): GridColDef[] {
+}): GridColDef[] => {
     const columns: GridColDef[] = (question.o.config?.grid_columns || []).map((column, _) => {
         // Corresponding column type
         let columnType: GridColDef['type'];
@@ -456,7 +456,7 @@ function getHeaders({
     return columns;
 }
 
-function getEmptyRow(question: Question) {
+const getEmptyRow = (question: Question) => {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
     question.o.config?.grid_columns?.forEach((column, _) => {
@@ -478,7 +478,7 @@ function getEmptyRow(question: Question) {
     return row;
 }
 
-function getEditActions({
+const getEditActions = ({
     id,
     isInEditMode,
     handleEditClick,
@@ -492,7 +492,7 @@ function getEditActions({
     handleDeleteClick: (id: GridRowId) => () => void;
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
-}) {
+}) => {
 
     if (isInEditMode) {
         return [
@@ -533,7 +533,7 @@ function getEditActions({
 }
 
 
-function CustomFooterComponent(props: GridSlotProps['footer']) {
+const CustomFooterComponent = (props: GridSlotProps['footer']) => {
     const { setRows, setRowModesModel, emptyRow } = props;
     // First field to focus on
     const firstField = Object.keys(emptyRow)[0];
