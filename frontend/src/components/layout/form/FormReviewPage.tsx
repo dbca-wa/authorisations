@@ -388,7 +388,7 @@ const displayDate = (answer: IAnswer) => {
     }
     return isEmptyAnswer(answer)
         ? <Typography className="text-xs italic text-[#666]">{NOT_PROVIDED}</Typography>
-        : <Typography className="text-xs text-[#111]">{dayjs(answer).format('DD/MM/YYYY')}</Typography>;
+        : <Typography className="text-xs text-[#111]">{dayjs(answer).format('D MMMM YYYY')}</Typography>;
 };
 
 const displayString = (answer: IAnswer) => {

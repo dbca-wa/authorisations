@@ -310,4 +310,45 @@ describe("FormReviewPage", () => {
       expect(submitButton).toBeDisabled();
     });
   });
+
+  describe("date formatting in review page", () => {
+    it("displays date values in human-readable format (D MMMM YYYY)", async () => {
+      const setUserCanEdit = vi.fn();
+      renderWithForm({
+        defaultValues: { 0: { "0-0": "Jane Doe", "0-1": "2025-10-28" } },
+        userCanEdit: false,
+        setUserCanEdit,
+      });
+
+      // Date should be displayed as "28 October 2025"
+      const dateText = await screen.findByText("28 October 2025");
+      expect(dateText).toBeInTheDocument();
+    });
+
+    it("displays single-digit day dates correctly", async () => {
+      const setUserCanEdit = vi.fn();
+      renderWithForm({
+        defaultValues: { 0: { "0-0": "Jane Doe", "0-1": "2025-10-05" } },
+        userCanEdit: false,
+        setUserCanEdit,
+      });
+
+      // Date should be displayed as "5 October 2025" without leading zero
+      const dateText = await screen.findByText("5 October 2025");
+      expect(dateText).toBeInTheDocument();
+    });
+
+    it("displays January dates correctly", async () => {
+      const setUserCanEdit = vi.fn();
+      renderWithForm({
+        defaultValues: { 0: { "0-0": "Jane Doe", "0-1": "2026-01-15" } },
+        userCanEdit: false,
+        setUserCanEdit,
+      });
+
+      // Date should be displayed as "15 January 2026"
+      const dateText = await screen.findByText("15 January 2026");
+      expect(dateText).toBeInTheDocument();
+    });
+  });
 });

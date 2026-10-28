@@ -93,6 +93,31 @@ class HelperFunctionsTests(TestCase):
         result = _normalise_answer_value(None, "test")
         self.assertEqual(result, "test")
 
+    def test_normalise_answer_value_date_formatting(self):
+        """_normalise_answer_value formats date in human-readable format."""
+        result = _normalise_answer_value({"type": "date"}, "2025-10-28")
+        self.assertEqual(result, "28 October 2025")
+
+    def test_normalise_answer_value_date_single_digit_day(self):
+        """_normalise_answer_value formats date with single-digit day correctly."""
+        result = _normalise_answer_value({"type": "date"}, "2025-10-05")
+        self.assertEqual(result, "5 October 2025")
+
+    def test_normalise_answer_value_date_january(self):
+        """_normalise_answer_value formats date in January correctly."""
+        result = _normalise_answer_value({"type": "date"}, "2026-01-15")
+        self.assertEqual(result, "15 January 2026")
+
+    def test_normalise_answer_value_date_invalid_format(self):
+        """_normalise_answer_value returns original string for invalid date format."""
+        result = _normalise_answer_value({"type": "date"}, "invalid-date")
+        self.assertEqual(result, "invalid-date")
+
+    def test_normalise_answer_value_date_empty_string(self):
+        """_normalise_answer_value returns None for empty date string."""
+        result = _normalise_answer_value({"type": "date"}, "")
+        self.assertIsNone(result)
+
 
 class GridRowsTests(TestCase):
     """Test grid answer normalisation."""
@@ -165,7 +190,7 @@ class GridRowsTests(TestCase):
 
         self.assertEqual(
             result,
-            [["Quokka", "Seen grazing at dusk.", "3", "✔ Yes", "Mammal", "2025-10-20"]],
+            [["Quokka", "Seen grazing at dusk.", "3", "✔ Yes", "Mammal", "20 October 2025"]],
         )
 
     def test_build_grid_rows_with_missing_column_label(self):
