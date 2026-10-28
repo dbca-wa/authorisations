@@ -23,6 +23,8 @@ import { FileAttachmentList } from '../../Common';
 import { SubmissionModal } from './SubmissionModal';
 
 const getStepPrefix = (stepIndex: number) => `${stepIndex + 1}.`;
+
+/** Build section prefix (A), B), C), etc.) for section numbering in review display. */
 const getSectionPrefix = (sectionIndex: number) => `${String.fromCharCode(65 + sectionIndex)})`;
 
 
@@ -291,10 +293,12 @@ export function FormReviewPage({
 
 
 
+/** Convert boolean value to human-readable display string with checkmark (✔ Yes) or cross (✗ No) symbol. */
 const humaniseBoolean = (val: IAnswer): string => {
     return val === true ? "✔ Yes" : "✗ No";
 }
 
+/** Check if an answer value is considered empty (null, blank string, or empty array). */
 const isEmptyAnswer = (answer: IAnswer | undefined) => {
     return (
         // answer === undefined ||
@@ -304,19 +308,22 @@ const isEmptyAnswer = (answer: IAnswer | undefined) => {
     );
 }
 
-// Type guards to ensure answer is the correct type for each display function
+/** Type guard to verify answer is a boolean value (for checkbox fields). */
 const isCheckboxAnswer = (answer: IAnswer): answer is boolean => {
     return typeof answer === 'boolean';
 };
 
+/** Type guard to verify answer is an array of grid rows. */
 const isGridAnswer = (answer: IAnswer): answer is IGridAnswerRow[] => {
     return Array.isArray(answer);
 };
 
+/** Type guard to verify answer is a string value. */
 const isStringAnswer = (answer: IAnswer): answer is string => {
     return typeof answer === 'string';
 };
 
+/** Render checkbox answer with type guard and human-readable display (✔ Yes / ✗ No). */
 const displayCheckbox = (answer: IAnswer) => {
     if (!isCheckboxAnswer(answer)) {
         console.warn(`Expected checkbox answer but got ${typeof answer}`, answer);
@@ -329,6 +336,7 @@ const displayCheckbox = (answer: IAnswer) => {
     );
 };
 
+/** Render grid answer as HTML table with rows/columns, applying type-specific formatting (date, checkbox, etc.) to each cell. */
 const displayGrid = (question: IQuestion, answer: IAnswer) => {
     if (!isGridAnswer(answer)) {
         console.warn(`Expected grid answer but got ${typeof answer}`, answer);
@@ -381,6 +389,7 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
     );
 };
 
+/** Format date answer to human-readable format (D MMMM YYYY, e.g. "28 October 2025") using dayjs. */
 const displayDate = (answer: IAnswer) => {
     if (!isStringAnswer(answer)) {
         console.warn(`Expected date answer but got ${typeof answer}`, answer);
@@ -391,6 +400,7 @@ const displayDate = (answer: IAnswer) => {
         : <Typography className="text-xs text-[#111]">{dayjs(answer).format('D MMMM YYYY')}</Typography>;
 };
 
+/** Format string answer (text, textarea, select, number) for display, handling empty values and preserving line breaks. */
 const displayString = (answer: IAnswer) => {
     if (!isStringAnswer(answer)) {
         console.warn(`Expected string answer but got ${typeof answer}`, answer);
@@ -401,6 +411,7 @@ const displayString = (answer: IAnswer) => {
         : <Typography className="whitespace-pre-wrap text-xs text-[#111]">{String(answer)}</Typography>;
 };
 
+/** Render file attachment list using FileAttachmentList component, or display "(no file uploaded)" message if empty. */
 const displayFiles = (attachments: IApplicationAttachment[]) => {
     return attachments.length > 0
         ? <FileAttachmentList attachments={attachments} canEdit={false} />
