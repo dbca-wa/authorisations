@@ -24,22 +24,22 @@ class HelperFunctionsTests(TestCase):
     """Test module-level helper functions for PDF answer normalisation."""
 
     def test_boolean_checkbox_true(self):
-        """_boolean_checkbox should return checked box for True."""
-        self.assertEqual(_boolean_checkbox(True), "☑ Yes")
+        """_boolean_checkbox should return checkmark for True."""
+        self.assertEqual(_boolean_checkbox(True), "✔ Yes")
 
     def test_boolean_checkbox_false(self):
-        """_boolean_checkbox should return unchecked box for False."""
-        self.assertEqual(_boolean_checkbox(False), "☐ No")
+        """_boolean_checkbox should return cross for False."""
+        self.assertEqual(_boolean_checkbox(False), "✗ No")
 
     def test_normalise_answer_value_with_checkbox_type(self):
         """_normalise_answer_value handles checkbox type with boolean."""
         result = _normalise_answer_value({"type": "checkbox"}, True)
-        self.assertEqual(result, "☑ Yes")
+        self.assertEqual(result, "✔ Yes")
 
     def test_normalise_answer_value_with_bool_type_false(self):
         """_normalise_answer_value handles boolean False."""
         result = _normalise_answer_value({"type": "text"}, False)
-        self.assertEqual(result, "☐ No")
+        self.assertEqual(result, "✗ No")
 
     def test_normalise_answer_value_none_returns_none(self):
         """_normalise_answer_value returns None for None values."""
@@ -93,6 +93,31 @@ class HelperFunctionsTests(TestCase):
         result = _normalise_answer_value(None, "test")
         self.assertEqual(result, "test")
 
+    def test_normalise_answer_value_date_formatting(self):
+        """_normalise_answer_value formats date in human-readable format."""
+        result = _normalise_answer_value({"type": "date"}, "2025-10-28")
+        self.assertEqual(result, "28 October 2025")
+
+    def test_normalise_answer_value_date_single_digit_day(self):
+        """_normalise_answer_value formats date with single-digit day correctly."""
+        result = _normalise_answer_value({"type": "date"}, "2025-10-05")
+        self.assertEqual(result, "5 October 2025")
+
+    def test_normalise_answer_value_date_january(self):
+        """_normalise_answer_value formats date in January correctly."""
+        result = _normalise_answer_value({"type": "date"}, "2026-01-15")
+        self.assertEqual(result, "15 January 2026")
+
+    def test_normalise_answer_value_date_invalid_format(self):
+        """_normalise_answer_value returns original string for invalid date format."""
+        result = _normalise_answer_value({"type": "date"}, "invalid-date")
+        self.assertEqual(result, "invalid-date")
+
+    def test_normalise_answer_value_date_empty_string(self):
+        """_normalise_answer_value returns None for empty date string."""
+        result = _normalise_answer_value({"type": "date"}, "")
+        self.assertIsNone(result)
+
 
 class GridRowsTests(TestCase):
     """Test grid answer normalisation."""
@@ -136,6 +161,37 @@ class GridRowsTests(TestCase):
         raw_value = ["not a dict", {"Col": "value"}]
         result = _build_grid_rows(question, raw_value)
         self.assertEqual(len(result), 1)
+
+    def test_build_grid_rows_with_all_supported_column_types(self):
+        """Grid rows preserve business values across text, textarea, numeric, checkbox, select, and date columns."""
+        question = {
+            "type": "grid",
+            "config": {
+                "grid_columns": [
+                    {"label": "Animal", "type": "text"},
+                    {"label": "Notes", "type": "textarea"},
+                    {"label": "Count", "type": "number"},
+                    {"label": "Approved", "type": "checkbox"},
+                    {"label": "Category", "type": "select", "select_options": ["Mammal", "Bird"]},
+                    {"label": "First seen", "type": "date"},
+                ]
+            },
+        }
+        raw_value = [{
+            "Animal": "Quokka",
+            "Notes": "Seen grazing at dusk.",
+            "Count": 3,
+            "Approved": True,
+            "Category": "Mammal",
+            "First seen": "2025-10-20",
+        }]
+
+        result = _build_grid_rows(question, raw_value)
+
+        self.assertEqual(
+            result,
+            [["Quokka", "Seen grazing at dusk.", "3", "✔ Yes", "Mammal", "20 October 2025"]],
+        )
 
     def test_build_grid_rows_with_missing_column_label(self):
         """_build_grid_rows uses default label when column label missing."""

@@ -259,6 +259,9 @@
       .grid-table {
         margin: 2px 0;
         border: 1px solid #444;
+        width: 100%;
+        table-layout: auto;
+        border-collapse: collapse;
       }
 
       .grid-table th,
@@ -276,6 +279,11 @@
           background: #dbe4bf;
           color: #4f5f2f;
         font-weight: 700;
+      }
+
+      .grid-table .empty-cell {
+        color: #666;
+        font-style: italic;
       }
 
       .attachment-list {
@@ -519,7 +527,9 @@
                               {% for row in question.grid_rows %}
                                 <tr>
                                   {% for cell in row %}
-                                    <td>{{ cell|linebreaksbr }}</td>
+                                    <td{% if not cell %} class="empty-cell"{% endif %}>
+                                      {% if not cell %}(Not provided){% else %}{{ cell|linebreaksbr }}{% endif %}
+                                    </td>
                                   {% endfor %}
                                 </tr>
                               {% endfor %}

@@ -8,6 +8,7 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from "@mui/material/Button";
 import FormHelperText from '@mui/material/FormHelperText';
+import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from "@mui/material/Typography";
 import dayjs from 'dayjs';
@@ -17,6 +18,8 @@ import { GridActionsCellItem, Toolbar } from '@mui/x-data-grid/components';
 import { DataGrid } from '@mui/x-data-grid/DataGrid';
 import type {
     GridColDef,
+    GridRenderCellParams,
+    GridRenderEditCellParams,
     GridRowId,
     GridRowModel,
     GridRowModesModel,
@@ -26,6 +29,8 @@ import type {
 import { GridRowModes } from '@mui/x-data-grid/models';
 import { useController, type ValidateResult } from 'react-hook-form';
 import { v6 as uuidv6 } from 'uuid';
+import { useDialog } from '../../context/Hooks';
+import { NOT_PROVIDED } from '../../context/Constants';
 import { type PrimitiveType } from "../../context/types/Generic";
 import { Question } from "../../context/types/Questionnaire";
 import { assert } from '../../context/Utils';
@@ -70,11 +75,128 @@ const toGridRows = (value: GridRowsProp, question: Question): GridRowsProp => {
     });
 }
 
-export function GridInput({
+/**
+ * Provide a concise preview for long-text grid cells in read mode.
+ */
+const getLongTextPreview = (value: unknown, maxLength = 50): string => {
+    const text = typeof value === "string" ? value : "";
+
+    if (text.length <= maxLength) {
+        return text;
+    }
+
+    return `${text.slice(0, maxLength).trimEnd()}...`;
+};
+
+/**
+ * Render long-text grid values with an abbreviated preview and full tooltip.
+ */
+const renderLongTextCell = ({ value }: GridRenderCellParams) => {
+    const text = typeof value === "string" ? value : "";
+    const preview = getLongTextPreview(text);
+
+    const span = (
+        <span className="whitespace-pre-wrap! wrap-break-word">
+            {preview ? preview : <span className="italic text-[#666]">{NOT_PROVIDED}</span>}
+        </span>
+    );
+
+    // Only show tooltip for truncated values.
+    if (!text || preview === text) {
+        return span;
+    }
+
+    return (
+        <Tooltip
+            title={text}
+            slotProps={{
+                tooltip: {
+                    className: "w-[56rem]! max-w-[56rem]! whitespace-pre-wrap wrap-break-word max-h-96 overflow-y-auto",
+                }
+            }}
+        >
+            {span}
+        </Tooltip>
+    );
+};
+
+type LongTextDialogEditCellProps = GridRenderEditCellParams & {
+    onApply: (id: GridRowId, field: string, value: string) => void;
+};
+
+/**
+ * Dialog-based editor for long-text grid columns.
+ *
+ * Keeps row height stable while allowing explicit full-size editing for multiline content.
+ */
+const LongTextDialogEditCell = ({ id, field, value, onApply }: LongTextDialogEditCellProps) => {
+    const { showDialog, hideDialog } = useDialog();
+    const draftInputRef = React.useRef<HTMLInputElement | null>(null);
+
+    const handleOpen = () => {
+        const initialValue = typeof value === "string" ? value : "";
+
+        showDialog({
+            title: String(field),
+            content:
+                <Box className="w-6xl">
+                    <TextField
+                        fullWidth
+                        multiline
+                        minRows={8}
+                        margin="dense"
+                        inputRef={draftInputRef}
+                        defaultValue={initialValue}
+                        aria-label={String(field)}
+                    />
+                </Box>,
+            actions: (
+                <>
+                    <Button onClick={handleCancel}>Cancel</Button>
+                    <Button variant="contained" onClick={handleApply}>Apply</Button>
+                </>
+            ),
+            onOpen: () => draftInputRef.current?.focus(),
+        });
+    };
+
+    const handleCancel = () => {
+        hideDialog();
+    };
+
+    const handleApply = () => {
+        const draftValue = draftInputRef.current?.value ?? "";
+        onApply(id, String(field), draftValue);
+        hideDialog();
+    };
+
+    return (
+        <Box className="mx-auto">
+            <Button
+                size="small"
+                variant="text"
+                color="secondary"
+                startIcon={<EditIcon />}
+                onClick={handleOpen}
+            >
+                Edit text
+            </Button>
+        </Box>
+    );
+};
+
+export const GridInput = ({
     question,
 }: {
     question: Readonly<Question>,
-}) {
+}) => {
+    const longTextFields = React.useMemo(
+        () => (question.o.config?.grid_columns ?? [])
+            .filter((column) => column.type === "textarea")
+            .map((column) => column.label),
+        [question]
+    );
+
     const { field, fieldState } = useController({
         name: question.key,
         defaultValue: [],
@@ -130,7 +252,18 @@ export function GridInput({
     // };
 
     const processRowUpdate = (newRow: GridRowModel) => {
+        const previousRow = rows.find((row) => row._id === newRow._id);
         const updatedRow = { ...newRow, _isNew: false };
+        const updatedRowRecord = updatedRow as Record<string, unknown>;
+        const previousRowRecord = previousRow as Record<string, unknown> | undefined;
+
+        // Preserve textarea edits coming from the dialog when DataGrid commits the row model.
+        longTextFields.forEach((fieldName) => {
+            if (previousRowRecord && fieldName in previousRowRecord) {
+                updatedRowRecord[fieldName] = previousRowRecord[fieldName];
+            }
+        });
+
         setRows(rows.map((row) => (row._id === newRow._id ? updatedRow : row)));
         return updatedRow;
     };
@@ -174,6 +307,11 @@ export function GridInput({
         handleDeleteClick,
         handleSaveClick,
         handleCancelClick,
+        onLongTextApply: (id, field, value) => {
+            setRows((previousRows) => previousRows.map((row) => (
+                row._id === id ? { ...row, [field]: value } : row
+            )));
+        },
     });
 
     return (
@@ -225,9 +363,10 @@ export function GridInput({
 }
 
 
-function getHeaders({
+const getHeaders = ({
     question,
     rowModesModel,
+    onLongTextApply,
     handleEditClick,
     handleDeleteClick,
     handleSaveClick,
@@ -235,11 +374,12 @@ function getHeaders({
 }: {
     question: Question;
     rowModesModel: GridRowModesModel;
+    onLongTextApply: (id: GridRowId, field: string, value: string) => void;
     handleEditClick: (id: GridRowId) => () => void;
     handleDeleteClick: (id: GridRowId) => () => void;
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
-}): GridColDef[] {
+}): GridColDef[] => {
     const columns: GridColDef[] = (question.o.config?.grid_columns || []).map((column, _) => {
         // Corresponding column type
         let columnType: GridColDef['type'];
@@ -253,6 +393,9 @@ function getHeaders({
             case "select":
                 columnType = "singleSelect";
                 break;
+            case "textarea":
+                columnType = "longText";
+                break;
             case "date":
                 columnType = "date";
                 break;
@@ -261,6 +404,10 @@ function getHeaders({
         }
 
         const columnFlex = columnType === "boolean" ? 0.5 : 1;
+        const isColumnTextLike = column.type === "text" || column.type === "textarea" || column.type === "select";
+        const renderEditCell = column.type === "textarea"
+            ? (params: GridRenderEditCellParams) => <LongTextDialogEditCell {...params} onApply={onLongTextApply} />
+            : undefined;
 
         return {
             field: column.label,
@@ -279,6 +426,8 @@ function getHeaders({
             valueOptions: columnType === "singleSelect" && column.select_options
                 ? column.select_options
                 : undefined,
+            renderCell: isColumnTextLike ? renderLongTextCell : undefined,
+            renderEditCell: renderEditCell,
             editable: true,
             sortable: false,
             headerAlign: "center",
@@ -307,7 +456,7 @@ function getHeaders({
     return columns;
 }
 
-function getEmptyRow(question: Question) {
+const getEmptyRow = (question: Question) => {
     const row: { [key: string]: PrimitiveType } = {};
     // Populate the row with values
     question.o.config?.grid_columns?.forEach((column, _) => {
@@ -329,7 +478,7 @@ function getEmptyRow(question: Question) {
     return row;
 }
 
-function getEditActions({
+const getEditActions = ({
     id,
     isInEditMode,
     handleEditClick,
@@ -343,7 +492,7 @@ function getEditActions({
     handleDeleteClick: (id: GridRowId) => () => void;
     handleSaveClick: (id: GridRowId) => () => void;
     handleCancelClick: (id: GridRowId) => () => void;
-}) {
+}) => {
 
     if (isInEditMode) {
         return [
@@ -384,7 +533,7 @@ function getEditActions({
 }
 
 
-function CustomFooterComponent(props: GridSlotProps['footer']) {
+const CustomFooterComponent = (props: GridSlotProps['footer']) => {
     const { setRows, setRowModesModel, emptyRow } = props;
     // First field to focus on
     const firstField = Object.keys(emptyRow)[0];

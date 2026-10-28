@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 import uuid
+from datetime import datetime
 from typing import Any
 
 from azure.core.exceptions import ResourceNotFoundError
@@ -21,7 +22,7 @@ from .statuses import ApplicationStatus
 
 def _boolean_checkbox(value: Any) -> str:
     """Return a checkbox glyph for boolean answers in the PDF output."""
-    return "☑ Yes" if value else "☐ No"
+    return "✔ Yes" if value else "✗ No"
 
 
 def _normalise_answer_value(question: dict[str, Any], value: Any) -> str | None:
@@ -29,7 +30,7 @@ def _normalise_answer_value(question: dict[str, Any], value: Any) -> str | None:
 
     Returns None for empty answers so the template can render a styled placeholder.
     Grid and file questions are handled by their own builders and never reach this
-    function, so only scalar, list, dict, checkbox, and empty cases are covered here.
+    function, so only scalar, list, dict, checkbox, date, and empty cases are covered here.
     """
     question_type = (question or {}).get("type")
 
@@ -40,6 +41,18 @@ def _normalise_answer_value(question: dict[str, Any], value: Any) -> str | None:
     # Absent or blank answers signal emptiness to the template via None.
     if value is None or value == "":
         return None
+
+    # Date answers render in human-readable format (e.g. "28 October 2026").
+    if question_type == "date" and isinstance(value, str):
+        try:
+            parsed_date = datetime.strptime(value, "%Y-%m-%d")
+            # Format as "day monthname year" (e.g. "28 October 2026")
+            # Remove leading zero from day using lstrip
+            day = str(parsed_date.day)
+            return f"{day} {parsed_date.strftime('%B %Y')}"
+        except (ValueError, AttributeError):
+            # If parsing fails, return the original string
+            return str(value)
 
     # Flatten list answers (e.g. multi-select) to one entry per line.
     if isinstance(value, list):
