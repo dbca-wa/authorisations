@@ -7,6 +7,7 @@ import { FormReviewPage } from "../../../../../components/layout/form/FormReview
 import { makeQuestionnaire } from "../../../fixtures";
 
 import type { IFormAnswers } from "../../../../../context/types/Application";
+import type { IQuestionnaire } from "../../../../../context/types/Questionnaire";
 
 const {
   submitApplicationMock,
@@ -50,12 +51,14 @@ const renderWithForm = ({
   defaultValues,
   userCanEdit,
   setUserCanEdit,
+  questionnaireOverride,
 }: {
   defaultValues: IFormAnswers;
   userCanEdit: boolean;
   setUserCanEdit: React.Dispatch<React.SetStateAction<boolean>>;
+  questionnaireOverride?: IQuestionnaire;
 }) => {
-  const questionnaire = makeQuestionnaire({
+  const defaultQuestionnaire = makeQuestionnaire({
     document: {
       schema_version: "2025.07-1",
       steps: [
@@ -84,6 +87,7 @@ const renderWithForm = ({
       ],
     },
   });
+  const questionnaire = questionnaireOverride ?? defaultQuestionnaire.document;
 
   const Wrapper = ({ children }: { children: React.ReactNode }) => {
     const methods = useForm<IFormAnswers>({ defaultValues });
@@ -95,7 +99,7 @@ const renderWithForm = ({
       <FormReviewPage
         userCanEdit={userCanEdit}
         setUserCanEdit={setUserCanEdit}
-        questionnaire={questionnaire.document}
+        questionnaire={questionnaire}
         attachments={[]}
         applicationKey="app-1"
         handleSubmit={(nextStep) => async () => {
@@ -349,6 +353,64 @@ describe("FormReviewPage", () => {
       // Date should be displayed as "15 January 2026"
       const dateText = await screen.findByText("15 January 2026");
       expect(dateText).toBeInTheDocument();
+    });
+  });
+
+  describe("dependent question visibility", () => {
+    const dependentQuestionnaire: IQuestionnaire = {
+      schema_version: "2025.07-1",
+      steps: [
+        {
+          title: "Step 1",
+          description: "",
+          sections: [
+            {
+              title: "Section 1",
+              description: "",
+              questions: [
+                {
+                  label: "Do you have approval?",
+                  type: "select",
+                  is_required: true,
+                  config: { select_options: ["No", "Yes"] },
+                },
+                {
+                  label: "Approval details",
+                  type: "text",
+                  is_required: true,
+                  config: { dependent_step: 1 },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    it("hides dependent question in review output when parent value is 'no' (case-insensitive)", () => {
+      const setUserCanEdit = vi.fn();
+      renderWithForm({
+        defaultValues: { 0: { "0-0": "NO", "0-1": "" } },
+        userCanEdit: false,
+        setUserCanEdit,
+        questionnaireOverride: dependentQuestionnaire,
+      });
+
+      expect(screen.queryByText("2. Approval details *")).not.toBeInTheDocument();
+      expect(screen.queryByText("(Not provided)")).not.toBeInTheDocument();
+    });
+
+    it("shows dependent question in review output when parent value is truthy", () => {
+      const setUserCanEdit = vi.fn();
+      renderWithForm({
+        defaultValues: { 0: { "0-0": "Yes", "0-1": "Permit 123" } },
+        userCanEdit: false,
+        setUserCanEdit,
+        questionnaireOverride: dependentQuestionnaire,
+      });
+
+      expect(screen.getByText("2. Approval details *")).toBeInTheDocument();
+      expect(screen.getByText("Permit 123")).toBeInTheDocument();
     });
   });
 });

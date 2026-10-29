@@ -138,7 +138,7 @@ describe("FormActiveStep", () => {
     expect(screen.getByText("2. Permit number")).toBeVisible();
   });
 
-  it("treats a parent value of 'yes' as truthy for dependent visibility", () => {
+  it("treats a parent value of 'yes' as truthy and 'no' (case-insensitive) as falsy for dependent visibility", () => {
     const handleSubmit = vi.fn(() => async () => {
       return;
     });
@@ -182,7 +182,7 @@ describe("FormActiveStep", () => {
       currentStep,
       activeStep: 0,
       handleSubmit,
-      defaultValues: { 0: { "0-0": "No" } },
+      defaultValues: { 0: { "0-0": "nO" } },
     });
 
     expect(screen.queryByText("2. Nature of affiliation")).not.toBeInTheDocument();

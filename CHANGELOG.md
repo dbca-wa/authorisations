@@ -15,6 +15,7 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Improved grid table styling with auto-scaling column widths and line break preservation in PDF and review page displays.
 - Updated boolean answer display from checkbox glyphs (☑/☐) to checkmark/cross symbols (✔/✗) for clearer visual distinction and reduced confusion.
 - Standardised date display format across PDF and review page to human-readable format (e.g. "28 October 2025") for both standalone date fields and dates within grid rows.
+- Applied dependent-question visibility rules consistently to review and PDF outputs so hidden conditional questions are omitted instead of showing "(Not provided)".
 
 ## [1.2.2] - 2026-10-21
 
@@ -162,4 +163,3 @@ Entries should be concise, single-sentence summaries without excessive technical
 - Fixed Prince XML licence filename handling and read-permission behaviour.
 - Fixed test configuration to use the default staticfiles backend and resolved related test regressions.
 - Fixed layout width inconsistencies; all drawers and form containers now scale responsively across different screen sizes (mobile, lg, xl breakpoints).
-

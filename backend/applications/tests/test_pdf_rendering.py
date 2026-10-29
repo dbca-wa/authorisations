@@ -14,8 +14,11 @@ from users.models import User
 from applications.models import (
     Application,
     ApplicationAttachment,
+    _build_dependent_question_parent_map,
+    _build_dependent_question_visibility_map,
     _build_question_item,
     _icon_class_for_extension,
+    _is_dependent_question_parent_value_truthy,
 )
 from applications.statuses import ApplicationStatus
 
@@ -389,6 +392,67 @@ class QuestionItemBuilderTests(TestCase):
         self.assertEqual(result["other_files"][0]["file_size"], "1000.0\xa0KB")
 
 
+class DependentQuestionVisibilityTests(TestCase):
+    """Test shared dependent-question visibility helpers used by PDF context building."""
+
+    def test_build_dependent_question_parent_map_uses_same_section_walkback(self):
+        """Map dependent questions to their parent question keys within one section."""
+        questions = [
+            {"label": "Q1", "type": "text", "is_required": False},
+            {"label": "Q2", "type": "text", "is_required": False, "config": {"dependent_step": 1}},
+            {"label": "Q3", "type": "text", "is_required": False, "config": {"dependent_step": 2}},
+        ]
+
+        result = _build_dependent_question_parent_map(
+            questions=questions,
+            step_index=0,
+            section_index=0,
+        )
+
+        self.assertEqual(
+            result,
+            {
+                "0.0-1": "0.0-0",
+                "0.0-2": "0.0-0",
+            },
+        )
+
+    def test_is_dependent_question_parent_value_truthy_treats_no_as_falsy(self):
+        """Treat string 'no' as falsy regardless of case."""
+        self.assertFalse(_is_dependent_question_parent_value_truthy("no"))
+        self.assertFalse(_is_dependent_question_parent_value_truthy("No"))
+        self.assertFalse(_is_dependent_question_parent_value_truthy("nO"))
+        self.assertFalse(_is_dependent_question_parent_value_truthy("NO"))
+        self.assertTrue(_is_dependent_question_parent_value_truthy("yes"))
+
+    def test_build_dependent_question_visibility_map_applies_transitive_hiding(self):
+        """Hide descendant dependent questions when any parent in the chain is hidden."""
+        dependent_question_parent_map = {
+            "0.0-1": "0.0-0",
+            "0.0-2": "0.0-1",
+        }
+
+        hidden_result = _build_dependent_question_visibility_map(
+            dependent_question_parent_map=dependent_question_parent_map,
+            answer_values_by_question_key={
+                "0.0-0": "NO",
+                "0.0-1": "intermediate",
+            },
+        )
+        self.assertFalse(hidden_result["0.0-1"])
+        self.assertFalse(hidden_result["0.0-2"])
+
+        visible_result = _build_dependent_question_visibility_map(
+            dependent_question_parent_map=dependent_question_parent_map,
+            answer_values_by_question_key={
+                "0.0-0": "yes",
+                "0.0-1": "intermediate",
+            },
+        )
+        self.assertTrue(visible_result["0.0-1"])
+        self.assertTrue(visible_result["0.0-2"])
+
+
 class PDFContextBuildingTests(TestCase):
     """Test PDF context building for template rendering."""
 
@@ -509,6 +573,134 @@ class PDFContextBuildingTests(TestCase):
         question = section["questions"][0]
         self.assertEqual(question["label"], "Name")
         self.assertEqual(question["value"], "John Doe")
+
+    def test_build_pdf_context_hides_dependent_questions_when_parent_answer_is_no(self):
+        """Hidden dependent questions are omitted from PDF context payload."""
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="dependent-hidden",
+            name="Dependent Hidden",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Do you have approval?",
+                                        "type": "select",
+                                        "is_required": True,
+                                        "config": {"select_options": ["No", "Yes"]},
+                                    },
+                                    {
+                                        "label": "Approval details",
+                                        "type": "text",
+                                        "is_required": True,
+                                        "config": {"dependent_step": 1},
+                                    },
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": "NO",
+                            "0-1": "",
+                        }
+                    }
+                ]
+            },
+        )
+
+        context = app.build_pdf_context()
+        section_questions = context["steps"][0]["sections"][0]["questions"]
+
+        self.assertEqual(len(section_questions), 1)
+        self.assertEqual(section_questions[0]["label"], "Do you have approval?")
+
+    def test_build_pdf_context_treats_out_of_bounds_walkback_as_independent_same_section_scope(self):
+        """Out-of-bounds walkback keeps question visible instead of cross-section dependency."""
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="dependent-scope",
+            name="Dependent Scope",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Section A parent",
+                                        "type": "select",
+                                        "is_required": False,
+                                        "config": {"select_options": ["No", "Yes"]},
+                                    },
+                                ],
+                            },
+                            {
+                                "title": "Section B",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Section B independent despite dependent_step",
+                                        "type": "text",
+                                        "is_required": False,
+                                        "config": {"dependent_step": 1},
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": "NO",
+                            "1-0": "Still visible",
+                        }
+                    }
+                ]
+            },
+        )
+
+        context = app.build_pdf_context()
+        section_b_questions = context["steps"][0]["sections"][1]["questions"]
+
+        self.assertEqual(len(section_b_questions), 1)
+        self.assertEqual(
+            section_b_questions[0]["label"],
+            "Section B independent despite dependent_step",
+        )
+        self.assertEqual(section_b_questions[0]["value"], "Still visible")
 
     def test_render_pdf_html_with_continuous_text_without_spaces(self):
         """render_pdf_html correctly handles continuous text without spaces.
