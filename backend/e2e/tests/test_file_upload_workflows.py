@@ -13,7 +13,7 @@ import copy
 
 import pytest
 from applications.models import Application, ApplicationAttachment
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, expect
 from questionnaires.models import Questionnaire
 
 
@@ -58,6 +58,11 @@ def _delete_attachment(page, filename: str):
     """Delete a specific attachment and confirm the dialog action."""
     page.get_by_title(f"Delete: {filename}").click()
     page.get_by_role("button", name="Delete", exact=True).click()
+
+
+def _wait_for_upload_success(page):
+    """Wait for the newest upload success alert without assuming there is only one visible instance."""
+    page.get_by_role("alert").filter(has_text="File has been uploaded").last.wait_for(timeout=5000)
 
 
 def _wait_for_application_patch(page, application_key: str):
@@ -120,7 +125,7 @@ def test_editor_upload_flow_supports_multiple_valid_files(
             mime_type="application/pdf",
             content=b"%PDF-1.4\nworkflow-one",
         )
-        page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_upload_success(page)
         _wait_for_application_patch(page, application.key)
         assert _attachment_link(page, "workflow-one.pdf").is_visible()
 
@@ -130,7 +135,7 @@ def test_editor_upload_flow_supports_multiple_valid_files(
             mime_type="image/png",
             content=b"\x89PNG\r\n\x1a\nworkflow-two",
         )
-        page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_upload_success(page)
         _wait_for_application_patch(page, application.key)
         assert _attachment_link(page, "workflow-two.png").is_visible()
 
@@ -173,7 +178,7 @@ def test_editor_invalid_upload_shows_error_and_allows_retry(
             mime_type="application/pdf",
             content=b"%PDF-1.4\nretry-success",
         )
-        page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_upload_success(page)
         _wait_for_application_patch(page, application.key)
         assert _attachment_link(page, "retry-success.pdf").is_visible()
     finally:
@@ -205,7 +210,7 @@ def test_editor_multiple_attachment_delete_keeps_upload_available(
             mime_type="application/pdf",
             content=b"%PDF-1.4\ndelete-me",
         )
-        page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_upload_success(page)
         _wait_for_application_patch(page, application.key)
 
         _upload_file(
@@ -214,7 +219,7 @@ def test_editor_multiple_attachment_delete_keeps_upload_available(
             mime_type="image/png",
             content=b"\x89PNG\r\n\x1a\nkeep-me",
         )
-        page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_upload_success(page)
         _wait_for_application_patch(page, application.key)
 
         assert _attachment_link(page, "delete-me.pdf").is_visible()
@@ -259,7 +264,7 @@ def test_editor_required_file_blocks_continue_until_upload(
             mime_type="application/pdf",
             content=b"%PDF-1.4\nrequired-file",
         )
-        page.get_by_text("File has been uploaded").wait_for(timeout=5000)
+        _wait_for_upload_success(page)
         _wait_for_application_patch(page, application.key)
 
         page.get_by_role("button", name="Continue").click()
