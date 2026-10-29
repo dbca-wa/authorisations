@@ -10,8 +10,10 @@ import dayjs from "dayjs";
 import React from "react";
 
 import type { AxiosError } from 'axios';
+import { computeDependentQuestionMap, computeDependentQuestionVisibilityMap } from '../../../context/DependentQuestions';
 import { useFormContext } from "react-hook-form";
 import { ApiManager } from '../../../context/ApiManager';
+import { NOT_PROVIDED } from '../../../context/Constants';
 import { useSnackbar } from '../../../context/Hooks';
 import { TurnstileManager } from '../../../context/TurnstileManager';
 import { fireConfettiEffect } from '../../../context/confettiEffect';
@@ -22,6 +24,8 @@ import { FileAttachmentList } from '../../Common';
 import { SubmissionModal } from './SubmissionModal';
 
 const getStepPrefix = (stepIndex: number) => `${stepIndex + 1}.`;
+
+/** Build section prefix (A), B), C), etc.) for section numbering in review display. */
 const getSectionPrefix = (sectionIndex: number) => `${String.fromCharCode(65 + sectionIndex)})`;
 
 
@@ -185,58 +189,14 @@ export function FormReviewPage({
 
                         <div className="space-y-3 p-3">
                             {step.sections.map((section: IFormSection, sectionIdx: number) => (
-                                <div key={sectionIdx} className="border border-[#222]">
-                                    <div className="bg-[#e8f1f9] px-3 py-2">
-                                        <h3 className="m-0 text-base font-bold text-[#111]">
-                                            {getSectionPrefix(sectionIdx)} {section.title}
-                                        </h3>
-                                    </div>
-
-                                    <div className="space-y-0">
-                                        {section.questions.map((qObj: IQuestion, questionIdx: number) => {
-                                            const question = new Question(qObj, {
-                                                step: stepIdx,
-                                                section: sectionIdx,
-                                                question: questionIdx,
-                                            });
-                                            const answer = answers[stepIdx][`${sectionIdx}-${questionIdx}`];
-                                            let displayAnswer: React.ReactNode;
-
-                                            switch (qObj.type) {
-                                                case "checkbox":
-                                                    displayAnswer = displayCheckbox(answer);
-                                                    break;
-                                                case "grid":
-                                                    displayAnswer = displayGrid(qObj, answer);
-                                                    break;
-                                                case "file":
-                                                    displayAnswer = displayFiles(attachments.filter(atch => atch.question === question.key));
-                                                    break;
-                                                case "date":
-                                                    displayAnswer = displayDate(answer);
-                                                    break;
-                                                case "select":
-                                                case "number":
-                                                case "textarea":
-                                                case "text":
-                                                    displayAnswer = displayString(answer);
-                                                    break;
-                                                default:
-                                                    console.warn(`Unsupported question type: ${qObj.type}`);
-                                                    displayAnswer = <Typography color="text.disabled">N/A - unsupported type</Typography>;
-                                            }
-
-                                            return (
-                                                <div key={questionIdx} className="border-t border-[#222]">
-                                                    <h4 className="m-0 bg-white px-3 py-2 text-[13px] font-bold text-[#173f82]">
-                                                        {question.labelText}
-                                                    </h4>
-                                                    <div className="px-3 py-2 text-xs leading-[1.45]">{displayAnswer}</div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                <SectionReview
+                                    key={sectionIdx}
+                                    stepIndex={stepIdx}
+                                    sectionIndex={sectionIdx}
+                                    section={section}
+                                    stepAnswers={answers[stepIdx] || {}}
+                                    attachments={attachments}
+                                />
                             ))}
                         </div>
                     </section>
@@ -288,12 +248,115 @@ export function FormReviewPage({
     );
 }
 
+/**
+ * Render one review section while applying dependent-question visibility rules.
+ */
+const SectionReview = ({
+    stepIndex,
+    sectionIndex,
+    section,
+    stepAnswers,
+    attachments,
+}: {
+    stepIndex: number;
+    sectionIndex: number;
+    section: IFormSection;
+    stepAnswers: Record<string, IAnswer>;
+    attachments: IApplicationAttachment[];
+}) => {
+    const dependentQuestionMap = computeDependentQuestionMap(
+        section.questions,
+        stepIndex,
+        sectionIndex,
+    );
+
+    // Build a per-question answer map keyed by Question.key so shared visibility logic
+    // can evaluate dependency chains with the same key format as the editor.
+    const answerValuesByQuestionKey: Record<string, unknown> = {};
+    section.questions.forEach((questionObj, questionIdx) => {
+        const question = new Question(questionObj, {
+            step: stepIndex,
+            section: sectionIndex,
+            question: questionIdx,
+        });
+        answerValuesByQuestionKey[question.key] = stepAnswers[`${sectionIndex}-${questionIdx}`];
+    });
+
+    const visibilityMap = computeDependentQuestionVisibilityMap({
+        dependentQuestionMap,
+        answerValuesByQuestionKey,
+    });
+
+    return (
+        <div className="border border-[#222]">
+            <div className="bg-[#e8f1f9] px-3 py-2">
+                <h3 className="m-0 text-base font-bold text-[#111]">
+                    {getSectionPrefix(sectionIndex)} {section.title}
+                </h3>
+            </div>
+
+            <div className="space-y-0">
+                {section.questions.map((qObj: IQuestion, questionIdx: number) => {
+                    const question = new Question(qObj, {
+                        step: stepIndex,
+                        section: sectionIndex,
+                        question: questionIdx,
+                    });
+
+                    // Hidden dependent questions must be omitted from review output entirely.
+                    if (!(visibilityMap[question.key] ?? true)) {
+                        return null;
+                    }
+
+                    const answer = stepAnswers[`${sectionIndex}-${questionIdx}`];
+                    let displayAnswer: React.ReactNode;
+
+                    switch (qObj.type) {
+                        case "checkbox":
+                            displayAnswer = displayCheckbox(answer);
+                            break;
+                        case "grid":
+                            displayAnswer = displayGrid(qObj, answer);
+                            break;
+                        case "file":
+                            displayAnswer = displayFiles(attachments.filter(atch => atch.question === question.key));
+                            break;
+                        case "date":
+                            displayAnswer = displayDate(answer);
+                            break;
+                        case "select":
+                        case "number":
+                        case "textarea":
+                        case "text":
+                            displayAnswer = displayString(answer);
+                            break;
+                        default:
+                            console.warn(`Unsupported question type: ${qObj.type}`);
+                            displayAnswer = <Typography color="text.disabled">N/A - unsupported type</Typography>;
+                    }
+
+                    return (
+                        <div key={questionIdx} className="border-t border-[#222]">
+                            <h4 className="m-0 bg-white px-3 py-2 text-[13px] font-bold text-[#173f82]">
+                                {question.labelText}
+                            </h4>
+                            <div className="px-3 py-2 text-xs leading-[1.45]">{displayAnswer}</div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
 
 
+
+/** Convert boolean value to human-readable display string with checkmark (✔ Yes) or cross (✗ No) symbol. */
 const humaniseBoolean = (val: IAnswer): string => {
-    return val === true ? "Yes" : "No";
+    return val === true ? "✔ Yes" : "✗ No";
 }
 
+/** Check if an answer value is considered empty (null, blank string, or empty array). */
 const isEmptyAnswer = (answer: IAnswer | undefined) => {
     return (
         // answer === undefined ||
@@ -303,19 +366,22 @@ const isEmptyAnswer = (answer: IAnswer | undefined) => {
     );
 }
 
-// Type guards to ensure answer is the correct type for each display function
+/** Type guard to verify answer is a boolean value (for checkbox fields). */
 const isCheckboxAnswer = (answer: IAnswer): answer is boolean => {
     return typeof answer === 'boolean';
 };
 
+/** Type guard to verify answer is an array of grid rows. */
 const isGridAnswer = (answer: IAnswer): answer is IGridAnswerRow[] => {
     return Array.isArray(answer);
 };
 
+/** Type guard to verify answer is a string value. */
 const isStringAnswer = (answer: IAnswer): answer is string => {
     return typeof answer === 'string';
 };
 
+/** Render checkbox answer with type guard and human-readable display (✔ Yes / ✗ No). */
 const displayCheckbox = (answer: IAnswer) => {
     if (!isCheckboxAnswer(answer)) {
         console.warn(`Expected checkbox answer but got ${typeof answer}`, answer);
@@ -328,13 +394,14 @@ const displayCheckbox = (answer: IAnswer) => {
     );
 };
 
+/** Render grid answer as HTML table with rows/columns, applying type-specific formatting (date, checkbox, etc.) to each cell. */
 const displayGrid = (question: IQuestion, answer: IAnswer) => {
     if (!isGridAnswer(answer)) {
         console.warn(`Expected grid answer but got ${typeof answer}`, answer);
         return <Typography className="text-xs italic text-[#666]">N/A - invalid answer</Typography>;
     }
     if (answer.length === 0) {
-        return <Typography className="text-xs italic text-[#666]">(Not provided)</Typography>;
+        return <Typography className="text-xs italic text-[#666]">{NOT_PROVIDED}</Typography>;
     }
 
     return (
@@ -361,13 +428,13 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
                                 } else if (col.type === "date") {
                                     displayValue = displayDate(cellValue);
                                 } else if (cellValue === null || cellValue === undefined || (typeof cellValue === "string" && cellValue.trim() === "")) {
-                                    displayValue = <span className="italic text-[#666]">(Not provided)</span>;
+                                    displayValue = <span className="italic text-[#666]">{NOT_PROVIDED}</span>;
                                 } else {
                                     displayValue = String(cellValue);
                                 }
 
                                 return (
-                                    <td key={colIdx} className="align-top border border-[#777] px-2 py-1.5 text-[#111]">
+                                    <td key={colIdx} className="align-top border border-[#777] px-2 py-1.5 whitespace-pre-wrap text-[#111]">
                                         {displayValue}
                                     </td>
                                 );
@@ -380,26 +447,29 @@ const displayGrid = (question: IQuestion, answer: IAnswer) => {
     );
 };
 
+/** Format date answer to human-readable format (D MMMM YYYY, e.g. "28 October 2025") using dayjs. */
 const displayDate = (answer: IAnswer) => {
     if (!isStringAnswer(answer)) {
         console.warn(`Expected date answer but got ${typeof answer}`, answer);
         return <Typography className="text-xs italic text-[#666]">N/A - invalid answer</Typography>;
     }
     return isEmptyAnswer(answer)
-        ? <Typography className="text-xs italic text-[#666]">(Not provided)</Typography>
-        : <Typography className="text-xs text-[#111]">{dayjs(answer).format('DD/MM/YYYY')}</Typography>;
+        ? <Typography className="text-xs italic text-[#666]">{NOT_PROVIDED}</Typography>
+        : <Typography className="text-xs text-[#111]">{dayjs(answer).format('D MMMM YYYY')}</Typography>;
 };
 
+/** Format string answer (text, textarea, select, number) for display, handling empty values and preserving line breaks. */
 const displayString = (answer: IAnswer) => {
     if (!isStringAnswer(answer)) {
         console.warn(`Expected string answer but got ${typeof answer}`, answer);
         return <Typography className="text-xs italic text-[#666]">N/A - invalid answer</Typography>;
     }
     return isEmptyAnswer(answer)
-        ? <Typography className="text-xs italic text-[#666]">(Not provided)</Typography>
+        ? <Typography className="text-xs italic text-[#666]">{NOT_PROVIDED}</Typography>
         : <Typography className="whitespace-pre-wrap text-xs text-[#111]">{String(answer)}</Typography>;
 };
 
+/** Render file attachment list using FileAttachmentList component, or display "(no file uploaded)" message if empty. */
 const displayFiles = (attachments: IApplicationAttachment[]) => {
     return attachments.length > 0
         ? <FileAttachmentList attachments={attachments} canEdit={false} />

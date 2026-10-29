@@ -14,8 +14,11 @@ from users.models import User
 from applications.models import (
     Application,
     ApplicationAttachment,
+    _build_dependent_question_parent_map,
+    _build_dependent_question_visibility_map,
     _build_question_item,
     _icon_class_for_extension,
+    _is_dependent_question_parent_value_truthy,
 )
 from applications.statuses import ApplicationStatus
 
@@ -389,6 +392,67 @@ class QuestionItemBuilderTests(TestCase):
         self.assertEqual(result["other_files"][0]["file_size"], "1000.0\xa0KB")
 
 
+class DependentQuestionVisibilityTests(TestCase):
+    """Test shared dependent-question visibility helpers used by PDF context building."""
+
+    def test_build_dependent_question_parent_map_uses_same_section_walkback(self):
+        """Map dependent questions to their parent question keys within one section."""
+        questions = [
+            {"label": "Q1", "type": "text", "is_required": False},
+            {"label": "Q2", "type": "text", "is_required": False, "config": {"dependent_step": 1}},
+            {"label": "Q3", "type": "text", "is_required": False, "config": {"dependent_step": 2}},
+        ]
+
+        result = _build_dependent_question_parent_map(
+            questions=questions,
+            step_index=0,
+            section_index=0,
+        )
+
+        self.assertEqual(
+            result,
+            {
+                "0.0-1": "0.0-0",
+                "0.0-2": "0.0-0",
+            },
+        )
+
+    def test_is_dependent_question_parent_value_truthy_treats_no_as_falsy(self):
+        """Treat string 'no' as falsy regardless of case."""
+        self.assertFalse(_is_dependent_question_parent_value_truthy("no"))
+        self.assertFalse(_is_dependent_question_parent_value_truthy("No"))
+        self.assertFalse(_is_dependent_question_parent_value_truthy("nO"))
+        self.assertFalse(_is_dependent_question_parent_value_truthy("NO"))
+        self.assertTrue(_is_dependent_question_parent_value_truthy("yes"))
+
+    def test_build_dependent_question_visibility_map_applies_transitive_hiding(self):
+        """Hide descendant dependent questions when any parent in the chain is hidden."""
+        dependent_question_parent_map = {
+            "0.0-1": "0.0-0",
+            "0.0-2": "0.0-1",
+        }
+
+        hidden_result = _build_dependent_question_visibility_map(
+            dependent_question_parent_map=dependent_question_parent_map,
+            answer_values_by_question_key={
+                "0.0-0": "NO",
+                "0.0-1": "intermediate",
+            },
+        )
+        self.assertFalse(hidden_result["0.0-1"])
+        self.assertFalse(hidden_result["0.0-2"])
+
+        visible_result = _build_dependent_question_visibility_map(
+            dependent_question_parent_map=dependent_question_parent_map,
+            answer_values_by_question_key={
+                "0.0-0": "yes",
+                "0.0-1": "intermediate",
+            },
+        )
+        self.assertTrue(visible_result["0.0-1"])
+        self.assertTrue(visible_result["0.0-2"])
+
+
 class PDFContextBuildingTests(TestCase):
     """Test PDF context building for template rendering."""
 
@@ -509,6 +573,134 @@ class PDFContextBuildingTests(TestCase):
         question = section["questions"][0]
         self.assertEqual(question["label"], "Name")
         self.assertEqual(question["value"], "John Doe")
+
+    def test_build_pdf_context_hides_dependent_questions_when_parent_answer_is_no(self):
+        """Hidden dependent questions are omitted from PDF context payload."""
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="dependent-hidden",
+            name="Dependent Hidden",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Do you have approval?",
+                                        "type": "select",
+                                        "is_required": True,
+                                        "config": {"select_options": ["No", "Yes"]},
+                                    },
+                                    {
+                                        "label": "Approval details",
+                                        "type": "text",
+                                        "is_required": True,
+                                        "config": {"dependent_step": 1},
+                                    },
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": "NO",
+                            "0-1": "",
+                        }
+                    }
+                ]
+            },
+        )
+
+        context = app.build_pdf_context()
+        section_questions = context["steps"][0]["sections"][0]["questions"]
+
+        self.assertEqual(len(section_questions), 1)
+        self.assertEqual(section_questions[0]["label"], "Do you have approval?")
+
+    def test_build_pdf_context_treats_out_of_bounds_walkback_as_independent_same_section_scope(self):
+        """Out-of-bounds walkback keeps question visible instead of cross-section dependency."""
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="dependent-scope",
+            name="Dependent Scope",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Step 1",
+                        "sections": [
+                            {
+                                "title": "Section A",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Section A parent",
+                                        "type": "select",
+                                        "is_required": False,
+                                        "config": {"select_options": ["No", "Yes"]},
+                                    },
+                                ],
+                            },
+                            {
+                                "title": "Section B",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Section B independent despite dependent_step",
+                                        "type": "text",
+                                        "is_required": False,
+                                        "config": {"dependent_step": 1},
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": "NO",
+                            "1-0": "Still visible",
+                        }
+                    }
+                ]
+            },
+        )
+
+        context = app.build_pdf_context()
+        section_b_questions = context["steps"][0]["sections"][1]["questions"]
+
+        self.assertEqual(len(section_b_questions), 1)
+        self.assertEqual(
+            section_b_questions[0]["label"],
+            "Section B independent despite dependent_step",
+        )
+        self.assertEqual(section_b_questions[0]["value"], "Still visible")
 
     def test_render_pdf_html_with_continuous_text_without_spaces(self):
         """render_pdf_html correctly handles continuous text without spaces.
@@ -1355,3 +1547,119 @@ class PDFContextBuildingTests(TestCase):
         # Verify 3: Metadata page CSS suppresses breadcrumb footer
         self.assertIn('@bottom-left', html,
             "CSS must include @bottom-left footer definition")
+
+    def test_render_pdf_html_displays_empty_grid_cells_as_not_provided(self):
+        """render_pdf_html displays empty grid cells as '(Not provided)' with grey styling.
+
+        This test validates that grid cells with None or empty string values display
+        consistently with the frontend, showing "(Not provided)" in grey italic text
+        instead of "None" or blank cells.
+        
+        The fix ensures:
+        1. Empty cells render "(Not provided)" text
+        2. Empty cells have the empty-cell CSS class
+        3. The CSS class applies grey color (#666) and italic style
+        4. Non-empty cells render their values normally
+        """
+        # Create a questionnaire with a grid question
+        questionnaire = Questionnaire.objects.create(
+            process=self.process,
+            code="grid-empty-test",
+            name="Grid Empty Cells Test",
+            document={
+                "schema_version": "2025.07-1",
+                "steps": [
+                    {
+                        "title": "Location Details",
+                        "sections": [
+                            {
+                                "title": "Site Information",
+                                "description": "",
+                                "questions": [
+                                    {
+                                        "label": "Site locations",
+                                        "type": "grid",
+                                        "is_required": False,
+                                        "config": {
+                                            "grid_columns": [
+                                                {"label": "Site Name"},
+                                                {"label": "Location"},
+                                                {"label": "Notes"},
+                                            ]
+                                        },
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            sort_order=1,
+            created_by=self.user,
+        )
+
+        # Create an application with mixed grid data:
+        # - Row 1: all values filled
+        # - Row 2: some empty values (None and empty string)
+        # - Row 3: all empty values
+        app = Application.objects.create(
+            owner=self.user,
+            questionnaire=questionnaire,
+            document={
+                "steps": [
+                    {
+                        "answers": {
+                            "0-0": [
+                                {
+                                    "Site Name": "Site A",
+                                    "Location": "North paddock",
+                                    "Notes": "Primary investigation site"
+                                },
+                                {
+                                    "Site Name": "Site B",
+                                    "Location": None,  # Empty as None
+                                    "Notes": ""  # Empty as empty string
+                                },
+                                {
+                                    "Site Name": None,
+                                    "Location": "",
+                                    "Notes": None
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+        # Render the PDF HTML
+        html = app.render_pdf_html()
+
+        # Verify 1: CSS class for empty cells exists and has correct styling
+        self.assertIn(".grid-table .empty-cell", html,
+            "CSS must include .grid-table .empty-cell rule")
+        self.assertIn("color: #666", html,
+            "Empty cell CSS must specify grey color (#666)")
+        self.assertIn("font-style: italic", html,
+            "Empty cell CSS must specify italic font style")
+
+        # Verify 2: Row 1 - non-empty cells render their values
+        self.assertIn("Site A", html)
+        self.assertIn("North paddock", html)
+        self.assertIn("Primary investigation site", html)
+
+        # Verify 3: Row 2 - empty cells show "(Not provided)" with class
+        # Location is None - should show (Not provided) with empty-cell class
+        self.assertIn('<td class="empty-cell">', html,
+            "Empty cells must have empty-cell CSS class")
+        # Check that (Not provided) appears in the HTML (counting helps verify presence)
+        not_provided_count = html.count("(Not provided)")
+        self.assertGreaterEqual(not_provided_count, 2,
+            "At least 2 '(Not provided)' entries should exist for Row 2 and Row 3")
+
+        # Verify 4: Structure is intact - table with columns and rows
+        self.assertIn("<table class=\"grid-table\"", html,
+            "Grid table must have grid-table class")
+        self.assertIn("Site Name", html)
+        self.assertIn("Location", html)
+        self.assertIn("Notes", html)

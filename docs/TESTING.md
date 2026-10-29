@@ -89,6 +89,7 @@ Key points verified:
 - Required validation blocks progression.
 - Step progression and navigation round-trip behaviour.
 - Correct semantic querying for MUI components (for example, StepButton role tab).
+- Dependent-question visibility is consistent across editor, review, PDF, and browser E2E, including case-insensitive `"no"` falsy handling and same-section scope.
 
 ### Frontend Backbone Module Coverage
 

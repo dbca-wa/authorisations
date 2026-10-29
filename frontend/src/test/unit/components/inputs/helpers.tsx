@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
+import { DialogProvider } from "../../../../context/Dialogs";
 import type { IFormAnswers } from "../../../../context/types/Application";
 import { Question, type IQuestion } from "../../../../context/types/Questionnaire";
 
@@ -49,12 +50,14 @@ export const renderWithForm = ({
     });
 
     return (
-      <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit((values) => onSubmit?.(values))}>
-          {children}
-          <Button type="submit">Submit</Button>
-        </form>
-      </FormProvider>
+      <DialogProvider>
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit((values) => onSubmit?.(values))}>
+            {children}
+            <Button type="submit">Submit</Button>
+          </form>
+        </FormProvider>
+      </DialogProvider>
     );
   };
 

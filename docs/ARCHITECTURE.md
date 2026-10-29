@@ -96,11 +96,40 @@ As of schema version 1, type-specific configuration fields are consolidated into
 - `select_options`: Array of strings for select/checkbox questions
 - `grid_columns`: Array of column definitions for grid questions
 - `grid_max_rows`: Maximum rows for grid questions (1-20)
-- `dependent_step`: Step index for conditional (walkback) questions
+- `dependent_step`: Walkback offset used to define dependent questions
 - `file_max_attachments`: Maximum file attachments for file questions (1-20)
 - `hint`: Optional contextual guidance text for the question (max 3000 characters, nullable, allows blank)
 
 **Migration from v0 to v1**: Migration `0001_consolidate_question_config` transforms all existing questionnaires from flat structure (properties at question level) to nested structure (properties within `config` object). See [SCHEMA-MIGRATION-HANDBOOK.md](SCHEMA-MIGRATION-HANDBOOK.md#migration-0001-consolidate-question-config) for details.
+
+### Dependent questions (`config.dependent_step`)
+
+Dependent questions are conditional questions that appear only when an earlier question in the same section evaluates to a truthy answer.
+
+#### How dependency is defined
+- Dependency is declared with `config.dependent_step` on the dependent question.
+- The value is a **walkback offset** from the current question index in the current section.
+  - Example: a question at index `5` with `dependent_step: 2` depends on the question at index `3`.
+- If the walkback target is out of bounds, the dependency is ignored and the question is treated as independent.
+
+#### Visibility rules (canonical behaviour)
+- A dependent question is visible only when:
+  1. Its parent question is visible, and
+  2. Its parent answer is truthy.
+- Truthiness rules currently used by the form runtime:
+  - `false`, `null`, and empty values are not truthy.
+  - For strings, blank/whitespace-only values are not truthy.
+  - The string `"no"` (case-insensitive) is treated as not truthy.
+  - Non-empty string values other than `"no"` are treated as truthy.
+- Dependency is transitive: if parent visibility fails at any level, all descendant dependent questions are hidden.
+
+#### Validation semantics
+- Required dependent questions (`is_required: true`) are only effectively required when visible.
+- Hidden dependent questions must not block progression/submission.
+
+#### Rendering contract across surfaces
+- The active form step rendering is the source of truth for dependent-question visibility semantics.
+- Review and PDF representations must apply the same visibility computation so hidden dependent questions are omitted rather than shown as `(Not provided)`.
 
 ## Business logic behind technical structure
 

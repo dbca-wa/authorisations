@@ -12,7 +12,9 @@ Dialog/consent/confirmation flows are covered separately in test_new_application
 import json
 
 import pytest
+from processes.models import AuthorisationProcess
 from questionnaires.models import Questionnaire
+from questionnaires.schema import SCHEMA_VERSION
 
 
 def fill_editor_form_and_continue(page):
@@ -60,6 +62,117 @@ def draft_application(authenticated_request_context_factory, e2e_users):
         request_context.dispose()
 
     return applicant, app_key
+
+
+@pytest.mark.e2e
+@pytest.mark.django_db(transaction=True)
+def test_grid_question_distinguishes_text_and_textarea_business_inputs(
+    authenticated_browser_context_factory,
+    authenticated_request_context_factory,
+    e2e_users,
+    mock_turnstile_script,
+):
+    """Verify a grid question exposes distinct input types for text and textarea business cells."""
+    applicant = e2e_users["applicant"]
+    process = AuthorisationProcess.objects.create(
+        slug="grid-demo",
+        name="Grid Demo",
+        description="Grid demo process",
+        sort_order=10,
+    )
+    questionnaire = Questionnaire.objects.create(
+        process=process,
+        code="grid-demo",
+        name="Grid Demo",
+        description="Grid demo questionnaire",
+        sort_order=1,
+        created_by=applicant,
+        updated_by=applicant,
+        document={
+            "schema_version": SCHEMA_VERSION,
+            "steps": [
+                {
+                    "title": "Step 1",
+                    "description": "",
+                    "sections": [
+                        {
+                            "title": "Section 1",
+                            "description": "",
+                            "questions": [
+                                {
+                                    "label": "Animal details",
+                                    "type": "grid",
+                                    "is_required": True,
+                                    "description": "Provide one row per animal",
+                                    "config": {
+                                        "grid_columns": [
+                                            {"label": "Species", "type": "text"},
+                                            {"label": "Notes", "type": "textarea"},
+                                            {"label": "Count", "type": "number"},
+                                            {"label": "Approved", "type": "checkbox"},
+                                            {"label": "Category", "type": "select", "select_options": ["Mammal", "Bird"]},
+                                            {"label": "First seen", "type": "date"},
+                                        ]
+                                    },
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        },
+    )
+
+    auth_context = authenticated_request_context_factory(applicant)
+    request_context = auth_context["context"]
+    try:
+        response = request_context.post(
+            "/api/applications",
+            data=json.dumps({
+                "process_slug": process.slug,
+                "questionnaire_id": questionnaire.id,
+                "questionnaire_code": questionnaire.code,
+                "questionnaire_version": questionnaire.version,
+                "collection_notice_agreed": True,
+                "turnstile_token": "e2e-turnstile-token",
+            }),
+            headers={
+                str(auth_context["csrf_header"]): str(auth_context["csrf_token"]),
+                "Content-Type": "application/json",
+            },
+        )
+        assert response.status == 201
+        app_key = response.json()["key"]
+    finally:
+        request_context.dispose()
+
+    context = authenticated_browser_context_factory(applicant)
+    page = context.new_page()
+    mock_turnstile_script(page)
+
+    try:
+        page.goto(f"/a/{app_key}")
+        page.wait_for_load_state("networkidle", timeout=5000)
+        page.get_by_role("button", name="Add Record").click()
+
+        assert page.get_by_text("Species", exact=True).is_visible()
+        assert page.get_by_text("Notes", exact=True).is_visible()
+        assert page.get_by_text("Count", exact=True).is_visible()
+        assert page.get_by_text("Approved", exact=True).is_visible()
+        assert page.get_by_text("Category", exact=True).is_visible()
+        assert page.get_by_text("First seen", exact=True).is_visible()
+        assert page.get_by_role("button", name="Save").count() >= 1
+        assert page.get_by_role("button", name="Cancel").count() >= 1
+
+        page.get_by_role("button", name="Edit text").first.click()
+        assert page.get_by_role("dialog", name="Notes").is_visible()
+        page.get_by_role("textbox").fill("Expanded long-text details")
+        page.get_by_role("button", name="Apply").click()
+        page.get_by_role("button", name="Save").first.click()
+        assert page.get_by_text("Expanded long-text details", exact=True).is_visible()
+    finally:
+        page.close()
+        context.close()
 
 
 @pytest.mark.e2e
