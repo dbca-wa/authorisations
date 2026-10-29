@@ -54,6 +54,12 @@ def _attachment_link(page, filename: str):
     return page.get_by_role("link", name=filename)
 
 
+def _delete_attachment(page, filename: str):
+    """Delete a specific attachment and confirm the dialog action."""
+    page.get_by_title(f"Delete: {filename}").click()
+    page.get_by_role("button", name="Delete", exact=True).click()
+
+
 def _wait_for_application_patch(page, application_key: str):
     """Wait for the attachment-triggered autosave request, tolerating fast-response races."""
     try:
@@ -214,8 +220,7 @@ def test_editor_multiple_attachment_delete_keeps_upload_available(
         assert _attachment_link(page, "delete-me.pdf").is_visible()
         assert _attachment_link(page, "keep-me.png").is_visible()
 
-        page.get_by_title("Delete: delete-me.pdf").click()
-        page.get_by_role("button", name="Delete").click()
+        _delete_attachment(page, "delete-me.pdf")
         page.get_by_text("File has been deleted").wait_for(timeout=5000)
         _wait_for_application_patch(page, application.key)
 
