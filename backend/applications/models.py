@@ -97,6 +97,65 @@ def _build_grid_rows(
     return rows
 
 
+def _build_dependent_question_parent_map(
+    questions: list[dict[str, Any]],
+    step_index: int,
+    section_index: int,
+) -> dict[str, str]:
+    """Map dependent question keys to their parent question keys within one section."""
+    parent_map: dict[str, str] = {}
+
+    for question_index, question in enumerate(questions):
+        walkback = (question.get("config") or {}).get("dependent_step")
+        if walkback and question_index - walkback >= 0:
+            question_key = f"{step_index}.{section_index}-{question_index}"
+            parent_key = f"{step_index}.{section_index}-{question_index - walkback}"
+            parent_map[question_key] = parent_key
+
+    return parent_map
+
+
+def _is_dependent_question_parent_value_truthy(value: Any) -> bool:
+    """Return whether a parent answer should reveal dependent questions.
+
+    Business rule: case-insensitive string "no" is explicitly treated as falsy.
+    """
+    if isinstance(value, str):
+        return value.strip() != "" and value.strip().lower() != "no"
+    return bool(value)
+
+
+def _build_dependent_question_visibility_map(
+    dependent_question_parent_map: dict[str, str],
+    answer_values_by_question_key: dict[str, Any],
+) -> dict[str, bool]:
+    """Resolve dependent-question visibility for one section.
+
+    Non-dependent questions are omitted and should default to visible.
+    """
+    visibility_cache: dict[str, bool] = {}
+
+    def _compute_visibility(question_key: str) -> bool:
+        if question_key in visibility_cache:
+            return visibility_cache[question_key]
+
+        parent_key = dependent_question_parent_map.get(question_key)
+        if parent_key is None:
+            visibility_cache[question_key] = True
+            return True
+
+        parent_value = answer_values_by_question_key.get(parent_key)
+        is_parent_visible = _compute_visibility(parent_key)
+        is_parent_truthy = _is_dependent_question_parent_value_truthy(parent_value)
+        visibility_cache[question_key] = is_parent_visible and is_parent_truthy
+        return visibility_cache[question_key]
+
+    for question_key in dependent_question_parent_map:
+        _compute_visibility(question_key)
+
+    return visibility_cache
+
+
 _EXTENSION_TO_ICON_CLASS = {
     # Must mirror getIconFromFilename in frontend/src/context/Utils.tsx.
     "pdf": "vscode-icons--file-type-pdf2",
@@ -383,6 +442,23 @@ class Application(models.Model):
             }
 
             for section_index, section in enumerate(step.get("sections") or []):
+                section_questions = section.get("questions") or []
+                dependent_question_parent_map = _build_dependent_question_parent_map(
+                    section_questions,
+                    step_index,
+                    section_index,
+                )
+                answer_values_by_question_key = {
+                    f"{step_index}.{section_index}-{question_index}": answers.get(
+                        f"{section_index}-{question_index}"
+                    )
+                    for question_index, _question in enumerate(section_questions)
+                }
+                dependent_question_visibility_map = _build_dependent_question_visibility_map(
+                    dependent_question_parent_map,
+                    answer_values_by_question_key,
+                )
+
                 section_payload = {
                     "prefix": f"{chr(65 + section_index)})",
                     "title": section.get("title") or f"Section {section_index + 1}",
@@ -390,9 +466,11 @@ class Application(models.Model):
                     "questions": [],
                 }
 
-                for question_index, question in enumerate(
-                    section.get("questions") or []
-                ):
+                for question_index, question in enumerate(section_questions):
+                    question_key = f"{step_index}.{section_index}-{question_index}"
+                    if not dependent_question_visibility_map.get(question_key, True):
+                        continue
+
                     answer_key = f"{section_index}-{question_index}"
                     answer_value = answers.get(answer_key)
                     section_payload["questions"].append(

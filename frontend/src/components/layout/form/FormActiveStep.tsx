@@ -9,9 +9,10 @@ import Stack from "@mui/material/Stack";
 import React from "react";
 
 import { useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
+import { computeDependentQuestionMap, computeDependentQuestionVisibilityMap } from '../../../context/DependentQuestions';
 import type { IApplicationAttachment } from '../../../context/types/Application';
 import type { AsyncVoidAction } from "../../../context/types/Generic";
-import { Question, type IFormSection, type IFormStep, type IQuestion } from "../../../context/types/Questionnaire";
+import { Question, type IFormSection, type IFormStep } from "../../../context/types/Questionnaire";
 import { CheckboxInput } from "../../inputs/checkbox";
 import { DateInput } from "../../inputs/date";
 import { FileInput } from "../../inputs/file";
@@ -161,26 +162,10 @@ const Section = ({
 
     // compute visibility once per render
     const visibilityMap = React.useMemo(() => {
-        const cache: Record<string, boolean> = {};
-
-        const compute = (qKey: string): boolean => {
-            if (Object.hasOwn(cache, qKey)) return cache[qKey];
-            const info = dependentQuestionMap[qKey];
-            if (!info) return (cache[qKey] = true);
-            const parentVal = parentValues[info.parentKey];
-            const parentVisible = compute(info.parentKey);
-            // Determine if the parent's value should be considered "truthy" for visibility purposes
-            const parentValueIsTruthy =
-                typeof parentVal === 'string'
-                    ? parentVal.trim() !== "" && parentVal.toLowerCase() !== "no"
-                    : Boolean(parentVal);
-
-            return (cache[qKey] = parentValueIsTruthy && parentVisible);
-        };
-
-        // ensure we compute visibility for all questions (so lookups are O(1) later)
-        Object.keys(dependentQuestionMap).forEach(k => compute(k));
-        return cache;
+        return computeDependentQuestionVisibilityMap({
+            dependentQuestionMap,
+            answerValuesByQuestionKey: parentValues,
+        });
     }, [dependentQuestionMap, parentValues]);
 
     // small wrapper used by render code
@@ -265,46 +250,4 @@ const Section = ({
             </List>
         </Stack>
     )
-}
-
-/**
- * Utility for dependent question visibility logic.
- * Simple: a dependent question is visible if its parent is visible and has a truthy value.
- * 
- * Build a map of dependent question key -> parent question key.
- * @param questions Section questions array
- * @param stepIndex Step index
- * @param sectionIndex Section index
- */
-const computeDependentQuestionMap = (
-    questions: IQuestion[],
-    stepIndex: number,
-    sectionIndex: number,
-) => {
-    const map: Record<string, { parentKey: string }> = {};
-    questions.forEach((qObj, qIndex) => {
-        const question = new Question(qObj, {
-            step: stepIndex,
-            section: sectionIndex,
-            question: qIndex,
-        });
-
-        const walkback = question.o.config?.dependent_step;
-        if (walkback && qIndex - walkback >= 0) {
-            const parentQuestion = new Question(
-                questions[qIndex - walkback],
-                {
-                    step: stepIndex,
-                    section: sectionIndex,
-                    question: qIndex - walkback,
-                }
-            );
-            map[question.key] = { parentKey: parentQuestion.key };
-        }
-    });
-
-    // if (Object.keys(map).length > 0)
-    //     console.debug("Computed dependent question map for section", sectionIndex, ":", map);
-
-    return map;
 }
