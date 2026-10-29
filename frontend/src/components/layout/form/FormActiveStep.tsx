@@ -111,7 +111,7 @@ const onKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
 
 /**
  * The component that groups questions and responsible for handling 
- * the follow-up questions visibility logic.
+ * the dependent question visibility logic.
  */
 const Section = ({
     applicationKey,
@@ -133,16 +133,16 @@ const Section = ({
     // Convert section index to letter (A, B, C, ...)
     const idxText = String.fromCharCode(65 + sectionIndex) + ")";
 
-    // Build followup map
-    const followupMap = React.useMemo(
-        () => computeFollowupMap(section.questions, stepIndex, sectionIndex),
+    // Build dependent question map
+    const dependentQuestionMap = React.useMemo(
+        () => computeDependentQuestionMap(section.questions, stepIndex, sectionIndex),
         [section.questions, stepIndex, sectionIndex]
     );
 
     // collect unique parent keys in a stable order
     const parentKeys: readonly string[] = React.useMemo(
-        () => Array.from(new Set(Object.values(followupMap).map(v => v.parentKey).filter(Boolean))).sort(),
-        [followupMap]
+        () => Array.from(new Set(Object.values(dependentQuestionMap).map(v => v.parentKey).filter(Boolean))).sort(),
+        [dependentQuestionMap]
     );
 
     // single useWatch call (top-level) for all parents
@@ -165,7 +165,7 @@ const Section = ({
 
         const compute = (qKey: string): boolean => {
             if (Object.hasOwn(cache, qKey)) return cache[qKey];
-            const info = followupMap[qKey];
+            const info = dependentQuestionMap[qKey];
             if (!info) return (cache[qKey] = true);
             const parentVal = parentValues[info.parentKey];
             const parentVisible = compute(info.parentKey);
@@ -179,9 +179,9 @@ const Section = ({
         };
 
         // ensure we compute visibility for all questions (so lookups are O(1) later)
-        Object.keys(followupMap).forEach(k => compute(k));
+        Object.keys(dependentQuestionMap).forEach(k => compute(k));
         return cache;
-    }, [followupMap, parentValues]);
+    }, [dependentQuestionMap, parentValues]);
 
     // small wrapper used by render code
     const isQuestionVisible = React.useCallback((questionKey: string): boolean => {
@@ -268,20 +268,18 @@ const Section = ({
 }
 
 /**
- * Utility for follow-up question visibility logic.
- * Simple: a follow-up is visible if its parent is visible and has a truthy value.
+ * Utility for dependent question visibility logic.
+ * Simple: a dependent question is visible if its parent is visible and has a truthy value.
  * 
- * Build a map of follow-up question key -> parent question key
+ * Build a map of dependent question key -> parent question key.
  * @param questions Section questions array
  * @param stepIndex Step index
  * @param sectionIndex Section index
- * @param followupObj Mapping of question key to walkback offset
  */
-const computeFollowupMap = (
+const computeDependentQuestionMap = (
     questions: IQuestion[],
     stepIndex: number,
     sectionIndex: number,
-    // followupObj: Record<string, number>
 ) => {
     const map: Record<string, { parentKey: string }> = {};
     questions.forEach((qObj, qIndex) => {
@@ -306,7 +304,7 @@ const computeFollowupMap = (
     });
 
     // if (Object.keys(map).length > 0)
-    //     console.debug("Computed followup map for section", sectionIndex, ":", map);
+    //     console.debug("Computed dependent question map for section", sectionIndex, ":", map);
 
     return map;
 }
