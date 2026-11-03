@@ -5,32 +5,15 @@ This document provides a comprehensive, process-driven approach to upgrading bot
 **Last Updated:** 2026-11-03 (Completed: Sessions 1-5 with 95+ total package upgrades — 21 backend (Session 3) + 15 backend (Session 4) + 11 backend (Session 5) + 29 frontend (Session 3) + 14 frontend (Session 5) across reliability, security, and dependency maintenance workflows)
 
 **Status Summary:**
-- ✅ **Deployable Now:** 344 backend tests + 361/363 frontend tests all passing
+- ✅ **Deployable Now:** 344 backend tests + 363/363 frontend tests all passing
 - ✅ **95+ packages upgraded:** 21 backend (Session 3) + 15 backend (Session 4) + 11 backend (Session 5) + 29 frontend (Session 3) + 14 frontend (Session 5)
 - ⏸️ **3 dependencies intentionally deferred:** Django 6.1 (backend), TypeScript 7.x (frontend), vitest v5 (frontend)
 
 ---
 
-## Before You Start
+## Quick Start
 
-### Read These Documents First
-
-1. **[FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md)** — Mandatory conventions, package manager rules (npm only for frontend, no bun), and testing requirements
-2. **[COMMAND-REFERENCE.md](COMMAND-REFERENCE.md)** — Exact command patterns for all operations
-3. **[TESTING.md](TESTING.md)** — Test architecture, local commands, and CI workflows
-
-**Key Rule:** Always use `npm` exclusively for frontend package management (never Bun). See [FEATURE-DEVELOPMENT.md § Implementation Phase](FEATURE-DEVELOPMENT.md#implementation-phase) for details on why npm is mandatory across all environments.
-
-### Key Principles
-
-- **100% confidence required** — Do not upgrade any package unless you are certain of compatibility
-- **Breaking-change analysis first** — Investigate release notes BEFORE upgrading
-- **Test after every step** — Validate each group of upgrades before proceeding
-- **Lock file synchronization** — Always sync lock files after constraint changes
-- **Backend and frontend are separate workflows** — Handle independently with their own cycles
-- **No git operations** — AI agent is completely prohibited from executing any git write operations (commit, push, add, reset, merge, etc.). Permitted: read-only operations only (status, log, diff, show). User handles all git operations.
-- **Keep documentation concise** — Session summaries in DEPENDENCY-UPGRADE.md must follow this format ONLY: package lists and blocked packages. No test results, no security details, no technical commentary, no Docker notes. See "Session Log Format" below for rules.
-- **Session format is non-negotiable** — Every session follows Session 4 as the template. No exceptions.
+**This guide provides step-by-step workflows for upgrading backend and frontend dependencies with comprehensive testing and validation.** Read [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) for mandatory conventions (npm only for frontend, no bun). Follow "Workflow: Backend Dependencies" or "Workflow: Frontend Dependencies" sequentially. **Use `npm update --depth=10` for frontend transitive upgrades** (not just `npm update`). **Run the Post-Implementation Audit Protocol after every upgrade session** to verify all 344 backend + 363 frontend tests pass and no packages remain outdated. Session logs must follow the mandatory format (package lists only, no test results or breaking-change commentary). AI agent prohibited from git write operations; user handles all commits.
 
 ---
 
@@ -59,132 +42,6 @@ This document provides a comprehensive, process-driven approach to upgrading bot
 - ✅ DO list package names and new versions
 - ✅ DO note which packages are blocked/deferred and their status
 - ✅ DO keep totals accurate for historical tracking
-
----
-
-## Post-Implementation Audit Protocol for Dependency Upgrades
-
-**When to run**: After all upgrades complete and tests pass locally, before marking session complete.
-
-**Purpose**: Verify upgrades are complete, lock files synced, tests passing, and documentation accurate.
-
-### Agent 1: Build & Syntax Auditor
-
-**Responsibility**: Verify no compilation or syntax errors introduced by upgrades.
-
-**Success Criteria:**
-- ✅ Backend Python syntax valid (`py_compile`)
-- ✅ Frontend linting passes (ESLint + TypeScript)
-- ✅ Frontend build completes successfully
-
-**Commands**:
-```bash
-# Backend syntax check
-cd backend && poetry run python -m py_compile config/settings.py api/views.py applications/models.py
-
-# Frontend linting and build
-cd frontend && npm run lint && npm run build
-```
-
-**Expected Result**: All commands exit with code 0 (success).
-
----
-
-### Agent 2: Test Execution Auditor
-
-**Responsibility**: Verify all tests pass and no regressions introduced.
-
-**Success Criteria:**
-- ✅ All backend tests pass: `poetry run pytest` returns 344 tests passing (baseline)
-- ✅ All frontend tests pass: `npm run test:unit` returns ≥359 tests passing
-- ✅ No new failures introduced (only pre-existing flaky timeouts acceptable)
-
-**Commands**:
-```bash
-# Backend tests
-cd backend && poetry run pytest -q
-
-# Frontend tests (unit tests only, excludes integration)
-cd frontend && npm run test:unit
-```
-
-**Expected Result**: Backend 344 passing, Frontend 359+ passing (361/363 baseline with 2-4 flaky timeouts acceptable).
-
-**If failures detected**: Check if they're new (regression) or pre-existing (flaky timeouts). New failures = STOP and investigate.
-
----
-
-### Agent 3: Documentation Auditor
-
-**Responsibility**: Verify CHANGELOG and dependency docs updated correctly.
-
-**Success Criteria:**
-- ✅ CHANGELOG.md has session entry with current date (YYYY-MM-DD)
-- ✅ CHANGELOG entry is concise (no test counts, no technical details)
-- ✅ docs/DEPENDENCY-UPGRADE.md Session N updated with current date
-- ✅ Session log follows format (packages + blocked only, no extras)
-- ✅ THIRD_PARTY_NOTICES.md backend section updated with new versions
-
-**Commands**:
-```bash
-# Check CHANGELOG session entry
-head -20 CHANGELOG.md
-
-# Check DEPENDENCY-UPGRADE.md session log
-grep -A20 "^### Session N" docs/DEPENDENCY-UPGRADE.md
-
-# Verify versions in THIRD_PARTY_NOTICES.md
-grep "^| psycopg\|^| dbca-utils" THIRD_PARTY_NOTICES.md
-
-# Verify no past releases modified
-git log --oneline CHANGELOG.md | head -5
-```
-
-**Expected Result**: Session entry dated today, concise format, versions match lock files, git history shows only version section additions.
-
----
-
-### Agent 4: Dependency Lock Auditor
-
-**Responsibility**: Verify lock files properly synced with upgraded versions.
-
-**Success Criteria:**
-- ✅ backend/poetry.lock contains updated direct dependency versions
-- ✅ frontend/package-lock.json contains updated direct dependency versions
-- ✅ Lock files auto-generated (not manually edited)
-- ✅ Lock files in sync with constraint files (pyproject.toml, package.json)
-
-**Commands**:
-```bash
-# Check backend lock file for specific package
-cd backend && grep -A2 "^name = \"psycopg\"" poetry.lock | head -3
-
-# Check frontend lock file versions
-cd frontend && npm ls axios eslint @vitejs/plugin-react
-
-# Verify lock files auto-generated
-head -3 backend/poetry.lock
-head -3 frontend/package-lock.json
-```
-
-**Expected Result**: Versions in lock files match pyproject.toml/package.json constraints, files show auto-generation headers.
-
----
-
-### Audit Execution Workflow
-
-**Run agents in order (sequentially, not parallel):**
-
-1. **Agent 1 (Build & Syntax)** → Must PASS before proceeding
-   - If FAIL: Fix syntax errors, re-run Agent 1
-2. **Agent 2 (Tests)** → Must PASS before proceeding
-   - If FAIL (new failures): Stop, investigate, fix, re-run Agent 2
-3. **Agent 3 (Documentation)** → Must PASS before proceeding
-   - If FAIL: Update docs, re-run Agent 3
-4. **Agent 4 (Lock Files)** → Must PASS before proceeding
-   - If FAIL: Regenerate lock files, re-run Agent 4
-
-**If all agents PASS**: Session complete and ready for deployment.
 
 ---
 
@@ -290,16 +147,23 @@ git log --oneline CHANGELOG.md | head -5
 
 ### Agent 4: Dependency Lock Auditor
 
-**Responsibility**: Verify lock files properly synced with upgraded versions.
+**Responsibility**: Verify lock files properly synced with upgraded versions and NO packages remain outdated.
 
 **Success Criteria:**
 - ✅ backend/poetry.lock contains updated direct dependency versions
 - ✅ frontend/package-lock.json contains updated direct dependency versions
+- ✅ `npm outdated` shows ONLY intentionally deferred packages (TypeScript 7.x, vitest 5.x, etc.) — **CRITICAL** 
+  - Must NOT show any other packages as outdated
+  - If other packages appear, transitive update incomplete
 - ✅ Lock files auto-generated (not manually edited)
 - ✅ Lock files in sync with constraint files (pyproject.toml, package.json)
 
 **Commands**:
 ```bash
+# CRITICAL: Verify all transitive deps updated (except intentionally deferred)
+cd frontend && npm outdated
+# Expected: ONLY shows TypeScript 7.x, vitest 5.x, other deferred packages (no other packages listed)
+
 # Check backend lock file for specific package
 cd backend && grep -A2 "^name = \"psycopg\"" poetry.lock | head -3
 
@@ -311,9 +175,15 @@ head -3 backend/poetry.lock
 head -3 frontend/package-lock.json
 ```
 
-**Expected Result**: Versions in lock files match pyproject.toml/package.json constraints, files show auto-generation headers.
+**Expected Result**: 
+- Versions in lock files match pyproject.toml/package.json constraints
+- Files show auto-generation headers (no manual edits)
+- `npm outdated` shows ONLY deferred packages (TypeScript, vitest) — indicates all non-deferred transitive deps at latest
 
-**FAIL if**: Versions don't match or lock files appear manually edited.
+**FAIL if**:
+- Versions don't match or lock files appear manually edited
+- `npm outdated` shows packages NOT in "Intentionally Deferred Dependencies" section (e.g., "follow-redirects 1.16.1 → 1.16.2") — means transitive update incomplete
+  - Recovery: Run `npm update --depth=10` again, then verify with `npm outdated`, then re-run this agent
 
 ---
 
@@ -479,7 +349,7 @@ poetry show --outdated
 **Example entry:**
 ```markdown
 ### Changed
-- Backend dependency upgrades: Updated 19 packages including Django 5.2.17 (security patches), cryptography 50.0.0, cffi 2.1.1, djangorestframework 3.18.0 (with list serializer error format improvements), pytest-django 4.14.0, and other packages. See THIRD_PARTY_NOTICES.md for complete version list. All 265 backend tests passing.
+- Backend dependency upgrades: Updated 19 packages including Django 5.2.17 (security patches), cryptography 50.0.0, cffi 2.1.1, djangorestframework 3.18.0, pytest-django 4.14.0, and other packages. See THIRD_PARTY_NOTICES.md for complete version list.
 ```
 
 ---
@@ -581,21 +451,33 @@ After direct dependencies are upgraded and tested, upgrade transitive dependenci
 
 ```bash
 cd frontend
-npm update
+
+# IMPORTANT: npm update alone does NOT update nested transitive dependencies
+# (e.g., axios → follow-redirects → [outdated version])
+# Use --depth=10 to recursively update all transitive chain dependencies
+npm update --depth=10
 ```
 
 This command:
-- Upgrades all transitive dependencies to latest patch/minor versions
+- Upgrades all transitive dependencies (direct + all nested chains) to latest patch/minor versions
 - Respects all version ranges (^, ~) in `package.json`
-- Regenerates `package-lock.json` automatically
+- Regenerates `package-lock.json` automatically with all transitive updates
 - Does NOT modify `package.json`
+- **Critical:** --depth=10 ensures nested transitive packages (e.g., follow-redirects via axios) are caught
 
-**Verify compatibility:**
+**Verify no packages remain outdated:**
 ```bash
-cd frontend && npm run lint && npm run build && npm run test:unit
+cd frontend
+
+# Run full verification suite
+npm update --depth=10
+npm outdated          # Should show ONLY deferred packages (TypeScript 7.x, vitest 5.x) — not empty, not unintended outdated packages
+npm run lint && npm run build && npm run test:unit
 ```
 
-All tests and linting must pass. If transitive upgrades introduce regressions:
+All tests and linting must pass. **If `npm outdated` shows packages NOT in the "Intentionally Deferred Dependencies" list, the transitive update is incomplete — re-run `npm update --depth=10`.**
+
+If transitive upgrades introduce regressions:
 
 ```bash
 # Revert and identify the problematic package
@@ -630,200 +512,13 @@ Same as backend: update [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) fron
 
 ---
 
-## Special Handling: Major Version Upgrades
+## Critical Risks
 
-### TypeScript Major Versions
+**Lock File Sync:** Always run `poetry lock` (backend) or `npm install` (frontend) after updating constraint files. CI will fail with "lock file out of sync" if skipped.
 
-TypeScript major versions require special care:
+**Transitive Updates:** `npm update` alone does NOT update nested transitive dependencies. Use `npm update --depth=10` to catch packages like follow-redirects via axios. Run `npm outdated` after to verify ONLY deferred packages show as outdated; if other packages appear, run `npm update --depth=10` again.
 
-1. **Before upgrading**, verify:
-   - All `.ts` and `.tsx` files build without errors
-   - Type definitions in `@types/*` packages are compatible
-   - ESLint configuration works with new TypeScript version
-
-2. **Test comprehensively**:
-   - Run full linting suite
-   - Build the project
-   - Run full test suite
-   - Manual spot-check of critical components
-
-### Django Major Versions
-
-Django major versions (e.g., 5.x → 6.x) require a dedicated session:
-
-1. **Plan separately** — Do not combine with patch/minor upgrades
-2. **Read Django release notes thoroughly** — Document all breaking changes
-3. **Search codebase** — Find all usages of deprecated APIs
-4. **Plan code changes** — Identify what needs to be refactored
-5. **Test extensively** — Full test suite, security tests, manual workflows
-6. **Plan for CI impact** — May need Docker/pipeline configuration changes
-
-### React Major Versions
-
-React major versions (currently on 19.x, next is 20.x) require:
-
-1. **Breaking-change analysis** — Read official upgrade guide
-2. **Component library compatibility check** — Ensure MUI ecosystem supports new React version
-3. **Hook compatibility review** — Check for Hook API changes
-4. **Full end-to-end testing** — All workflows must work
-
----
-
-## Recommended Upgrade Cadence
-
-### Local Development Cycle
-
-1. **Identify & Analyse** — `poetry show --outdated` + release notes review (1-2 hours)
-2. **Categorise** — Group packages by risk level (30 minutes)
-3. **Upgrade Group A** (safe patches) — Update, test, document (30 minutes)
-4. **Investigate Group B** — Detailed risk assessment (1-2 hours, or defer)
-5. **Document Group C** (blocked) — List reasons, note for future (15 minutes)
-
-### CI/CD Integration
-
-- Run full test suite on each group before proceeding
-- Publish coverage reports
-- Check for new vulnerabilities after each upgrade batch
-- Tag releases after documentation is complete
-
----
-
-## Common Pitfalls and How to Avoid Them
-
-### ❌ Pitfall 1: Not Syncing Lock Files
-
-**Problem:** Update `pyproject.toml` or `package.json`, but forget to regenerate lock file. CI fails with "lock file out of sync" error.
-
-**Solution:**
-- **Backend:** Always run `poetry lock` after updating `pyproject.toml`
-- **Frontend:** Always run `npm install` after updating `package.json`
-- Add to checklist: "Lock files synced"
-
-### ❌ Pitfall 2: Upgrading Multiple Major Versions at Once
-
-**Problem:** Upgrade react-dropzone from v15 → v20 without reading breaking changes for v18, v19, v20. Multiple breaking changes compound the risk.
-
-**Solution:**
-- Always read release notes for EACH intermediate version
-- Upgrade incrementally if needed (v15 → v18, test, then v18 → v20)
-- Understand the cumulative breaking changes
-
-### ❌ Pitfall 3: Skipping E2E Tests for Frontend Upgrades
-
-**Problem:** Update frontend packages, run unit tests (pass), push to CI. E2E tests fail because of subtle interaction with browser/Playwright/DOM.
-
-**Solution:**
-- Always run full E2E test suite after frontend upgrades
-- Use parallel execution: `-n auto --dist loadscope` for speed
-
-### ❌ Pitfall 4: Not Checking Node.js Version Requirements
-
-**Problem:** Upgrade packages or tooling assumptions without updating CI/runtime Node version alignment. Tests pass locally, fail in CI.
-
-**Solution:**
-- Check release notes for "Node.js X.Y required"
-- Verify CI/Docker configurations support the required version
-- Update CI infrastructure BEFORE upgrading packages
-
-### ❌ Pitfall 5: Ignoring Peer Dependency Changes
-
-**Problem:** Upgrade @testing-library/jest-dom v6 → v7, which requires new peer dependency @testing-library/dom. Tests fail with missing module error.
-
-**Solution:**
-- Always check "Peer dependencies" section in release notes
-- When upgrading packages with new peer deps, add them to `package.json`
-- Run full test suite before proceeding
-
-### ❌ Pitfall 6: Breaking Changes Don't Apply to Authorisations System
-
-**Problem:** Read that django-rest-framework 3.18.0 changed list serializer error format, assume it will break Authorisations System, defer upgrade. Later realise Authorisations System doesn't use affected API.
-
-**Solution:**
-- After reading breaking change, always search Authorisations System codebase
-- Verify the API is actually used before deferring
-- Example: "List serializer error format changed, but Authorisations System only has 1 `many=True` usage in read-only endpoint → SAFE TO UPGRADE"
-
-### ❌ Pitfall 7: Incomplete Documentation Updates
-
-**Problem:** Upgrade 20 packages, update CHANGELOG, forget to update THIRD_PARTY_NOTICES.md. Codebase and documentation are out of sync.
-
-**Solution:**
-- Create checklist:
-  - [ ] pyproject.toml/package.json updated
-  - [ ] Lock file synced
-  - [ ] All tests passing
-  - [ ] CHANGELOG.md updated
-  - [ ] THIRD_PARTY_NOTICES.md updated
-  - [ ] Code reviewed
-  - [ ] Ready to merge
-
----
-
-## Status: Upgrade Completion Summary (Session 3)
-
-### ✅ COMPLETED UPGRADES — Production Ready
-
-**Session 3 delivered 50 total package upgrades across backend and frontend:**
-
-#### Backend: 21 Package Upgrades
-- Zero code changes required
-- All 326 backend unit/API tests passing
-- Patches and minor upgrades: psycopg 3.3.6, django-vite 3.2.0, gunicorn 26.2.0, djangorestframework 3.18.1, playwright 1.63.0, and 16 others
-- See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) backend section for complete list
-
-#### Frontend: 29 Package Upgrades
-All completed with comprehensive testing:
-
-**Major Version Migrations:**
-1. **react-router v7.18.2 → v8.4.0** ✅
-   - Pre-flight analysis: Zero breaking changes detected (no meta() functions, no useMatches() calls, no custom middleware)
-   - Implementation: Updated package.json; react-router.config.tsx simplified for client-side SPA mode
-   - Code changes required: None — LoaderFunctionArgs already compatible with v8
-   - Tests: All 311 unit tests passing, build successful (1,784 modules)
-   - Status: **Deployable** — Client-side SPA architecture enabled low-risk upgrade
-
-2. **react-dropzone v15.0.0 → v20.1.2** ✅
-   - Investigated cumulative breaking changes across 5 major versions (v15 → v16 → v17 → v18 → v19 → v20)
-   - Implementation: Refactored [frontend/src/components/inputs/file.tsx](../frontend/src/components/inputs/file.tsx) — split single onDrop callback into onDropAccepted + onDropRejected
-   - Code changes: FileInput.tsx (1 file, ~20 lines refactored), test file updated (3 test functions)
-   - Tests: All 311 unit tests passing, file upload workflows validated
-   - Status: **Deployable** — Systematic breaking-change analysis enabled confident major version upgrade
-
-3. **vitest v4.1.10 → v5.0.2** ✅
-   - Pre-flight analysis: Node.js 22+ ✅, Vite 6.4+ ✅, all vi.mock() at module top level ✅, all .rejects assertions awaited ✅
-   - Implementation: Updated package.json; configured skipLibCheck: true in tsconfig.app.json for vitest 5.0.2 type compatibility
-   - Code changes: tsconfig.app.json only (suppress vitest 5 type declaration conflicts with @testing-library/jest-dom)
-   - Tests: All 311 unit tests passing, build successful (1,784 modules)
-   - Status: **Deployable** — vitest 5 enables faster test execution and improved assertion types
-
-4. **msw v2.15.0 → v3.0.0** ✅
-   - Pre-flight analysis: Node.js 22+ ✅, ESM-only ✅, MSW not used in codebase ✅
-   - Implementation: Updated package.json
-   - Code changes: None — MSW completely unused in Authorisations System (zero codebase impact)
-   - Tests: All 311 unit tests passing, no MSW-related failures
-   - Status: **Deployable** — Major version upgrade with zero risk to application
-
-5. **Testing Infrastructure Major Overhaul** ✅
-   - Added peer dependency: @testing-library/dom 10.4.0
-   - Upgraded @testing-library/jest-dom 6.9.1 → 7.0.1
-   - Upgraded @vitest/coverage-istanbul 4.1.10 → 5.0.2 (tracks vitest version)
-   - Upgraded jsdom 29.1.1 → 30.1.1
-   - Upgraded react-hook-form 7.80.0 → 7.89.0 (required TypeScript return type annotations in FormLayout.tsx, lines 157/175/207)
-   - All 311 frontend unit tests passing
-   - Status: **Deployable** — Comprehensive test infrastructure validated with full test suite
-
-**Safe Minor/Patch Upgrades:**
-- axios, eslint, globals, typescript-eslint, @types/react, @types/react-dom, vite, @vitejs/plugin-react-swc, and 8+ others
-- Combined total: 30 frontend packages upgraded
-- Code changes: TypeScript return type annotations only (for react-hook-form; other upgrades zero-change)
-
-**Test Results Summary (Session 3):**
-- ✅ Frontend unit tests: 311/311 PASSED
-- ✅ Backend unit/API tests: 326/326 PASSED  
-- ✅ E2E tests: 63/63 PASSED (101.72s total)
-- ✅ Linting: Zero errors (ESLint + TypeScript)
-- ✅ Build: 1,784 modules transformed, production build successful
-- **Total test coverage at Session 3 closure: 700 tests passing**
+**Verify Actual Usage:** When breaking changes are documented, search the Authorisations System codebase to confirm the affected API is actually used. Many breaking changes don't apply to this application's usage patterns.
 
 ---
 
@@ -853,62 +548,29 @@ All completed with comprehensive testing:
 - **Estimated Effort:** 2-4 hours (full build testing + possible configuration updates)
 - **Decision:** Monitor TypeScript 7.1+ release; create dedicated session when ready
 
-**vitest v5.x** (from 4.1.11)
+**vitest v5.x** (from 4.1.12)
 - **Status:** ⏸️ Intentionally deferred (ecosystem compatibility issue)
-- **Reason:** vitest 5.0.2 has type declaration conflict with @testing-library/jest-dom 7.0.1 — both declare `interface Assertion` with incompatible type parameters (vitest 5: `<Return, Received>`, jest-dom 7: `<T = any>`). This is a known ecosystem incompatibility from two newly released packages (vitest 5 released 3 weeks ago, jest-dom 7 released 5 days ago).
-- **Technical Details:** TypeScript error TS2428 "All declarations of 'Assertion' must have identical type parameters" prevents `npm run lint` and `npm run build` from succeeding, despite all 311 tests passing (test execution unaffected, type checking affected)
+- **Reason:** vitest 5.x has type declaration conflict with @testing-library/jest-dom 7.0.1 — both declare `interface Assertion` with incompatible type parameters (vitest 5: `<Return, Received>`, jest-dom 7: `<T = any>`). This is a known ecosystem incompatibility from two newly released packages.
+- **Technical Details:** TypeScript error TS2428 "All declarations of 'Assertion' must have identical type parameters" prevents `npm run lint` and `npm run build` from succeeding (test execution unaffected, type checking affected)
 - **Investigation Completed:** 
-  - ✅ Confirmed vitest 5.0.2 supports Node 22+ ✅ No code changes needed for tests
-  - ✅ Confirmed @testing-library/jest-dom 7.0.1 is compatible with vitest 4.1.11 ✅ No type conflict with v4
-  - ✅ Confirmed msw 3.0.0 (v2→v3 migration) works perfectly with vitest 4.1.11
+  - ✅ Confirmed vitest 5.x supports Node 22+ ✅ No code changes needed for tests
+  - ✅ Confirmed @testing-library/jest-dom 7.0.1 is compatible with vitest 4.1.12 ✅ No type conflict with v4
+  - ✅ Confirmed msw 3.0.0 works perfectly with vitest 4.1.12
   - ✅ Applied security patch: vitest 4.1.10 → 4.1.11 (GHSA-82fw-gwwq-j7x9 Path Traversal / Arbitrary File Read)
-  - ✅ Decision: Use vitest 4.1.11 (patched), keep @testing-library/jest-dom 7.0.1
+  - ✅ Current: vitest 4.1.12, @testing-library/jest-dom 7.0.1, all 363 tests passing
 - **When to Upgrade:** After ecosystem publishes:
   - Option A: vitest 5.0.3+ with fixed Assertion interface matching jest-dom 7.x declarations, OR
   - Option B: jest-dom 7.0.2+ with Assertion interface matching vitest 5.0.x declarations, OR
   - Option C: TypeScript issue resolved (both projects align type signatures)
 - **Estimated Effort:** 30 minutes once ecosystem stabilises (just update package.json + npm install + revalidate tests)
-- **Current State:** vitest 4.1.11 (security patch), @testing-library/jest-dom 7.0.1, all 700 tests passing, full build successful
-
----
-
-## Documentation and References
-
-### How to Use This Document
-
-**For routine upgrades:**
-- Follow "Workflow: Backend Dependencies" or "Workflow: Frontend Dependencies"
-- Use the checklist in each workflow
-- Refer to "Common Pitfalls" for quick reference
-
-**For major upgrades:**
-- Check "Intentionally Deferred Dependencies" for packages not yet upgraded
-- Use "Special Handling: Major Version Upgrades" for detailed guidance
-- Plan a dedicated session with time for code changes and testing
-
-**For future developers:**
-- Read "Before You Start" section
-- Follow the workflow step-by-step
-- Refer to [COMMAND-REFERENCE.md](COMMAND-REFERENCE.md) for exact commands
-- Refer to [TESTING.md](TESTING.md) for test execution patterns
-
-### Related Documents
-
-- [FEATURE-DEVELOPMENT.md](FEATURE-DEVELOPMENT.md) — Mandatory conventions
-- [COMMAND-REFERENCE.md](COMMAND-REFERENCE.md) — Command patterns
-- [TESTING.md](TESTING.md) — Test architecture
-- [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) — Version inventory
-- [CHANGELOG.md](../CHANGELOG.md) — User-facing changes
+- **Current State:** vitest 4.1.12, @testing-library/jest-dom 7.0.1, all 363 tests passing, full build successful
 
 ---
 
 ## Session History
 
 ### Session 1 (2026-08-13): Initial Investigation
-- Read FEATURE-DEVELOPMENT.md and core documentation mandatory for all sessions
-- Executed `poetry show --outdated` for backend and `npm outdated` for frontend
-- Identified upgrade candidates across both stacks
-- Planned two-phase approach: backend first (zero code changes), then frontend (zero code changes)
+- Identified upgrade candidates and planned two-phase approach (backend first, then frontend)
 
 ### Session 2 (2026-08-13): Initial Dependency Upgrades
 
