@@ -20,19 +20,19 @@ attribution obligations, those obligations continue to apply.
 
 | Package | Version reviewed | Licence |
 | --- | --- | --- |
-| Django | 5.2.17 | BSD-3-Clause |
-| psycopg | 3.3.6 | LGPL-3.0-only |
+| Django | 5.2.18 | BSD-3-Clause |
+| psycopg | 3.3.7 | LGPL-3.0-only |
 | django-vite | 3.2.0 | Apache-2.0 |
 | whitenoise | 6.9.0 | MIT |
 | gunicorn | 26.2.0 | MIT |
 | django-environ | 0.14.0 | MIT |
-| jsonschema | 4.26.0 | MIT |
+| jsonschema | 4.24.0 | MIT |
 | drf-jsonschema-serializer | 3.0.0 | BSD-3-Clause |
 | django-jsonform | 2.23.2 | BSD-3-Clause |
 | django-admin-tools | 0.9.3 | MIT |
-| frozendict | 2.4.7 | LGPL-3.0-only |
-| dbca-utils | 3.0.13 | Apache-2.0 |
-| djangorestframework | 3.18.1 | BSD-3-Clause |
+| frozendict | 2.5.0 | LGPL-3.0-only |
+| dbca-utils | 3.0.16 | Apache-2.0 |
+| djangorestframework | 3.18.3 | BSD-3-Clause |
 | pyfsig | 1.1.1 | MIT |
 | django-storages | 1.14.6 | BSD-3-Clause |
 | django-admin-sortable2 | 2.3.1 | MIT |

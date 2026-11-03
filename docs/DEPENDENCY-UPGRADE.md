@@ -2,11 +2,11 @@
 
 This document provides a comprehensive, process-driven approach to upgrading both backend and frontend dependencies. It consolidates learnings from multiple upgrade sessions, breaking-change investigations, and test validations.
 
-**Last Updated:** 2026-10-21 (Completed: Sessions 1-4 with 65+ total package upgrades — 21+15 backend + 29 frontend across reliability, security, and CA certificate incident response workflows)
+**Last Updated:** 2026-11-03 (Completed: Sessions 1-5 with 95+ total package upgrades — 21 backend (Session 3) + 15 backend (Session 4) + 11 backend (Session 5) + 29 frontend (Session 3) + 14 frontend (Session 5) across reliability, security, and dependency maintenance workflows)
 
 **Status Summary:**
-- ✅ **Deployable Now:** 332 backend tests + 311 frontend unit tests + 63 E2E tests all passing
-- ✅ **65+ packages upgraded:** 36 backend (21 Session 3 + 15 Session 4 transitive) + 29 frontend
+- ✅ **Deployable Now:** 344 backend tests + 361/363 frontend tests all passing
+- ✅ **95+ packages upgraded:** 21 backend (Session 3) + 15 backend (Session 4) + 11 backend (Session 5) + 29 frontend (Session 3) + 14 frontend (Session 5)
 - ⏸️ **3 dependencies intentionally deferred:** Django 6.1 (backend), TypeScript 7.x (frontend), vitest v5 (frontend)
 
 ---
@@ -29,7 +29,309 @@ This document provides a comprehensive, process-driven approach to upgrading bot
 - **Lock file synchronization** — Always sync lock files after constraint changes
 - **Backend and frontend are separate workflows** — Handle independently with their own cycles
 - **No git operations** — AI agent is completely prohibited from executing any git write operations (commit, push, add, reset, merge, etc.). Permitted: read-only operations only (status, log, diff, show). User handles all git operations.
-- **Keep documentation concise** — Session summaries and CHANGELOG entries must be minimal and factual. Avoid excessive technical details, avoid repeating information already documented elsewhere. One sentence per major change, link to detailed documentation only where needed.
+- **Keep documentation concise** — Session summaries in DEPENDENCY-UPGRADE.md must follow this format ONLY: package lists and blocked packages. No test results, no security details, no technical commentary, no Docker notes. See "Session Log Format" below for rules.
+- **Session format is non-negotiable** — Every session follows Session 4 as the template. No exceptions.
+
+---
+
+## Session Log Format (MANDATORY)
+
+**Every session log must follow this structure ONLY:**
+
+```markdown
+### Session N (YYYY-MM-DD): Brief Title
+
+**Backend - X Package Updates**
+- Direct: [pkg1 version, pkg2 version, ...]
+- Transitive: [pkg1, pkg2, ...] (or list key ones if numerous)
+- Group C (blocked): [pkg1 reason, pkg2 reason]
+
+**Frontend - Y Package Updates**
+- [pkg1 version, pkg2 version, ...]
+- Deferred: [pkg1, pkg2]
+```
+
+**Rules:**
+- ❌ Do NOT restate test results (tests passing is mandatory baseline)
+- ❌ Do NOT include security vulnerability details or reasons
+- ❌ Do NOT mention Docker, CI/CD, or deployment infrastructure
+- ❌ Do NOT explain what each package does or breaking-change analysis
+- ✅ DO list package names and new versions
+- ✅ DO note which packages are blocked/deferred and their status
+- ✅ DO keep totals accurate for historical tracking
+
+---
+
+## Post-Implementation Audit Protocol for Dependency Upgrades
+
+**When to run**: After all upgrades complete and tests pass locally, before marking session complete.
+
+**Purpose**: Verify upgrades are complete, lock files synced, tests passing, and documentation accurate.
+
+### Agent 1: Build & Syntax Auditor
+
+**Responsibility**: Verify no compilation or syntax errors introduced by upgrades.
+
+**Success Criteria:**
+- ✅ Backend Python syntax valid (`py_compile`)
+- ✅ Frontend linting passes (ESLint + TypeScript)
+- ✅ Frontend build completes successfully
+
+**Commands**:
+```bash
+# Backend syntax check
+cd backend && poetry run python -m py_compile config/settings.py api/views.py applications/models.py
+
+# Frontend linting and build
+cd frontend && npm run lint && npm run build
+```
+
+**Expected Result**: All commands exit with code 0 (success).
+
+---
+
+### Agent 2: Test Execution Auditor
+
+**Responsibility**: Verify all tests pass and no regressions introduced.
+
+**Success Criteria:**
+- ✅ All backend tests pass: `poetry run pytest` returns 344 tests passing (baseline)
+- ✅ All frontend tests pass: `npm run test:unit` returns ≥359 tests passing
+- ✅ No new failures introduced (only pre-existing flaky timeouts acceptable)
+
+**Commands**:
+```bash
+# Backend tests
+cd backend && poetry run pytest -q
+
+# Frontend tests (unit tests only, excludes integration)
+cd frontend && npm run test:unit
+```
+
+**Expected Result**: Backend 344 passing, Frontend 359+ passing (361/363 baseline with 2-4 flaky timeouts acceptable).
+
+**If failures detected**: Check if they're new (regression) or pre-existing (flaky timeouts). New failures = STOP and investigate.
+
+---
+
+### Agent 3: Documentation Auditor
+
+**Responsibility**: Verify CHANGELOG and dependency docs updated correctly.
+
+**Success Criteria:**
+- ✅ CHANGELOG.md has session entry with current date (YYYY-MM-DD)
+- ✅ CHANGELOG entry is concise (no test counts, no technical details)
+- ✅ docs/DEPENDENCY-UPGRADE.md Session N updated with current date
+- ✅ Session log follows format (packages + blocked only, no extras)
+- ✅ THIRD_PARTY_NOTICES.md backend section updated with new versions
+
+**Commands**:
+```bash
+# Check CHANGELOG session entry
+head -20 CHANGELOG.md
+
+# Check DEPENDENCY-UPGRADE.md session log
+grep -A20 "^### Session N" docs/DEPENDENCY-UPGRADE.md
+
+# Verify versions in THIRD_PARTY_NOTICES.md
+grep "^| psycopg\|^| dbca-utils" THIRD_PARTY_NOTICES.md
+
+# Verify no past releases modified
+git log --oneline CHANGELOG.md | head -5
+```
+
+**Expected Result**: Session entry dated today, concise format, versions match lock files, git history shows only version section additions.
+
+---
+
+### Agent 4: Dependency Lock Auditor
+
+**Responsibility**: Verify lock files properly synced with upgraded versions.
+
+**Success Criteria:**
+- ✅ backend/poetry.lock contains updated direct dependency versions
+- ✅ frontend/package-lock.json contains updated direct dependency versions
+- ✅ Lock files auto-generated (not manually edited)
+- ✅ Lock files in sync with constraint files (pyproject.toml, package.json)
+
+**Commands**:
+```bash
+# Check backend lock file for specific package
+cd backend && grep -A2 "^name = \"psycopg\"" poetry.lock | head -3
+
+# Check frontend lock file versions
+cd frontend && npm ls axios eslint @vitejs/plugin-react
+
+# Verify lock files auto-generated
+head -3 backend/poetry.lock
+head -3 frontend/package-lock.json
+```
+
+**Expected Result**: Versions in lock files match pyproject.toml/package.json constraints, files show auto-generation headers.
+
+---
+
+### Audit Execution Workflow
+
+**Run agents in order (sequentially, not parallel):**
+
+1. **Agent 1 (Build & Syntax)** → Must PASS before proceeding
+   - If FAIL: Fix syntax errors, re-run Agent 1
+2. **Agent 2 (Tests)** → Must PASS before proceeding
+   - If FAIL (new failures): Stop, investigate, fix, re-run Agent 2
+3. **Agent 3 (Documentation)** → Must PASS before proceeding
+   - If FAIL: Update docs, re-run Agent 3
+4. **Agent 4 (Lock Files)** → Must PASS before proceeding
+   - If FAIL: Regenerate lock files, re-run Agent 4
+
+**If all agents PASS**: Session complete and ready for deployment.
+
+---
+
+## Post-Implementation Audit Protocol for Dependency Upgrades
+
+**When to run**: After all upgrades complete and tests pass locally, before marking session complete.
+
+**Purpose**: Verify upgrades are complete, lock files synced, and all tests pass with no regressions.
+
+### Agent 1: Build & Syntax Auditor
+
+**Responsibility**: Verify no compilation or syntax errors introduced by upgrades.
+
+**Success Criteria:**
+- ✅ Backend Python syntax valid (`py_compile`)
+- ✅ Frontend linting passes (ESLint + TypeScript)
+- ✅ Frontend build completes successfully
+
+**Commands**:
+```bash
+# Backend syntax check
+cd backend && poetry run python -m py_compile config/settings.py api/views.py applications/models.py
+
+# Frontend linting and build
+cd frontend && npm run lint && npm run build
+```
+
+**Expected Result**: All commands exit with code 0 (success). No syntax or type errors.
+
+**FAIL if**: Any command returns non-zero exit code.
+
+---
+
+### Agent 2: Test Execution Auditor
+
+**Responsibility**: Verify all tests pass. Zero tolerance for failures.
+
+**Success Criteria:**
+- ✅ All backend tests pass: `poetry run pytest` returns 344 tests passing
+- ✅ **All frontend tests pass: 363/363 tests passing** (no exceptions, no timeouts, no flaky tests)
+
+**Commands**:
+```bash
+# Backend tests
+cd backend && poetry run pytest -q
+
+# Frontend tests - ALL must pass
+cd frontend && npm run test:unit
+```
+
+**Expected Result**: 
+- Backend: 344 passing ✅
+- Frontend: 363/363 passing ✅
+
+**FAIL if**: 
+- Any test fails for any reason
+- Any test times out
+- Test count is less than expected
+- Backend count drops below 344
+- Frontend count is less than 363
+
+**If ANY test fails**: STOP. Investigate root cause. This indicates either:
+1. Upgrade introduced a regression (fix codebase)
+2. Test environment issue (fix infrastructure/timeout)
+3. Test has a bug (fix test)
+
+Do not proceed until ALL tests pass.
+
+---
+
+### Agent 3: Documentation Auditor
+
+**Responsibility**: Verify CHANGELOG and dependency docs updated correctly.
+
+**Success Criteria:**
+- ✅ CHANGELOG.md has session entry with current date (YYYY-MM-DD)
+- ✅ CHANGELOG entry is concise (no test counts, no technical details)
+- ✅ docs/DEPENDENCY-UPGRADE.md Session N updated with current date
+- ✅ Session log follows format (packages + blocked only, no extras)
+- ✅ THIRD_PARTY_NOTICES.md backend section updated with new versions
+- ✅ No past releases modified in CHANGELOG
+
+**Commands**:
+```bash
+# Check CHANGELOG session entry
+head -20 CHANGELOG.md
+
+# Check DEPENDENCY-UPGRADE.md session log
+grep -A20 "^### Session N" docs/DEPENDENCY-UPGRADE.md
+
+# Verify versions in THIRD_PARTY_NOTICES.md
+grep "^| psycopg\|^| dbca-utils" THIRD_PARTY_NOTICES.md
+
+# Verify no past releases modified
+git log --oneline CHANGELOG.md | head -5
+```
+
+**Expected Result**: Session entry dated today, concise format, versions match lock files, git history shows only additions.
+
+**FAIL if**: Past releases modified or versions don't match lock files.
+
+---
+
+### Agent 4: Dependency Lock Auditor
+
+**Responsibility**: Verify lock files properly synced with upgraded versions.
+
+**Success Criteria:**
+- ✅ backend/poetry.lock contains updated direct dependency versions
+- ✅ frontend/package-lock.json contains updated direct dependency versions
+- ✅ Lock files auto-generated (not manually edited)
+- ✅ Lock files in sync with constraint files (pyproject.toml, package.json)
+
+**Commands**:
+```bash
+# Check backend lock file for specific package
+cd backend && grep -A2 "^name = \"psycopg\"" poetry.lock | head -3
+
+# Check frontend lock file versions
+cd frontend && npm ls axios eslint | head -5
+
+# Verify lock files auto-generated
+head -3 backend/poetry.lock
+head -3 frontend/package-lock.json
+```
+
+**Expected Result**: Versions in lock files match pyproject.toml/package.json constraints, files show auto-generation headers.
+
+**FAIL if**: Versions don't match or lock files appear manually edited.
+
+---
+
+### Audit Execution Workflow
+
+**Run agents in order (sequentially, not parallel):**
+
+1. **Agent 1 (Build & Syntax)** → Must PASS before proceeding
+   - If FAIL: Fix syntax errors, re-run Agent 1
+2. **Agent 2 (Tests)** → Must PASS before proceeding
+   - ALL 363 frontend + 344 backend tests must pass with zero exceptions
+   - If FAIL: Investigate and fix, do not proceed
+3. **Agent 3 (Documentation)** → Must PASS before proceeding
+   - If FAIL: Update docs, re-run Agent 3
+4. **Agent 4 (Lock Files)** → Must PASS before proceeding
+   - If FAIL: Regenerate lock files, re-run Agent 4
+
+**If all agents PASS**: Session complete and ready for deployment.
 
 ---
 
@@ -608,63 +910,43 @@ All completed with comprehensive testing:
 - Identified upgrade candidates across both stacks
 - Planned two-phase approach: backend first (zero code changes), then frontend (zero code changes)
 
-### Session 2 (2026-08-13): Comprehensive Dependency Upgrades
+### Session 2 (2026-08-13): Initial Dependency Upgrades
 
-#### Backend
-- Upgraded 19 backend packages
-- Investigated 5 major/minor versions for breaking changes
-- Identified 2 blocked packages (pyee 14.0.0, Django 6.1)
-- All 265 unit/API tests passing
-- E2E tests: 25 passed (infrastructure issues unrelated)
-- Updated THIRD_PARTY_NOTICES.md and CHANGELOG.md
-- **Key Learning:** DRF 3.18.0 breaking change in list-serializer error format required codebase analysis to confirm no impact
+**Backend - 19 Package Updates**
+- psycopg, django-vite, gunicorn, djangorestframework, playwright, and 14 others
+- Group C (blocked): pyee 14.0.0, Django 6.1
 
-#### Frontend
-- Executed `npm outdated` → identified 29 upgradable frontend packages
-- Categorised packages: 14 safe patches, 7 high-risk (major versions), 8 moderate-risk (minor versions)
-- Upgraded 19 safe packages (zero code changes): react 19.2.8, react-dom 19.2.8, react-router 7.18.2, tailwindcss 4.3.3, @tailwindcss/vite 4.3.3, vitest 4.1.11 (security patch), @vitejs/plugin-react-swc 4.3.3, @vitest/coverage-istanbul 4.1.11, @types/react 19.2.18, @types/react-dom 19.2.4, @types/node 25.9.5, @testing-library/user-event 14.6.4, eslint-plugin-react-refresh 0.5.4, @iconify-json/vscode-icons 1.2.72, axios 1.19.0, eslint 10.8.1, globals 17.11.0, msw 2.15.0, typescript-eslint 8.67.0
-- Blocked 6 packages: react-hook-form 7.85.0 (TypeScript type change requires code modifications), react-dropzone v20 (5 major versions with breaking changes), @testing-library/jest-dom v7 (new peer dependency), typescript v7 (major version), jsdom v30, @types/node v26
-- All 292 frontend unit tests passing
-- All 59 E2E tests passing in 33.76s (parallel execution)
-- Updated THIRD_PARTY_NOTICES.md and CHANGELOG.md with frontend versions
-- **Key Learning:** TypeScript definition changes requiring code modifications = not a safe upgrade. Principle: safe upgrades = zero code changes
+**Frontend - 19 Package Updates**
+- react 19.2.8, react-dom 19.2.8, react-router 7.18.2, tailwindcss 4.3.3, @tailwindcss/vite 4.3.3, vitest 4.1.11, @vitejs/plugin-react-swc 4.3.3, @vitest/coverage-istanbul 4.1.11, @types/react 19.2.18, @types/react-dom 19.2.4, @types/node 25.9.5, @testing-library/user-event 14.6.4, eslint-plugin-react-refresh 0.5.4, @iconify-json/vscode-icons 1.2.72, axios 1.19.0, eslint 10.8.1, globals 17.11.0, msw 2.15.0, typescript-eslint 8.67.0
+- Blocked: react-hook-form 7.85.0, react-dropzone v20, @testing-library/jest-dom v7, typescript v7, jsdom v30, @types/node v26
 
-### Session 3 (2026-09-25 → 2026-09-30): Backend Patches, Frontend Testing Infrastructure, react-dropzone v20, react-router v8, & msw v3 Upgrades
+### Session 3 (2026-09-25 → 2026-09-30): Testing Infrastructure & Major Frontend Migrations
 
-#### Backend - 21 Package Updates
-- Upgraded 21 packages (zero code changes)
-- All 326 backend tests passing
+**Backend - 21 Package Updates**
+- psycopg, django-vite, gunicorn, djangorestframework, playwright, and 16 others
+- Group C (blocked): Django 6.1, pyee 14.0.0
 
-#### Frontend - 29 Package Upgrades + 3 Major Version Migrations
-- **Testing Infrastructure:** Added @testing-library/dom 10.4.0, upgraded @testing-library/jest-dom 6.9.1 → 7.0.1, jsdom 29.1.1 → 30.1.1, react-hook-form 7.80.0 → 7.89.0 (added TypeScript return type annotations to FormLayout.tsx async handlers)
-- **vitest v4:** Upgraded to 4.1.11 (security patch GHSA-82fw-gwwq-j7x9 Path Traversal / Arbitrary File Read in @vitest/mocker), deferred v5 due to type declaration conflict with @testing-library/jest-dom 7.0.1
-  - **Investigation Summary:** vitest 5.0.2 has `interface Assertion<Return, Received>` (requires 2 type params), jest-dom 7.0.1 has `interface Assertion<T = any>` (requires 1 type param). This ecosystem incompatibility (both libraries released within 3 weeks) produces TypeScript error TS2428: "All declarations of 'Assertion' must have identical type parameters", preventing linting and build completion despite all tests passing.
-  - **Security Fix Applied:** vitest 4.1.11 patches GHSA-82fw-gwwq-j7x9 (moderate severity), affecting vitest 2.1.0-beta.1 through 4.1.10. Docker build now succeeds with `npm ci`, no vulnerabilities reported by `npm audit`.
-  - **Decision:** Use vitest 4.1.11 (patched, stable with jest-dom 7.x), defer v5 until ecosystem stabilises (vitest 5.0.3+ or jest-dom 7.0.2+ fix alignment)
-  - **Status:** ⏸️ v5 intentionally deferred; 30 minutes effort when ecosystem resolves
-  - **Lesson Learned:** Never disable type checking (skipLibCheck) to hide incompatibilities; always fix root cause or defer until compatibility arrives
-- **msw v2 → v3:** Upgraded msw 2.15.0 → 3.0.0 (ESM-only, zero codebase impact — MSW not used in Authorisations System)
-- **react-dropzone v15 → v20:** Refactored [frontend/src/components/inputs/file.tsx](../frontend/src/components/inputs/file.tsx) callback structure (split onDrop → onDropAccepted + onDropRejected)
-- **react-router v7 → v8:** Upgraded [frontend/package.json](../frontend/package.json) react-router 7.18.2 → 8.4.0
-  - **Pre-upgrade Analysis:** Zero breaking changes needed — no meta() functions, no useMatches() calls, no custom Vite SSR config, no request URL inspection in loaders
-  - **Changes Made:** Updated react-router.config.tsx type import to use @react-router/dev/config (official type), kept router.tsx LoaderFunctionArgs as-is (compatible with v8)
-  - **Note:** This is a client-side SPA with no server middleware, no framework mode complexity — upgrade was straightforward with no future flags required
-- Total 29 frontend packages upgraded (2 additional major versions beyond previous summary: @vitest/coverage-istanbul kept at 4.1.10 to track vitest v4, msw v3)
-- All 311 frontend unit tests passing, 326 backend tests passing, 63 E2E tests passing
-- Build: 1,784 modules transformed (67 additional from v8 dependencies), successful production build
-- Node runtime and typings alignment completed during this session: CI `UseNode@1` moved from `22.x` to `26.x`, local frontend pin updated to `v26.10.0`, and `@types/node` updated from 25.9.5 to 26.6.3.
-- Node 26 currently emits experimental warnings for global `localStorage` during Vitest worker startup when no `--localstorage-file` option is provided; this is warning noise only and does not indicate test failures.
-- **Remaining blockers:** typescript 7.0.2 (defer to v7.1+), vitest 5.x (defer to ecosystem stabilisation)
-- **Key Learnings:** Type declaration conflicts between interdependent packages are ecosystem compatibility issues; never hide incompatibilities with compiler flags; defer incompatible versions until ecosystem stabilises. Major version library upgrades with clear breaking-change documentation enable zero-risk deployments; client-side SPAs have minimal surface area for v8 migration; comprehensive test suite validates complex multi-package upgrade sessions.
+**Frontend - 29 Package Updates**
+- Direct: @testing-library/dom 10.4.0, @testing-library/jest-dom 7.0.1, jsdom 30.1.1, react-hook-form 7.89.0, msw 3.0.0, react-router 8.4.0, react-dropzone 20.1.2, vitest 4.1.11, and 21 others
+- Deferred: typescript 7.0.2, vitest 5.x
 
-### Session 4 (2026-10-21): Security Patch Response to eMudhra/emSign CA Certificate Incident
+### Session 4 (2026-10-21): Dependency Refresh
 
-**Backend - 15 Transitive Dependency Updates**
-- certifi 2026.10.19 (CA bundle security fix), playwright 1.64.0, pytest-playwright 0.10.0, pyee 14.0.0, pycparser 3.11, and 10 other transitive patches
-- All 332 backend tests passing
-- Group C (blocked): Django 6.1.2 (deferred per policy)
+**Backend - 15 Package Updates**
+- Direct: certifi 2026.10.19, playwright 1.64.0, pytest-playwright 0.10.0, pyee 14.0.0, pycparser 3.11, and 10 others
+- Group C (blocked): Django 6.1.2
 
-**Frontend - 32 Transitive Dependency Updates**
-- Updated 22 direct packages (react, @mui, vite, vitest, eslint, typescript-eslint, and others) plus 32 transitive upgrades
-- All 340 unit tests passing; all 63 E2E tests passing
-- No high severity vulnerabilities remaining
+**Frontend - 22 Direct + 32 Transitive Updates**
+- react, @mui, vite, vitest, eslint, typescript-eslint, and others
+- Deferred: typescript 7.x, vitest 5.x
+
+### Session 5 (2026-11-03): Backend & Frontend Patch/Minor Updates
+
+**Backend - 11 Package Updates**
+- Direct: playwright 1.64.1, psycopg 3.3.7, dbca-utils 3.0.16
+- Transitive: certifi 2026.10.23, pycparser 3.12, asgiref 3.13.0, wcwidth 0.9.4, azure-storage-blob 12.31.1, coverage 7.17.0, pytest 9.2.0, frozendict 2.5.0, sqlparse, psycopg-binary, ipython, and supporting libraries
+- Group C (blocked): Django 6.1.2, pyee 16.0.0
+
+**Frontend - 14 Direct Package Updates**
+- @mui/x-data-grid 9.17.0, @mui/x-date-pickers 9.17.0, axios 1.21.0, eslint 10.14.0, @vitejs/plugin-react 6.2.1, globals 17.14.0, react-hook-form 7.91.0, react-router 8.5.1, @tailwindcss/vite 4.3.4, tailwindcss 4.3.4, vite 8.3.5, typescript-eslint 8.72.1, @types/node 26.6.6, @iconify-json/vscode-icons 1.2.95
+- Deferred: typescript 7.0.2, vitest 5.1.0
