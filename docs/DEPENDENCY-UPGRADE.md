@@ -188,6 +188,153 @@ head -3 frontend/package-lock.json
 
 ---
 
+## Post-Implementation Audit Protocol for Dependency Upgrades
+
+**When to run**: After all upgrades complete and tests pass locally, before marking session complete.
+
+**Purpose**: Verify upgrades are complete, lock files synced, and all tests pass with no regressions.
+
+### Agent 1: Build & Syntax Auditor
+
+**Responsibility**: Verify no compilation or syntax errors introduced by upgrades.
+
+**Success Criteria:**
+- ✅ Backend Python syntax valid (`py_compile`)
+- ✅ Frontend linting passes (ESLint + TypeScript)
+- ✅ Frontend build completes successfully
+
+**Commands**:
+```bash
+# Backend syntax check
+cd backend && poetry run python -m py_compile config/settings.py api/views.py applications/models.py
+
+# Frontend linting and build
+cd frontend && npm run lint && npm run build
+```
+
+**Expected Result**: All commands exit with code 0 (success). No syntax or type errors.
+
+**FAIL if**: Any command returns non-zero exit code.
+
+---
+
+### Agent 2: Test Execution Auditor
+
+**Responsibility**: Verify all tests pass. Zero tolerance for failures.
+
+**Success Criteria:**
+- ✅ All backend tests pass: `poetry run pytest` returns 344 tests passing
+- ✅ **All frontend tests pass: 363/363 tests passing** (no exceptions, no timeouts, no flaky tests)
+
+**Commands**:
+```bash
+# Backend tests
+cd backend && poetry run pytest -q
+
+# Frontend tests - ALL must pass
+cd frontend && npm run test:unit
+```
+
+**Expected Result**: 
+- Backend: 344 passing ✅
+- Frontend: 363/363 passing ✅
+
+**FAIL if**: 
+- Any test fails for any reason
+- Any test times out
+- Test count is less than expected
+- Backend count drops below 344
+- Frontend count is less than 363
+
+**If ANY test fails**: STOP. Investigate root cause. This indicates either:
+1. Upgrade introduced a regression (fix codebase)
+2. Test environment issue (fix infrastructure/timeout)
+3. Test has a bug (fix test)
+
+Do not proceed until ALL tests pass.
+
+---
+
+### Agent 3: Documentation Auditor
+
+**Responsibility**: Verify CHANGELOG and dependency docs updated correctly.
+
+**Success Criteria:**
+- ✅ CHANGELOG.md has session entry with current date (YYYY-MM-DD)
+- ✅ CHANGELOG entry is concise (no test counts, no technical details)
+- ✅ docs/DEPENDENCY-UPGRADE.md Session N updated with current date
+- ✅ Session log follows format (packages + blocked only, no extras)
+- ✅ THIRD_PARTY_NOTICES.md backend section updated with new versions
+- ✅ No past releases modified in CHANGELOG
+
+**Commands**:
+```bash
+# Check CHANGELOG session entry
+head -20 CHANGELOG.md
+
+# Check DEPENDENCY-UPGRADE.md session log
+grep -A20 "^### Session N" docs/DEPENDENCY-UPGRADE.md
+
+# Verify versions in THIRD_PARTY_NOTICES.md
+grep "^| psycopg\|^| dbca-utils" THIRD_PARTY_NOTICES.md
+
+# Verify no past releases modified
+git log --oneline CHANGELOG.md | head -5
+```
+
+**Expected Result**: Session entry dated today, concise format, versions match lock files, git history shows only additions.
+
+**FAIL if**: Past releases modified or versions don't match lock files.
+
+---
+
+### Agent 4: Dependency Lock Auditor
+
+**Responsibility**: Verify lock files properly synced with upgraded versions.
+
+**Success Criteria:**
+- ✅ backend/poetry.lock contains updated direct dependency versions
+- ✅ frontend/package-lock.json contains updated direct dependency versions
+- ✅ Lock files auto-generated (not manually edited)
+- ✅ Lock files in sync with constraint files (pyproject.toml, package.json)
+
+**Commands**:
+```bash
+# Check backend lock file for specific package
+cd backend && grep -A2 "^name = \"psycopg\"" poetry.lock | head -3
+
+# Check frontend lock file versions
+cd frontend && npm ls axios eslint | head -5
+
+# Verify lock files auto-generated
+head -3 backend/poetry.lock
+head -3 frontend/package-lock.json
+```
+
+**Expected Result**: Versions in lock files match pyproject.toml/package.json constraints, files show auto-generation headers.
+
+**FAIL if**: Versions don't match or lock files appear manually edited.
+
+---
+
+### Audit Execution Workflow
+
+**Run agents in order (sequentially, not parallel):**
+
+1. **Agent 1 (Build & Syntax)** → Must PASS before proceeding
+   - If FAIL: Fix syntax errors, re-run Agent 1
+2. **Agent 2 (Tests)** → Must PASS before proceeding
+   - ALL 363 frontend + 344 backend tests must pass with zero exceptions
+   - If FAIL: Investigate and fix, do not proceed
+3. **Agent 3 (Documentation)** → Must PASS before proceeding
+   - If FAIL: Update docs, re-run Agent 3
+4. **Agent 4 (Lock Files)** → Must PASS before proceeding
+   - If FAIL: Regenerate lock files, re-run Agent 4
+
+**If all agents PASS**: Session complete and ready for deployment.
+
+---
+
 ## Workflow: Backend Dependencies
 
 ### Phase 1: Identify Upgradable Packages
