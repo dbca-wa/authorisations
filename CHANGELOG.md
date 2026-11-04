@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries should be concise, single-sentence summaries without excessive technical detail. Focus on the user-facing impact rather than implementation details.
 
+## [1.2.4] - 2026-11-04
+
+### Changed
+
+- **Session 5 (2026-11-03):** Backend upgraded psycopg 3.3.7, dbca-utils 3.0.16, and 9 transitive packages. Frontend upgraded 14 packages (MUI, axios, eslint, vite, tailwindcss, react-router, react-hook-form, and others). Deferred: Django 6.1.2, TypeScript 7.x, vitest 5.x.
+
 ## [1.2.3] - 2026-10-29
 
 ### Changed

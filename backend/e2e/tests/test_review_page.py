@@ -237,6 +237,9 @@ def test_attachment_dialog_shows_empty_and_populated_states(
     # Find the card for the app_with_attachments application using its internal_id and click its Files button
     page.locator(f'text={app_with_attachments.internal_id}').locator('xpath=ancestor::*[contains(@class, "MuiCard")]//button[@aria-label="View attachments"]').click()
     page.wait_for_selector('role=dialog')
+    
+    # Wait for attachment names to actually appear (data must be fetched and rendered)
+    page.wait_for_selector('text=fileA.txt', timeout=5000)
 
     # Verify both attachments names are present in the dialog
     assert page.locator('text=fileA.txt').count() == 1
